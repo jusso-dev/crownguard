@@ -1,0 +1,83 @@
+- id: MS-SPO-001
+  module: core
+  domain: sharepoint-onedrive
+  appliesTo: [ms-sharepoint-sites, ms-teams, ms-sensitive-data]
+  severity: high
+  question: Is SharePoint and OneDrive external sharing set no more permissively than "New and existing guests", with "Anyone" links disabled or tightly restricted?
+  why: >-
+    "Anyone" links work for whoever holds them, with no sign-in and no record of who opened them.
+    They get forwarded, indexed and left active for years.
+  yesLooksLike: >-
+    Organisation-level sharing for SharePoint and OneDrive is "New and existing guests" or more
+    restrictive, Anyone links are disabled (or limited to specific sites with short expiry and
+    view-only), the default link type is "Specific people" or "People in your organisation" with
+    view permission, and guests cannot reshare items they don't own.
+  remediation: >-
+    In the SharePoint admin centre under Policies, Sharing, lower the organisation-level setting for
+    SharePoint and OneDrive, set the default link type and permission, set expiry for guest access
+    and any Anyone links, and limit external sharing to approved domains or security groups.
+  effort: S
+  licence: []
+  sources: [ms-spo-external-sharing, ms-spo-default-link]
+  refs:
+    - { framework: cis-m365, ref: "7.2.3" }
+    - { framework: cis-m365, ref: "7.2.4" }
+    - { framework: cis-m365, ref: "7.2.5" }
+    - { framework: cis-m365, ref: "7.2.7" }
+    - { framework: cis-m365, ref: "7.2.11" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ms-zero-trust, ref: Data III }
+
+- id: MS-SPO-002
+  module: core
+  domain: sharepoint-onedrive
+  appliesTo: [ms-sharepoint-sites, ms-sensitive-data]
+  severity: high
+  question: Are the SharePoint sites holding crown-jewel data set to block external sharing and limited to a defined membership group?
+  why: >-
+    Organisation-wide settings are a ceiling, not a guarantee. Board, HR and M&A sites often have
+    broad groups such as "Everyone except external users" added for convenience, exposing them to
+    every employee, every compromised account and Copilot.
+  yesLooksLike: >-
+    Each crown-jewel site has external sharing set to "Only people in your organisation", membership
+    limited to a named group with an owner, no "Everyone" or "Everyone except external users"
+    permissions, and where licensed a sensitivity label or restricted access control policy
+    enforces this.
+  remediation: >-
+    Set site-level sharing to "Only people in your organisation", remove broad permission groups,
+    apply a Highly Confidential container label that sets privacy and sharing, and use SharePoint
+    Advanced Management restricted access control for sites that must be limited to one group.
+  effort: S
+  licence: []
+  sources: [ms-spo-external-sharing, ms-restricted-access-control, ms-labels-containers]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Data III }
+    - { framework: ms-zero-trust, ref: Copilot step 7 }
+
+- id: MS-SPO-003
+  module: core
+  domain: sharepoint-onedrive
+  appliesTo: [ms-sharepoint-sites, ms-copilot-agents]
+  severity: medium
+  question: Do you review oversharing reports at least quarterly to find sites shared with everyone, through Anyone links or with large numbers of guests?
+  why: >-
+    Sharing drifts over time and nobody sees the overall picture. Oversharing reports show which
+    sites expose sensitive content broadly, so owners can fix them before an attacker or Copilot
+    finds them.
+  yesLooksLike: >-
+    Data access governance reports (sharing links, "Everyone except external users", sensitivity
+    labels and permissions) are run at least quarterly, site owners fix issues through site access
+    reviews, and the highest-risk sites are tracked to closure.
+  remediation: >-
+    Use SharePoint Advanced Management (included with Microsoft 365 Copilot licences) to run data
+    access governance reports and site access reviews. Without it, use SharePoint sharing reports
+    and audit log searches for sharing events.
+  effort: M
+  licence: [sharepoint-advanced-management]
+  sources: [ms-dag-reports, ms-sam, ms-sam-copilot-licence]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-4 }
+    - { framework: ms-zero-trust, ref: Copilot step 7 }

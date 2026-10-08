@@ -1,0 +1,324 @@
+id: cis-m365
+name: CIS Microsoft 365 Foundations Benchmark v7.0.0
+shortName: CIS M365 v7
+publisher: Center for Internet Security
+source: cis-m365
+closed: true
+note: >-
+  Version 7.0.0 (May 2026). CIS Benchmarks are licensed CC BY-NC-SA 4.0, so only recommendation
+  numbers and paraphrased short titles are recorded here; obtain the full benchmark from CIS for
+  rationale, audit and remediation text. This list covers the recommendations referenced by this
+  content pack, not the whole benchmark.
+controls:
+  - id: "1.1.1"
+    group: Microsoft 365 admin center
+    title: Administrative accounts are cloud-only
+  - id: "1.1.2"
+    group: Microsoft 365 admin center
+    title: Two emergency access accounts are defined
+  - id: "1.1.3"
+    group: Microsoft 365 admin center
+    title: Between two and four Global Administrators
+  - id: "1.1.4"
+    group: Microsoft 365 admin center
+    title: Admin accounts use licences with a reduced application footprint
+  - id: "1.2.1"
+    group: Microsoft 365 admin center
+    title: Only approved public groups exist
+  - id: "1.2.2"
+    group: Microsoft 365 admin center
+    title: Sign-in to shared mailboxes is blocked
+  - id: "1.3.1"
+    group: Microsoft 365 admin center
+    title: Passwords set to never expire
+  - id: "1.3.3"
+    group: Microsoft 365 admin center
+    title: External calendar sharing is not available
+  - id: "1.3.6"
+    group: Microsoft 365 admin center
+    title: Customer Lockbox is enabled
+  - id: "2.1.1"
+    group: Microsoft 365 Defender
+    title: Safe Links for Office applications enabled
+  - id: "2.1.2"
+    group: Microsoft 365 Defender
+    title: Common attachment types filter enabled
+  - id: "2.1.4"
+    group: Microsoft 365 Defender
+    title: Safe Attachments policy enabled
+  - id: "2.1.5"
+    group: Microsoft 365 Defender
+    title: Safe Attachments for SharePoint, OneDrive and Teams enabled
+  - id: "2.1.7"
+    group: Microsoft 365 Defender
+    title: Anti-phishing policy created
+  - id: "2.1.8"
+    group: Microsoft 365 Defender
+    title: SPF records published for all Exchange domains
+  - id: "2.1.9"
+    group: Microsoft 365 Defender
+    title: DKIM enabled for all Exchange Online domains
+  - id: "2.1.10"
+    group: Microsoft 365 Defender
+    title: DMARC records published for all Exchange Online domains
+  - id: "2.4.1"
+    group: Microsoft 365 Defender
+    title: Priority account protection enabled and configured
+  - id: "2.4.2"
+    group: Microsoft 365 Defender
+    title: Priority accounts have Strict protection presets applied
+  - id: "2.4.4"
+    group: Microsoft 365 Defender
+    title: Zero-hour auto purge for Teams is on
+  - id: "2.4.5"
+    group: Microsoft 365 Defender
+    title: AIR remediation is enabled
+  - id: "3.1.1"
+    group: Microsoft Purview
+    title: Audit log search is enabled
+  - id: "3.2.1"
+    group: Microsoft Purview
+    title: DLP policies are enabled
+  - id: "3.2.2"
+    group: Microsoft Purview
+    title: DLP policies are enabled for Teams
+  - id: "3.2.3"
+    group: Microsoft Purview
+    title: DLP policies are published for Copilot users
+  - id: "3.3.1"
+    group: Microsoft Purview
+    title: Sensitivity label policies are published
+  - id: "4.1"
+    group: Microsoft Intune admin center
+    title: Devices without a compliance policy are marked not compliant
+  - id: "4.2"
+    group: Microsoft Intune admin center
+    title: Personally owned device enrolment is blocked by default
+  - id: "5.1.2.1"
+    group: Microsoft Entra admin center
+    title: Per-user MFA is disabled
+  - id: "5.1.2.2"
+    group: Microsoft Entra admin center
+    title: Users cannot register applications
+  - id: "5.1.2.3"
+    group: Microsoft Entra admin center
+    title: Non-admin users cannot create tenants
+  - id: "5.1.2.4"
+    group: Microsoft Entra admin center
+    title: Access to the Entra admin center is restricted
+  - id: "5.1.4.3"
+    group: Microsoft Entra admin center
+    title: Global Administrator not added as local admin during Entra join
+  - id: "5.1.4.4"
+    group: Microsoft Entra admin center
+    title: Local administrator assignment limited during Entra join
+  - id: "5.1.4.5"
+    group: Microsoft Entra admin center
+    title: Local Administrator Password Solution is enabled
+  - id: "5.1.5.1"
+    group: Microsoft Entra admin center
+    title: User consent to apps is not allowed
+  - id: "5.1.5.2"
+    group: Microsoft Entra admin center
+    title: Admin consent workflow is enabled
+  - id: "5.1.5.3"
+    group: Microsoft Entra admin center
+    title: Password addition is blocked for applications
+  - id: "5.1.5.4"
+    group: Microsoft Entra admin center
+    title: Application password lifetime does not exceed 180 days
+  - id: "5.1.5.5"
+    group: Microsoft Entra admin center
+    title: New application passwords are system-generated
+  - id: "5.1.5.6"
+    group: Microsoft Entra admin center
+    title: Application certificate lifetime does not exceed 180 days
+  - id: "5.1.6.1"
+    group: Microsoft Entra admin center
+    title: Collaboration invitations sent to allowed domains only
+  - id: "5.1.6.2"
+    group: Microsoft Entra admin center
+    title: Guest user access is restricted
+  - id: "5.1.6.3"
+    group: Microsoft Entra admin center
+    title: Guest invitations limited to the Guest Inviter role
+  - id: "5.1.8.1"
+    group: Microsoft Entra admin center
+    title: Password hash sync is enabled for hybrid deployments
+  - id: "5.2.2.1"
+    group: Microsoft Entra admin center
+    title: MFA required for administrative roles
+  - id: "5.2.2.2"
+    group: Microsoft Entra admin center
+    title: MFA required for all users
+  - id: "5.2.2.3"
+    group: Microsoft Entra admin center
+    title: Legacy authentication is blocked
+  - id: "5.2.2.4"
+    group: Microsoft Entra admin center
+    title: Admin sign-in frequency set and browser sessions not persistent
+  - id: "5.2.2.5"
+    group: Microsoft Entra admin center
+    title: Phishing-resistant MFA strength required for administrators
+  - id: "5.2.2.6"
+    group: Microsoft Entra admin center
+    title: Identity Protection user risk policies enabled
+  - id: "5.2.2.7"
+    group: Microsoft Entra admin center
+    title: Identity Protection sign-in risk policies enabled
+  - id: "5.2.2.8"
+    group: Microsoft Entra admin center
+    title: Medium and high sign-in risk is blocked
+  - id: "5.2.2.9"
+    group: Microsoft Entra admin center
+    title: Managed device required for authentication
+  - id: "5.2.2.10"
+    group: Microsoft Entra admin center
+    title: Managed device required to register security information
+  - id: "5.2.2.11"
+    group: Microsoft Entra admin center
+    title: Sign-in frequency for Intune enrolment set to every time
+  - id: "5.2.2.12"
+    group: Microsoft Entra admin center
+    title: Device code sign-in flow is blocked
+  - id: "5.2.2.13"
+    group: Microsoft Entra admin center
+    title: Periodic reauthentication required for all users
+  - id: "5.2.2.14"
+    group: Microsoft Entra admin center
+    title: Trusted named locations defined and applied
+  - id: "5.2.2.15"
+    group: Microsoft Entra admin center
+    title: Exclusionary geographic access controls used
+  - id: "5.2.2.16"
+    group: Microsoft Entra admin center
+    title: Token Protection enforced for session tokens
+  - id: "5.2.2.17"
+    group: Microsoft Entra admin center
+    title: Authentication transfer is blocked
+  - id: "5.2.3.1"
+    group: Microsoft Entra admin center
+    title: Authenticator protects against MFA fatigue
+  - id: "5.2.3.2"
+    group: Microsoft Entra admin center
+    title: Custom banned password list used
+  - id: "5.2.3.3"
+    group: Microsoft Entra admin center
+    title: Password protection enabled for on-premises AD
+  - id: "5.2.3.4"
+    group: Microsoft Entra admin center
+    title: All member users are MFA capable
+  - id: "5.2.3.5"
+    group: Microsoft Entra admin center
+    title: Weak authentication methods are disabled
+  - id: "5.2.3.6"
+    group: Microsoft Entra admin center
+    title: System-preferred MFA is enabled
+  - id: "5.2.3.7"
+    group: Microsoft Entra admin center
+    title: Email OTP authentication method is disabled
+  - id: "5.2.4.1"
+    group: Microsoft Entra admin center
+    title: Self-service password reset enabled for all
+  - id: "5.3.1"
+    group: Microsoft Entra admin center
+    title: Privileged Identity Management used to manage roles
+  - id: "5.3.2"
+    group: Microsoft Entra admin center
+    title: Access reviews configured for guest users
+  - id: "5.3.3"
+    group: Microsoft Entra admin center
+    title: Access reviews configured for privileged roles
+  - id: "5.3.4"
+    group: Microsoft Entra admin center
+    title: Approval required for Global Administrator activation
+  - id: "5.3.5"
+    group: Microsoft Entra admin center
+    title: Approval required for Privileged Role Administrator activation
+  - id: "6.1.1"
+    group: Exchange admin center
+    title: Organisation-wide mailbox auditing is on
+  - id: "6.1.2"
+    group: Exchange admin center
+    title: Mailbox audit actions are configured
+  - id: "6.1.3"
+    group: Exchange admin center
+    title: Mailbox audit bypass is not enabled
+  - id: "6.2.1"
+    group: Exchange admin center
+    title: All forms of mail forwarding are blocked or disabled
+  - id: "6.2.2"
+    group: Exchange admin center
+    title: Transport rules do not allow-list specific domains
+  - id: "6.2.3"
+    group: Exchange admin center
+    title: Email from external senders is identified
+  - id: "6.3.1"
+    group: Exchange admin center
+    title: Users cannot install Outlook add-ins
+  - id: "6.5.1"
+    group: Exchange admin center
+    title: Modern authentication for Exchange Online is enabled
+  - id: "6.5.4"
+    group: Exchange admin center
+    title: SMTP AUTH is disabled
+  - id: "6.5.5"
+    group: Exchange admin center
+    title: Direct Send is restricted
+  - id: "7.2.1"
+    group: SharePoint admin center
+    title: Modern authentication required for SharePoint apps
+  - id: "7.2.3"
+    group: SharePoint admin center
+    title: External content sharing is restricted
+  - id: "7.2.4"
+    group: SharePoint admin center
+    title: OneDrive content sharing is restricted
+  - id: "7.2.5"
+    group: SharePoint admin center
+    title: Guests cannot share items they don't own
+  - id: "7.2.6"
+    group: SharePoint admin center
+    title: External sharing managed by domain allow or block lists
+  - id: "7.2.7"
+    group: SharePoint admin center
+    title: Link sharing is restricted
+  - id: "7.2.8"
+    group: SharePoint admin center
+    title: External sharing restricted by security group
+  - id: "7.2.9"
+    group: SharePoint admin center
+    title: Guest access to a site or OneDrive expires automatically
+  - id: "7.2.10"
+    group: SharePoint admin center
+    title: Reauthentication with verification code is restricted
+  - id: "7.2.11"
+    group: SharePoint admin center
+    title: Default sharing link permission is set
+  - id: "7.3.1"
+    group: SharePoint admin center
+    title: Infected files are disallowed for download
+  - id: "8.1.1"
+    group: Microsoft Teams admin center
+    title: External file sharing limited to approved cloud storage
+  - id: "8.2.1"
+    group: Microsoft Teams admin center
+    title: External domains are restricted
+  - id: "8.2.2"
+    group: Microsoft Teams admin center
+    title: Communication with unmanaged Teams users is disabled
+  - id: "8.2.3"
+    group: Microsoft Teams admin center
+    title: External Teams users cannot initiate conversations
+  - id: "8.4.1"
+    group: Microsoft Teams admin center
+    title: App permission policies are configured
+  - id: "8.5.1"
+    group: Microsoft Teams admin center
+    title: Anonymous users can't join a meeting
+  - id: "8.5.3"
+    group: Microsoft Teams admin center
+    title: Only people in the organisation can bypass the lobby
+  - id: "8.6.1"
+    group: Microsoft Teams admin center
+    title: Users can report security concerns in Teams

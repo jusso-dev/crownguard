@@ -1,0 +1,257 @@
+- id: MS-ID-001
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-exchange-mailboxes, ms-sharepoint-sites, ms-teams, ms-sensitive-data, ms-copilot-agents]
+  severity: critical
+  question: Is multi-factor authentication enforced at sign-in for every user account?
+  why: >-
+    Most account takeovers start with a guessed, sprayed or phished password. Without MFA, one
+    leaked password opens that person's mail, files and every app that trusts Entra ID.
+  yesLooksLike: >-
+    An enabled Conditional Access policy requires MFA (or an authentication strength) for all users
+    and all resources, excluding only emergency access accounts. Tenants without Entra ID P1 have
+    Security Defaults turned on instead.
+  remediation: >-
+    Turn on the Microsoft-managed "Multifactor authentication for all users" policy, or create a
+    Conditional Access policy from the "Require MFA for all users" template targeting all resources.
+    Run it in report-only mode first, run an MFA registration campaign, then enforce. Tenants without
+    Entra ID P1 should enable Security Defaults. Retire legacy per-user MFA once Conditional Access
+    covers everyone.
+  effort: M
+  licence: [entra-p1]
+  sources: [ms-ca-all-users-mfa, ms-ca-managed-policies, ms-security-defaults]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.2" }
+    - { framework: cis-m365, ref: "5.1.2.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: MS-ID-002
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-exchange-mailboxes]
+  severity: critical
+  question: Is legacy authentication (POP, IMAP, SMTP AUTH, Exchange ActiveSync basic and older Office clients) blocked for all users?
+  why: >-
+    Legacy protocols cannot perform MFA, so attackers use them to test sprayed or stolen passwords
+    and get straight into mailboxes even where MFA is switched on. Microsoft reports that more than
+    99 percent of password spray attacks use legacy authentication.
+  yesLooksLike: >-
+    A Conditional Access policy (or the Microsoft-managed or Baseline security mode policy) blocks
+    Exchange ActiveSync clients and other clients for all users, and the sign-in logs show no
+    successful legacy authentication.
+  remediation: >-
+    Filter the Entra sign-in logs by client app to find remaining legacy protocol use, move those
+    devices and apps to modern authentication, then enable the "Block legacy authentication"
+    Conditional Access policy for all users. Security Defaults also blocks legacy authentication.
+  effort: S
+  licence: [entra-p1]
+  sources: [ms-ca-block-legacy, ms-ca-managed-policies, ms-exo-basic-auth]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.3" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: NS-8 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: MS-ID-003
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-exchange-mailboxes, ms-sharepoint-sites, ms-sensitive-data]
+  severity: high
+  question: Do all users sign in to Microsoft 365 with a phishing-resistant method such as passkeys, Windows Hello for Business or certificate-based authentication?
+  why: >-
+    Adversary-in-the-middle phishing kits now routinely capture both the password and the MFA
+    approval or session cookie for push, SMS and code-based MFA. Phishing-resistant methods are
+    bound to the genuine sign-in site, so a fake page cannot replay them.
+  yesLooksLike: >-
+    Users are registered for passkeys (FIDO2 security keys or device-bound passkeys in Microsoft
+    Authenticator) or Windows Hello for Business, and Conditional Access requires the built-in
+    "Phishing-resistant MFA" authentication strength for all users, or at minimum for everyone who
+    can reach crown-jewel apps and data.
+  remediation: >-
+    Follow Microsoft's phishing-resistant passwordless deployment guide. Enable passkeys (FIDO2) in
+    the Authentication methods policy, deploy Windows Hello for Business, use Temporary Access Pass
+    for onboarding and recovery, then require the phishing-resistant authentication strength in
+    Conditional Access, starting with the highest-risk groups.
+  effort: L
+  licence: [entra-p1]
+  sources: [ms-phish-resistant-deploy, ms-auth-strengths]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: MS-ID-004
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant]
+  severity: high
+  question: Have weak MFA methods (SMS, voice call and email one-time passcode) been disabled for members in the Authentication methods policy?
+  why: >-
+    SIM swapping, call forwarding and mailbox compromise make SMS, voice and email codes easy to
+    intercept. An attacker who can register a weak method of their own can also keep access after a
+    password reset.
+  yesLooksLike: >-
+    Authentication methods are managed only in the Authentication methods policy (legacy MFA and
+    SSPR policies migrated), SMS, voice call and email OTP are disabled for members, and Microsoft
+    Authenticator shows number matching with application and location context.
+  remediation: >-
+    In the Entra admin centre under Authentication methods, complete migration from the legacy MFA
+    and SSPR policies, move users to Microsoft Authenticator or passkeys with a registration
+    campaign, then disable SMS, voice call and email OTP (keep email OTP only for B2B guests if you
+    need it).
+  effort: M
+  licence: []
+  sources: [ms-auth-methods-manage]
+  refs:
+    - { framework: cis-m365, ref: "5.2.3.5" }
+    - { framework: cis-m365, ref: "5.2.3.7" }
+    - { framework: cis-m365, ref: "5.2.3.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+
+- id: MS-ID-005
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-exchange-mailboxes]
+  severity: high
+  question: Are device code flow and authentication transfer blocked, apart from the specific shared devices that need them?
+  why: >-
+    Device code phishing persuades a user to type a code into Microsoft's genuine sign-in page,
+    which hands the attacker a token that already satisfies MFA. Microsoft notes the flow is rarely
+    used legitimately but frequently used by attackers.
+  yesLooksLike: >-
+    A Conditional Access policy, or the Microsoft-managed "Block device code flow" policy, blocks
+    device code flow and authentication transfer for all users, with narrow exceptions such as Teams
+    Rooms resource accounts.
+  remediation: >-
+    Review sign-in logs for the device code authentication protocol, then enable the
+    Microsoft-managed policy or create a Conditional Access policy using the Authentication flows
+    condition to block device code flow and authentication transfer. Scope any exception to named
+    shared-device accounts.
+  effort: S
+  licence: [entra-p1]
+  sources: [ms-ca-auth-flows, ms-ca-managed-policies]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.12" }
+    - { framework: cis-m365, ref: "5.2.2.17" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-7 }
+
+- id: MS-ID-006
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant]
+  severity: high
+  question: Do Conditional Access policies act on Entra ID Protection risk, remediating high-risk users and challenging risky sign-ins?
+  why: >-
+    Microsoft detects leaked credentials, token replay, password spray and anomalous travel in real
+    time. Without risk policies those detections are only alerts that may not be read until the
+    damage is done.
+  yesLooksLike: >-
+    Enabled policies require risk remediation or a secure password change for high user risk, and
+    MFA with sign-in frequency "every time" for medium and high sign-in risk, covering all users
+    except emergency access accounts.
+  remediation: >-
+    Turn on the Microsoft-managed risk policies, or create policies from the "Require MFA for
+    elevated sign-in risk" and "Require secure password change for elevated user risk" templates.
+    In hybrid tenants enable password hash sync so leaked credential detection works.
+  effort: S
+  licence: [entra-p2]
+  sources: [ms-ca-risk-signin, ms-ca-risk-user, ms-id-protection-policies]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.6" }
+    - { framework: cis-m365, ref: "5.2.2.7" }
+    - { framework: cis-m365, ref: "5.2.2.8" }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: mcsb, ref: LT-2 }
+    - { framework: ms-zero-trust, ref: Identity V }
+
+- id: MS-ID-007
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-sharepoint-sites, ms-exchange-mailboxes, ms-teams, ms-sensitive-data, ms-managed-endpoints]
+  severity: high
+  question: Is access to Microsoft 365 data limited to compliant or hybrid-joined devices, or to approved mobile apps protected by app protection policies?
+  why: >-
+    A stolen password and MFA approval are far less useful if sign-in also requires a company-managed
+    device. Device requirements also stop data being downloaded to personal or shared computers that
+    IT cannot see or wipe.
+  yesLooksLike: >-
+    Conditional Access requires a compliant or Entra hybrid-joined device for desktop access to
+    Office 365, approved client apps with app protection policies on iOS and Android, and limits
+    unmanaged browsers to web-only access without downloads.
+  remediation: >-
+    Enrol devices in Intune with compliance policies, deploy the "Require compliant or hybrid joined
+    device or MFA for all users" template in report-only mode, then tighten it to require a
+    compliant device for crown-jewel apps. Apply Intune app protection policies for mobile and
+    SharePoint unmanaged-device restrictions for browsers.
+  effort: L
+  licence: [entra-p1, intune]
+  sources: [ms-ca-compliant-device, ms-zt-endpoints]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.9" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-7 }
+    - { framework: ms-zero-trust, ref: Endpoints 2 }
+
+- id: MS-ID-008
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-teams, ms-sharepoint-sites]
+  severity: medium
+  question: Are guest invitations limited to approved inviters and domains, with guests unable to browse your directory?
+  why: >-
+    Guests who can list your users and groups hand attackers a map for phishing, and uncontrolled
+    invitations let any employee give an outsider standing access to sensitive Teams and sites.
+  yesLooksLike: >-
+    External collaboration settings give guests the most restricted directory access, only admins
+    and the Guest Inviter role can invite, invitations are limited by a domain allow or block list,
+    cross-tenant access settings are reviewed, and guests are reviewed periodically.
+  remediation: >-
+    In the Entra admin centre under External Identities, set guest user access to the most
+    restrictive option, limit who can invite guests, configure collaboration domain restrictions,
+    and review inbound and outbound cross-tenant access settings. With Entra ID P2, schedule access
+    reviews for guests.
+  effort: S
+  licence: []
+  sources: [ms-external-collab, ms-cross-tenant-access]
+  refs:
+    - { framework: cis-m365, ref: "5.1.6.1" }
+    - { framework: cis-m365, ref: "5.1.6.2" }
+    - { framework: cis-m365, ref: "5.1.6.3" }
+    - { framework: cis-m365, ref: "5.3.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-3 }
+
+- id: MS-ID-009
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-privileged-roles]
+  severity: medium
+  question: Are Conditional Access exclusions limited to emergency access accounts and documented service accounts, and reviewed at least quarterly?
+  why: >-
+    Attackers look for the accounts and locations your policies skip. A forgotten exclusion group or
+    "trusted" IP range quietly removes MFA and device checks from the accounts that need them most.
+  yesLooksLike: >-
+    Every exclusion is a named group with an owner and documented reason, trusted named locations
+    are not used to skip MFA, policy changes are checked in report-only mode and the policy impact
+    view, and exclusions are reviewed every quarter.
+  remediation: >-
+    Export your Conditional Access policies, list every excluded user, group, role and location,
+    remove those without a justification, move the rest into dedicated groups covered by access
+    reviews, and alert on changes to Conditional Access policies.
+  effort: S
+  licence: [entra-p1]
+  sources: [ms-ca-plan, ms-emergency-access]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: IM-7 }
+    - { framework: ms-zero-trust, ref: Identity II }

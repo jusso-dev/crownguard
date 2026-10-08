@@ -1,0 +1,77 @@
+- id: MS-BCK-001
+  module: core
+  domain: backup-recovery
+  appliesTo: [ms-backups, ms-sharepoint-sites, ms-exchange-mailboxes]
+  severity: high
+  question: Are crown-jewel SharePoint sites, OneDrive accounts and mailboxes backed up to a protected backup that is separate from the recycle bins and version history an attacker could purge?
+  why: >-
+    Microsoft keeps the service running, but recovering from ransomware, a malicious administrator or
+    mass deletion is your responsibility. Recycle bins and retention can be emptied or worked around
+    by anyone with enough admin rights.
+  yesLooksLike: >-
+    Microsoft 365 Backup or a third-party backup covers all crown-jewel sites, OneDrives and
+    mailboxes, retention meets business continuity requirements, and new sites and mailboxes are
+    added automatically or through a regular process.
+  remediation: >-
+    Enable Microsoft 365 Backup (pay-as-you-go) or a backup product built on Microsoft 365 Backup
+    Storage, create policies for crown-jewel sites, mailboxes and OneDrives with rules that pick up
+    new ones, and record recovery point and recovery time objectives.
+  effort: M
+  licence: [m365-backup]
+  sources: [ms-m365-backup, ms-m365-resiliency]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-1 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: MS-BCK-002
+  module: core
+  domain: backup-recovery
+  appliesTo: [ms-backups]
+  severity: medium
+  question: Have you restored a full site, OneDrive or mailbox from backup to a common point in time within the last 12 months, as part of a disaster recovery exercise?
+  why: >-
+    Untested backups fail at the worst moment: missing sites, expired credentials or restores that
+    take weeks. A test proves you can meet the recovery time the business expects.
+  yesLooksLike: >-
+    At least annually, a documented exercise restores representative sites, OneDrives and mailboxes,
+    plus key tenant configuration such as exported Conditional Access and Intune policies, to a
+    common point in time, records how long it took, and fixes any gaps.
+  remediation: >-
+    Schedule a restore test to a new URL or folder, time it against your recovery objectives, include
+    tenant configuration in the exercise, and add the test to your business continuity plan.
+  effort: S
+  licence: []
+  sources: [ms-m365-backup]
+  refs:
+    - { framework: nist-csf-2, ref: RC.RP-03 }
+    - { framework: mcsb, ref: BR-4 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: MS-BCK-003
+  module: core
+  domain: backup-recovery
+  appliesTo: [ms-backups, ms-privileged-roles]
+  severity: high
+  question: Are backups protected so that no one other than a dedicated backup administrator can modify or delete them?
+  why: >-
+    Ransomware operators go after backups first. If the same compromised Global Administrator can
+    delete backups or offboard the backup tool, there is nothing left to restore.
+  yesLooksLike: >-
+    Backup administration uses separate PIM-protected accounts that are not used for day-to-day
+    tenant administration, backups are immutable or append-only, deletion or policy changes notify
+    multiple admins, and third-party backup consoles require phishing-resistant MFA.
+  remediation: >-
+    Assign the Microsoft 365 Backup Administrator role (or third-party console access) to a small
+    dedicated group through PIM, enable multi-admin notifications, enable immutability where the
+    product supports it, and alert on backup policy changes.
+  effort: S
+  licence: []
+  sources: [ms-m365-backup, ms-azure-backup-mua]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-2 }
+  e8:
+    - { strategy: regular-backups, level: 2 }

@@ -1,0 +1,482 @@
+# Google Workspace, Chrome Enterprise and Google Cloud guidance cited by the google platform questions.
+
+- id: gws-checklist-large
+  title: "Security checklist for medium and large businesses (100+ users)"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/security-checklist-for-medium-and-large-businesses-100-users
+  retrieved: 2026-10-08
+- id: gws-checklist-small
+  title: "Security checklist for small businesses (1-100 users)"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/security-checklist-for-small-businesses-1-100-users
+  retrieved: 2026-10-08
+- id: gws-admin-best-practices
+  title: "Security best practices for administrator accounts"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/security-best-practices-for-administrator-accounts
+  retrieved: 2026-10-08
+- id: gws-deploy-2sv
+  title: "Deploy 2-Step Verification"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/deploy-2-step-verification
+  retrieved: 2026-10-08
+- id: gws-passkeys
+  title: "Allow users to skip passwords at sign-in"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/allow-users-to-skip-passwords-at-sign-in
+  retrieved: 2026-10-08
+- id: gws-advanced-protection
+  title: "Protect users with the Advanced Protection Program"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/protect-users-with-the-advanced-protection-program
+  retrieved: 2026-10-08
+- id: gws-context-aware-access
+  title: "Protect your business with Context-Aware Access"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/protect-your-business-with-context-aware-access
+  retrieved: 2026-10-08
+- id: gws-session-length
+  title: "Set session length for Google services"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/set-session-length-for-google-services
+  retrieved: 2026-10-08
+- id: gws-offboarding
+  title: "Maintain data security after an employee leaves"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/maintain-data-security-after-an-employee-leaves
+  retrieved: 2026-10-08
+- id: gws-transfer-tool
+  title: "Use the transfer tool to migrate unmanaged personal accounts"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/use-the-transfer-tool-to-migrate-unmanaged-personal-accounts
+  retrieved: 2026-10-08
+- id: gws-sso
+  title: "Setting up SSO"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/apps/setting-up-sso
+  retrieved: 2026-10-08
+- id: gws-gcds
+  title: "About Google Cloud Directory Sync"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/about-google-cloud-directory-sync
+  retrieved: 2026-10-08
+- id: gws-admin-roles
+  title: "Prebuilt administrator roles"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/prebuilt-administrator-roles
+  retrieved: 2026-10-08
+- id: gws-super-admin-recovery
+  title: "Allow super administrators to recover their password"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/allow-super-administrators-to-recover-their-password
+  retrieved: 2026-10-08
+- id: gws-multi-party-approval
+  title: "Multi-party approval for sensitive actions"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/multi-party-approval-for-sensitive-actions
+  retrieved: 2026-10-08
+- id: gws-app-access-control
+  title: "Control which third-party & internal apps access Google Workspace data"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/apps/control-which-third-party-and-internal-apps-access-google-workspace-data
+  retrieved: 2026-10-08
+- id: gws-domain-wide-delegation
+  title: "Control API access with domain-wide delegation"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/apps/control-api-access-with-domain-wide-delegation
+  retrieved: 2026-10-08
+- id: gws-marketplace-allowlist
+  title: "Manage the Marketplace app allowlist for your organization"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/apps/manage-the-marketplace-app-allowlist-for-your-organization
+  retrieved: 2026-10-08
+- id: gws-drive-external-sharing
+  title: "Manage external sharing for your organization"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/drive/manage-external-sharing-for-your-organization
+  retrieved: 2026-10-08
+- id: gws-trust-rules
+  title: "Create and manage trust rules for Drive sharing"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/create-and-manage-trust-rules-for-drive-sharing
+  retrieved: 2026-10-08
+- id: gws-shared-drives
+  title: "Manage shared drives as an admin"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/drive/manage-shared-drives-as-an-admin
+  retrieved: 2026-10-08
+- id: gws-dlp
+  title: "Get started with DLP"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/about-dlp
+  retrieved: 2026-10-08
+- id: gws-classification-labels
+  title: "Get started as a classification labels admin"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/get-started-as-a-classification-labels-admin
+  retrieved: 2026-10-08
+- id: gws-takeout
+  title: "Allow or block Google Takeout"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/advanced/allow-or-block-google-takeout
+  retrieved: 2026-10-08
+- id: gws-client-side-encryption
+  title: "About client-side encryption"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/about-client-side-encryption
+  retrieved: 2026-10-08
+- id: gws-spf
+  title: "Set up SPF"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/set-up-spf
+  retrieved: 2026-10-08
+- id: gws-dkim
+  title: "Set up DKIM"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/set-up-dkim
+  retrieved: 2026-10-08
+- id: gws-dmarc
+  title: "Set up DMARC"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/set-up-dmarc
+  retrieved: 2026-10-08
+- id: gws-auto-forwarding
+  title: "Let users automatically forward their own Gmail emails"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/gmail/let-users-automatically-forward-their-own-gmail-emails
+  retrieved: 2026-10-08
+- id: gws-pre-delivery-scanning
+  title: "Help prevent phishing with pre-delivery message scanning"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/help-prevent-phishing-with-pre-delivery-message-scanning
+  retrieved: 2026-10-08
+- id: gws-advanced-phishing-malware
+  title: "Advanced phishing and malware protection"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/gmail/advanced/advanced-phishing-and-malware-protection
+  retrieved: 2026-10-08
+- id: gws-security-sandbox
+  title: "Set up rules to detect harmful attachments"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/gmail/advanced/set-up-rules-to-detect-harmful-attachments
+  retrieved: 2026-10-08
+- id: gws-pop-imap
+  title: "Turn POP & IMAP on or off for users"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users
+  retrieved: 2026-10-08
+- id: gws-mail-delegation
+  title: "Let users delegate access to a Gmail account"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/gmail/let-users-delegate-access-to-a-gmail-account
+  retrieved: 2026-10-08
+- id: gws-chat-external
+  title: "Control external Chat & spaces chat options"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/chat/control-external-chat-and-spaces-chat-options
+  retrieved: 2026-10-08
+- id: gws-chat-apps
+  title: "Allow users to install Chat apps"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/chat/allow-users-to-install-chat-apps
+  retrieved: 2026-10-08
+- id: gws-calendar-sharing
+  title: "Set Google Calendar sharing options"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/calendar/set-google-calendar-sharing-options
+  retrieved: 2026-10-08
+- id: gws-groups-policies
+  title: "Set organization-wide policies for using groups"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/groups/set-organization-wide-policies-for-using-groups
+  retrieved: 2026-10-08
+- id: gws-advanced-mobile
+  title: "Set up advanced mobile management"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/set-up-advanced-mobile-management
+  retrieved: 2026-10-08
+- id: gws-endpoint-verification
+  title: "Turn endpoint verification on or off"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/turn-endpoint-verification-on-or-off
+  retrieved: 2026-10-08
+- id: chrome-policy-management
+  title: "Understand Chrome policy management"
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/9037717
+  retrieved: 2026-10-08
+- id: chrome-extensions
+  title: "Managing Extensions in Your Enterprise"
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/9296680
+  retrieved: 2026-10-08
+- id: chrome-update-strategies
+  title: "Chrome update management strategies"
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/9982578
+  retrieved: 2026-10-08
+- id: chromeos-updates
+  title: "Manage updates on ChromeOS devices"
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/3168106
+  retrieved: 2026-10-08
+- id: gws-gemini-privacy-hub
+  title: "Generative AI in Google Workspace Privacy Hub"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/generative-ai/generative-ai-in-google-workspace-privacy-hub
+  retrieved: 2026-10-08
+- id: gws-gemini-app-toggle
+  title: "Turn the Gemini App on or off"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/generative-ai/gemini-app/turn-the-gemini-app-on-or-off
+  retrieved: 2026-10-08
+- id: gws-alert-center
+  title: "About the alert center"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/about-the-alert-center
+  retrieved: 2026-10-08
+- id: gws-investigation-tool
+  title: "About the security investigation tool"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/about-the-security-investigation-tool
+  retrieved: 2026-10-08
+- id: gws-activity-rules
+  title: "Create & manage rules from the Rules page"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/create-and-manage-rules-from-the-rules-page
+  retrieved: 2026-10-08
+- id: gws-security-dashboard
+  title: "Use the security dashboard"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/use-the-security-dashboard
+  retrieved: 2026-10-08
+- id: gws-security-health
+  title: "Get started with the security health page"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/get-started-with-the-security-health-page
+  retrieved: 2026-10-08
+- id: gws-bigquery-export
+  title: "Set up service log exports to BigQuery"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/reports/set-up-service-log-exports-to-bigquery
+  retrieved: 2026-10-08
+- id: gws-share-with-gcp
+  title: "Share data with Google Cloud services"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/getting-started/share-data-with-google-cloud-services
+  retrieved: 2026-10-08
+- id: gws-vault-overview
+  title: "Google Vault"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/vault/getting-started/vault-overview
+  retrieved: 2026-10-08
+- id: gws-vault-retention
+  title: "How retention works"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/vault/retention/how-retention-works
+  retrieved: 2026-10-08
+- id: gws-vault-faq
+  title: "Google Vault FAQ"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/vault/getting-started/google-vault-faq
+  retrieved: 2026-10-08
+- id: gws-recover-drive
+  title: "Recover deleted files and folders for Drive users"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/drive/recover-deleted-files-and-folders-for-drive-users
+  retrieved: 2026-10-08
+- id: gws-transfer-drive
+  title: "Transfer Drive files to a new owner as an admin"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/drive/transfer-drive-files-to-a-new-owner-as-an-admin
+  retrieved: 2026-10-08
+- id: gws-compare-business
+  title: "Compare Business editions"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/getting-started/editions/compare-business-editions
+  retrieved: 2026-10-08
+- id: gws-compare-enterprise
+  title: "Compare Enterprise editions"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/getting-started/editions/compare-enterprise-editions
+  retrieved: 2026-10-08
+- id: gcp-identity-editions
+  title: "Cloud Identity editions"
+  publisher: Google
+  url: https://docs.cloud.google.com/identity/docs/editions
+  retrieved: 2026-10-08
+- id: gcp-security-foundations
+  title: "Enterprise foundations blueprint"
+  publisher: Google
+  url: https://docs.cloud.google.com/architecture/blueprints/security-foundations
+  retrieved: 2026-10-08
+- id: gcp-blueprint-authn
+  title: "Enterprise foundations blueprint: Authentication and authorization"
+  publisher: Google
+  url: https://docs.cloud.google.com/architecture/blueprints/security-foundations/authentication-authorization
+  retrieved: 2026-10-08
+- id: gcp-blueprint-preventative
+  title: "Enterprise foundations blueprint: Preventative controls for acceptable resource configurations"
+  publisher: Google
+  url: https://docs.cloud.google.com/architecture/blueprints/security-foundations/preventative-controls
+  retrieved: 2026-10-08
+- id: gcp-blueprint-detective
+  title: "Enterprise foundations blueprint: Detective controls"
+  publisher: Google
+  url: https://docs.cloud.google.com/architecture/blueprints/security-foundations/detective-controls
+  retrieved: 2026-10-08
+- id: gcp-super-admin
+  title: "Super administrator account best practices"
+  publisher: Google
+  url: https://docs.cloud.google.com/resource-manager/docs/super-admin-best-practices
+  retrieved: 2026-10-08
+- id: gcp-org-policy-constraints
+  title: "Organization policy constraints"
+  publisher: Google
+  url: https://docs.cloud.google.com/organization-policy/reference/org-policy-constraints
+  retrieved: 2026-10-08
+- id: gcp-restrict-service-accounts
+  title: "Restrict IAM service account usage"
+  publisher: Google
+  url: https://docs.cloud.google.com/organization-policy/restrict-service-accounts
+  retrieved: 2026-10-08
+- id: gcp-sa-key-best-practices
+  title: "Best practices for managing service account keys"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
+  retrieved: 2026-10-08
+- id: gcp-sa-best-practices
+  title: "Best practices for using service accounts securely"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/best-practices-service-accounts
+  retrieved: 2026-10-08
+- id: gcp-sa-roles
+  title: "Roles for service account authentication"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/service-account-permissions
+  retrieved: 2026-10-08
+- id: gcp-workload-identity-federation
+  title: "Workload Identity Federation"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/workload-identity-federation
+  retrieved: 2026-10-08
+- id: gcp-domain-restricted-sharing
+  title: "Restrict identities with domain-restricted sharing"
+  publisher: Google
+  url: https://docs.cloud.google.com/organization-policy/restrict-domains
+  retrieved: 2026-10-08
+- id: gcp-iam-securely
+  title: "Use IAM securely"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/using-iam-securely
+  retrieved: 2026-10-08
+- id: gcp-role-recommendations
+  title: "Overview of role recommendations"
+  publisher: Google
+  url: https://docs.cloud.google.com/policy-intelligence/docs/role-recommendations-overview
+  retrieved: 2026-10-08
+- id: gcp-pam
+  title: "Privileged Access Manager overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/iam/docs/pam-overview
+  retrieved: 2026-10-08
+- id: gcp-uniform-bucket-access
+  title: "Uniform bucket-level access"
+  publisher: Google
+  url: https://docs.cloud.google.com/storage/docs/uniform-bucket-level-access
+  retrieved: 2026-10-08
+- id: gcp-public-access-prevention
+  title: "Public access prevention"
+  publisher: Google
+  url: https://docs.cloud.google.com/storage/docs/public-access-prevention
+  retrieved: 2026-10-08
+- id: gcp-bigquery-iam
+  title: "Control access to resources with IAM (BigQuery)"
+  publisher: Google
+  url: https://docs.cloud.google.com/bigquery/docs/control-access-to-resources-iam
+  retrieved: 2026-10-08
+- id: gcp-cloudsql-private-ip
+  title: "Configure private IP (Cloud SQL)"
+  publisher: Google
+  url: https://docs.cloud.google.com/sql/docs/mysql/configure-private-ip
+  retrieved: 2026-10-08
+- id: gcp-vpc-service-controls
+  title: "Overview of VPC Service Controls"
+  publisher: Google
+  url: https://docs.cloud.google.com/vpc-service-controls/docs/overview
+  retrieved: 2026-10-08
+- id: gcp-cmek
+  title: "Customer-managed encryption keys (CMEK)"
+  publisher: Google
+  url: https://docs.cloud.google.com/kms/docs/cmek
+  retrieved: 2026-10-08
+- id: gcp-sensitive-data-discovery
+  title: "Overview of sensitive data discovery"
+  publisher: Google
+  url: https://docs.cloud.google.com/sensitive-data-protection/docs/data-profiles
+  retrieved: 2026-10-08
+- id: gcp-cloudsql-backups
+  title: "Cloud SQL backups overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/sql/docs/mysql/backup-recovery/backups
+  retrieved: 2026-10-08
+- id: gcp-cloudsql-deletion-protection
+  title: "Prevent deletion of an instance (Cloud SQL)"
+  publisher: Google
+  url: https://docs.cloud.google.com/sql/docs/mysql/deletion-protection
+  retrieved: 2026-10-08
+- id: gcp-storage-soft-delete
+  title: "Soft delete overview (Cloud Storage)"
+  publisher: Google
+  url: https://docs.cloud.google.com/storage/docs/soft-delete
+  retrieved: 2026-10-08
+- id: gcp-backup-vault
+  title: "Backup vaults for immutable and indelible backups"
+  publisher: Google
+  url: https://docs.cloud.google.com/backup-disaster-recovery/docs/concepts/backup-vault
+  retrieved: 2026-10-08
+- id: gcp-audit-logs
+  title: "Cloud Audit Logs overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/audit
+  retrieved: 2026-10-08
+- id: gcp-data-access-logs
+  title: "Enable Data Access audit logs"
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/audit/configure-data-access
+  retrieved: 2026-10-08
+- id: gcp-aggregated-sinks
+  title: "Collate and route organization- and folder-level logs to supported destinations"
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/export/aggregated_sinks
+  retrieved: 2026-10-08
+- id: gcp-log-buckets
+  title: "Configure log buckets"
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/buckets
+  retrieved: 2026-10-08
+- id: gcp-log-based-alerts
+  title: "Configure log-based alerting policies"
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/alerting/log-based-alerts
+  retrieved: 2026-10-08
+- id: gcp-scc-overview
+  title: "Security Command Center overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/security-command-center/docs/security-command-center-overview
+  retrieved: 2026-10-08
+- id: gcp-scc-tiers
+  title: "Security Command Center service tiers"
+  publisher: Google
+  url: https://docs.cloud.google.com/security-command-center/docs/service-tiers
+  retrieved: 2026-10-08
+- id: gws-cloud-session-length
+  title: "Set session length for Google Cloud services"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/set-session-length-for-google-cloud-services
+  retrieved: 2026-10-08
+- id: gcp-bucket-lock
+  title: "Bucket Lock (Cloud Storage)"
+  publisher: Google
+  url: https://docs.cloud.google.com/storage/docs/bucket-lock
+  retrieved: 2026-10-08

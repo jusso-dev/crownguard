@@ -1,0 +1,103 @@
+- id: GO-CLOG-001
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-data-stores, gcp-org-iam]
+  severity: high
+  question: Are Data Access audit logs turned on for the services that hold crown-jewel data, such as Cloud Storage, Cloud SQL and Cloud KMS?
+  why: >-
+    Admin Activity logs record configuration changes, but reads of your data are only logged if Data
+    Access logs are enabled, and they are off by default for every service except some BigQuery
+    services. Without them you can't tell what an attacker read.
+  yesLooksLike: >-
+    The organisation's audit log configuration enables Data Read, Data Write and Admin Read logs for
+    services holding crown-jewel data, with exemptions only for documented high-volume service
+    accounts.
+  remediation: >-
+    In IAM & Admin > Audit Logs at the organisation level, enable Data Read, Data Write and Admin
+    Read for Cloud Storage, Cloud SQL, Cloud KMS and other sensitive services, exempt only noisy
+    pipelines if cost requires, and confirm the logs arrive.
+  effort: S
+  sources: [gcp-data-access-logs, gcp-audit-logs]
+  refs:
+    - { framework: cis-gcp, ref: "2.1" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+
+- id: GO-CLOG-002
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Are audit logs from every project routed by an organisation-level sink to a central, retention-locked store that project admins cannot change?
+  why: >-
+    Logs kept only in each project can be deleted or excluded by whoever compromises that project,
+    which is often an attacker's first step. A central, locked copy keeps the evidence.
+  yesLooksLike: >-
+    An aggregated sink at the organisation node that includes child resources routes audit logs to
+    a dedicated logging project, the destination has a locked retention period of at least 12
+    months, and only the security team can administer that project.
+  remediation: >-
+    Create an organisation-level aggregated sink that includes children and points to a central
+    logging project, set and lock retention on the destination log bucket (or use Bucket Lock on
+    Cloud Storage), and restrict IAM on the logging project to the security team.
+  effort: M
+  sources: [gcp-aggregated-sinks, gcp-log-buckets, gcp-blueprint-detective]
+  refs:
+    - { framework: cis-gcp, ref: "2.3" }
+    - { framework: cis-gcp, ref: "2.4" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-CLOG-003
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Is Security Command Center activated for the whole organisation, with its findings triaged and fixed?
+  why: >-
+    Misconfigurations such as public buckets, open firewalls and leaked keys, and threats such as
+    crypto-mining or anomalous IAM grants, appear continuously. Security Command Center finds them,
+    but only if it covers every project and someone acts on the findings.
+  yesLooksLike: >-
+    Security Command Center is activated at the organisation level (Premium for threat detection and
+    attack path simulation, or at least Standard), high and critical findings go to a ticketing
+    system or SIEM with an owner, and muted findings are justified.
+  remediation: >-
+    Activate Security Command Center at the organisation level, choose Premium if you need threat
+    detection and attack path analysis, send high and critical findings to Pub/Sub or your SIEM, and
+    review open findings weekly.
+  effort: M
+  licence: [gcp-scc-premium]
+  sources: [gcp-scc-overview, gcp-scc-tiers, gcp-blueprint-detective]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+
+- id: GO-CLOG-004
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam]
+  severity: medium
+  question: Are you alerted when IAM policies, custom roles or audit logging settings change at the organisation or in production projects?
+  why: >-
+    Attackers grant themselves roles and switch off logging early. An alert on IAM policy and audit
+    configuration changes gives you a chance to catch them within minutes.
+  yesLooksLike: >-
+    Log-based alerting policies or SIEM rules fire on SetIamPolicy, custom role changes and audit
+    configuration changes at the organisation and in production projects, and notify the security
+    team.
+  remediation: >-
+    Create log-based alerting policies in Cloud Monitoring for SetIamPolicy, custom role create,
+    update and delete, and audit configuration changes, scoped to the central log store or
+    production projects, and send notifications to the security team.
+  effort: S
+  sources: [gcp-log-based-alerts, gcp-super-admin]
+  refs:
+    - { framework: cis-gcp, ref: "2.5" }
+    - { framework: cis-gcp, ref: "2.6" }
+    - { framework: cis-gcp, ref: "2.7" }
+    - { framework: nist-csf-2, ref: DE.CM-03 }

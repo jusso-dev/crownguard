@@ -1,0 +1,115 @@
+- id: GO-LOG-001
+  module: core
+  domain: logging-detection
+  appliesTo: [gw-tenant, gw-super-admins, gw-gmail, gw-oauth-apps]
+  severity: high
+  question: Do critical alerts, such as suspicious sign-ins, leaked passwords, government-backed attacks and admin privilege grants, reach a monitored mailbox or security tool?
+  why: >-
+    Google detects many attacks in progress, but alerts nobody reads don't stop anything. Admin
+    privilege grants and suspicious programmatic sign-ins are often the first sign of a tenant
+    takeover.
+  yesLooksLike: >-
+    The system-defined rules for suspicious login, suspicious programmatic login, leaked password,
+    government-backed attacks, user suspended for suspicious activity, user granted admin privilege,
+    password changed and Gmail employee spoofing send notifications to a monitored security mailbox
+    or ticketing system with a named owner.
+  remediation: >-
+    On the Rules page, open each system-defined rule listed above, turn on email notifications and
+    add a monitored security distribution list, and forward alerts to your ticketing system or SIEM
+    through the Alert Center API where possible.
+  effort: S
+  licence: [alert-center]
+  sources: [gws-alert-center, gws-activity-rules, gws-admin-best-practices]
+  refs:
+    - { framework: cis-gws, ref: "6.1" }
+    - { framework: cis-gws, ref: "6.2" }
+    - { framework: cis-gws, ref: "6.3" }
+    - { framework: cis-gws, ref: "6.4" }
+    - { framework: cis-gws, ref: "6.5" }
+    - { framework: cis-gws, ref: "6.6" }
+    - { framework: cis-gws, ref: "6.7" }
+    - { framework: cis-gws, ref: "6.8" }
+    - { framework: nist-csf-2, ref: DE.AE-06 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Monitor" }
+
+- id: GO-LOG-002
+  module: core
+  domain: logging-detection
+  appliesTo: [gw-tenant, gw-super-admins, gw-drive, gw-gmail, gw-oauth-apps]
+  severity: high
+  question: Are Workspace audit logs exported to BigQuery or a SIEM, kept for at least 12 months and protected from deletion?
+  why: >-
+    Workspace keeps audit data for a limited time, while investigations into slow-burn compromises
+    often need older evidence. Correlating Google sign-ins and admin changes with other systems
+    needs the logs in one protected place.
+  yesLooksLike: >-
+    Login, admin, Drive, OAuth, SAML and Gmail log events flow to BigQuery or a SIEM, are retained
+    for at least 12 months, and only the security team can change or delete them.
+  remediation: >-
+    On Enterprise or Cloud Identity Premium, turn on service log exports to BigQuery and set
+    retention on the dataset. On other editions, connect your SIEM through the Admin SDK Reports
+    API. Restrict who can modify the destination dataset or SIEM.
+  effort: M
+  licence: [bigquery-export]
+  sources: [gws-bigquery-export, gws-checklist-large]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-LOG-003
+  module: core
+  domain: logging-detection
+  appliesTo: [gw-tenant]
+  severity: medium
+  question: Does someone review the security health page, security dashboard and security reports at least monthly and act on what they find?
+  why: >-
+    Settings drift as admins make changes, and risky configurations appear as Google adds features.
+    Regular review of Google's own posture checks catches exposure before an attacker does.
+  yesLooksLike: >-
+    A named person reviews the security health page, security dashboard and the security and app
+    usage reports every month, records findings and tracks fixes to completion.
+  remediation: >-
+    Schedule a monthly review of the security health page and security dashboard (Enterprise and
+    Cloud Identity Premium) or the security and apps usage reports on other editions, and track
+    remediation in your ticketing system.
+  effort: S
+  licence: [security-center]
+  sources: [gws-security-health, gws-security-dashboard]
+  refs:
+    - { framework: cis-gws, ref: "4.3.1" }
+    - { framework: cis-gws, ref: "4.3.2" }
+    - { framework: cis-gws, ref: "5.1.1.1" }
+    - { framework: cis-gws, ref: "5.1.1.2" }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+
+- id: GO-LOG-004
+  module: core
+  domain: logging-detection
+  appliesTo: [gw-tenant, gw-gmail, gw-drive, gw-oauth-apps]
+  severity: high
+  question: Is there a tested playbook for containing a compromised Google account that covers sessions, tokens, forwarding, delegates and admin changes?
+  why: >-
+    Changing a password alone doesn't remove an attacker who has added a mail forward, a delegate,
+    an OAuth app or another admin. Speed and completeness in the first hour decide how much data is
+    lost.
+  yesLooksLike: >-
+    A written playbook, exercised at least yearly, covers suspending the user or resetting the
+    password and sign-in cookies, revoking OAuth tokens and app passwords, removing forwarding,
+    filters and delegates, checking admin role changes, and scoping access with the audit logs or
+    security investigation tool.
+  remediation: >-
+    Write the playbook from Google's guidance on compromised accounts and departing employees,
+    assign owners, prepare saved investigation searches (or activity rules on Enterprise) for the
+    common steps, and run a tabletop exercise at least annually.
+  effort: M
+  sources: [gws-checklist-large, gws-offboarding, gws-investigation-tool]
+  refs:
+    - { framework: nist-csf-2, ref: RS.MA-01 }
+    - { framework: nist-csf-2, ref: RS.MI-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }

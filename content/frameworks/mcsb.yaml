@@ -1,0 +1,254 @@
+id: mcsb
+name: Microsoft cloud security benchmark v2 (preview)
+shortName: MCSB v2
+publisher: Microsoft
+source: ms-mcsb
+closed: true
+note: >-
+  Microsoft's prescriptive cloud security control set, which also underpins Defender for Cloud's
+  regulatory compliance dashboard. Version 2 (preview) supersedes v1 and adds an Artificial
+  Intelligence Security domain; v1 control ids for the shared domains are largely unchanged.
+controls:
+  - id: NS-1
+    group: Network security
+    title: Establish network segmentation boundaries
+  - id: NS-2
+    group: Network security
+    title: Secure cloud native services with network controls
+  - id: NS-3
+    group: Network security
+    title: Deploy firewall at the edge of enterprise network
+  - id: NS-4
+    group: Network security
+    title: Deploy intrusion detection/intrusion prevention systems (IDS/IPS)
+  - id: NS-5
+    group: Network security
+    title: Deploy DDoS protection
+  - id: NS-6
+    group: Network security
+    title: Deploy web application firewall
+  - id: NS-7
+    group: Network security
+    title: Manage network security centrally and effectively
+  - id: NS-8
+    group: Network security
+    title: Detect and disable insecure services and protocols
+  - id: NS-9
+    group: Network security
+    title: Connect on-premises or cloud network privately
+  - id: NS-10
+    group: Network security
+    title: Ensure Domain Name System (DNS) security
+  - id: IM-1
+    group: Identity management
+    title: Centralize identity and authentication while ensuring isolation
+  - id: IM-2
+    group: Identity management
+    title: Protect identity and authentication systems
+  - id: IM-3
+    group: Identity management
+    title: Manage application identities securely and automatically
+  - id: IM-4
+    group: Identity management
+    title: Authenticate server and services
+  - id: IM-5
+    group: Identity management
+    title: Use single sign-on (SSO) for application access
+  - id: IM-6
+    group: Identity management
+    title: Use strong authentication controls
+  - id: IM-7
+    group: Identity management
+    title: Restrict resource access based on conditions
+  - id: IM-8
+    group: Identity management
+    title: Restrict the exposure of credentials and secrets
+  - id: PA-1
+    group: Privileged access
+    title: Separate and limit highly privileged/administrative users
+  - id: PA-2
+    group: Privileged access
+    title: Avoid standing access for user accounts and permissions
+  - id: PA-3
+    group: Privileged access
+    title: Manage lifecycle of identities and entitlements
+  - id: PA-4
+    group: Privileged access
+    title: Review and reconcile user access regularly
+  - id: PA-5
+    group: Privileged access
+    title: Set up emergency access
+  - id: PA-6
+    group: Privileged access
+    title: Use privileged access solution
+  - id: PA-7
+    group: Privileged access
+    title: Follow just enough administration (least privilege) principle
+  - id: PA-8
+    group: Privileged access
+    title: Determine access process for cloud provider support
+  - id: DP-1
+    group: Data protection
+    title: Discover, classify, and label sensitive data
+  - id: DP-2
+    group: Data protection
+    title: Monitor anomalies and threats targeting sensitive data
+  - id: DP-3
+    group: Data protection
+    title: Encrypt sensitive data in transit
+  - id: DP-4
+    group: Data protection
+    title: Enable data at rest encryption by default
+  - id: DP-5
+    group: Data protection
+    title: Use customer-managed key option in data at rest encryption when required
+  - id: DP-6
+    group: Data protection
+    title: Use a secure key management process
+  - id: DP-7
+    group: Data protection
+    title: Use a secure certificate management process
+  - id: DP-8
+    group: Data protection
+    title: Ensure security of key and certificate repository
+  - id: AM-1
+    group: Asset management
+    title: Track asset inventory and their risks
+  - id: AM-2
+    group: Asset management
+    title: Use only approved services
+  - id: AM-3
+    group: Asset management
+    title: Ensure security of asset lifecycle management
+  - id: AM-4
+    group: Asset management
+    title: Limit access to asset management
+  - id: AM-5
+    group: Asset management
+    title: Use only approved applications in virtual machine
+  - id: LT-1
+    group: Logging and threat detection
+    title: Enable threat detection capabilities
+  - id: LT-2
+    group: Logging and threat detection
+    title: Enable threat detection for identity and access management
+  - id: LT-3
+    group: Logging and threat detection
+    title: Enable logging for security investigation
+  - id: LT-4
+    group: Logging and threat detection
+    title: Enable network logging for security investigation
+  - id: LT-5
+    group: Logging and threat detection
+    title: Centralize security log management and analysis
+  - id: LT-6
+    group: Logging and threat detection
+    title: Configure log storage retention
+  - id: LT-7
+    group: Logging and threat detection
+    title: Use approved time synchronization sources
+  - id: IR-1
+    group: Incident response
+    title: Preparation - update incident response plan and handling process
+  - id: IR-2
+    group: Incident response
+    title: Preparation - setup incident notification
+  - id: IR-3
+    group: Incident response
+    title: Detection and analysis - create incidents based on high-quality alerts
+  - id: IR-4
+    group: Incident response
+    title: Detection and analysis - investigate an incident
+  - id: IR-5
+    group: Incident response
+    title: Detection and analysis - prioritize incidents
+  - id: IR-6
+    group: Incident response
+    title: Containment, eradication and recovery - automate the incident handling
+  - id: IR-7
+    group: Incident response
+    title: Post-incident activity - conduct lessons learned and retain evidence
+  - id: PV-1
+    group: Posture and vulnerability management
+    title: Define and establish secure configurations
+  - id: PV-2
+    group: Posture and vulnerability management
+    title: Audit and enforce secure configurations
+  - id: PV-3
+    group: Posture and vulnerability management
+    title: Define and establish secure configurations for compute resources
+  - id: PV-4
+    group: Posture and vulnerability management
+    title: Audit and enforce secure configurations for compute resources
+  - id: PV-5
+    group: Posture and vulnerability management
+    title: Perform vulnerability assessments
+  - id: PV-6
+    group: Posture and vulnerability management
+    title: Rapidly and automatically remediate vulnerabilities
+  - id: PV-7
+    group: Posture and vulnerability management
+    title: Conduct regular red team operations
+  - id: ES-1
+    group: Endpoint security
+    title: Use Endpoint Detection and Response (EDR)
+  - id: ES-2
+    group: Endpoint security
+    title: Use modern anti-malware software
+  - id: ES-3
+    group: Endpoint security
+    title: Ensure anti-malware software and signatures are updated
+  - id: BR-1
+    group: Backup and recovery
+    title: Ensure regular automated backups
+  - id: BR-2
+    group: Backup and recovery
+    title: Protect backup and recovery data
+  - id: BR-3
+    group: Backup and recovery
+    title: Monitor backups
+  - id: BR-4
+    group: Backup and recovery
+    title: Regularly test backup
+  - id: DS-1
+    group: DevOps security
+    title: Conduct threat modeling
+  - id: DS-2
+    group: DevOps security
+    title: Secure the software supply chain
+  - id: DS-3
+    group: DevOps security
+    title: Secure the DevOps infrastructure
+  - id: DS-4
+    group: DevOps security
+    title: Integrate Static Application Security Testing (SAST)
+  - id: DS-5
+    group: DevOps security
+    title: Integrate Dynamic Application Security Testing (DAST)
+  - id: DS-6
+    group: DevOps security
+    title: Secure the workload lifecycle
+  - id: DS-7
+    group: DevOps security
+    title: Implement DevOps logging and monitoring
+  - id: AI-1
+    group: Artificial intelligence security
+    title: Ensure use of approved models
+  - id: AI-2
+    group: Artificial intelligence security
+    title: Implement multi-layered content filtering
+  - id: AI-3
+    group: Artificial intelligence security
+    title: Adopt safety meta-prompts
+  - id: AI-4
+    group: Artificial intelligence security
+    title: Apply least privilege for agent functions
+  - id: AI-5
+    group: Artificial intelligence security
+    title: Ensure human-in-the-loop
+  - id: AI-6
+    group: Artificial intelligence security
+    title: Establish monitoring and detection
+  - id: AI-7
+    group: Artificial intelligence security
+    title: Perform continuous AI Red Teaming

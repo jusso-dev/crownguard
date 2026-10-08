@@ -1,0 +1,15 @@
+- id: asd-e8-maturity-model
+  title: Essential Eight maturity model (November 2023)
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essential-eight-maturity-model
+  retrieved: 2026-10-08
+- id: asd-e8-explained
+  title: Essential Eight explained (November 2023)
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essential-eight-explained
+  retrieved: 2026-10-08
+- id: nist-csf-2
+  title: The NIST Cybersecurity Framework (CSF) 2.0 (NIST CSWP 29)
+  publisher: NIST
+  url: https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf
+  retrieved: 2026-10-08

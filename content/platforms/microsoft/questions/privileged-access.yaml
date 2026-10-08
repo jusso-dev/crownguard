@@ -1,0 +1,259 @@
+- id: MS-PA-001
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-hybrid-identity]
+  severity: critical
+  question: Do administrators use separate cloud-only admin accounts that have no mailbox and are not synchronised from on-premises Active Directory?
+  why: >-
+    If an admin role sits on someone's everyday account, one phishing email or malicious attachment
+    gives an attacker the keys to the tenant. Synchronised admin accounts also let an on-premises
+    compromise climb straight into the cloud.
+  yesLooksLike: >-
+    Every directory role holder uses a dedicated admin account (for example on the onmicrosoft.com
+    domain) that is cloud-only, has no Exchange or Office app licence, and is never used for email
+    or browsing. There are between two and four Global Administrators.
+  remediation: >-
+    Create cloud-only admin accounts for each administrator, move role assignments off daily
+    accounts, remove mail-enabled licences from admin accounts, stop on-premises synchronised
+    accounts holding privileged roles, and reduce Global Administrators to between two and four by
+    delegating to least-privileged roles.
+  effort: M
+  licence: []
+  sources: [ms-protect-m365-on-prem, ms-entra-role-best-practices, ms-enterprise-access-model]
+  refs:
+    - { framework: cis-m365, ref: "1.1.1" }
+    - { framework: cis-m365, ref: "1.1.3" }
+    - { framework: cis-m365, ref: "1.1.4" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-1 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: MS-PA-002
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
+  severity: critical
+  question: Does Conditional Access require phishing-resistant MFA for every privileged directory role?
+  why: >-
+    Administrator accounts are the keys to the tenant. Push, SMS and one-time code MFA can be phished
+    in real time or fatigued, and one successful admin phish lets an attacker disable logging, add
+    backdoor accounts and take everything.
+  yesLooksLike: >-
+    A Conditional Access policy targeting all privileged directory roles requires the built-in
+    "Phishing-resistant MFA" authentication strength for all resources, and every admin has a FIDO2
+    key, passkey or Windows Hello for Business registered.
+  remediation: >-
+    Register FIDO2 security keys, passkeys or Windows Hello for Business for each admin, then create
+    a Conditional Access policy from the "Require phishing-resistant MFA for administrators"
+    template, or turn on the equivalent Baseline security mode policy, excluding only emergency
+    access accounts.
+  effort: M
+  licence: [entra-p1]
+  sources: [ms-ca-admin-phish-resistant, ms-auth-strengths, ms-mandatory-mfa]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.5" }
+    - { framework: cis-m365, ref: "5.2.2.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: MS-PA-003
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles]
+  severity: high
+  question: Are privileged roles held as eligible assignments activated just-in-time through Privileged Identity Management, rather than permanently assigned?
+  why: >-
+    Permanent admin rights mean any compromise of an admin account is immediately a tenant
+    compromise, at any hour. Just-in-time activation with MFA, justification and approval for the
+    most powerful roles shrinks that window to hours and leaves an audit trail.
+  yesLooksLike: >-
+    Only emergency access accounts hold permanent active Global Administrator. All other privileged
+    role assignments are eligible in PIM, activation requires MFA and justification and lasts a few
+    hours at most, and Global Administrator and Privileged Role Administrator activation needs
+    approval.
+  remediation: >-
+    Enable PIM, convert permanent assignments to eligible, configure role settings (activation
+    duration, MFA or authentication context, justification, approval for Global and Privileged Role
+    Administrator) and send activation alerts to the security team.
+  effort: M
+  licence: [entra-p2]
+  sources: [ms-pim-configure, ms-ramp]
+  refs:
+    - { framework: cis-m365, ref: "5.3.1" }
+    - { framework: cis-m365, ref: "5.3.4" }
+    - { framework: cis-m365, ref: "5.3.5" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-2 }
+    - { framework: ms-zero-trust, ref: Identity IV }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: MS-PA-004
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
+  severity: medium
+  question: Are privileged role assignments revalidated at least every 12 months and removed after 45 days of inactivity?
+  why: >-
+    Admin rights accumulate. People change jobs, projects end and contractors leave, but their roles
+    stay behind, and each unused privileged account is an unwatched door.
+  yesLooksLike: >-
+    Recurring access reviews cover all privileged Entra and Azure roles at least annually with
+    results applied automatically, and privileged accounts with no sign-in for 45 days are found and
+    disabled.
+  remediation: >-
+    Create access reviews for privileged roles in PIM or Entra ID Governance with auto-apply
+    enabled, use sign-in activity reports to find dormant admin accounts, and document the
+    revalidation in your access management procedure.
+  effort: S
+  licence: [entra-p2]
+  sources: [ms-access-reviews, ms-pim-configure]
+  refs:
+    - { framework: cis-m365, ref: "5.3.3" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-4 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-PA-005
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles]
+  severity: high
+  question: Do you have at least two cloud-only emergency access accounts, protected by FIDO2 keys or certificates, alerted on every use and tested at least every 90 days?
+  why: >-
+    Without working break-glass accounts, a Conditional Access mistake, MFA outage or federation
+    failure can lock every administrator out of the tenant. Because these accounts bypass normal
+    controls, any unexpected use must raise an alarm.
+  yesLooksLike: >-
+    Two or more onmicrosoft.com accounts hold permanent Global Administrator, use passkeys (FIDO2)
+    or certificate-based authentication different from normal admin methods, are excluded through a
+    dedicated group from policies that block or restrict sign-in, trigger an alert to the security
+    team on any sign-in, and are tested at least every 90 days.
+  remediation: >-
+    Follow Microsoft's emergency access guidance. Create the accounts, register FIDO2 keys stored in
+    separate secure locations, add the accounts to an excluded group, create an Azure Monitor or
+    Sentinel alert on any sign-in, and schedule validation drills at least every 90 days.
+  effort: S
+  licence: []
+  sources: [ms-emergency-access]
+  refs:
+    - { framework: cis-m365, ref: "1.1.2" }
+    - { framework: nist-csf-2, ref: PR.IR-03 }
+    - { framework: mcsb, ref: PA-5 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-PA-006
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-managed-endpoints]
+  severity: high
+  question: Do administrators perform privileged tasks only from dedicated, hardened admin workstations, separate from the device they use for email and browsing?
+  why: >-
+    An admin who manages the tenant from the laptop they also use for email and browsing exposes
+    their admin session to any malware on that device. Attackers steal session tokens from
+    compromised endpoints to sidestep MFA.
+  yesLooksLike: >-
+    Admin accounts can only sign in from Intune-managed privileged access workstations (or an
+    equivalent secured device group) enforced by a Conditional Access device filter, with a short
+    sign-in frequency and no persistent browser sessions.
+  remediation: >-
+    Build privileged access devices following Microsoft's privileged access guidance (Intune-managed,
+    restricted apps, no email or general browsing), then add a Conditional Access policy for
+    directory roles that requires those devices through a device filter, plus sign-in frequency and
+    non-persistent browser session controls.
+  effort: L
+  licence: [entra-p1, intune]
+  sources: [ms-privileged-access-devices, ms-enterprise-access-model]
+  refs:
+    - { framework: cis-m365, ref: "5.2.2.4" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-6 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: MS-PA-007
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-entra-tenant]
+  severity: high
+  question: If an IT provider manages your tenant, is their access limited to time-bound GDAP relationships with least-privileged roles, with legacy DAP removed?
+  why: >-
+    Managed service providers are a favoured target because one compromised provider account can
+    reach many customers. Legacy delegated admin (DAP) links gave the provider's whole helpdesk
+    permanent Global Administrator.
+  yesLooksLike: >-
+    No DAP relationships remain. Each partner has a GDAP relationship with an expiry date, mapped to
+    named security groups in the partner tenant, using least-privileged roles rather than Global
+    Administrator, and relationships are reviewed at least annually.
+  remediation: >-
+    In the Microsoft 365 admin centre under partner relationships, remove DAP and unused
+    relationships, ask partners to re-establish GDAP with only the roles they need, set expiry dates,
+    and monitor partner sign-ins in the Entra sign-in logs.
+  effort: S
+  licence: []
+  sources: [ms-gdap]
+  refs:
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: mcsb, ref: PA-7 }
+
+- id: MS-PA-008
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-hybrid-identity]
+  severity: critical
+  question: Are Entra Connect or Cloud Sync servers, AD FS servers and domain controllers managed as Tier 0 (control plane) assets?
+  why: >-
+    Entra Connect holds credentials that can reset passwords and synchronise identities into the
+    cloud, and AD FS signs the tokens Microsoft 365 trusts. Whoever controls these servers can sign
+    in as any user, including administrators.
+  yesLooksLike: >-
+    These servers are administered only by dedicated Tier 0 accounts from privileged access
+    workstations, are not reachable from user networks or the internet beyond what they need, run
+    EDR and Defender for Identity sensors, receive critical patches within 48 hours, and their
+    service accounts are monitored.
+  remediation: >-
+    Apply Microsoft's Entra Connect hardening guidance (treat as a control plane asset, restrict
+    local administrators, enforce TLS 1.2 and LSA protection), place these servers in a Tier 0
+    management boundary with dedicated admin accounts, restrict network access, and deploy Defender
+    for Endpoint and Defender for Identity.
+  effort: L
+  licence: []
+  sources: [ms-entra-connect-prereqs, ms-protect-m365-on-prem, ms-enterprise-access-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: IM-2 }
+    - { framework: ms-zero-trust, ref: Identity I }
+
+- id: MS-PA-009
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-hybrid-identity, ms-entra-tenant]
+  severity: high
+  question: Do users authenticate to Microsoft 365 with cloud authentication (password hash sync or certificate-based authentication) rather than an on-premises federation server such as AD FS?
+  why: >-
+    With federation, Microsoft 365 trusts whatever tokens the on-premises server signs. Stealing the
+    AD FS token-signing certificate ("Golden SAML") lets an attacker impersonate anyone, bypass MFA
+    and keep access after password resets.
+  yesLooksLike: >-
+    All verified domains are managed rather than federated, password hash synchronisation is on
+    (which also powers leaked credential detection), and AD FS is decommissioned or no longer issues
+    tokens for Microsoft 365.
+  remediation: >-
+    Enable password hash sync, use staged rollout to move groups to cloud authentication, convert
+    domains from federated to managed, migrate remaining relying-party applications to Entra ID
+    single sign-on, then decommission AD FS.
+  effort: L
+  licence: []
+  sources: [ms-migrate-federation, ms-phs, ms-protect-m365-on-prem]
+  refs:
+    - { framework: cis-m365, ref: "5.1.8.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: ms-zero-trust, ref: Identity I }

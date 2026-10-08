@@ -1,0 +1,75 @@
+- id: GO-AI-001
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini, gw-drive, gw-gmail]
+  severity: high
+  question: Before Gemini was turned on, were overshared files found and fixed so Gemini cannot surface crown-jewel content to the wrong staff?
+  why: >-
+    Gemini only shows content a user can already open, but it finds it instantly. Files shared with
+    the whole organisation or with stale groups become one prompt away from anyone.
+  yesLooksLike: >-
+    Gemini is turned on for organisational units only after a review of files shared organisation-
+    wide or with broad groups, crown-jewel shared drives have tightly controlled membership, and the
+    review is repeated periodically.
+  remediation: >-
+    Use Drive log events, the security investigation tool or Drive data protection insights to find
+    files shared with the whole organisation or large groups, tighten access on sensitive ones, then
+    turn Gemini on by organisational unit in the Admin console's generative AI settings, starting
+    with lower-risk teams.
+  effort: M
+  sources: [gws-gemini-privacy-hub, gws-gemini-app-toggle, gws-investigation-tool]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+
+- id: GO-AI-002
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini, gw-drive]
+  severity: medium
+  question: Are your most sensitive files protected with controls Gemini respects, such as download and copy restrictions, DLP or client-side encryption?
+  why: >-
+    Gemini will not retrieve files whose download, print and copy options are restricted, and
+    cannot read client-side encrypted content. Using these on crown-jewel documents keeps them out of
+    AI summaries even for people who can open them.
+  yesLooksLike: >-
+    Board, legal and M&A documents prevent download, print and copy for viewers and commenters, DLP
+    rules cover them, and the most sensitive are client-side encrypted where your edition allows.
+  remediation: >-
+    Restrict download, print and copy on sensitive shared drives and files, apply classification
+    labels and DLP rules to them, and on Enterprise Plus consider client-side encryption for the
+    highest-sensitivity content. Confirm with a test account that Gemini does not return those
+    files.
+  effort: M
+  licence: [dlp]
+  sources: [gws-gemini-privacy-hub, gws-client-side-encryption, gws-dlp]
+  refs:
+    - { framework: cis-gws, ref: "3.1.2.1.2.4" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.DS-10 }
+    - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+
+- id: GO-AI-003
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini, gw-oauth-apps, gw-gmail, gw-drive, gw-collaboration]
+  severity: high
+  question: Are third-party AI assistants and meeting note-takers blocked from Workspace data unless they have been reviewed and approved?
+  why: >-
+    AI tools often request broad Gmail, Drive and Calendar access and send content to their own
+    services, outside your retention, DLP and contractual controls. Staff can connect one in
+    seconds.
+  yesLooksLike: >-
+    Gmail, Drive and Calendar are restricted services, unconfigured apps are limited to sign-in only,
+    any AI tool with data access has been reviewed for data handling and deliberately trusted, and
+    staff have an approved AI tools list.
+  remediation: >-
+    Check Accessed apps for AI assistants and note-takers, block those not approved, keep Gmail,
+    Drive and Calendar restricted in API controls, and publish an approved AI tools list that points
+    staff to Gemini with Workspace data protections.
+  effort: S
+  sources: [gws-app-access-control, gws-gemini-privacy-hub]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: nist-csf-2, ref: GV.SC-07 }

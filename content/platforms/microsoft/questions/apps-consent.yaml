@@ -1,0 +1,112 @@
+- id: MS-APP-001
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-exchange-mailboxes, ms-sharepoint-sites]
+  severity: high
+  question: Is user consent to applications restricted so staff cannot give third-party apps access to company data without an admin review?
+  why: >-
+    Consent phishing tricks a user into approving a malicious app, which then reads their mail and
+    files through the API. No password is needed, and the access survives password resets and MFA.
+  yesLooksLike: >-
+    User consent is set to "Do not allow user consent" or limited to verified publishers requesting
+    low-impact permissions, users cannot register applications, and the admin consent workflow
+    routes requests to named reviewers.
+  remediation: >-
+    In the Entra admin centre under Enterprise applications, Consent and permissions, disable user
+    consent or allow only verified publishers with selected low-risk permissions. Enable the admin
+    consent workflow with named reviewers, stop users registering applications, and review existing
+    consent grants.
+  effort: S
+  licence: []
+  sources: [ms-user-consent, ms-admin-consent-workflow, ms-consent-phishing]
+  refs:
+    - { framework: cis-m365, ref: "5.1.5.1" }
+    - { framework: cis-m365, ref: "5.1.5.2" }
+    - { framework: cis-m365, ref: "5.1.2.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: AM-2 }
+    - { framework: ms-zero-trust, ref: Applications V }
+
+- id: MS-APP-002
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-entra-tenant]
+  severity: high
+  question: Are applications holding high-impact permissions (such as Mail.Read, Files.ReadWrite.All, Sites.FullControl.All or Directory.ReadWrite.All) inventoried, owned and reviewed at least quarterly?
+  why: >-
+    Apps with application permissions can read every mailbox or file, or grant themselves admin
+    rights, without anyone signing in. Attackers who compromise an existing app, or add a credential
+    to one, inherit all of that access.
+  yesLooksLike: >-
+    There is a list of every app with privileged Microsoft Graph or Exchange permissions. Each has a
+    named owner and business justification, unused apps and permissions are removed, and new
+    high-privilege grants raise an alert.
+  remediation: >-
+    Use the Entra enterprise applications permissions view, or app governance in Defender for Cloud
+    Apps, to list app permissions. Remove unused apps, reduce permissions to least privilege, assign
+    owners, and alert on consent grants and new credentials as described in the Entra security
+    operations guide for applications.
+  effort: M
+  licence: []
+  sources: [ms-app-permissions-review, ms-entra-secops-apps]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: mcsb, ref: PA-4 }
+    - { framework: ms-zero-trust, ref: Applications V }
+
+- id: MS-APP-003
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-azure-key-vault]
+  severity: high
+  question: Do your app registrations authenticate with certificates, managed identities or workload identity federation instead of long-lived client secrets?
+  why: >-
+    Client secrets are passwords for apps. They get pasted into scripts, config files and code
+    repositories, are rarely rotated and are not covered by MFA, so a leaked secret on a privileged
+    app is a direct path to tenant data.
+  yesLooksLike: >-
+    No app registration with privileged permissions uses a client secret. Certificates are
+    short-lived and stored in Key Vault, Azure workloads use managed identities, CI/CD pipelines use
+    federated credentials, and an app management policy blocks new password credentials or caps
+    their lifetime.
+  remediation: >-
+    Inventory credentials on app registrations and service principals, replace secrets with
+    certificates, managed identities or federated credentials, and configure a tenant app management
+    policy that blocks password addition and limits credential lifetime to 180 days or less.
+  effort: M
+  licence: []
+  sources: [ms-app-registration-best-practices, ms-workload-identity-federation, ms-managed-identities]
+  refs:
+    - { framework: cis-m365, ref: "5.1.5.3" }
+    - { framework: cis-m365, ref: "5.1.5.4" }
+    - { framework: cis-m365, ref: "5.1.5.6" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-3 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }
+
+- id: MS-APP-004
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-exchange-mailboxes]
+  severity: medium
+  question: Are applications with mailbox access scoped to only the mailboxes they need, using Exchange Online RBAC for Applications?
+  why: >-
+    An app granted Mail.Read or full mailbox access in Entra ID can read every mailbox in the
+    organisation, including the CEO's and legal's. Scoping limits the damage if the app or its
+    vendor is breached.
+  yesLooksLike: >-
+    Apps that need mailbox access are granted it through Exchange Online RBAC for Applications with
+    a management scope limited to the relevant mailboxes, and unscoped tenant-wide mail permissions
+    in Entra ID have been removed.
+  remediation: >-
+    Find apps with application Mail, Calendars or EWS full-access permissions, recreate their access
+    as Exchange RBAC for Applications role assignments scoped to specific mailboxes, then remove the
+    unscoped Entra ID grants. RBAC for Applications replaces Application Access Policies.
+  effort: M
+  licence: []
+  sources: [ms-exo-app-rbac]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-7 }

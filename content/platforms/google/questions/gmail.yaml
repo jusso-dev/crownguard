@@ -1,0 +1,133 @@
+- id: GO-GML-001
+  module: core
+  domain: gmail
+  appliesTo: [gw-gmail]
+  severity: high
+  question: Are SPF, DKIM and a DMARC policy of quarantine or reject published for every domain that sends email?
+  why: >-
+    Without them anyone can send email that appears to come from your domain, making invoice fraud
+    and phishing of your customers and staff far more convincing. Large mailbox providers also junk
+    or reject unauthenticated mail.
+  yesLooksLike: >-
+    Every domain has an SPF record, Gmail DKIM signing is turned on with a 2048-bit key, DMARC is at
+    p=quarantine or p=reject with aggregate reports monitored, and domains that send no mail publish
+    a reject policy.
+  remediation: >-
+    Publish SPF for every domain, generate and start DKIM signing in Apps > Google Workspace > Gmail
+    > Authenticate email, publish DMARC at p=none with reporting, fix legitimate senders the reports
+    reveal, then move to quarantine and reject.
+  effort: M
+  sources: [gws-spf, gws-dkim, gws-dmarc]
+  refs:
+    - { framework: cis-gws, ref: "3.1.3.2.1" }
+    - { framework: cis-gws, ref: "3.1.3.2.2" }
+    - { framework: cis-gws, ref: "3.1.3.2.3" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Gmail" }
+
+- id: GO-GML-002
+  module: core
+  domain: gmail
+  appliesTo: [gw-gmail]
+  severity: high
+  question: Is automatic forwarding of email to outside addresses turned off?
+  why: >-
+    After compromising a mailbox, attackers set up silent forwarding so they keep receiving every
+    message, including invoices and password resets, even after the password is changed.
+  yesLooksLike: >-
+    Automatic forwarding and per-user outbound gateways are both off in Gmail End User Access
+    settings, and any approved forwarding is done through admin-managed routing.
+  remediation: >-
+    In Apps > Google Workspace > Gmail > End User Access, turn off automatic forwarding and per-user
+    outbound gateways, check existing forwarding through Gmail log events, and handle legitimate
+    cases with admin routing rules.
+  effort: S
+  sources: [gws-auto-forwarding, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.3.5.2" }
+    - { framework: cis-gws, ref: "3.1.3.5.3" }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: google-security-guidance, ref: "Checklist: Gmail" }
+
+- id: GO-GML-003
+  module: core
+  domain: gmail
+  appliesTo: [gw-gmail, gw-tenant]
+  severity: high
+  question: Are all of Gmail's advanced phishing and malware protections and enhanced pre-delivery scanning turned on?
+  why: >-
+    Several of Gmail's strongest protections, such as warnings for lookalike domains, employee-name
+    spoofing, scripts in attachments and links to untrusted domains, are not fully on by default.
+    Phishing is still the main way accounts are compromised.
+  yesLooksLike: >-
+    Every attachment, links and external images, and spoofing and authentication protection in
+    Gmail > Safety is on with suspicious mail sent to spam or quarantine, enhanced pre-delivery
+    message scanning is on, and external recipient warnings are on.
+  remediation: >-
+    In Apps > Google Workspace > Gmail > Safety, turn on all attachment, links and external images,
+    and spoofing and authentication protections, choosing quarantine or spam as the action. Turn on
+    enhanced pre-delivery message scanning under Spam, phishing and malware, and turn on external
+    recipient warnings.
+  effort: S
+  sources: [gws-advanced-phishing-malware, gws-pre-delivery-scanning, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.3.4.1.1" }
+    - { framework: cis-gws, ref: "3.1.3.4.1.2" }
+    - { framework: cis-gws, ref: "3.1.3.4.1.3" }
+    - { framework: cis-gws, ref: "3.1.3.4.2.1" }
+    - { framework: cis-gws, ref: "3.1.3.4.2.2" }
+    - { framework: cis-gws, ref: "3.1.3.4.2.3" }
+    - { framework: cis-gws, ref: "3.1.3.4.3.1" }
+    - { framework: cis-gws, ref: "3.1.3.4.3.2" }
+    - { framework: cis-gws, ref: "3.1.3.4.3.3" }
+    - { framework: cis-gws, ref: "3.1.3.4.3.4" }
+    - { framework: cis-gws, ref: "3.1.3.5.4" }
+    - { framework: cis-gws, ref: "3.1.3.6.1" }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: google-security-guidance, ref: "Checklist: Gmail" }
+
+- id: GO-GML-004
+  module: core
+  domain: gmail
+  appliesTo: [gw-gmail]
+  severity: medium
+  question: Is the Gmail security sandbox turned on to run attachments in a virtual environment before they are delivered?
+  why: >-
+    New malware is built to slip past signature scanning. Running attachments in a sandbox catches
+    previously unseen malicious documents before they reach finance or executive inboxes.
+  yesLooksLike: >-
+    Security sandbox is on for all organisational units, or at least for executives, finance and
+    admins through security sandbox rules.
+  remediation: >-
+    In Apps > Google Workspace > Gmail > Spam, phishing and malware, turn on security sandbox for all
+    organisational units, or create security sandbox rules for high-risk groups if a full rollout
+    affects delivery times.
+  effort: S
+  licence: [security-sandbox]
+  sources: [gws-security-sandbox]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+
+- id: GO-GML-005
+  module: core
+  domain: gmail
+  appliesTo: [gw-gmail]
+  severity: medium
+  question: Is Gmail mailbox delegation restricted, with delegates on executive and finance mailboxes reviewed?
+  why: >-
+    A delegate can read and send from a mailbox. Attackers who compromise a mailbox add a delegate
+    they control, or abuse an assistant's delegation to send fraudulent payment requests in an
+    executive's name.
+  yesLooksLike: >-
+    Mail delegation is off except for organisational units with a business need (such as executive
+    assistants), and delegates on executive, finance and shared mailboxes are reviewed at least
+    quarterly.
+  remediation: >-
+    In Apps > Google Workspace > Gmail > User settings, turn mail delegation off by default and on
+    only for the organisational units that need it. Review existing delegates through Gmail log
+    events and remove any no longer required.
+  effort: S
+  sources: [gws-mail-delegation]
+  refs:
+    - { framework: cis-gws, ref: "3.1.3.1.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }

@@ -1,0 +1,77 @@
+- id: MS-TMS-001
+  module: core
+  domain: teams-collab
+  appliesTo: [ms-teams, ms-entra-tenant]
+  severity: high
+  question: Is Teams external chat limited to allowed partner domains, with chat from unmanaged (personal) Teams accounts blocked?
+  why: >-
+    Attackers create look-alike tenants or personal accounts and message staff in Teams posing as
+    the helpdesk, then talk them into installing remote access tools or approving MFA prompts. Staff
+    tend to trust Teams more than email.
+  yesLooksLike: >-
+    External access in the Teams admin centre allows only specific partner domains (or blocks all),
+    communication with unmanaged Teams accounts is off or users cannot be contacted first, and
+    external chat warnings are shown to users.
+  remediation: >-
+    In the Teams admin centre under External access, switch to "Allow only specific external
+    domains", turn off chat with unmanaged Teams accounts or block them from starting conversations,
+    and brief staff on helpdesk impersonation in Teams.
+  effort: S
+  licence: []
+  sources: [ms-teams-external-access]
+  refs:
+    - { framework: cis-m365, ref: "8.2.1" }
+    - { framework: cis-m365, ref: "8.2.2" }
+    - { framework: cis-m365, ref: "8.2.3" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ms-zero-trust, ref: M365 swim lane 1 }
+
+- id: MS-TMS-002
+  module: core
+  domain: teams-collab
+  appliesTo: [ms-teams, ms-sharepoint-sites]
+  severity: medium
+  question: Are Teams that hold crown-jewel information private, protected by a sensitivity label, and free of guests?
+  why: >-
+    A team's privacy and guest settings decide who can find and join it. Public teams are open to
+    every employee and to Copilot, and a single guest added to a board or deal team can see every
+    file and chat in it.
+  yesLooksLike: >-
+    Container sensitivity labels make Highly Confidential teams private, block guests and restrict
+    sharing; those teams have at least two owners and their membership is reviewed periodically.
+  remediation: >-
+    Enable sensitivity labels for Microsoft 365 groups, Teams and sites, configure a Highly
+    Confidential container label (private, no guests, internal-only sharing, unmanaged-device
+    restrictions) and apply it to crown-jewel teams; schedule owner or access reviews.
+  effort: M
+  licence: [purview-labels, entra-p1]
+  sources: [ms-labels-containers]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: DP-1 }
+    - { framework: ms-zero-trust, ref: Data III }
+
+- id: MS-TMS-003
+  module: core
+  domain: teams-collab
+  appliesTo: [ms-teams, ms-workload-identities]
+  severity: medium
+  question: Are third-party and custom apps in Teams restricted to an approved list?
+  why: >-
+    Teams apps and bots can read messages, files and meeting content for the users who install them.
+    Unvetted apps are a quiet path for data to leave the organisation.
+  yesLooksLike: >-
+    Org-wide app settings or app-centric management allow only Microsoft and approved third-party
+    apps, custom app upload is limited to developers, and users request new apps through an approval
+    process.
+  remediation: >-
+    In the Teams admin centre under Manage apps, block third-party and custom apps by default, allow
+    approved apps individually, and enable user requests so new apps are reviewed before use.
+  effort: S
+  licence: []
+  sources: [ms-teams-app-management]
+  refs:
+    - { framework: cis-m365, ref: "8.4.1" }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-2 }
+    - { framework: ms-zero-trust, ref: Applications II }

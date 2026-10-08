@@ -1,0 +1,125 @@
+id: google
+name: Google Workspace & Google Cloud
+vendor: Google
+description: >-
+  Google Workspace or Cloud Identity (the identity plane, admin accounts, Gmail, Drive, Chat,
+  Meet, Calendar, managed endpoints and Gemini) plus optional Google Cloud organisation, IAM and
+  data services. Questions follow Google's Workspace security checklists, administrator account
+  best practices and the Google Cloud enterprise foundations blueprint, cross-referenced to the
+  CIS Google Workspace and Google Cloud Platform Foundations Benchmarks.
+
+modules:
+  - id: core
+    name: Google Workspace / Cloud Identity
+    description: The Google tenant, its users and admins, and Workspace apps such as Gmail, Drive, Chat, Meet, Calendar and Gemini.
+    optional: false
+  - id: gcp
+    name: Google Cloud
+    description: A Google Cloud organisation linked to the same Workspace or Cloud Identity account, its IAM, service accounts, data stores and logging.
+    optional: true
+
+# Feature inclusion follows Google's "Compare Business editions", "Compare Enterprise editions"
+# and Cloud Identity "Editions" pages (retrieved 2026-10-08). Business editions cover up to 300 users.
+# Google Cloud services (Security Command Center Premium, Backup and DR, etc.) are billed separately
+# from Workspace editions, so gcp-scc-premium is not part of any tier.
+licenceTiers:
+  - id: business-starter
+    name: Business Starter
+    features: [alert-center, gemini]
+  - id: business-standard
+    name: Business Standard
+    features: [alert-center, gemini, security-sandbox, data-regions, drive-labels]
+  - id: business-plus
+    name: Business Plus
+    features: [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control]
+  - id: enterprise-standard
+    name: Enterprise Standard
+    features:
+      [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
+       context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval]
+  - id: enterprise-plus
+    name: Enterprise Plus
+    features:
+      [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
+       context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval, client-side-encryption]
+  - id: cloud-identity-free
+    name: Cloud Identity Free
+    features: [alert-center]
+  - id: cloud-identity-premium
+    name: Cloud Identity Premium
+    features: [alert-center, advanced-endpoint-management, session-control, context-aware-access, security-center, bigquery-export]
+
+licenceFeatures:
+  - id: alert-center
+    name: Alert center
+  - id: gemini
+    name: Gemini in Workspace apps and the Gemini app
+  - id: security-sandbox
+    name: Gmail security sandbox (advanced attachment scanning)
+  - id: data-regions
+    name: Data regions
+  - id: drive-labels
+    name: Drive classification labels (custom labels)
+  - id: vault
+    name: Google Vault
+  - id: advanced-endpoint-management
+    name: Advanced endpoint management (advanced mobile management)
+  - id: session-control
+    name: Google session length control
+  - id: context-aware-access
+    name: Context-Aware Access
+  - id: dlp
+    name: Data loss prevention for Drive, Gmail and Chat
+  - id: trust-rules
+    name: Trust rules for Drive sharing
+  - id: security-center
+    name: Security center (dashboard, health page, investigation tool, activity rules)
+  - id: bigquery-export
+    name: Audit log export to BigQuery
+  - id: multi-party-approval
+    name: Multi-party approval for sensitive admin actions
+  - id: client-side-encryption
+    name: Client-side encryption
+  - id: gcp-scc-premium
+    name: Security Command Center Premium (Google Cloud subscription)
+
+domains:
+  - id: identity
+    name: Identity & sign-in
+    description: How users prove who they are, where they can sign in from, and how accounts are created and removed.
+  - id: admin-access
+    name: Administrator access
+    description: Super admins, delegated admin roles and emergency access to the Google tenant.
+  - id: oauth-apps
+    name: Third-party apps & delegation
+    description: OAuth apps, Marketplace apps and domain-wide delegation that can read or change Workspace data.
+  - id: drive-data
+    name: Drive & data protection
+    description: Sharing, classification and data loss prevention for Drive, shared drives and Docs.
+  - id: gmail
+    name: Gmail
+    description: Email authentication, phishing and malware defences, and mailbox access controls.
+  - id: collaboration
+    name: Chat, Calendar & Groups
+    description: External collaboration through Google Chat, Calendar and Google Groups.
+  - id: endpoints
+    name: Endpoints & browser
+    description: Mobile devices, computers, ChromeOS and Chrome browser that reach Workspace data.
+  - id: gemini-ai
+    name: Gemini & AI
+    description: Gemini in Workspace, the Gemini app and third-party AI tools that read organisational data.
+  - id: logging-detection
+    name: Logging & detection
+    description: Alerts, audit logs and investigation of suspicious activity in the Google tenant.
+  - id: backup-retention
+    name: Backup & retention
+    description: Recovering Workspace data after deletion, ransomware or a rogue admin, and retaining it for legal needs.
+  - id: gcp-iam
+    name: Google Cloud IAM
+    description: Organisation-level administration, IAM roles, organisation policies and service accounts.
+  - id: gcp-data
+    name: Google Cloud data
+    description: Exposure, exfiltration controls and recoverability of BigQuery, Cloud Storage and Cloud SQL.
+  - id: gcp-logging
+    name: Google Cloud logging & detection
+    description: Cloud Audit Logs, centralised log retention, alerting and Security Command Center.

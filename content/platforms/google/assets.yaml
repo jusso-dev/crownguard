@@ -1,0 +1,240 @@
+- id: gw-tenant
+  module: core
+  tier: identity
+  name: Google Workspace / Cloud Identity tenant
+  description: >-
+    The Google account for your organisation: every user, group and organisational unit, and the
+    sign-in policies that decide who gets in. Whoever controls it controls email, files and any
+    Google Cloud projects that trust it.
+  examples: [Primary domain and user directory, Organisational units and their policies, Security groups used for access]
+  discoveryPrompts:
+    - Which domain do your staff sign in with, and is it the same one that owns your Google Cloud organisation?
+    - Which groups grant access to sensitive shared drives, apps or Google Cloud projects?
+    - Do contractors, shared mailboxes or service users hold Google accounts in the tenant?
+  exposures: [internet-facing, unmanaged-devices, guest-access]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1110.003, name: "Brute Force: Password Spraying" }
+    - { technique: T1566.002, name: "Phishing: Spearphishing Link" }
+    - { technique: T1539, name: Steal Web Session Cookie }
+
+- id: gw-super-admins
+  module: core
+  tier: privileged
+  name: Super admins & delegated admin roles
+  description: >-
+    Super administrator accounts can change any setting, reset any password, read any mailbox via
+    Vault or delegation, and are owners of the linked Google Cloud organisation. Delegated admin
+    roles carry part of that power, including break-glass accounts kept for emergencies.
+  examples: [Super admin accounts, Help desk and user management admins, Break-glass emergency account, Vault administrators]
+  discoveryPrompts:
+    - How many accounts hold the Super Admin role, and does each one belong to a named person?
+    - Do admins use the same account for daily email and for administration?
+    - Which custom admin roles can reset passwords, manage Vault or change security settings?
+  exposures: [standing-admin, internet-facing, unmanaged-devices]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1098.003, name: "Account Manipulation: Additional Cloud Roles" }
+    - { technique: T1556, name: Modify Authentication Process }
+    - { technique: T1531, name: Account Access Removal }
+
+- id: gw-federation
+  module: core
+  tier: identity
+  name: Directory sync, SSO & federation
+  description: >-
+    Google Cloud Directory Sync, third-party identity providers (Microsoft Entra ID, Okta, others)
+    and SSO profiles that create accounts or vouch for sign-ins. A compromised IdP or signing
+    certificate lets an attacker sign in as anyone it federates.
+  examples: [SAML SSO profile to Entra ID or Okta, Google Cloud Directory Sync server, Provisioning connector from an HR system]
+  discoveryPrompts:
+    - Do users sign in to Google through another identity provider, and which accounts are excluded from SSO?
+    - Where does Google Cloud Directory Sync run, and which account and credentials does it use?
+  exposures: [third-party-apps, standing-admin]
+  threats:
+    - { technique: T1606.002, name: "Forge Web Credentials: SAML Tokens" }
+    - { technique: T1484.002, name: "Domain or Tenant Policy Modification: Trust Modification" }
+    - { technique: T1556.007, name: "Modify Authentication Process: Hybrid Identity" }
+
+- id: gw-oauth-apps
+  module: core
+  tier: privileged
+  name: Third-party OAuth apps & domain-wide delegation
+  description: >-
+    Marketplace apps, OAuth integrations and service accounts with domain-wide delegation. A
+    delegated client can act as any user in the domain without a password or 2-Step Verification.
+  examples: [Backup or e-signature app with Gmail and Drive scopes, CRM sync with domain-wide delegation, AI note-taker reading Calendar and Drive]
+  discoveryPrompts:
+    - Which apps appear under Security > API controls > Accessed apps with Gmail or Drive access?
+    - Which client IDs are listed under domain-wide delegation, and who owns each one?
+    - Has anyone approved AI assistants, meeting note-takers or browser add-ons to read mail or files?
+  exposures: [third-party-apps]
+  threats:
+    - { technique: T1528, name: Steal Application Access Token }
+    - { technique: T1550.001, name: "Use Alternate Authentication Material: Application Access Token" }
+    - { technique: T1098.001, name: "Account Manipulation: Additional Cloud Credentials" }
+    - { technique: T1114.002, name: "Email Collection: Remote Email Collection" }
+
+- id: gw-drive
+  module: core
+  tier: data
+  name: Drive shared drives & My Drive data
+  description: >-
+    Shared drives, My Drive folders and Docs, Sheets and Slides holding sensitive records. Drive is
+    the main store Gemini and third-party apps read from.
+  examples: [Board papers shared drive, HR and payroll folders, Finance forecasts in Sheets, Customer data exports, Legal matters]
+  discoveryPrompts:
+    - Which shared drives hold board, HR, finance, legal or customer information?
+    - Are any of those files shared with external domains or "anyone with the link"?
+    - Is sensitive work kept in individual My Drives rather than team-owned shared drives?
+  exposures: [external-sharing, guest-access, unmanaged-devices, third-party-apps, ai-grounding]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1213, name: Data from Information Repositories }
+    - { technique: T1537, name: Transfer Data to Cloud Account }
+    - { technique: T1486, name: Data Encrypted for Impact }
+
+- id: gw-gmail
+  module: core
+  tier: data
+  name: Gmail mailboxes (executive, finance, shared)
+  description: >-
+    Mailboxes of executives, finance and payroll staff, and shared or role mailboxes. They hold
+    sensitive correspondence and are used to approve payments, which makes them the target of
+    business email compromise.
+  examples: [CEO and board members, Accounts payable mailbox, Payroll and HR mailboxes, Legal counsel]
+  discoveryPrompts:
+    - Which mailboxes approve payments, change supplier bank details or handle payroll?
+    - Which executives have assistants with delegated access to their mailbox?
+    - Is any mail automatically forwarded to an outside address?
+  exposures: [internet-facing, third-party-apps, unmanaged-devices, ai-grounding]
+  threats:
+    - { technique: T1114.003, name: "Email Collection: Email Forwarding Rule" }
+    - { technique: T1114.002, name: "Email Collection: Remote Email Collection" }
+    - { technique: T1566.001, name: "Phishing: Spearphishing Attachment" }
+    - { technique: T1534, name: Internal Spearphishing }
+    - { technique: T1656, name: Impersonation }
+
+- id: gw-collaboration
+  module: core
+  tier: collaboration
+  name: Chat, Meet, Calendar & Groups
+  description: >-
+    Google Chat spaces, Meet recordings and transcripts, calendars and Google Groups. Executive
+    calendars reveal deals and travel; groups often control access to other resources.
+  examples: [Executive and board calendars, Incident-response Chat space, Deal-team spaces with external advisers, Groups granting shared drive access]
+  discoveryPrompts:
+    - Which Chat spaces or Meet recordings contain sensitive discussions?
+    - Can people outside the organisation join groups, Chat spaces or see calendar details?
+  exposures: [external-sharing, guest-access, third-party-apps, ai-grounding]
+  threats:
+    - { technique: T1213.005, name: "Data from Information Repositories: Messaging Applications" }
+    - { technique: T1566.003, name: "Phishing: Spearphishing via Service" }
+    - { technique: T1534, name: Internal Spearphishing }
+
+- id: gw-endpoints
+  module: core
+  tier: endpoint
+  name: Managed endpoints (ChromeOS, Chrome browser, mobile)
+  description: >-
+    Laptops, Chromebooks, phones and the Chrome browser used to reach Workspace. An unmanaged or
+    out-of-date device, or a malicious browser extension, can steal session cookies and bypass
+    2-Step Verification.
+  examples: [Executive laptops and phones, Finance team Chromebooks, Personal phones with Gmail and Drive]
+  discoveryPrompts:
+    - Which devices do executives and admins use to reach Workspace, and are they company-managed?
+    - Is Chrome on company computers enrolled in Chrome Enterprise Core (browser cloud management)?
+    - Can users install any Chrome extension they like?
+  exposures: [unmanaged-devices, internet-facing]
+  threats:
+    - { technique: T1176.001, name: "Software Extensions: Browser Extensions" }
+    - { technique: T1539, name: Steal Web Session Cookie }
+    - { technique: T1189, name: Drive-by Compromise }
+
+- id: gw-gemini
+  module: core
+  tier: ai
+  name: Gemini for Workspace & AI data
+  description: >-
+    Gemini in Gmail, Docs, Drive, Chat and Meet, the Gemini app and NotebookLM. Gemini can find and
+    summarise anything a user can already open, so oversharing becomes instant discovery.
+  examples: [Gemini side panel over Drive and Gmail, Gemini app conversations, Meet "take notes for me" transcripts]
+  discoveryPrompts:
+    - Which teams have Gemini turned on, and could they find board, HR or finance files through it?
+    - Are third-party AI tools connected to Gmail, Drive or Calendar?
+  exposures: [ai-grounding, third-party-apps, external-sharing]
+  threats:
+    - { technique: T1213, name: Data from Information Repositories }
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1567, name: Exfiltration Over Web Service }
+
+- id: gw-vault-retention
+  module: core
+  tier: data
+  name: Vault, retention & backups
+  description: >-
+    Google Vault retention rules and holds, and any backup of Workspace data. Vault access lets an
+    admin search and export every mailbox; missing backups mean a rogue admin or ransomware can
+    destroy data permanently.
+  examples: [Vault retention rules and litigation holds, Third-party Workspace backup service, Vault eDiscovery admins]
+  discoveryPrompts:
+    - If a super admin deleted users or shared drives today, how would you get the data back once Google's 20- to 25-day recovery window has passed?
+    - Who can search and export mail through Vault?
+  exposures: [standing-admin, third-party-apps]
+  threats:
+    - { technique: T1485, name: Data Destruction }
+    - { technique: T1490, name: Inhibit System Recovery }
+    - { technique: T1114.002, name: "Email Collection: Remote Email Collection" }
+
+- id: gcp-org-iam
+  module: gcp
+  tier: cloud
+  name: Google Cloud organisation & IAM
+  description: >-
+    The Google Cloud organisation node, folders, projects, IAM policies and organisation policies.
+    Organisation-level roles can grant themselves access to every project and dataset.
+  examples: [Organization Administrator and billing roles, Production folder, Shared VPC host project, Organisation policy settings]
+  discoveryPrompts:
+    - Who holds Owner, Organization Administrator or IAM admin roles at organisation or folder level?
+    - Which projects run production systems or hold customer data?
+  exposures: [standing-admin, internet-facing, third-party-apps]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1098.003, name: "Account Manipulation: Additional Cloud Roles" }
+    - { technique: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs" }
+    - { technique: T1580, name: Cloud Infrastructure Discovery }
+
+- id: gcp-data-stores
+  module: gcp
+  tier: cloud
+  name: Google Cloud data stores (BigQuery, Cloud Storage, Cloud SQL)
+  description: >-
+    Data warehouses, buckets and databases holding customer, financial or analytics data,
+    including exports from Workspace and other business systems.
+  examples: [BigQuery customer analytics datasets, Cloud Storage buckets with backups or exports, Cloud SQL application databases]
+  discoveryPrompts:
+    - Which BigQuery datasets, buckets or Cloud SQL instances hold personal, payment or health information?
+    - Are any of them reachable from the internet or shared with other organisations?
+  exposures: [internet-facing, external-sharing, third-party-apps]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1537, name: Transfer Data to Cloud Account }
+    - { technique: T1485, name: Data Destruction }
+    - { technique: T1486, name: Data Encrypted for Impact }
+
+- id: gcp-service-accounts
+  module: gcp
+  tier: privileged
+  name: Service accounts & keys
+  description: >-
+    Google Cloud service accounts used by workloads, pipelines and integrations, and any
+    downloadable JSON keys. A leaked key works from anywhere until it is deleted, without MFA.
+  examples: [CI/CD deployment service account, Data pipeline service account, Service account used for Workspace domain-wide delegation]
+  discoveryPrompts:
+    - Which service accounts hold Owner, Editor or admin roles?
+    - Do any service accounts have user-managed keys, and where are those key files stored?
+  exposures: [standing-admin, third-party-apps, internet-facing]
+  threats:
+    - { technique: T1552.001, name: "Unsecured Credentials: Credentials In Files" }
+    - { technique: T1098.001, name: "Account Manipulation: Additional Cloud Credentials" }
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }

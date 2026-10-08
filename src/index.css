@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1f2a44;
+  --color-ink-soft: #3b4663;
+  --color-gold: #b07d1f;
+  --color-gold-soft: #f6ecd8;
+  --color-paper: #f7f6f2;
+  --color-line: #e3e0d8;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}

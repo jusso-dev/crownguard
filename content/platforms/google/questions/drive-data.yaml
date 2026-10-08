@@ -1,0 +1,154 @@
+- id: GO-DRV-001
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive, gw-gemini]
+  severity: high
+  question: Is sharing Drive files outside the organisation limited to approved domains, or at minimum warned on?
+  why: >-
+    With unrestricted external sharing, one click can expose board papers or customer data to any
+    personal Gmail account. Most Drive data leaks come from oversharing rather than hacking.
+  yesLooksLike: >-
+    For organisational units holding crown-jewel data, external sharing is restricted to
+    allowlisted partner domains (or governed by trust rules), users are warned whenever they share
+    outside the organisation, Access Checker is set to recipients only, and external collaborators
+    must sign in with a Google account.
+  remediation: >-
+    In Apps > Google Workspace > Drive and Docs > Sharing settings, restrict external sharing to
+    allowlisted domains for sensitive organisational units, turn on warnings when files are shared
+    outside the organisation, set Access Checker to "Recipients only", and require external
+    recipients to sign in. On Enterprise editions, trust rules let you allow external sharing team
+    by team.
+  effort: M
+  sources: [gws-drive-external-sharing, gws-trust-rules, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.2.1.1.1" }
+    - { framework: cis-gws, ref: "3.1.2.1.1.3" }
+    - { framework: cis-gws, ref: "3.1.2.1.1.5" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }
+
+- id: GO-DRV-002
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive]
+  severity: high
+  question: Are users prevented from publishing files to the web or sharing them with anyone who has the link?
+  why: >-
+    Files that are public or open to anyone with the link can be forwarded and found with no record
+    of who opened them. Links leak through email forwards, browser history and chat logs.
+  yesLooksLike: >-
+    Drive sharing settings stop users making files visible to anyone with the link or publishing
+    them to the web, the default general access for new files is restricted, and files already
+    shared publicly have been found and fixed.
+  remediation: >-
+    In Drive and Docs > Sharing settings, turn off the option that lets users make files and
+    published web content visible to anyone with the link, and set default general access for new
+    files to restricted. Use Drive log events or the security investigation tool to find files
+    already shared publicly and change them.
+  effort: S
+  sources: [gws-drive-external-sharing, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.2.1.1.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }
+
+- id: GO-DRV-003
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive]
+  severity: high
+  question: Are crown-jewel files kept in shared drives with members-only access and settings that managers cannot loosen?
+  why: >-
+    Sensitive files scattered across personal My Drives leave with their owner and get shared ad
+    hoc. Organisation-owned shared drives limited to members make access visible and reviewable.
+  yesLooksLike: >-
+    Board, HR, finance and legal content lives in dedicated shared drives, membership is granted
+    through groups and reviewed, file access is limited to shared drive members, and managers
+    cannot override the shared drive settings set by admins.
+  remediation: >-
+    Move sensitive content into dedicated shared drives and grant membership through Google Groups.
+    In Drive and Docs > Sharing settings > Shared drive creation, stop managers overriding shared
+    drive settings and stop people who aren't members being added to files. Review membership
+    quarterly.
+  effort: M
+  sources: [gws-shared-drives, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.2.1.2.2" }
+    - { framework: cis-gws, ref: "3.1.2.1.2.3" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }
+
+- id: GO-DRV-004
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive, gw-gmail, gw-collaboration, gw-gemini]
+  severity: high
+  question: Do data loss prevention rules block or warn when sensitive data is shared outside the organisation from Drive, Gmail or Chat?
+  why: >-
+    Sharing settings cannot tell a lunch menu from a payroll export. DLP inspects content for things
+    like tax file numbers, card numbers or labelled documents and stops it leaving the organisation.
+  yesLooksLike: >-
+    DLP rules using predefined detectors relevant to you (for example tax file numbers, health
+    identifiers or card numbers) and classification labels warn on or block external sharing in
+    Drive, outbound Gmail and Chat, and DLP incidents are reviewed.
+  remediation: >-
+    Under Security > Access and data control > Data protection, create DLP rules for Drive, Gmail
+    and Chat using predefined detectors and labels, run them in audit mode first, review the
+    incidents, then switch to warn or block for external sharing of crown-jewel data.
+  effort: M
+  licence: [dlp]
+  sources: [gws-dlp, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "4.2.3.1" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }
+
+- id: GO-DRV-005
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive, gw-gemini]
+  severity: medium
+  question: Are sensitive files marked with Drive classification labels so DLP and other controls can recognise them?
+  why: >-
+    Without classification, DLP rules, reviews and AI controls have to guess which files matter.
+    Labels let you protect the documents that are your crown jewels consistently.
+  yesLooksLike: >-
+    A published sensitivity label (for example Internal, Confidential, Restricted) exists, files in
+    crown-jewel shared drives carry a high-sensitivity value, and DLP rules use the label as a
+    condition.
+  remediation: >-
+    Create and publish classification labels in the Admin console, set default label values for
+    new files where suitable, ask data owners to label existing crown-jewel files (or use AI
+    classification where available), and reference the labels in DLP rules.
+  effort: M
+  licence: [drive-labels]
+  sources: [gws-classification-labels, gws-gemini-privacy-hub]
+  refs:
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+
+- id: GO-DRV-006
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive, gw-gmail, gw-endpoints]
+  severity: medium
+  question: Are bulk copies of Workspace data, through Drive for desktop, offline access or Google Takeout, limited to the people and devices that need them?
+  why: >-
+    Synced and offline copies sit on laptops outside Google's access controls, and Takeout lets a
+    departing employee or an attacker export a whole mailbox and Drive in one step.
+  yesLooksLike: >-
+    Drive for desktop and offline Docs are off, or allowed only on company-managed devices; Google
+    Takeout is blocked for users who don't need it; and Takeout activity is visible in audit logs.
+  remediation: >-
+    In Drive and Docs > Features and applications, turn off offline access and Drive for desktop or
+    limit them to company-owned devices. In Data > Data import & export > Google Takeout, set
+    Takeout to not allowed for most organisational units, and watch Takeout log events.
+  effort: S
+  sources: [gws-takeout, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.2.2.1" }
+    - { framework: cis-gws, ref: "3.1.2.3.1" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }

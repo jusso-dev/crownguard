@@ -1,0 +1,163 @@
+- id: MS-AZ-001
+  module: azure
+  domain: azure
+  appliesTo: [ms-azure-subscriptions]
+  severity: critical
+  question: Are Owner and User Access Administrator roles on management groups and subscriptions eligible through PIM rather than permanently assigned?
+  why: >-
+    Standing Owner rights let any compromised admin or automation account take over production
+    workloads, read data, or delete resources and backups in one step.
+  yesLooksLike: >-
+    No person holds permanent Owner or User Access Administrator at management group or subscription
+    scope (other than documented break-glass), assignments are eligible in PIM with MFA and approval,
+    service principals have scoped least-privilege roles, and Global Administrators do not leave
+    elevated access to Azure resources switched on.
+  remediation: >-
+    Review Azure role assignments at root, management group and subscription scope, convert human
+    assignments to PIM-eligible with approval for Owner and User Access Administrator, scope
+    automation to resource groups, and alert on elevate-access events.
+  effort: M
+  licence: [entra-p2]
+  sources: [ms-azure-rbac-best, ms-elevate-access, ms-mcsb-privileged-access]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-1 }
+    - { framework: mcsb, ref: PA-2 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Infrastructure III }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: MS-AZ-002
+  module: azure
+  domain: azure
+  appliesTo: [ms-azure-subscriptions, ms-azure-key-vault]
+  severity: high
+  question: Is Microsoft Defender for Cloud enabled on every subscription, with Defender plans on for production workloads and recommendations actioned?
+  why: >-
+    Cloud misconfigurations such as open storage, exposed management ports and unpatched VMs are
+    found by attackers within hours. Defender for Cloud measures posture against the Microsoft cloud
+    security benchmark and detects threats against workloads.
+  yesLooksLike: >-
+    Foundational CSPM is on everywhere with the benchmark assigned at the root management group,
+    Defender plans for servers, storage, databases, Key Vault and Resource Manager are enabled for
+    production, and high-severity recommendations have owners and due dates.
+  remediation: >-
+    Enable Defender for Cloud on all subscriptions through Azure Policy at management group scope,
+    turn on the relevant Defender plans for production, route alerts to Defender XDR or Sentinel,
+    and track high-severity recommendations to closure.
+  effort: M
+  licence: [defender-for-cloud]
+  sources: [ms-mdc, ms-mcsb]
+  refs:
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: PV-2 }
+    - { framework: mcsb, ref: LT-1 }
+    - { framework: ms-zero-trust, ref: Applications VI }
+
+- id: MS-AZ-003
+  module: azure
+  domain: azure
+  appliesTo: [ms-azure-key-vault]
+  severity: high
+  question: Do production key vaults use the Azure RBAC permission model with purge protection enabled and network access restricted?
+  why: >-
+    Vault access policies grant broad, hard-to-audit rights, and without purge protection an attacker
+    or mistake can permanently destroy the keys that encrypt your data or that applications need to
+    run.
+  yesLooksLike: >-
+    Production key vaults use Azure RBAC with least-privilege data-plane roles such as Key Vault
+    Secrets User, purge protection is on, public network access is disabled or limited through
+    private endpoints or the firewall, and diagnostic logs are collected.
+  remediation: >-
+    Migrate vaults from access policies to Azure RBAC, enable purge protection (soft delete is on by
+    default), restrict networking with private endpoints or firewall rules, and enforce these
+    settings with Azure Policy.
+  effort: M
+  licence: []
+  sources: [ms-kv-secure, ms-kv-rbac, ms-kv-soft-delete]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: DP-8 }
+    - { framework: mcsb, ref: DP-6 }
+
+- id: MS-AZ-004
+  module: azure
+  domain: azure
+  appliesTo: [ms-azure-key-vault, ms-azure-subscriptions, ms-workload-identities]
+  severity: high
+  question: Do Azure workloads authenticate with managed identities instead of stored keys, connection strings or secrets?
+  why: >-
+    Keys and connection strings end up in code repositories, pipelines and config files where they
+    leak easily, and storage account keys grant full access to all data while bypassing Entra ID
+    controls and logging.
+  yesLooksLike: >-
+    App Services, Functions, VMs and pipelines use managed identities or workload identity
+    federation, storage accounts disallow Shared Key authorisation, remaining secrets live in Key
+    Vault with rotation, and secret scanning runs on code repositories.
+  remediation: >-
+    Enable managed identities on workloads and grant them scoped RBAC roles, update applications to
+    use Entra authentication, disallow Shared Key access on storage accounts, move remaining secrets
+    to Key Vault, and turn on secret scanning in source control.
+  effort: L
+  licence: []
+  sources: [ms-managed-identities, ms-storage-shared-key, ms-workload-identity-federation]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-3 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }
+
+- id: MS-AZ-005
+  module: azure
+  domain: azure
+  appliesTo: [ms-backups, ms-azure-subscriptions]
+  severity: high
+  question: Are Azure Backup vaults protecting crown-jewel workloads immutable, with always-on soft delete and multi-user authorisation through Resource Guard?
+  why: >-
+    Attackers with subscription access disable backups and delete recovery points before encrypting
+    VMs and databases. Immutability and a separate approver stop one compromised account from
+    destroying your recovery path.
+  yesLooksLike: >-
+    Production vaults have always-on enhanced soft delete, immutability enabled and locked, Resource
+    Guard in a separate subscription controlled by a different team protecting critical operations,
+    and backup alerts monitored.
+  remediation: >-
+    Enable and lock vault immutability, turn on always-on soft delete, deploy Resource Guard in a
+    separate subscription or tenant with its own administrators and link it to vaults for
+    multi-user authorisation, and configure backup alerts.
+  effort: M
+  licence: []
+  sources: [ms-azure-backup-immutable, ms-azure-backup-mua]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-2 }
+    - { framework: mcsb, ref: BR-3 }
+  e8:
+    - { strategy: regular-backups, level: 2 }
+
+- id: MS-AZ-006
+  module: azure
+  domain: azure
+  appliesTo: [ms-azure-subscriptions]
+  severity: high
+  question: Are storage accounts, databases and other PaaS services holding sensitive data closed to anonymous and public network access?
+  why: >-
+    Publicly readable blob containers and internet-exposed databases are among the most common causes
+    of cloud data breaches, and they need no credentials at all.
+  yesLooksLike: >-
+    Anonymous blob access is disallowed on every storage account, sensitive PaaS services use private
+    endpoints or firewall allow lists, and Azure Policy denies or audits new public exposure.
+  remediation: >-
+    Disable blob anonymous access on all storage accounts, enable private endpoints or restrict
+    public network access on storage, SQL and other PaaS services, and assign the matching built-in
+    Azure Policy definitions at management group scope.
+  effort: M
+  licence: []
+  sources: [ms-storage-anon, ms-mcsb]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }

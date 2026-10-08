@@ -1,0 +1,164 @@
+id: microsoft
+name: Microsoft 365 & Entra ID
+vendor: Microsoft
+description: >-
+  Microsoft 365 tenants and their Microsoft Entra ID identity plane: Exchange Online, SharePoint,
+  OneDrive, Teams, Purview, Intune-managed devices, Microsoft 365 Copilot and agents, with an
+  optional Azure module for subscriptions, Key Vault and Azure backups.
+
+modules:
+  - id: core
+    name: Microsoft 365 & Entra ID
+    description: The tenant, identities, admin roles, collaboration workloads, data protection, devices, Copilot and backups.
+    optional: false
+  - id: azure
+    name: Azure
+    description: Azure management groups and subscriptions, Key Vault, Defender for Cloud and Azure Backup.
+    optional: true
+
+# Base plans only. Add-ons (Copilot, SharePoint Advanced Management, Microsoft 365 Backup,
+# Workload Identities, Defender for Cloud, Sentinel) are not part of any tier, so questions that
+# need them always show the licence gap. Business Premium includes Defender for Business, which
+# provides endpoint detection and response comparable to Defender for Endpoint Plan 2 for
+# organisations of up to 300 users, so it is mapped to defender-endpoint-p2.
+licenceTiers:
+  - id: business-basic
+    name: Microsoft 365 Business Basic
+    features: []
+  - id: business-standard
+    name: Microsoft 365 Business Standard
+    features: []
+  - id: business-premium
+    name: Microsoft 365 Business Premium
+    features:
+      - entra-p1
+      - intune
+      - defender-office-p1
+      - defender-endpoint-p1
+      - defender-endpoint-p2
+      - purview-labels
+      - purview-dlp
+  - id: office-365-e3
+    name: Office 365 E3
+    features:
+      - purview-labels
+      - purview-dlp
+  - id: microsoft-365-e3
+    name: Microsoft 365 E3
+    features:
+      - entra-p1
+      - intune
+      - defender-endpoint-p1
+      - purview-labels
+      - purview-dlp
+  - id: microsoft-365-e3-e5-security
+    name: Microsoft 365 E3 + E5 Security add-on
+    features:
+      - entra-p1
+      - entra-p2
+      - intune
+      - defender-office-p1
+      - defender-office-p2
+      - defender-endpoint-p1
+      - defender-endpoint-p2
+      - defender-identity
+      - defender-cloud-apps
+      - purview-labels
+      - purview-dlp
+  - id: microsoft-365-e5
+    name: Microsoft 365 E5
+    features:
+      - entra-p1
+      - entra-p2
+      - intune
+      - defender-office-p1
+      - defender-office-p2
+      - defender-endpoint-p1
+      - defender-endpoint-p2
+      - defender-identity
+      - defender-cloud-apps
+      - purview-labels
+      - purview-auto-labelling
+      - purview-dlp
+      - purview-dlp-advanced
+      - purview-audit-premium
+
+licenceFeatures:
+  - id: entra-p1
+    name: Microsoft Entra ID P1 (Conditional Access)
+  - id: entra-p2
+    name: Microsoft Entra ID P2 (PIM, ID Protection, access reviews)
+  - id: entra-workload-id
+    name: Microsoft Entra Workload ID (add-on)
+  - id: intune
+    name: Microsoft Intune Plan 1
+  - id: defender-office-p1
+    name: Defender for Office 365 Plan 1 (Safe Links, Safe Attachments)
+  - id: defender-office-p2
+    name: Defender for Office 365 Plan 2 (priority accounts, AIR, attack simulation)
+  - id: defender-endpoint-p1
+    name: Defender for Endpoint Plan 1 (next-gen protection, ASR rules)
+  - id: defender-endpoint-p2
+    name: Defender for Endpoint Plan 2 or Defender for Business (EDR, automated investigation)
+  - id: defender-identity
+    name: Microsoft Defender for Identity
+  - id: defender-cloud-apps
+    name: Microsoft Defender for Cloud Apps
+  - id: purview-labels
+    name: Purview sensitivity labels (manual labelling)
+  - id: purview-auto-labelling
+    name: Purview automatic and default labelling
+  - id: purview-dlp
+    name: Purview DLP for Exchange, SharePoint and OneDrive
+  - id: purview-dlp-advanced
+    name: Purview DLP for Teams, endpoints and Copilot (E5 / E5 Compliance)
+  - id: purview-audit-premium
+    name: Purview Audit (Premium)
+  - id: sharepoint-advanced-management
+    name: SharePoint Advanced Management (add-on, or included with Microsoft 365 Copilot)
+  - id: copilot
+    name: Microsoft 365 Copilot (add-on)
+  - id: m365-backup
+    name: Microsoft 365 Backup (pay-as-you-go)
+  - id: sentinel
+    name: Microsoft Sentinel (consumption)
+  - id: defender-for-cloud
+    name: Microsoft Defender for Cloud plans (Azure)
+
+domains:
+  - id: identity
+    name: Identity & Conditional Access
+    description: How people sign in, the MFA methods they use and the conditions under which access is granted.
+  - id: privileged-access
+    name: Privileged access
+    description: Admin roles, emergency access accounts, admin workstations, partners and the hybrid identity servers that control the tenant.
+  - id: apps-consent
+    name: Apps & consent
+    description: App registrations, service principals and the permissions users and admins grant to third-party apps.
+  - id: data-protection
+    name: Data protection
+    description: Knowing where sensitive information lives and protecting it with sensitivity labels and data loss prevention.
+  - id: sharepoint-onedrive
+    name: SharePoint & OneDrive
+    description: Sharing settings and oversharing of documents and sites.
+  - id: exchange-email
+    name: Exchange & email
+    description: Mailbox exposure, legacy protocols, email authentication and phishing protection.
+  - id: teams-collab
+    name: Teams & collaboration
+    description: External chat, guest membership and apps in Microsoft Teams.
+  - id: endpoints
+    name: Endpoints
+    description: Device management, Office macros, application control, patching and endpoint detection.
+  - id: copilot-ai
+    name: Copilot & AI agents
+    description: What Microsoft 365 Copilot can surface, and who can build and run agents.
+  - id: logging-detection
+    name: Logging & detection
+    description: Audit logs, retention, alerting and who responds when something is detected.
+  - id: backup-recovery
+    name: Backup & recovery
+    description: Recovering Microsoft 365 data after ransomware, malicious deletion or a rogue administrator.
+  - id: azure
+    name: Azure
+    description: Azure management plane, secrets, posture management and backups.

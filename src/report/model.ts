@@ -1,0 +1,134 @@
+import type { Catalogue, Question, Source } from "../content/schema";
+import { essentialEight, type E8Result } from "../engine/maturity";
+import {
+  activeQuestions,
+  answerValue,
+  assessAll,
+  domainPosture,
+  gapStats,
+  overallPosture,
+  type DomainPosture,
+  type JewelRisk,
+} from "../engine/risk";
+import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
+import type { Answer, Assessment } from "../engine/types";
+import { readableOn, textOn, tint } from "../theme/color";
+
+export interface ReportTheme {
+  primary: string;
+  /** Primary darkened if needed so it reads as text on white. */
+  heading: string;
+  onPrimary: string;
+  accent: string;
+  tint: string;
+}
+
+export interface FrameworkRow {
+  framework: string;
+  ref: string;
+  title?: string;
+  questions: { question: Question; answer: Answer | undefined }[];
+  status: "Met" | "Partly met" | "Not met" | "Not applicable";
+}
+
+export interface ReportModel {
+  assessment: Assessment;
+  generatedAt: Date;
+  theme: ReportTheme;
+  platformNames: string[];
+  posture: { score: number | null; confidence: number };
+  risks: JewelRisk[];
+  domains: DomainPosture[];
+  e8: (E8Result & { title: string })[];
+  roadmap: RoadmapItem[];
+  questions: Question[];
+  csf: { fn: string; score: number | null; subcategories: number }[];
+  cis: FrameworkRow[];
+  sources: Source[];
+  assetTypeName: (id: string) => string;
+  frameworkName: (id: string) => string;
+  licenceGap: (q: Question) => string[];
+  platformOf: (q: Question) => string | undefined;
+}
+
+const statusOf = (values: (number | null)[]): FrameworkRow["status"] => {
+  const v = values.filter((x): x is number => x !== null);
+  if (!v.length) return "Not applicable";
+  if (v.every((x) => x === 1)) return "Met";
+  if (v.some((x) => x > 0)) return "Partly met";
+  return "Not met";
+};
+
+export function buildReport(catalogue: Catalogue, assessment: Assessment, generatedAt = new Date()): ReportModel {
+  const questions = activeQuestions(catalogue, assessment);
+  const { answers } = assessment;
+  const b = assessment.branding;
+  const bundles = assessment.platforms.map((p) => catalogue.platforms.get(p)).filter((x) => !!x);
+  const jewels = assessment.jewels.filter((j) => assessment.platforms.includes(j.platform));
+
+  const refRows = (prefix: string): FrameworkRow[] => {
+    const rows = new Map<string, FrameworkRow>();
+    for (const q of questions)
+      for (const r of q.refs.filter((r) => r.framework.startsWith(prefix))) {
+        const key = `${r.framework}:${r.ref}`;
+        const row = rows.get(key) ?? {
+          framework: r.framework,
+          ref: r.ref,
+          title: catalogue.frameworks.get(r.framework)?.controls.find((c) => c.id === r.ref)?.title,
+          questions: [],
+          status: "Not applicable" as const,
+        };
+        row.questions.push({ question: q, answer: answers[q.id] });
+        rows.set(key, row);
+      }
+    return [...rows.values()]
+      .map((r) => ({ ...r, status: statusOf(r.questions.map((x) => answerValue(x.answer))) }))
+      .sort((a, b) => a.framework.localeCompare(b.framework) || a.ref.localeCompare(b.ref, undefined, { numeric: true }));
+  };
+
+  const csfFramework = catalogue.frameworks.get("nist-csf-2");
+  const csf = ["Govern", "Identify", "Protect", "Detect", "Respond", "Recover"].map((fn) => {
+    const ids = new Set(csfFramework?.controls.filter((c) => c.group === fn).map((c) => c.id) ?? []);
+    const qs = questions.filter((q) => q.refs.some((r) => r.framework === "nist-csf-2" && ids.has(r.ref)));
+    const s = gapStats(qs, answers);
+    const subcategories = new Set(qs.flatMap((q) => q.refs.filter((r) => r.framework === "nist-csf-2" && ids.has(r.ref)).map((r) => r.ref))).size;
+    return { fn, score: s.weight ? 1 - s.gap / s.weight : null, subcategories };
+  });
+
+  const e8Titles = catalogue.frameworks.get("essential-eight")?.controls ?? [];
+  const sourceIds = new Set(questions.flatMap((q) => q.sources));
+  for (const f of catalogue.frameworks.values()) if (questions.some((q) => q.refs.some((r) => r.framework === f.id))) sourceIds.add(f.source);
+  const e8Source = catalogue.frameworks.get("essential-eight")?.source;
+  if (e8Source) sourceIds.add(e8Source);
+
+  return {
+    assessment,
+    generatedAt,
+    theme: {
+      primary: b.primary,
+      heading: readableOn(b.primary),
+      onPrimary: textOn(b.primary),
+      accent: b.accent,
+      tint: tint(b.primary, 0.9),
+    },
+    platformNames: bundles.map((x) => x.platform.name),
+    posture: overallPosture(catalogue, assessment),
+    risks: assessAll(catalogue, assessment),
+    domains: domainPosture(catalogue, assessment),
+    e8: essentialEight(questions, answers).map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy })),
+    roadmap: buildRoadmap(questions, jewels, answers),
+    questions,
+    csf,
+    cis: refRows("cis-"),
+    sources: [...sourceIds].map((id) => catalogue.sources.get(id)).filter((s): s is Source => !!s).sort((a, b) => a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title)),
+    assetTypeName: (id) => bundles.flatMap((x) => x.assetTypes).find((a) => a.id === id)?.name ?? id,
+    frameworkName: (id) => catalogue.frameworks.get(id)?.shortName ?? id,
+    platformOf: (q) => bundles.find((x) => x.questions.includes(q))?.platform.id,
+    licenceGap: (q) => {
+      const bundle = bundles.find((x) => x.questions.includes(q));
+      if (!bundle) return [];
+      const have = new Set(bundle.platform.licenceTiers.find((t) => t.id === assessment.licence[bundle.platform.id])?.features ?? []);
+      return q.licence.filter((l) => !have.has(l)).map((l) => bundle.platform.licenceFeatures.find((f) => f.id === l)?.name ?? l);
+    },
+  };
+}

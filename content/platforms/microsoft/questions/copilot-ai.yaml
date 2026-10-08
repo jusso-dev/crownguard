@@ -1,0 +1,134 @@
+- id: MS-AI-001
+  module: core
+  domain: copilot-ai
+  appliesTo: [ms-copilot-agents, ms-sharepoint-sites]
+  severity: high
+  question: Before Copilot reaches users, have your most sensitive sites been fixed, excluded from Copilot (Restricted Content Discovery) or restricted to their intended members?
+  why: >-
+    Copilot answers from everything the user can technically open. Sites that are overshared but
+    obscure today become one prompt away, for example "summarise the restructure plans".
+  yesLooksLike: >-
+    Crown-jewel sites are identified, oversharing reports have been reviewed, and sites that cannot
+    be fixed quickly have Restricted Content Discovery or restricted access control applied,
+    following Microsoft's secure and governed foundation blueprint for Copilot.
+  remediation: >-
+    Follow the "Remediate oversharing" pillar of Microsoft's blueprint. Run data access governance
+    reports, fix permissions with site owners, apply Restricted Content Discovery to sensitive sites
+    that must stay broadly accessible, and restricted access control to sites that should be used by
+    one group only.
+  effort: M
+  licence: [copilot, sharepoint-advanced-management]
+  sources: [ms-copilot-secure-govern, ms-copilot-configure-foundation, ms-restricted-content-discovery]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: DP-1 }
+    - { framework: ms-zero-trust, ref: Copilot step 1 }
+    - { framework: ms-zero-trust, ref: M365 swim lane 4 }
+
+- id: MS-AI-002
+  module: core
+  domain: copilot-ai
+  appliesTo: [ms-copilot-agents, ms-sensitive-data]
+  severity: medium
+  question: Do Purview DLP policies stop Copilot from processing your most sensitive labelled files and emails?
+  why: >-
+    Even with correct permissions, you may not want highly confidential content summarised,
+    rephrased or pasted into other documents by an AI assistant. DLP for Copilot keeps labelled items
+    out of responses and can block prompts that contain sensitive information.
+  yesLooksLike: >-
+    A DLP policy for the Microsoft 365 Copilot and Copilot Chat location excludes Highly Confidential
+    (and similar) labelled items from processing, and a separate rule blocks prompts containing
+    sensitive information types such as tax file numbers.
+  remediation: >-
+    In the Purview portal create a custom DLP policy with the Microsoft 365 Copilot and Copilot Chat
+    location, add a rule using the sensitivity labels condition with "Prevent Copilot from processing
+    content", and a separate rule for sensitive information types in prompts; test in simulation
+    mode first.
+  effort: S
+  licence: [purview-dlp-advanced]
+  sources: [ms-dlp-copilot, ms-purview-licensing]
+  refs:
+    - { framework: cis-m365, ref: "3.2.3" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: AI-2 }
+    - { framework: ms-zero-trust, ref: Copilot step 1 }
+
+- id: MS-AI-003
+  module: core
+  domain: copilot-ai
+  appliesTo: [ms-copilot-agents, ms-sensitive-data]
+  severity: medium
+  question: Are Copilot and AI agent interactions audited and reviewed for sensitive data exposure, including use of unsanctioned AI apps?
+  why: >-
+    Without visibility you cannot tell whether AI is surfacing sensitive data to the wrong people, or
+    whether staff are pasting confidential information into consumer AI services.
+  yesLooksLike: >-
+    Auditing captures Copilot interactions, Data Security Posture Management for AI is enabled with
+    its recommended policies, someone reviews its reports on sensitive data in prompts and responses,
+    and generative AI apps are discovered and unsanctioned ones blocked.
+  remediation: >-
+    Confirm unified auditing is on, enable Purview DSPM for AI and apply its recommended policies,
+    review its activity and oversharing reports monthly, and use Defender for Cloud Apps discovery
+    (or web content filtering) to find and block unsanctioned generative AI apps.
+  effort: M
+  licence: []
+  sources: [ms-dspm-ai, ms-audit-solutions, ms-mdca-discovered-apps]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: mcsb, ref: AI-6 }
+    - { framework: ms-zero-trust, ref: M365 swim lane 4 }
+
+- id: MS-AI-004
+  module: core
+  domain: copilot-ai
+  appliesTo: [ms-copilot-agents]
+  severity: high
+  question: Are the creation and sharing of Copilot Studio agents, and the connectors they can use, controlled by policy?
+  why: >-
+    Makers can connect an agent to SharePoint, Dataverse, email or external services and share it
+    widely or even publicly. A badly configured agent can expose data to everyone in the
+    organisation or to anonymous internet users, or move data to unapproved services.
+  yesLooksLike: >-
+    Power Platform data policies separate business from non-business connectors and block HTTP and
+    unapproved connectors in the default environment, agent sharing is limited to security groups,
+    agents require Entra ID authentication, and new agents are reviewed in the agent registry.
+  remediation: >-
+    In the Power Platform admin centre enable Managed Environments, create data policies for the
+    default and production environments, limit who can create and share agents, require Microsoft
+    authentication for agents, and review the Microsoft 365 admin centre agent registry regularly.
+  effort: M
+  licence: []
+  sources: [ms-copilot-studio-security, ms-copilot-studio-sharing, ms-power-platform-dlp, ms-agent-registry]
+  refs:
+    - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: AM-2 }
+    - { framework: ms-zero-trust, ref: Applications II }
+
+- id: MS-AI-005
+  module: core
+  domain: copilot-ai
+  appliesTo: [ms-copilot-agents, ms-workload-identities]
+  severity: medium
+  question: Do autonomous AI agents run under dedicated, least-privilege identities with a named owner and human approval for high-impact actions?
+  why: >-
+    An agent with broad Graph permissions, or running on a maker's own credentials, can be steered
+    by prompt injection hidden in an email or document into reading, sending or deleting data at
+    scale.
+  yesLooksLike: >-
+    Each autonomous agent has its own agent or workload identity rather than a person's account,
+    only the permissions its task needs, an accountable owner, human approval before consequential
+    actions such as sending external email, and is covered by Conditional Access and risk policies
+    for agents.
+  remediation: >-
+    Inventory agents in the agent registry and Microsoft Entra Agent ID, move agents off shared or
+    personal credentials, scope permissions to specific sites or mailboxes, require approval for
+    consequential actions, and apply Conditional Access to agent identities, such as blocking
+    high-risk agents.
+  effort: M
+  licence: []
+  sources: [ms-entra-agent-id, ms-risky-agents, ms-mcsb-ai]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: AI-4 }
+    - { framework: mcsb, ref: AI-5 }

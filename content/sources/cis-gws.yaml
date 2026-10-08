@@ -1,0 +1,11 @@
+# CIS Benchmarks are licensed CC BY-NC-SA 4.0. We record recommendation numbers and short titles only.
+- id: cis-gws
+  title: CIS Google Workspace Foundations Benchmark v1.4.0
+  publisher: Center for Internet Security
+  url: https://www.cisecurity.org/benchmark/google_workspace
+  retrieved: 2026-10-08
+- id: cis-gcp
+  title: CIS Google Cloud Platform Foundation Benchmark v5.0.0
+  publisher: Center for Internet Security
+  url: https://www.cisecurity.org/benchmark/google_cloud_computing_platform
+  retrieved: 2026-10-08

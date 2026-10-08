@@ -1,0 +1,151 @@
+- id: GO-CDAT-001
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: critical
+  question: Is public access prevention enforced on Cloud Storage across the whole organisation?
+  why: >-
+    One bucket made public by mistake can expose backups, exports or customer files to the whole
+    internet, and attackers scan for public buckets constantly.
+  yesLooksLike: >-
+    The storage.publicAccessPrevention and storage.uniformBucketLevelAccess constraints are enforced
+    at the organisation node, and any bucket that must be public (such as website assets) sits in a
+    separate project with a documented exception.
+  remediation: >-
+    Find buckets granting access to allUsers or allAuthenticatedUsers with Security Command Center
+    or Cloud Asset Inventory and fix them, enforce storage.publicAccessPrevention and
+    storage.uniformBucketLevelAccess at the organisation, and move genuinely public content to a
+    dedicated project with an exception.
+  effort: S
+  sources: [gcp-public-access-prevention, gcp-uniform-bucket-access, gcp-blueprint-preventative]
+  refs:
+    - { framework: cis-gcp, ref: "5.1" }
+    - { framework: cis-gcp, ref: "5.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+
+- id: GO-CDAT-002
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: high
+  question: Are BigQuery datasets holding sensitive data free of public access and shared only with specific groups?
+  why: >-
+    BigQuery often holds the organisation's most complete copy of customer and financial data. A
+    dataset granted to allAuthenticatedUsers can be read by anyone with a Google account.
+  yesLooksLike: >-
+    No dataset grants access to allUsers or allAuthenticatedUsers, access to crown-jewel datasets is
+    through named groups with read-only roles where possible, and sensitive columns use policy tags
+    or authorised views.
+  remediation: >-
+    Check dataset IAM for allUsers and allAuthenticatedUsers (Security Command Center flags them),
+    replace individual and broad grants with group-based predefined roles at dataset level, and use
+    column-level policy tags or authorised views for sensitive fields.
+  effort: M
+  sources: [gcp-bigquery-iam]
+  refs:
+    - { framework: cis-gcp, ref: "7.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: GO-CDAT-003
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: high
+  question: Are Cloud SQL instances reachable only over private IP or the Cloud SQL Auth Proxy, never from open public networks?
+  why: >-
+    Databases with public IPs and broad authorised networks are scanned and brute-forced
+    continuously. A single weak database password then exposes the application's entire data set.
+  yesLooksLike: >-
+    Production Cloud SQL instances use private IP, the sql.restrictPublicIp and
+    sql.restrictAuthorizedNetworks constraints are enforced, connections require TLS, and people
+    sign in with IAM database authentication.
+  remediation: >-
+    Move instances to private IP or connect through the Cloud SQL Auth Proxy, remove 0.0.0.0/0
+    authorised networks, enforce sql.restrictPublicIp and sql.restrictAuthorizedNetworks, require
+    SSL/TLS connections, and turn on IAM database authentication.
+  effort: M
+  sources: [gcp-cloudsql-private-ip, gcp-blueprint-preventative]
+  refs:
+    - { framework: cis-gcp, ref: "6.4" }
+    - { framework: cis-gcp, ref: "6.5" }
+    - { framework: cis-gcp, ref: "6.6" }
+    - { framework: cis-gcp, ref: "6.7" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: GO-CDAT-004
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Are crown-jewel projects inside a VPC Service Controls perimeter that stops data being copied out with stolen credentials?
+  why: >-
+    IAM alone can't stop a valid but stolen credential from copying a BigQuery table or bucket to an
+    attacker's own project. A service perimeter blocks data movement across the boundary even when
+    the caller has permission.
+  yesLooksLike: >-
+    Projects holding crown-jewel data sit in a service perimeter that restricts BigQuery, Cloud
+    Storage and the other services they use, access levels limit where the APIs can be called from,
+    ingress and egress rules are documented, and changes are trialled in dry-run mode.
+  remediation: >-
+    Define a service perimeter around production data projects, restrict the services they use,
+    run it in dry-run mode and review violations, add access levels and ingress and egress rules for
+    legitimate flows, then enforce it.
+  effort: L
+  sources: [gcp-vpc-service-controls, gcp-security-foundations]
+  refs:
+    - { framework: cis-gcp, ref: "3.8" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+
+- id: GO-CDAT-005
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: medium
+  question: Do you know which BigQuery datasets, buckets and databases contain sensitive data, through automated discovery or classification?
+  why: >-
+    You can't protect crown-jewel data you don't know about. Copies of customer data spread into
+    test projects, exports and analytics tables over time.
+  yesLooksLike: >-
+    Sensitive Data Protection discovery profiles BigQuery, Cloud SQL and Cloud Storage across the
+    organisation, high-sensitivity results go to Security Command Center or data owners for review,
+    and the results update your crown-jewel list.
+  remediation: >-
+    Turn on Sensitive Data Protection discovery at the organisation or folder level for BigQuery,
+    Cloud SQL and Cloud Storage, publish data profiles to Security Command Center, and assign owners
+    to review high-sensitivity resources.
+  effort: M
+  sources: [gcp-sensitive-data-discovery]
+  refs:
+    - { framework: cis-gcp, ref: "7.4" }
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+
+- id: GO-CDAT-006
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: high
+  question: Are crown-jewel Cloud SQL and Cloud Storage data backed up to copies that a compromised project owner cannot delete?
+  why: >-
+    An attacker with project Owner, or ransomware using a stolen service account, can delete
+    databases, buckets and the backups kept alongside them. Recovery then depends on copies held
+    outside that blast radius.
+  yesLooksLike: >-
+    Cloud SQL automated backups and deletion protection are on, Cloud Storage soft delete is on,
+    critical workloads are also backed up to a Backup and DR backup vault (or another project with
+    separate admins) with enforced retention, and restores are tested.
+  remediation: >-
+    Turn on automated backups, point-in-time recovery and deletion protection for Cloud SQL, keep
+    Cloud Storage soft delete on, protect critical workloads with Backup and DR backup vaults with an
+    enforced minimum retention, and test a restore at least yearly.
+  effort: M
+  sources: [gcp-cloudsql-backups, gcp-cloudsql-deletion-protection, gcp-storage-soft-delete, gcp-backup-vault]
+  refs:
+    - { framework: cis-gcp, ref: "6.8" }
+    - { framework: cis-gcp, ref: "6.9" }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: RC.RP-03 }
+  e8:
+    - { strategy: regular-backups, level: 2 }

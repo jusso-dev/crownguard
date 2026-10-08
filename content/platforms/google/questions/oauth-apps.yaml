@@ -1,0 +1,79 @@
+- id: GO-APP-001
+  module: core
+  domain: oauth-apps
+  appliesTo: [gw-oauth-apps, gw-gmail, gw-drive, gw-gemini]
+  severity: high
+  question: Are users prevented from granting unreviewed third-party apps access to Gmail, Drive and other Workspace data?
+  why: >-
+    Consent phishing tricks a user into authorising a malicious app, which then reads their mail and
+    files through Google's APIs without needing the password or 2-Step Verification. The token keeps
+    working until someone revokes it.
+  yesLooksLike: >-
+    Under Security > Access and data control > API controls, unconfigured third-party apps are
+    limited to Google sign-in only (or blocked), Gmail and Drive are Restricted services, apps you
+    approve are deliberately marked Trusted or Limited, and Marketplace installs are limited to an
+    allowlist.
+  remediation: >-
+    In API controls, set Unconfigured third-party apps to allow only apps that ask for Google
+    sign-in information (or block them), mark Gmail, Drive and Docs and other sensitive services as
+    Restricted under Manage Google services, review Accessed apps and set the ones you approve to
+    Trusted or Limited, and allow only allowlisted Marketplace apps.
+  effort: M
+  sources: [gws-app-access-control, gws-marketplace-allowlist, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "4.2.1.1" }
+    - { framework: cis-gws, ref: "3.1.9.1.1" }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Apps" }
+
+- id: GO-APP-002
+  module: core
+  domain: oauth-apps
+  appliesTo: [gw-oauth-apps]
+  severity: medium
+  question: Do you review the third-party apps holding access to Workspace data at least every six months and remove ones no longer needed?
+  why: >-
+    Apps approved years ago may since have been abandoned, sold or breached, yet their tokens still
+    hold broad access to mail and files. Compromised SaaS integrations are a common route to bulk
+    data theft.
+  yesLooksLike: >-
+    A recorded review of Accessed apps and Configured apps (users, scopes and verification status)
+    happens on a schedule, each trusted app has a business owner, and unused apps are blocked.
+  remediation: >-
+    In API controls > Manage third-party app access, export the Accessed apps list, check each app's
+    scopes and user count, confirm a business owner, block anything unneeded, and record the
+    review. Use OAuth log events to see which apps are actually being used.
+  effort: S
+  sources: [gws-app-access-control, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "4.2.1.2" }
+    - { framework: nist-csf-2, ref: ID.AM-04 }
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: google-security-guidance, ref: "Checklist: Apps" }
+
+- id: GO-APP-003
+  module: core
+  domain: oauth-apps
+  appliesTo: [gw-oauth-apps, gcp-service-accounts, gw-gmail, gw-drive]
+  severity: critical
+  question: Is every domain-wide delegation client known, owned and limited to the narrowest scopes it needs?
+  why: >-
+    A service account with domain-wide delegation can act as any user, executives included, with no
+    password or 2-Step Verification. If its key leaks, an attacker can read every mailbox and file in
+    the organisation.
+  yesLooksLike: >-
+    Every client ID under API controls > Domain-wide delegation has a named owner, a documented
+    purpose and narrow scopes (for example read-only Calendar rather than full Gmail), unused clients
+    have been deleted, and the backing service accounts have no downloadable keys.
+  remediation: >-
+    Review the domain-wide delegation list at least twice a year, delete unused clients, cut scopes
+    to the minimum, and trace each client ID to its Google Cloud service account to confirm who
+    controls it and that it has no user-managed keys. Turn on multi-party approval so new
+    delegations need a second super admin.
+  effort: M
+  sources: [gws-domain-wide-delegation, gcp-sa-key-best-practices]
+  refs:
+    - { framework: cis-gws, ref: "4.2.1.4" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Apps" }

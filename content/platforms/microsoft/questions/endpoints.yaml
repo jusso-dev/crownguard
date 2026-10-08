@@ -1,0 +1,247 @@
+- id: MS-END-001
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are all company devices enrolled in Intune with compliance policies, and are devices with no compliance policy marked not compliant?
+  why: >-
+    Compliance status is what lets Conditional Access refuse sign-ins from devices that are
+    unencrypted, out of date or infected. Devices outside management are invisible and unprotected.
+  yesLooksLike: >-
+    All corporate Windows, macOS, iOS and Android devices are enrolled; compliance policies require
+    encryption, a minimum OS version, a passcode and an acceptable Defender risk level; the tenant
+    marks devices with no compliance policy as not compliant; and non-compliance triggers
+    notification and loss of access.
+  remediation: >-
+    Enrol devices through Windows Autopilot and Apple and Android enrolment, create compliance
+    policies per platform, set "Mark devices with no compliance policy assigned as" to Not compliant,
+    configure actions for non-compliance, and pair this with a Conditional Access compliant-device
+    policy.
+  effort: L
+  licence: [intune]
+  sources: [ms-intune-compliance, ms-zt-endpoints]
+  refs:
+    - { framework: cis-m365, ref: "4.1" }
+    - { framework: cis-m365, ref: "4.2" }
+    - { framework: nist-csf-2, ref: ID.AM-01 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: AM-1 }
+    - { framework: ms-zero-trust, ref: Endpoints 1 }
+
+- id: MS-END-002
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are Microsoft Office macros disabled for users without a business need, blocked in files from the internet, and locked so users cannot change these settings?
+  why: >-
+    Malicious macros in emailed or downloaded documents are still a common way to get code running
+    on a user's computer, leading to ransomware or token theft.
+  yesLooksLike: >-
+    An Intune policy disables macros for all users except an approved group, keeps the block on
+    macros in files from the internet, enables macro antivirus scanning, and users cannot override
+    these settings.
+  remediation: >-
+    Deploy Microsoft 365 Apps macro settings with the Intune settings catalog or Cloud Policy:
+    disable VBA macros without notification for most users, block macros from running in Office
+    files from the internet, and force runtime antivirus scanning. Scope an exception group for
+    documented business needs.
+  effort: M
+  licence: [intune]
+  sources: [ms-macros-internet, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: office-macros, level: 1 }
+
+- id: MS-END-003
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are attack surface reduction rules in block mode on Windows devices, including the rules that stop Office and PDF apps creating child processes and stop macros calling Win32 APIs?
+  why: >-
+    Even approved documents can be weaponised. ASR rules stop the behaviours attackers rely on after
+    a user opens a malicious file, such as Word launching PowerShell or malware reading credentials
+    from LSASS.
+  yesLooksLike: >-
+    An Intune endpoint security policy sets the Office, Adobe Reader, Win32 API from macros, LSASS
+    credential theft and email content rules to Block on all Windows devices, exclusions are minimal
+    and reviewed, and ASR events are visible in the Defender portal.
+  remediation: >-
+    Deploy ASR rules in audit mode through Intune endpoint security, review the events in the
+    Defender portal for a few weeks, add narrow exclusions, then switch to block. Include "Block
+    Win32 API calls from Office macros" and "Block all Office applications from creating child
+    processes".
+  effort: M
+  licence: [intune, defender-endpoint-p1]
+  sources: [ms-asr-rules, ms-intune-asr, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: ES-2 }
+  e8:
+    - { strategy: office-macros, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-END-004
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Is application control enforced on workstations so only approved executables, scripts and installers can run, including from user profile and temporary folders?
+  why: >-
+    Ransomware, remote access tools and infostealers usually run from a user's Downloads or Temp
+    folder. Application control stops unapproved programs running even when a user is tricked into
+    launching them.
+  yesLooksLike: >-
+    App Control for Business (or AppLocker) policies deployed through Intune enforce an allow list on
+    all workstations, cover user profile and temporary folders, include Microsoft's recommended block
+    rules, and blocked events are collected centrally.
+  remediation: >-
+    Start with an App Control for Business policy in audit mode, using Intune as a managed installer
+    so IT-deployed apps are trusted. Review the audit events, then enforce, and add Microsoft's
+    recommended block rules and vulnerable driver blocklist.
+  effort: L
+  licence: [intune]
+  sources: [ms-app-control, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-5 }
+  e8:
+    - { strategy: application-control, level: 1 }
+
+- id: MS-END-005
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are operating system updates applied to workstations within one month of release?
+  why: >-
+    Attackers weaponise published vulnerabilities within days. Devices that miss monthly updates
+    remain open to exploits that are already in commodity attack kits.
+  yesLooksLike: >-
+    Windows Autopatch or Intune update rings with deadlines install quality updates within one month
+    (and expedited updates for actively exploited vulnerabilities), macOS, iOS and Android updates
+    are enforced through Intune, unsupported operating systems are replaced, and update compliance is
+    reported.
+  remediation: >-
+    Enrol devices in Windows Autopatch or configure Intune update rings with deferral and deadline
+    settings that complete within one month, use expedited quality updates for critical exploited
+    vulnerabilities, enforce OS updates on other platforms, and add a minimum OS version to
+    compliance policies.
+  effort: M
+  licence: [intune]
+  sources: [ms-intune-windows-updates, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: MS-END-006
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are Microsoft 365 Apps, web browsers and PDF software updated within two weeks of release?
+  why: >-
+    Office, browsers and PDF readers process untrusted content from email and the web every day,
+    which makes them the most targeted applications on a workstation.
+  yesLooksLike: >-
+    Microsoft 365 Apps use Current Channel or Monthly Enterprise Channel with updates enforced, Edge
+    and other browsers auto-update, PDF readers are managed, and reports show devices are within two
+    weeks of the latest release; unsupported versions are removed.
+  remediation: >-
+    Set the Microsoft 365 Apps update channel and deadline through Intune or Cloud Update, enforce
+    browser auto-update policies, deploy PDF software through Intune with automatic updates, and
+    remove unsupported Office versions and browser extensions.
+  effort: M
+  licence: [intune]
+  sources: [ms-m365-apps-channels, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: MS-END-007
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity]
+  severity: high
+  question: Does every Windows and macOS device and server run endpoint detection and response, with tamper protection on?
+  why: >-
+    Antivirus alone misses hands-on-keyboard attackers. EDR records what happened, lets responders
+    isolate a device in seconds and, with automatic attack disruption, can contain ransomware before
+    it spreads.
+  yesLooksLike: >-
+    All devices and servers are onboarded to Defender for Endpoint Plan 2 or Defender for Business
+    (or an equivalent EDR), tamper protection is enforced tenant-wide, EDR in block mode is on, and
+    automated investigation and response is set to remediate.
+  remediation: >-
+    Onboard devices to Defender through Intune, turn on tamper protection and EDR in block mode,
+    set automation level to full remediation, and confirm every device reports as onboarded and
+    healthy in the device inventory.
+  effort: M
+  licence: [defender-endpoint-p2]
+  sources: [ms-edr-block-mode, ms-tamper-protection, ms-defender-business]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: ES-1 }
+    - { framework: ms-zero-trust, ref: Endpoints 4 }
+
+- id: MS-END-008
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Do staff work without local administrator rights, with each device's built-in administrator password managed by Windows LAPS?
+  why: >-
+    Local admin rights let malware switch off protections and dump credentials, and a shared local
+    administrator password lets an attacker move from one compromised laptop to every other.
+  yesLooksLike: >-
+    Users are not local administrators (elevation is handled by IT or Endpoint Privilege
+    Management), Global Administrators are not added as local admins on Entra join, and Windows LAPS
+    rotates a unique local administrator password per device, backed up to Entra ID.
+  remediation: >-
+    In Entra device settings stop registering users becoming local administrators, enable Windows
+    LAPS in Entra ID and deploy an Intune account protection LAPS policy, and use Intune account
+    protection to control membership of the local Administrators group.
+  effort: M
+  licence: [intune]
+  sources: [ms-laps]
+  refs:
+    - { framework: cis-m365, ref: "5.1.4.3" }
+    - { framework: cis-m365, ref: "5.1.4.4" }
+    - { framework: cis-m365, ref: "5.1.4.5" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-7 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: MS-END-009
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints, ms-privileged-roles]
+  severity: high
+  question: Do high-impact Intune actions, such as wiping devices or deploying scripts and apps, require approval from a second administrator?
+  why: >-
+    Intune can run a script on, or wipe, every enrolled device at once. A single compromised Intune
+    or Global Administrator account can therefore become a fleet-wide destruction or ransomware
+    event.
+  yesLooksLike: >-
+    Intune Multi Admin Approval access policies protect device wipe, retire and delete, scripts and
+    app deployments; approvers are a small separate group; scoped Intune RBAC limits who can make
+    changes; and Intune role holders use PIM and phishing-resistant MFA.
+  remediation: >-
+    In the Intune admin centre under Tenant administration, create Multi Admin Approval access
+    policies for device actions, scripts and apps with a dedicated approver group, reduce Intune
+    Administrator assignments using scoped RBAC roles, and alert on high-impact Intune actions.
+  effort: S
+  licence: [intune]
+  sources: [ms-intune-maa]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-1 }

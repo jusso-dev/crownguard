@@ -1,0 +1,207 @@
+- id: GO-ADM-001
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins]
+  severity: high
+  question: Are there between two and four super admin accounts, each assigned to one named person?
+  why: >-
+    A single super admin is a single point of failure if that person is unavailable or locked out.
+    Many super admins multiply the accounts an attacker can phish to gain total control, and shared
+    accounts make it impossible to tell who did what.
+  yesLooksLike: >-
+    Filtering Directory > Users by Admin role > Super admin shows two to four accounts, each tied to
+    one named individual, and the list is reviewed at least quarterly.
+  remediation: >-
+    Filter the user list by the Super admin role. Remove the role from anyone who does not need it
+    and give them a delegated role instead, make sure at least two named people hold it, and never
+    share a super admin account between people.
+  effort: S
+  sources: [gws-admin-best-practices, gcp-super-admin]
+  refs:
+    - { framework: cis-gws, ref: "1.1.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+
+- id: GO-ADM-002
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins]
+  severity: critical
+  question: Do super admins and other high-privilege admins use separate admin accounts that are never used for email, browsing or daily work?
+  why: >-
+    An admin account used for everyday email and web browsing meets every phishing message and
+    malicious site its owner does. A separate account used only for administration shrinks that
+    exposure dramatically.
+  yesLooksLike: >-
+    Each administrator has a normal account for daily work and a separate privileged account (for
+    example jane.admin@) with Gmail and other non-essential services turned off and no third-party
+    app grants, and admins sign out of it when finished.
+  remediation: >-
+    Create dedicated admin accounts, move admin roles onto them and remove roles from daily
+    accounts. Place the admin accounts in their own organisational unit with Gmail, Drive and other
+    unneeded services turned off and third-party app access blocked, and ask admins to sign out
+    when not administering.
+  effort: M
+  sources: [gws-admin-best-practices, gws-checklist-large, gcp-super-admin]
+  refs:
+    - { framework: cis-gws, ref: "1.1.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: GO-ADM-003
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gcp-org-iam]
+  severity: critical
+  question: Are all administrator accounts required to sign in with security keys or passkeys?
+  why: >-
+    Admin accounts are the keys to the whole tenant and to any linked Google Cloud organisation.
+    They are targeted with real-time phishing that defeats codes and prompts, and only
+    phishing-resistant methods stop it.
+  yesLooksLike: >-
+    Admin accounts sit in an organisational unit where 2-Step Verification is enforced with "Only
+    security key", each admin has at least two registered keys or passkeys, and super admins are
+    enrolled in the Advanced Protection Program.
+  remediation: >-
+    Put admin accounts in their own organisational unit, enforce 2-Step Verification there with the
+    "Only security key" method, issue each admin two FIDO2 keys (one stored safely as a spare), and
+    enable Advanced Protection Program enrolment under Security > Authentication > Advanced
+    Protection Program for super admins and other high-risk users.
+  effort: M
+  sources: [gws-admin-best-practices, gws-deploy-2sv, gws-advanced-protection, gcp-super-admin]
+  refs:
+    - { framework: cis-gws, ref: "4.1.1.1" }
+    - { framework: cis-gws, ref: "4.1.1.2" }
+    - { framework: cis-gws, ref: "4.1.3.1" }
+    - { framework: cis-gcp, ref: "1.4" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Protect" }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: GO-ADM-004
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-vault-retention]
+  severity: high
+  question: Is routine administration done through delegated admin roles that grant only the privileges each job needs?
+  why: >-
+    If help desk staff, Vault users or app managers are made super admins for convenience, any one
+    of their accounts can be used to take over the tenant. Narrow roles limit what a compromised
+    admin account can do.
+  yesLooksLike: >-
+    Help desk, user management, groups, services and Vault tasks use prebuilt or custom admin roles,
+    scoped to the relevant organisational units where possible, and super admin is reserved for
+    tasks only it can perform.
+  remediation: >-
+    Review Account > Admin roles. Assign prebuilt roles such as Help Desk Admin, User Management
+    Admin, Groups Admin or Services Admin, or custom roles with only the privileges needed, scope
+    them to organisational units, and remove super admin from anyone who can work with less.
+  effort: M
+  sources: [gws-admin-roles, gws-admin-best-practices]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: GO-ADM-005
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins]
+  severity: high
+  question: Is self-service password recovery turned off for super admin accounts?
+  why: >-
+    Self-recovery lets anyone who controls a super admin's recovery phone or email reset its
+    password. SIM-swap and recovery-mailbox takeovers turn that convenience into a route to full
+    tenant control.
+  yesLooksLike: >-
+    Under Security > Authentication > Account recovery, super admin account recovery is turned off,
+    and super admins regain access through another super admin instead.
+  remediation: >-
+    In Security > Authentication > Account recovery, turn off super admin account recovery. Make
+    sure at least two super admins exist so one can reset the other, and that the break-glass
+    account's credentials are stored securely.
+  effort: S
+  sources: [gws-super-admin-recovery, gcp-super-admin]
+  refs:
+    - { framework: cis-gws, ref: "4.1.2.1" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+
+- id: GO-ADM-006
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-federation]
+  severity: high
+  question: Is there a documented break-glass super admin account that still works if your identity provider or normal admins are unavailable?
+  why: >-
+    If SSO breaks, admins are locked out or an attacker removes your administrators, you need a
+    guaranteed way back in. Without one, recovery depends on proving domain ownership to Google in
+    the middle of a crisis.
+  yesLooksLike: >-
+    A named emergency super admin exists that does not depend on SSO, has a long unique password and
+    at least two security keys stored in separate secure locations, has backup codes in a safe, is
+    never used day to day, raises an alert whenever it signs in, and is tested at least yearly.
+  remediation: >-
+    Create a dedicated emergency super admin, keep it out of third-party SSO, register two security
+    keys and store them and printed backup codes in separate safes, document the procedure, and
+    create an alert on any sign-in by the account. Test access at least annually.
+  effort: S
+  sources: [gws-admin-best-practices, gcp-super-admin]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: RC.RP-01 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Recovery" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-ADM-007
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-tenant, gw-oauth-apps]
+  severity: medium
+  question: Is multi-party approval turned on so sensitive security changes need a second super admin to approve them?
+  why: >-
+    One compromised or rogue super admin can quietly switch off 2-Step Verification, change SSO,
+    grant domain-wide delegation or export mailboxes from Vault. A second approver stops one account
+    making those changes alone.
+  yesLooksLike: >-
+    "Require multi-party approval for sensitive actions" is on under Security > Authentication >
+    Multi-party approval settings, and approvers verify each request with the requester before
+    approving.
+  remediation: >-
+    Turn on multi-party approval in Security > Authentication > Multi-party approval settings (it
+    needs at least two super admins), and agree an out-of-band check, such as a phone call, that
+    approvers use before approving a request.
+  effort: S
+  licence: [multi-party-approval]
+  sources: [gws-multi-party-approval, gws-domain-wide-delegation]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: GO-ADM-008
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gcp-org-iam]
+  severity: medium
+  question: Are admin role assignments revalidated at least every 12 months and removed after 45 days without use?
+  why: >-
+    Admin rights accumulate as people change jobs. Forgotten or unused admin accounts are prime
+    targets because nobody notices when they are misused.
+  yesLooksLike: >-
+    A recorded review at least yearly confirms every admin role holder in Workspace and every
+    organisation-level Google Cloud role still needs it, and admin accounts unused for 45 days are
+    suspended or have their roles removed.
+  remediation: >-
+    Export admin role assignments from Account > Admin roles (and organisation-level IAM bindings in
+    Google Cloud), confirm each with the person's manager, remove stale assignments, and use last
+    sign-in data and IAM role recommendations to find admin access unused for 45 days.
+  effort: S
+  sources: [gws-admin-roles, gws-admin-best-practices, gcp-role-recommendations]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }

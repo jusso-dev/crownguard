@@ -1,0 +1,111 @@
+- id: MS-EXO-001
+  module: core
+  domain: exchange-email
+  appliesTo: [ms-exchange-mailboxes, ms-sensitive-data]
+  severity: high
+  question: Is automatic forwarding of email to external addresses blocked, with only approved exceptions?
+  why: >-
+    A hidden forwarding rule is the classic way attackers keep reading a compromised mailbox, and
+    how invoice-fraud gangs watch payment conversations long after the password is changed.
+  yesLooksLike: >-
+    The outbound spam filter policy sets automatic forwarding to Off (or the default
+    system-controlled setting, which blocks it), any exceptions sit in a separate policy scoped to
+    named mailboxes, and alerts fire on new forwarding or suspicious inbox rules.
+  remediation: >-
+    In the Defender portal under Anti-spam policies, set "Automatic forwarding rules" in the
+    outbound policy to Off, create a scoped policy for approved exceptions, check remote domains and
+    mail flow rules for forwarding, and review existing inbox rules that forward externally.
+  effort: S
+  licence: []
+  sources: [ms-mdo-forwarding]
+  refs:
+    - { framework: cis-m365, ref: "6.2.1" }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: mcsb, ref: DP-2 }
+    - { framework: ms-zero-trust, ref: Data IV }
+
+- id: MS-EXO-002
+  module: core
+  domain: exchange-email
+  appliesTo: [ms-exchange-mailboxes]
+  severity: high
+  question: Is SMTP AUTH client submission turned off for the organisation and enabled only on named mailboxes that still need it?
+  why: >-
+    SMTP AUTH accepts a username and password and cannot do MFA, so attackers use it to validate
+    stolen passwords and to send convincing phishing from real mailboxes. Microsoft has announced
+    the retirement of Basic authentication for SMTP AUTH.
+  yesLooksLike: >-
+    SMTP AUTH is disabled at organisation level, remaining printers and applications use OAuth,
+    Microsoft Graph or a connector-based relay, and any per-mailbox exceptions are documented and
+    monitored.
+  remediation: >-
+    Report SMTP AUTH usage, move devices and apps to OAuth, Microsoft Graph or a connector relay,
+    disable SMTP AUTH organisation-wide with Set-TransportConfig -SmtpClientAuthenticationDisabled
+    $true, and enable it per mailbox only where unavoidable. Keep legacy authentication blocked in
+    Conditional Access.
+  effort: M
+  licence: []
+  sources: [ms-exo-smtp-auth, ms-exo-basic-auth]
+  refs:
+    - { framework: cis-m365, ref: "6.5.4" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: NS-8 }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: MS-EXO-003
+  module: core
+  domain: exchange-email
+  appliesTo: [ms-exchange-mailboxes]
+  severity: high
+  question: Are SPF, DKIM and DMARC configured for all your email domains, with DMARC set to quarantine or reject?
+  why: >-
+    Without an enforced DMARC policy, anyone can send email that appears to come from your domain to
+    your customers, suppliers and staff. Domain spoofing is a staple of invoice fraud and phishing.
+  yesLooksLike: >-
+    Every domain has an SPF record, DKIM signing is enabled in Exchange Online, and a DMARC record
+    is at p=quarantine or p=reject with aggregate reports monitored. Domains that never send mail
+    publish p=reject.
+  remediation: >-
+    Publish SPF records listing all legitimate senders, enable DKIM signing for each custom domain
+    in the Defender portal, publish DMARC at p=none with reporting, fix legitimate senders, then move
+    to quarantine and reject.
+  effort: M
+  licence: []
+  sources: [ms-email-auth, ms-dmarc]
+  refs:
+    - { framework: cis-m365, ref: "2.1.8" }
+    - { framework: cis-m365, ref: "2.1.9" }
+    - { framework: cis-m365, ref: "2.1.10" }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+
+- id: MS-EXO-004
+  module: core
+  domain: exchange-email
+  appliesTo: [ms-exchange-mailboxes, ms-teams, ms-sharepoint-sites]
+  severity: high
+  question: Are Microsoft's preset security policies for Exchange Online Protection and Defender for Office 365 applied to all recipients?
+  why: >-
+    Phishing remains the main way in. Preset policies keep anti-phishing, impersonation protection,
+    Safe Links and Safe Attachments at Microsoft's recommended settings as threats change, rather
+    than relying on custom settings that drift and leave gaps.
+  yesLooksLike: >-
+    The Standard preset covers all recipients and the Strict preset covers executives, finance,
+    payroll and administrators (tagged as priority accounts). Impersonation protection lists
+    executives and key partner domains, and no broad allow-listed sender domains bypass filtering.
+  remediation: >-
+    In the Defender portal under Preset security policies, turn on Standard protection for everyone
+    and Strict protection for high-value users, add users and domains to impersonation protection,
+    tag priority accounts, and remove custom allow lists that bypass filtering.
+  effort: S
+  licence: [defender-office-p1]
+  sources: [ms-mdo-presets, ms-mdo-priority-accounts]
+  refs:
+    - { framework: cis-m365, ref: "2.1.1" }
+    - { framework: cis-m365, ref: "2.1.4" }
+    - { framework: cis-m365, ref: "2.1.7" }
+    - { framework: cis-m365, ref: "2.4.1" }
+    - { framework: cis-m365, ref: "2.4.2" }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: ES-2 }
+    - { framework: ms-zero-trust, ref: M365 swim lane 2 }

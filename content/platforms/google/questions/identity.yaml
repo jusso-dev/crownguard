@@ -1,0 +1,187 @@
+- id: GO-ID-001
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-gmail, gw-drive, gw-collaboration, gw-gemini, gcp-org-iam]
+  severity: critical
+  question: Is 2-Step Verification enforced for every user account, not just made available?
+  why: >-
+    If 2-Step Verification is optional, a password is all an attacker needs. Phished and reused
+    passwords remain the most common way into Google accounts, and from there into mail, files and
+    any Google Cloud projects the user can reach.
+  yesLooksLike: >-
+    Security > Authentication > 2-Step Verification shows enforcement on for every organisational
+    unit with a short new-user enrollment period, and filtering the user list by 2SV enrolment
+    shows no active users left unenrolled.
+  remediation: >-
+    In the Admin console go to Security > Authentication > 2-Step Verification, allow users to turn
+    on 2-Step Verification, set Enforcement to On for every organisational unit with a short
+    new-user enrollment period, and chase unenrolled users from the user list. Remove exception
+    groups that are no longer needed.
+  effort: M
+  sources: [gws-deploy-2sv, gws-checklist-large, gws-checklist-small]
+  refs:
+    - { framework: cis-gws, ref: "4.1.1.3" }
+    - { framework: cis-gcp, ref: "1.3" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: GO-ID-002
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-gmail, gw-drive, gw-gemini, gcp-org-iam]
+  severity: high
+  question: Is 2-Step Verification limited to phishing-resistant methods (security keys or passkeys) for all users?
+  why: >-
+    Text-message codes, authenticator codes and Google prompts can all be relayed by
+    adversary-in-the-middle phishing kits. Security keys and passkeys are bound to Google's real
+    sign-in page, so a fake page cannot use them.
+  yesLooksLike: >-
+    The 2-Step Verification method is set to "Only security key" (which accepts both security keys
+    and passkeys) for all organisational units, or at least for admins, executives and finance with
+    a dated plan for everyone else, and passkeys are allowed for sign-in.
+  remediation: >-
+    Issue FIDO2 security keys or have users register passkeys on their phone or computer, allow
+    users to skip passwords with passkeys, then change the 2-Step Verification method to "Only
+    security key" one organisational unit at a time, starting with admins, executives and finance.
+    Keep backup codes for recovery.
+  effort: L
+  sources: [gws-deploy-2sv, gws-passkeys, gws-checklist-large]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: GO-ID-003
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-drive, gw-gmail, gw-gemini]
+  severity: high
+  question: Do Context-Aware Access policies limit access to Gmail, Drive and other core apps based on device and location?
+  why: >-
+    With a valid password or a stolen session, an attacker can reach mail and files from any
+    computer in the world. Context-Aware Access adds a second gate, so the device must meet your
+    rules and the request must come from an expected place.
+  yesLooksLike: >-
+    Access levels requiring a company-managed or endpoint-verified device (and, where relevant,
+    approved countries) are assigned to Gmail, Drive and other sensitive apps for all staff, after
+    first running in monitor mode.
+  remediation: >-
+    Deploy endpoint verification, create access levels under Security > Access and data control >
+    Context-Aware Access (for example "company-owned or encrypted device with screen lock" and
+    "approved countries"), test them in monitor mode, then enforce them on Gmail, Drive, Calendar
+    and the Admin console for the organisational units holding crown-jewel data.
+  effort: L
+  licence: [context-aware-access]
+  sources: [gws-context-aware-access, gws-endpoint-verification]
+  refs:
+    - { framework: cis-gws, ref: "4.2.2.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: GO-ID-004
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-endpoints, gcp-org-iam]
+  severity: medium
+  question: Do Google web sessions and Google Cloud console sessions expire so users must sign in again regularly?
+  why: >-
+    A stolen browser session cookie lets an attacker skip the password and 2-Step Verification
+    entirely. Limiting session length caps how long a stolen session stays useful, especially on
+    shared or unmanaged devices and for people with Google Cloud access.
+  yesLooksLike: >-
+    Google session control sets a web session duration your organisation has chosen (shorter for
+    admins), and Google Cloud session control requires reauthentication at least every 24 hours for
+    users of the Cloud console and gcloud, using a security key where possible.
+  remediation: >-
+    Under Security > Access and data control > Google session control, set a web session duration
+    for each organisational unit, with a shorter one for admin and finance units. Under Google
+    Cloud session control, select Require reauthentication, choose a frequency (1 to 24 hours) and
+    choose Security key as the reauthentication method for administrators.
+  effort: S
+  licence: [session-control]
+  sources: [gws-session-length, gws-cloud-session-length]
+  refs:
+    - { framework: cis-gws, ref: "4.2.4.1" }
+    - { framework: cis-gws, ref: "4.2.5.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+
+- id: GO-ID-005
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-drive, gw-gmail, gw-endpoints]
+  severity: high
+  question: When someone leaves, are their Google account access, sessions and app tokens removed on their last day?
+  why: >-
+    Former staff and contractors who keep a signed-in session, an OAuth token or a synced phone can
+    keep reading mail and files long after they leave, and dormant accounts are easy targets for
+    attackers.
+  yesLooksLike: >-
+    A documented leaver process triggered by HR resets the password and sign-in cookies, revokes
+    app passwords, OAuth tokens and security keys, removes recovery email and phone, wipes company
+    data from mobile devices, transfers Drive ownership, and then suspends or deletes the account.
+  remediation: >-
+    Follow Google's guidance on maintaining data security after an employee leaves - reset the
+    password and sign-in cookies, revoke tokens and app passwords, remove recovery options, wipe the
+    account from mobile devices, transfer Drive files to a new owner, then suspend or delete the
+    account. Automate the trigger from your HR system or identity provider and review suspended
+    accounts monthly.
+  effort: M
+  sources: [gws-offboarding, gws-transfer-drive, gws-checklist-large]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: GV.RR-04 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+
+- id: GO-ID-006
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-drive]
+  severity: medium
+  question: Have you found and dealt with personal (unmanaged) Google accounts that use your company email domain?
+  why: >-
+    Staff may have created consumer Google accounts with their work address before you adopted
+    Workspace. Those accounts sit outside your 2-Step Verification, offboarding and audit controls,
+    yet still receive files shared with your domain.
+  yesLooksLike: >-
+    The transfer tool for unmanaged users has been reviewed, every conflicting account has been
+    asked to transfer into the organisation or change its address, and the list is rechecked
+    periodically.
+  remediation: >-
+    Open the transfer tool for unmanaged users in the Admin console, send transfer requests to each
+    conflicting account, and follow up with anyone who declines (they must rename their consumer
+    account). Recheck after large hiring rounds or acquisitions.
+  effort: M
+  sources: [gws-transfer-tool]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+
+- id: GO-ID-007
+  module: core
+  domain: identity
+  appliesTo: [gw-federation, gw-tenant]
+  severity: high
+  question: If users sign in through a third-party identity provider or directory sync, is that system protected to at least the same standard as Google sign-in?
+  why: >-
+    With SSO, Google trusts whatever the identity provider asserts. A weak IdP sign-in policy, a
+    compromised IdP administrator or a stolen SAML signing key lets an attacker sign in as any
+    federated user without ever facing Google's own 2-Step Verification.
+  yesLooksLike: >-
+    The IdP enforces phishing-resistant MFA and device checks for the Google app, IdP admin roles
+    are held as tightly as Google super admins, changes to SSO profiles and signing certificates
+    raise alerts, super admins and the break-glass account do not depend on the IdP, and Google
+    Cloud Directory Sync runs under a dedicated admin role limited to users and groups.
+  remediation: >-
+    Review the SSO profiles under Security > Authentication > SSO with third-party IdP and migrate
+    any legacy profile. Require phishing-resistant MFA in the IdP policy for Google, alert on SSO
+    profile changes in Admin log events, keep super admins signing in with Google credentials and
+    security keys, and give the GCDS account a custom admin role with only user and group
+    management privileges.
+  effort: M
+  sources: [gws-sso, gws-gcds, gcp-blueprint-authn]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-04 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }

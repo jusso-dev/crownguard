@@ -1,0 +1,141 @@
+- id: MS-LOG-001
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-entra-tenant, ms-privileged-roles, ms-exchange-mailboxes, ms-sharepoint-sites, ms-teams, ms-sensitive-data, ms-copilot-agents]
+  severity: high
+  question: Is Microsoft Purview unified audit logging turned on, including mailbox auditing with no bypasses?
+  why: >-
+    The audit log is the record of who read, shared, forwarded or deleted what. Without it you cannot
+    scope a breach, answer a regulator or show what an attacker did not touch.
+  yesLooksLike: >-
+    Audit (Standard) recording is on, mailbox auditing is on by default for all mailboxes with no
+    audit bypass, and the security team has tested a search for file and mailbox access events.
+  remediation: >-
+    In the Purview portal under Audit, confirm recording is on (or run Set-AdminAuditLogConfig with
+    UnifiedAuditLogIngestionEnabled set to true), confirm the organisation's AuditDisabled setting is
+    False, and check that no mailbox has audit bypass enabled.
+  effort: S
+  licence: []
+  sources: [ms-audit-enable, ms-audit-solutions]
+  refs:
+    - { framework: cis-m365, ref: "3.1.1" }
+    - { framework: cis-m365, ref: "6.1.1" }
+    - { framework: cis-m365, ref: "6.1.3" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: ms-zero-trust, ref: SecOps I }
+
+- id: MS-LOG-002
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-entra-tenant, ms-privileged-roles, ms-workload-identities]
+  severity: high
+  question: Are Entra ID sign-in and audit logs, and Microsoft 365 audit logs, sent to a central log store or SIEM and kept for at least 12 months?
+  why: >-
+    Entra ID keeps sign-in logs for only 30 days (7 days without a premium licence), and intrusions
+    are often discovered months later. Central, protected logs also stop an attacker with admin
+    rights from erasing their tracks.
+  yesLooksLike: >-
+    Entra diagnostic settings stream interactive, non-interactive and service principal sign-in logs
+    and audit logs to Log Analytics, Microsoft Sentinel or another SIEM; Microsoft 365 audit and
+    Defender data are connected; retention is at least 12 months; and only the security team can
+    delete logs.
+  remediation: >-
+    Configure Entra ID diagnostic settings to a Log Analytics workspace or Sentinel (or a third-party
+    SIEM through Event Hubs), connect the Microsoft 365 and Defender XDR data connectors, set
+    retention to 12 months or more, and restrict who can modify or delete the workspace.
+  effort: M
+  licence: [entra-p1]
+  sources: [ms-entra-log-integration, ms-sentinel]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.AE-03 }
+    - { framework: mcsb, ref: LT-5 }
+    - { framework: mcsb, ref: LT-6 }
+    - { framework: ms-zero-trust, ref: SecOps I }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-LOG-003
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-privileged-roles, ms-entra-tenant, ms-workload-identities, ms-hybrid-identity]
+  severity: high
+  question: Are you alerted in near real time to new privileged role assignments, Conditional Access changes, emergency account sign-ins and new credentials added to applications?
+  why: >-
+    These are the moves an attacker makes straight after gaining admin access, to lock in
+    persistence. Catching them within minutes is the difference between a contained incident and
+    rebuilding the tenant.
+  yesLooksLike: >-
+    Detection rules in Sentinel, Defender XDR or Azure Monitor fire on role assignments made outside
+    PIM, Conditional Access and federation changes, emergency account sign-ins and credentials added
+    to service principals, and route to someone on call.
+  remediation: >-
+    Use the Microsoft Entra security operations guides for privileged accounts and applications to
+    build detections, starting with the emergency account sign-in alert and role assignment changes,
+    and test each alert end to end.
+  effort: M
+  licence: []
+  sources: [ms-entra-secops-privileged, ms-entra-secops-apps, ms-emergency-access]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: mcsb, ref: LT-1 }
+    - { framework: mcsb, ref: LT-2 }
+    - { framework: ms-zero-trust, ref: Identity III }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-LOG-004
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are Microsoft Defender XDR incidents triaged by a named person or service within a defined time, including outside business hours?
+  why: >-
+    Microsoft's tools raise high-quality alerts for account takeover, malicious inbox rules and
+    ransomware, but they only help if someone acts. Many breaches are visible in the portal days
+    before anyone looks.
+  yesLooksLike: >-
+    Incident notifications go to a monitored queue, a person, team or managed detection and response
+    provider owns triage with a response-time target, automatic attack disruption is enabled, and
+    response playbooks for identity compromise are documented.
+  remediation: >-
+    Configure incident email notification rules in the Defender portal, assign an owner or MDR
+    provider with a response target, confirm the prerequisites for automatic attack disruption, and
+    adopt Microsoft's incident response playbooks for phishing, password spray and app consent
+    grants.
+  effort: M
+  licence: []
+  sources: [ms-xdr-notifications, ms-attack-disruption, ms-ir-playbooks]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: nist-csf-2, ref: RS.MA-01 }
+    - { framework: mcsb, ref: IR-2 }
+    - { framework: mcsb, ref: IR-3 }
+    - { framework: ms-zero-trust, ref: SecOps II }
+
+- id: MS-LOG-005
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-hybrid-identity]
+  severity: high
+  question: Is Microsoft Defender for Identity, or an equivalent, monitoring your domain controllers, AD FS, AD CS and Entra Connect servers?
+  why: >-
+    Attacks on on-premises identity, such as DCSync, Kerberoasting and theft of the AD FS signing
+    key, are invisible to cloud logs but lead straight to cloud compromise in hybrid environments.
+  yesLooksLike: >-
+    Defender for Identity sensors are installed and healthy on every domain controller, AD FS, AD CS
+    and Entra Connect server, health issues are actioned, and identity alerts flow into Defender XDR
+    incidents.
+  remediation: >-
+    Deploy Defender for Identity sensors on all identity servers, configure the required Windows
+    auditing, resolve sensor health issues, and include identity alerts in your triage process.
+  effort: M
+  licence: [defender-identity]
+  sources: [ms-mdi, ms-protect-m365-on-prem]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: LT-2 }
+    - { framework: ms-zero-trust, ref: Identity VI }

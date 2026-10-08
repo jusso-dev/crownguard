@@ -1,0 +1,116 @@
+id: ms-zero-trust
+name: Microsoft Zero Trust deployment guidance
+shortName: Microsoft Zero Trust
+publisher: Microsoft
+source: ms-zt-m365
+closed: false
+note: >-
+  Microsoft's Zero Trust deployment guides are organised by pillar (identity, endpoints, data,
+  applications, infrastructure, visibility/automation) with numbered deployment objectives, plus
+  workload guides for Microsoft 365 and Copilot. References cite the pillar and objective number.
+controls:
+  - id: Identity I
+    group: Identity
+    title: Cloud identity federates with on-premises identity systems
+  - id: Identity II
+    group: Identity
+    title: Conditional Access policies gate access and provide remediation activities
+  - id: Identity III
+    group: Identity
+    title: Analytics improve visibility
+  - id: Identity IV
+    group: Identity
+    title: Identities and access privileges are managed with identity governance
+  - id: Identity V
+    group: Identity
+    title: User, device, location, and behaviour are analysed in real time to determine risk
+  - id: Identity VI
+    group: Identity
+    title: Integrate threat signals from other security solutions
+  - id: Data I
+    group: Data
+    title: Classify, label and discover sensitive data
+  - id: Data II
+    group: Data
+    title: Apply encryption, access control and content markings
+  - id: Data III
+    group: Data
+    title: Control access to data
+  - id: Data IV
+    group: Data
+    title: Prevent data leakage
+  - id: Data V
+    group: Data
+    title: Manage insider risks
+  - id: Data VI
+    group: Data
+    title: Delete unnecessary sensitive information
+  - id: Endpoints 1
+    group: Endpoints
+    title: Register endpoints with a cloud identity provider
+  - id: Endpoints 2
+    group: Endpoints
+    title: Limit access to cloud-managed and compliant endpoints and apps
+  - id: Endpoints 3
+    group: Endpoints
+    title: Deploy policies that enforce DLP for corporate devices and BYOD
+  - id: Endpoints 4
+    group: Endpoints
+    title: Monitor device risk with endpoint threat detection
+  - id: Applications I
+    group: Applications
+    title: Gain visibility into app activities and data by connecting them via APIs
+  - id: Applications II
+    group: Applications
+    title: Discover and control the use of shadow IT
+  - id: Applications III
+    group: Applications
+    title: Protect sensitive information and activities automatically with policies
+  - id: Applications IV
+    group: Applications
+    title: Deploy adaptive access and session controls for all apps
+  - id: Applications V
+    group: Applications
+    title: Strengthen protection against cyber threats and rogue apps
+  - id: Applications VI
+    group: Applications
+    title: Assess the security posture of your cloud environments
+  - id: Infrastructure I
+    group: Infrastructure
+    title: Workloads are monitored and alerted to abnormal behaviour
+  - id: Infrastructure II
+    group: Infrastructure
+    title: Every workload is assigned an app identity and deployed consistently
+  - id: Infrastructure III
+    group: Infrastructure
+    title: Human access to resources requires just-in-time
+  - id: Infrastructure IV
+    group: Infrastructure
+    title: Unauthorised deployments are blocked and alerts triggered
+  - id: Infrastructure VI
+    group: Infrastructure
+    title: User and resource access segmented for each workload
+  - id: SecOps I
+    group: Visibility, automation and orchestration
+    title: Establish visibility
+  - id: SecOps II
+    group: Visibility, automation and orchestration
+    title: Enable automation
+  - id: M365 swim lane 1
+    group: Microsoft 365 deployment
+    title: Secure remote and hybrid work
+  - id: M365 swim lane 2
+    group: Microsoft 365 deployment
+    title: Prevent or reduce business damage from a breach
+  - id: M365 swim lane 3
+    group: Microsoft 365 deployment
+    title: Identify and protect sensitive business data
+  - id: M365 swim lane 4
+    group: Microsoft 365 deployment
+    title: Secure AI apps and data
+  - id: Copilot step 1
+    group: Microsoft Copilot
+    title: Deploy or validate data protection and oversharing controls
+  - id: Copilot step 7
+    group: Microsoft Copilot
+    title: Deploy or validate minimum user permissions to data

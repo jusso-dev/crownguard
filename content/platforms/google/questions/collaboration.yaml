@@ -1,0 +1,100 @@
+- id: GO-COL-001
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration]
+  severity: medium
+  question: Is Google Chat with people outside the organisation limited to allowlisted domains?
+  why: >-
+    Open external chat lets anyone with a Google account message staff directly, a phishing route
+    that skips email filtering, and lets staff move files out through external spaces.
+  yesLooksLike: >-
+    External chat is off or limited to allowlisted partner domains, external spaces are restricted,
+    and external file sharing in Chat is off.
+  remediation: >-
+    In Apps > Google Workspace > Google Chat > External Chat Settings, turn external chat off or
+    select "Only allow this for allowlisted domains", restrict external spaces, and turn off
+    external file sharing in Chat.
+  effort: S
+  sources: [gws-chat-external, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.4.1.1" }
+    - { framework: cis-gws, ref: "3.1.4.2.1" }
+    - { framework: cis-gws, ref: "3.1.4.3.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Google Chat" }
+
+- id: GO-COL-002
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration, gw-oauth-apps]
+  severity: medium
+  question: Are users prevented from installing Chat apps or adding incoming webhooks without review?
+  why: >-
+    Chat apps and webhooks can read messages in the spaces they join or post content that looks
+    legitimate. An unreviewed bot can collect sensitive discussions or deliver phishing links inside
+    trusted spaces.
+  yesLooksLike: >-
+    "Allow users to install Chat apps" and "Allow users to add and use incoming webhooks" are off,
+    or Chat apps are limited to those on the Marketplace allowlist.
+  remediation: >-
+    In Apps > Google Workspace > Google Chat > Chat apps settings, turn off user installation of
+    Chat apps and incoming webhooks, and allow specific approved apps through the Marketplace
+    allowlist.
+  effort: S
+  sources: [gws-chat-apps, gws-marketplace-allowlist]
+  refs:
+    - { framework: cis-gws, ref: "3.1.4.4.1" }
+    - { framework: cis-gws, ref: "3.1.4.4.2" }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+
+- id: GO-COL-003
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration, gw-tenant, gw-drive]
+  severity: medium
+  question: Are Google Groups private to the organisation, with group creation restricted?
+  why: >-
+    Groups often grant access to shared drives, apps and Google Cloud projects. Groups that
+    outsiders can see or join, or that anyone can create, leak membership and conversations and
+    become a back door into resources.
+  yesLooksLike: >-
+    Access to groups from outside the organisation is private, only admins or a defined set of users
+    can create groups, the default permission to view conversations is limited to members, and
+    groups that grant access are labelled as security groups.
+  remediation: >-
+    In Apps > Google Workspace > Groups for Business > Sharing settings, set access from outside the
+    organisation to private, restrict who can create groups, limit default conversation viewing to
+    group members, and apply the security label to groups used for access control.
+  effort: S
+  sources: [gws-groups-policies, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.6.1" }
+    - { framework: cis-gws, ref: "3.1.6.2" }
+    - { framework: cis-gws, ref: "3.1.6.3" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Google Groups" }
+
+- id: GO-COL-004
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration]
+  severity: low
+  question: Is external calendar sharing limited to free/busy information, with warnings when external guests are invited?
+  why: >-
+    Executive calendars reveal deals, travel, board meetings and who is talking to whom. Attackers
+    use these details to time and tailor fraud and phishing.
+  yesLooksLike: >-
+    External sharing for primary and secondary calendars shows only free/busy information, and users
+    are warned when they invite guests from outside the organisation.
+  remediation: >-
+    In Apps > Google Workspace > Calendar > Sharing settings, set external sharing for primary and
+    secondary calendars to "Only free/busy information (hide event details)" and turn on external
+    invitation warnings.
+  effort: S
+  sources: [gws-calendar-sharing, gws-checklist-large]
+  refs:
+    - { framework: cis-gws, ref: "3.1.1.1.1" }
+    - { framework: cis-gws, ref: "3.1.1.1.3" }
+    - { framework: cis-gws, ref: "3.1.1.2.1" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Calendar" }

@@ -1,0 +1,39 @@
+id: essential-eight
+name: ASD Essential Eight Maturity Model
+shortName: Essential Eight
+publisher: Australian Signals Directorate
+source: asd-e8-maturity-model
+closed: true
+note: >-
+  The maturity model defines four levels. Maturity Level Zero signals weaknesses in overall posture;
+  Maturity Levels One to Three mitigate increasingly capable tradecraft and targeting. Each level is
+  implemented progressively, and ASD recommends reaching the same level across all eight strategies
+  before moving higher. The Essential Eight was designed for internet-connected IT networks (largely
+  Windows workstations and servers), so for cloud SaaS tenants only some requirements apply directly,
+  chiefly multi-factor authentication, restricting administrative privileges and regular backups.
+  Results here indicate alignment, not a formal Essential Eight assessment.
+controls:
+  - id: patch-applications
+    group: Mitigation strategy
+    title: Patch applications
+  - id: patch-operating-systems
+    group: Mitigation strategy
+    title: Patch operating systems
+  - id: mfa
+    group: Mitigation strategy
+    title: Multi-factor authentication
+  - id: restrict-admin-privileges
+    group: Mitigation strategy
+    title: Restrict administrative privileges
+  - id: application-control
+    group: Mitigation strategy
+    title: Application control
+  - id: office-macros
+    group: Mitigation strategy
+    title: Restrict Microsoft Office macros
+  - id: user-application-hardening
+    group: Mitigation strategy
+    title: User application hardening
+  - id: regular-backups
+    group: Mitigation strategy
+    title: Regular backups

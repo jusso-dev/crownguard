@@ -1,0 +1,124 @@
+- id: GO-BAK-001
+  module: core
+  domain: backup-retention
+  appliesTo: [gw-vault-retention, gw-drive, gw-gmail]
+  severity: high
+  question: Are Gmail, Drive and shared drive data backed up by a service independent of Google Vault, with restores tested?
+  why: >-
+    Admins can recover deleted Drive files for only 25 days after the trash is emptied, and only 20
+    days after an account is deleted. Google says Vault is not a backup tool. Ransomware, a rogue
+    admin or a sync mistake can destroy data permanently.
+  yesLooksLike: >-
+    A backup service covers every user's Gmail and Drive and every shared drive, runs at least
+    daily, keeps backups as long as the business needs, and a point-in-time restore of a mailbox and
+    a shared drive has been tested in the last year.
+  remediation: >-
+    Choose a Workspace backup service (the Vault FAQ lists partner options), cover every licensed
+    user and shared drive, set retention to match business continuity needs, and test restoring a
+    mailbox and a shared drive at least yearly.
+  effort: M
+  sources: [gws-vault-faq, gws-recover-drive]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: RC.RP-03 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: GO-BAK-002
+  module: core
+  domain: backup-retention
+  appliesTo: [gw-vault-retention, gw-super-admins]
+  severity: high
+  question: Would your Workspace backups survive a compromised super admin, because they are stored and administered separately from the Google tenant?
+  why: >-
+    An attacker with super admin can delete users, shared drives and Vault holds. If the backup
+    service is controlled by the same accounts, it can be wiped in the same attack.
+  yesLooksLike: >-
+    Backups are stored outside your Google tenant, the backup console uses separate admin accounts
+    with phishing-resistant MFA that a Google super admin cannot take over, only named backup
+    administrators can change or delete backups, and backup deletions raise an alert.
+  remediation: >-
+    Configure the backup service with its own dedicated admin accounts, restrict deletion and policy
+    changes to backup administrators, require phishing-resistant MFA, and alert on backup deletion
+    or retention changes.
+  effort: M
+  sources: [gws-vault-faq, gws-admin-best-practices]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: regular-backups, level: 2 }
+
+- id: GO-BAK-003
+  module: core
+  domain: backup-retention
+  appliesTo: [gw-vault-retention]
+  severity: medium
+  question: Are Workspace backups immutable for their retention period, so even backup administrators cannot delete them early?
+  why: >-
+    Ransomware crews and malicious insiders go after backup consoles first. With immutability, a
+    stolen backup admin account still cannot erase your recovery points.
+  yesLooksLike: >-
+    The backup service applies a retention lock or write-once storage to Workspace backups, and
+    deleting a backup before it expires is technically blocked or needs multi-person approval.
+  remediation: >-
+    Turn on the backup service's immutability or retention lock feature, or keep a copy in
+    write-once storage such as a Cloud Storage bucket with a locked retention policy, and confirm with
+    the vendor how early deletion is prevented.
+  effort: M
+  sources: [gws-vault-faq, gcp-bucket-lock]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+  e8:
+    - { strategy: regular-backups, level: 3 }
+
+- id: GO-BAK-004
+  module: core
+  domain: backup-retention
+  appliesTo: [gw-vault-retention, gw-gmail, gw-drive, gw-collaboration, gw-gemini]
+  severity: medium
+  question: Are Vault retention rules set for Gmail, Drive, Chat, Meet and Gemini data in line with your legal and record-keeping obligations?
+  why: >-
+    Without retention rules, a user (or an attacker using their account) can permanently delete
+    mail, files or chats, destroying records you are legally required to keep and evidence you need
+    after an incident.
+  yesLooksLike: >-
+    Default retention rules exist for each service you use, custom rules cover regulated teams or
+    crown-jewel shared drives, the periods are approved by legal or records management, and
+    litigation holds are used when required.
+  remediation: >-
+    In Vault, create default retention rules for Gmail, Drive, Chat, Groups, Meet and the Gemini app
+    where supported, matched to your records schedule, add custom rules for regulated teams, and
+    record who approved them.
+  effort: M
+  licence: [vault]
+  sources: [gws-vault-retention, gws-vault-overview, gws-gemini-privacy-hub]
+  refs:
+    - { framework: nist-csf-2, ref: GV.OC-03 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+
+- id: GO-BAK-005
+  module: core
+  domain: backup-retention
+  appliesTo: [gw-vault-retention, gw-super-admins, gw-gmail]
+  severity: high
+  question: Are Vault privileges limited to a few named people, with Vault activity audited?
+  why: >-
+    Vault can search and export any user's mail, chats and files, including executives' and HR's.
+    For confidentiality, a Vault user account is as sensitive as a super admin, and searches only
+    leave a useful trail if someone looks at it.
+  yesLooksLike: >-
+    Vault access is granted through a dedicated admin role to a small named group (typically legal
+    and security), those accounts are protected like admin accounts, and Vault audit events are
+    reviewed regularly.
+  remediation: >-
+    Review which admin roles include Vault privileges, remove them from anyone without a current
+    need, protect the remaining accounts with security keys, and review Vault log events at least
+    monthly. Multi-party approval can require a second super admin to approve Vault exports.
+  effort: S
+  licence: [vault]
+  sources: [gws-checklist-large, gws-vault-overview, gws-multi-party-approval]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Vault" }

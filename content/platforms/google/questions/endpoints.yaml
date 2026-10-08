@@ -1,0 +1,103 @@
+- id: GO-END-001
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints, gw-gmail, gw-drive]
+  severity: high
+  question: Are phones and tablets that access Workspace managed with advanced mobile management, including screen lock, encryption and remote wipe?
+  why: >-
+    With basic or no management, a lost or personal phone can hold years of email and synced files
+    with no passcode requirement and no way to wipe them, and a compromised phone can leak session
+    tokens.
+  yesLooksLike: >-
+    Mobile management is set to Advanced, devices need admin approval or a work profile before they
+    sync, strong passcodes and encryption are required, compromised devices are blocked, and the
+    company data on a lost device can be wiped.
+  remediation: >-
+    In Devices > Mobile & endpoints > Settings > Universal settings, set mobile management to
+    Advanced and turn on device approvals. Require a strong passcode and encryption, block
+    compromised devices, use Android work profiles and iOS managed apps, and document the
+    lost-device wipe process.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-advanced-mobile, gws-offboarding]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: ID.AM-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Endpoints" }
+
+- id: GO-END-002
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Is Chrome on company computers centrally managed with security settings that users cannot change?
+  why: >-
+    The browser is where staff use Workspace. Unmanaged Chrome lets users switch off Safe Browsing,
+    sync work data into personal profiles and run outdated versions, and gives you no view of risky
+    settings.
+  yesLooksLike: >-
+    Chrome on company computers is enrolled in Chrome Enterprise Core (or managed through Workspace
+    user policy), and Safe Browsing, browser sign-in restrictions and other security settings are
+    enforced as mandatory policies that users cannot override.
+  remediation: >-
+    Enrol Chrome browsers in Chrome Enterprise Core from the Admin console, then under Devices >
+    Chrome > Settings > Users & browsers enforce Safe Browsing protection, restrict browser sign-in
+    to managed accounts where appropriate and apply the other security settings in Google's Chrome
+    guidance. Check the browser reports to confirm policies apply.
+  effort: M
+  sources: [chrome-policy-management, gws-checklist-large]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: GO-END-003
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints, gw-oauth-apps]
+  severity: high
+  question: Is Chrome extension installation limited to an approved list?
+  why: >-
+    Malicious and hijacked browser extensions can read every page a user opens, including Gmail and
+    Drive, and steal session cookies that bypass 2-Step Verification. Popular extensions have been
+    compromised through their developers' accounts.
+  yesLooksLike: >-
+    Chrome blocks all extensions by default except an allowlist (or blocks extensions requesting
+    risky permissions), approved extensions are force-installed where needed, and the installed
+    extension inventory is reviewed.
+  remediation: >-
+    Under Devices > Chrome > Apps & extensions > Users & browsers, block all apps and extensions by
+    default, allowlist the ones the business approves (optionally letting users request others for
+    review), and review installed extensions in the Chrome browser reports.
+  effort: M
+  sources: [chrome-extensions]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+
+- id: GO-END-004
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are Chrome browser and ChromeOS updates installed automatically, with relaunches forced within days of release?
+  why: >-
+    Browser and ChromeOS vulnerabilities are exploited quickly after patches ship, and users who
+    never restart Chrome keep running vulnerable versions for weeks.
+  yesLooksLike: >-
+    Automatic updates are on and not pinned to old versions, relaunch notifications force a restart
+    within a few days, ChromeOS devices auto-update and are retired before their Auto Update
+    Expiration date, and version reports show few out-of-date browsers.
+  remediation: >-
+    Keep Chrome automatic updates on, set relaunch notification to required with a short period,
+    configure ChromeOS device update settings to auto-update, track Auto Update Expiration dates for
+    ChromeOS devices, and review version reports monthly.
+  effort: S
+  sources: [chrome-update-strategies, chromeos-updates, gws-checklist-large]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+    - { strategy: patch-operating-systems, level: 1 }

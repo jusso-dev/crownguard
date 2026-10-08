@@ -1,0 +1,6 @@
+# CIS Benchmarks are licensed CC BY-NC-SA 4.0. We record recommendation numbers and short titles only.
+- id: cis-m365
+  title: CIS Microsoft 365 Foundations Benchmark v7.0.0
+  publisher: Center for Internet Security
+  url: https://www.cisecurity.org/benchmark/microsoft_365
+  retrieved: 2026-10-08

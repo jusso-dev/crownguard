@@ -1,0 +1,304 @@
+- id: ms-entra-tenant
+  module: core
+  tier: identity
+  name: Microsoft Entra ID tenant & identity plane
+  description: >-
+    The directory that every Microsoft 365, Azure and single sign-on app trusts: user accounts,
+    sign-in methods, Conditional Access and tenant-wide settings. Whoever controls it controls
+    access to everything else.
+  examples:
+    - All staff accounts and their MFA methods
+    - Conditional Access policies
+    - Single sign-on to payroll, CRM and finance apps
+    - Guest (B2B) accounts and cross-tenant access settings
+  discoveryPrompts:
+    - Which business apps (payroll, finance, CRM, HR) do people sign in to with their Microsoft work account?
+    - If an attacker signed in as any one of your staff, what could they reach without being challenged again?
+    - Do suppliers, contractors or other organisations have guest accounts in your tenant?
+  exposures: [guest-access, internet-facing, unmanaged-devices, third-party-apps]
+  threats:
+    - { technique: T1110.003, name: "Brute Force: Password Spraying" }
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1557, name: Adversary-in-the-Middle }
+    - { technique: T1621, name: Multi-Factor Authentication Request Generation }
+    - { technique: T1539, name: Steal Web Session Cookie }
+
+- id: ms-privileged-roles
+  module: core
+  tier: privileged
+  name: Privileged roles & emergency access accounts
+  description: >-
+    Global Administrators and other directory roles that can change security settings, read any
+    mailbox or file, or reset other admins, plus the break-glass accounts kept for emergencies
+    and any partner (GDAP) access.
+  examples:
+    - Global Administrator and Privileged Role Administrator assignments
+    - Exchange, SharePoint, Intune and Security Administrator roles
+    - Break-glass (emergency access) accounts
+    - Managed service provider delegated access (GDAP)
+  discoveryPrompts:
+    - Who in your organisation, or at your IT provider, holds Global Administrator today?
+    - Do your administrators use the same account for email and web browsing as they use to administer the tenant?
+    - Is there an emergency account that could get you back in if every admin were locked out, and who holds its credentials?
+  exposures: [standing-admin, internet-facing, unmanaged-devices]
+  threats:
+    - { technique: T1098.003, name: "Account Manipulation: Additional Cloud Roles" }
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1199, name: Trusted Relationship }
+    - { technique: T1484.002, name: "Domain or Tenant Policy Modification: Trust Modification" }
+    - { technique: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs" }
+
+- id: ms-hybrid-identity
+  module: core
+  tier: privileged
+  name: Hybrid identity servers (Entra Connect, Cloud Sync, AD FS)
+  description: >-
+    On-premises servers that synchronise Active Directory to Entra ID or federate sign-in. Microsoft
+    classes Entra Connect as a control plane (Tier 0) asset: compromising it, AD FS or the domain
+    controllers behind it gives an attacker a path into the cloud tenant.
+  examples:
+    - Microsoft Entra Connect Sync server and its service accounts
+    - Entra Cloud Sync provisioning agents
+    - AD FS farm and token-signing certificate
+    - Domain controllers and AD Certificate Services
+  discoveryPrompts:
+    - Do staff sign in with the same password on-premises and in Microsoft 365? If so, which server synchronises it?
+    - When you sign in to Microsoft 365, are you redirected to a company-branded sign-in page hosted on your own servers (AD FS)?
+    - Who can log on to the synchronisation server, and is it patched and monitored like a domain controller?
+  exposures: [standing-admin, internet-facing]
+  threats:
+    - { technique: T1556.007, name: "Modify Authentication Process: Hybrid Identity" }
+    - { technique: T1606.002, name: "Forge Web Credentials: SAML Tokens" }
+    - { technique: T1003.006, name: "OS Credential Dumping: DCSync" }
+    - { technique: T1649, name: Steal or Forge Authentication Certificates }
+
+- id: ms-workload-identities
+  module: core
+  tier: identity
+  name: App registrations, service principals & workload identities
+  description: >-
+    Applications and automation that hold their own credentials or permissions in the tenant,
+    including third-party SaaS apps users have consented to. Application permissions such as
+    Mail.Read or Sites.Read.All give access to every mailbox or site without any user signing in.
+  examples:
+    - Backup, archiving and email security tools with tenant-wide access
+    - Line-of-business apps and scripts using client secrets
+    - Third-party apps users approved via "Sign in with Microsoft"
+    - Managed identities used by Azure workloads
+  discoveryPrompts:
+    - Which third-party products (backup, email security, e-signature, CRM sync) read your mail or files in the background?
+    - Are there scripts or integrations that sign in with an app secret, and who owns them?
+    - Could any member of staff approve a new app's access to their mailbox or OneDrive without IT involvement?
+  exposures: [third-party-apps, internet-facing]
+  threats:
+    - { technique: T1528, name: Steal Application Access Token }
+    - { technique: T1098.001, name: "Account Manipulation: Additional Cloud Credentials" }
+    - { technique: T1550.001, name: "Use Alternate Authentication Material: Application Access Token" }
+    - { technique: T1566.002, name: "Phishing: Spearphishing Link" }
+
+- id: ms-sharepoint-sites
+  module: core
+  tier: data
+  name: SharePoint sites & OneDrive
+  description: >-
+    Document libraries and personal OneDrives holding contracts, financials, HR records, board
+    papers and intellectual property. Oversharing here is also what Microsoft 365 Copilot will
+    surface to anyone who asks.
+  examples:
+    - Board papers and executive site
+    - HR, payroll and legal sites
+    - Finance and M&A document libraries
+    - Executives' OneDrive folders
+  discoveryPrompts:
+    - Which SharePoint sites or Teams hold board, HR, legal, finance or customer data?
+    - Which documents would cause regulatory notification, legal action or loss of a deal if they leaked?
+    - Are any of these shared with "Everyone except external users", by anyone-with-the-link, or with external parties?
+  exposures: [external-sharing, guest-access, unmanaged-devices, ai-grounding, third-party-apps]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1213.002, name: "Data from Information Repositories: Sharepoint" }
+    - { technique: T1567.002, name: "Exfiltration Over Web Service: Exfiltration to Cloud Storage" }
+    - { technique: T1486, name: Data Encrypted for Impact }
+
+- id: ms-teams
+  module: core
+  tier: collaboration
+  name: Microsoft Teams
+  description: >-
+    Chats, channels and meetings where sensitive decisions are discussed and files are shared,
+    plus the external chat and guest access that let people outside the organisation in.
+  examples:
+    - Executive and board Teams
+    - Incident, deal or legal matter Teams
+    - Customer and supplier shared channels
+  discoveryPrompts:
+    - Which Teams discuss restructures, acquisitions, legal matters or security incidents?
+    - Can anyone on the internet start a Teams chat with your staff?
+    - Do any sensitive Teams have guests or shared channels with other organisations?
+  exposures: [external-sharing, guest-access, unmanaged-devices, ai-grounding, third-party-apps]
+  threats:
+    - { technique: T1566.003, name: "Phishing: Spearphishing via Service" }
+    - { technique: T1213, name: Data from Information Repositories }
+    - { technique: T1656, name: Impersonation }
+
+- id: ms-exchange-mailboxes
+  module: core
+  tier: collaboration
+  name: Exchange Online mailboxes (executives, finance, payroll)
+  description: >-
+    Mailboxes that approve payments, change bank details or hold confidential correspondence.
+    A single compromised finance or executive mailbox is the usual starting point for business
+    email compromise and invoice fraud.
+  examples:
+    - CEO, CFO and board members' mailboxes
+    - Accounts payable and payroll shared mailboxes
+    - Legal and HR mailboxes
+  discoveryPrompts:
+    - Which mailboxes can approve payments, change supplier bank details or release payroll?
+    - Which shared mailboxes receive invoices or customer personal information?
+    - Who besides the owner (assistants, delegates, apps) can read executives' mail?
+  exposures: [internet-facing, unmanaged-devices, third-party-apps, ai-grounding]
+  threats:
+    - { technique: T1114.002, name: "Email Collection: Remote Email Collection" }
+    - { technique: T1114.003, name: "Email Collection: Email Forwarding Rule" }
+    - { technique: T1564.008, name: "Hide Artifacts: Email Hiding Rules" }
+    - { technique: T1098.002, name: "Account Manipulation: Additional Email Delegate Permissions" }
+    - { technique: T1534, name: Internal Spearphishing }
+
+- id: ms-sensitive-data
+  module: core
+  tier: data
+  name: Sensitive information estate (Purview labels & DLP)
+  description: >-
+    The categories of regulated or confidential information that exist across mail, files and
+    chat, such as personal information, health records, tax file numbers and payment card data,
+    and how they are classified and protected wherever they travel.
+  examples:
+    - Customer and patient personal information
+    - Tax file numbers, Medicare and bank account details
+    - Payment card data
+    - Pricing, tenders and intellectual property
+  discoveryPrompts:
+    - Which types of personal or regulated information would trigger a notifiable data breach if exposed?
+    - Do you have a classification scheme (for example Public, Internal, Confidential, Highly Confidential) that staff actually apply?
+    - Is sensitive information ever emailed or shared with external parties as part of normal work?
+  exposures: [external-sharing, guest-access, unmanaged-devices, ai-grounding]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1048, name: Exfiltration Over Alternative Protocol }
+    - { technique: T1567, name: Exfiltration Over Web Service }
+
+- id: ms-managed-endpoints
+  module: core
+  tier: endpoint
+  name: Intune-managed endpoints & admin workstations
+  description: >-
+    Laptops and phones that hold session tokens and cached data, the workstations administrators
+    use, and Intune itself, which can push scripts, apps or a wipe command to every enrolled
+    device.
+  examples:
+    - Staff Windows and macOS laptops
+    - Administrator and privileged access workstations
+    - Mobile phones with Outlook and Teams
+    - Intune scripts, app deployments and remote wipe
+  discoveryPrompts:
+    - Which devices do your administrators and executives use, and are they managed by Intune?
+    - Can staff reach email and files from personal, unmanaged devices?
+    - Who can deploy scripts or apps to every device, or issue a wipe, from the Intune admin centre?
+  exposures: [unmanaged-devices, standing-admin, internet-facing]
+  threats:
+    - { technique: T1204.002, name: "User Execution: Malicious File" }
+    - { technique: T1059.005, name: "Command and Scripting Interpreter: Visual Basic" }
+    - { technique: T1072, name: Software Deployment Tools }
+    - { technique: T1003, name: OS Credential Dumping }
+    - { technique: T1485, name: Data Destruction }
+
+- id: ms-copilot-agents
+  module: core
+  tier: ai
+  name: Microsoft 365 Copilot & AI agents
+  description: >-
+    Microsoft 365 Copilot answers questions using everything a user can already access, and
+    agents built in Copilot Studio or published by partners can act on data and call connectors.
+    Overshared content and over-privileged agents become instantly discoverable.
+  examples:
+    - Microsoft 365 Copilot and Copilot Chat
+    - Copilot Studio agents connected to SharePoint, Dataverse or line-of-business systems
+    - Third-party agents and plugins in the agent registry
+  discoveryPrompts:
+    - Who has Microsoft 365 Copilot licences today, and who is next?
+    - Has anyone built an agent in Copilot Studio that connects to company data or other systems?
+    - If someone asked Copilot "show me salaries" or "summarise the board papers", what would it find?
+  exposures: [ai-grounding, third-party-apps, external-sharing]
+  threats:
+    - { technique: T1213, name: Data from Information Repositories }
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1567, name: Exfiltration Over Web Service }
+
+- id: ms-backups
+  module: core
+  tier: data
+  name: Backups & recovery capability
+  description: >-
+    The ability to restore Microsoft 365 data and configuration after ransomware, a malicious
+    administrator or mass deletion. Recycle bins and retention are not backups if an attacker
+    with admin rights can purge them.
+  examples:
+    - Microsoft 365 Backup or third-party backup of Exchange, SharePoint and OneDrive
+    - Purview retention policies for records
+    - Azure Backup vaults
+  discoveryPrompts:
+    - If every file in SharePoint and OneDrive were encrypted tonight, how would you get them back and how long would it take?
+    - Could the same administrator account that runs Microsoft 365 also delete your backups?
+    - When did you last restore a whole site or mailbox to prove it works?
+  exposures: [standing-admin, third-party-apps]
+  threats:
+    - { technique: T1490, name: Inhibit System Recovery }
+    - { technique: T1485, name: Data Destruction }
+    - { technique: T1486, name: Data Encrypted for Impact }
+
+- id: ms-azure-subscriptions
+  module: azure
+  tier: cloud
+  name: Azure subscriptions & management plane
+  description: >-
+    Management groups, subscriptions and the Owner, Contributor and User Access Administrator
+    roles that control them. Global Administrators can elevate themselves to control every
+    subscription, so the Entra and Azure planes share one fate.
+  examples:
+    - Production subscriptions hosting line-of-business apps
+    - Storage accounts and databases holding customer data
+    - Management group hierarchy and Azure Policy assignments
+  discoveryPrompts:
+    - Which Azure subscriptions run production systems or hold customer data?
+    - Who holds Owner or User Access Administrator at the subscription or management group level?
+    - Are any storage accounts, databases or web apps reachable directly from the internet?
+  exposures: [standing-admin, internet-facing, third-party-apps]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1651, name: Cloud Administration Command }
+    - { technique: T1578, name: Modify Cloud Compute Infrastructure }
+    - { technique: T1537, name: Transfer Data to Cloud Account }
+    - { technique: T1530, name: Data from Cloud Storage }
+
+- id: ms-azure-key-vault
+  module: azure
+  tier: cloud
+  name: Azure Key Vault & application secrets
+  description: >-
+    Keys, certificates and secrets that applications use to reach databases, payment gateways
+    and other systems. A leaked secret often bypasses MFA and Conditional Access entirely.
+  examples:
+    - Database connection strings
+    - TLS and code-signing certificates
+    - API keys for payment and SaaS providers
+    - Customer-managed encryption keys
+  discoveryPrompts:
+    - Where do your applications keep passwords, API keys and certificates?
+    - Who can read secrets in production key vaults?
+    - What would stop working if a key vault, or the key in it, were deleted?
+  exposures: [standing-admin, internet-facing, third-party-apps]
+  threats:
+    - { technique: T1555.006, name: "Credentials from Password Stores: Cloud Secrets Management Stores" }
+    - { technique: T1552.001, name: "Unsecured Credentials: Credentials In Files" }
+    - { technique: T1485, name: Data Destruction }

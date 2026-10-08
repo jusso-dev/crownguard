@@ -1,0 +1,157 @@
+- id: GO-CIAM-001
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gw-super-admins]
+  severity: high
+  question: Is Google Cloud administration done through organisation-level roles granted to admin groups, rather than by Workspace super admins?
+  why: >-
+    Super admins can grant themselves any Google Cloud role, so they are already your most valuable
+    accounts. Using them for day-to-day cloud work exposes them far more than necessary.
+  yesLooksLike: >-
+    Organization Administrator and other organisation-level roles are granted to dedicated groups
+    (for example a Google Cloud organisation admins group), super admin accounts hold no direct
+    Google Cloud IAM roles, and super admins are used only for tenant tasks and recovery.
+  remediation: >-
+    Create groups for organisation, billing, security and network administration, grant the
+    Organization Administrator and other organisation-level roles to those groups, add named admin
+    accounts as members, and remove direct IAM bindings held by super admin accounts.
+  effort: M
+  sources: [gcp-super-admin, gcp-blueprint-authn]
+  refs:
+    - { framework: cis-gcp, ref: "1.1.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Cloud super admin best practices" }
+    - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+
+- id: GO-CIAM-002
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Are basic roles (Owner and Editor) kept off users and service accounts, in favour of narrower roles granted to groups?
+  why: >-
+    Owner and Editor grant thousands of permissions across every service in a project, so one
+    compromised account can read databases, delete backups and change IAM. Narrow roles limit the
+    blast radius.
+  yesLooksLike: >-
+    No users or service accounts hold Owner or Editor at organisation or folder level, project-level
+    basic roles are rare and justified, access is granted to groups, and IAM role recommendations
+    are reviewed and applied.
+  remediation: >-
+    Use Policy Analyzer or Cloud Asset Inventory to list basic role bindings, replace them with
+    predefined or custom roles granted to groups, and act on IAM role recommendations to remove
+    permissions that aren't used.
+  effort: L
+  sources: [gcp-iam-securely, gcp-role-recommendations, gcp-blueprint-authn]
+  refs:
+    - { framework: cis-gcp, ref: "1.6" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: GO-CIAM-003
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores]
+  severity: high
+  question: Does the domain-restricted sharing organisation policy stop IAM roles being granted to accounts outside your organisation?
+  why: >-
+    Without it, anyone with IAM admin rights can grant a personal Gmail account or an outside
+    organisation access to projects and datasets, an easy and quiet way to exfiltrate data or keep
+    access.
+  yesLooksLike: >-
+    The iam.allowedPolicyMemberDomains constraint (or the managed iam.managed.allowedPolicyMembers
+    constraint) is enforced at the organisation node allowing only your own customer ID and approved
+    partners, and any project-level exceptions are documented.
+  remediation: >-
+    Enforce domain-restricted sharing at the organisation with your Workspace or Cloud Identity
+    customer ID (organisations created on or after 3 May 2024 have it by default), list existing
+    external principals with Policy Analyzer and remove or justify them, and grant exceptions only
+    on specific projects.
+  effort: M
+  sources: [gcp-domain-restricted-sharing, gcp-blueprint-preventative]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+
+- id: GO-CIAM-004
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-service-accounts, gw-oauth-apps]
+  severity: critical
+  question: Is creating and uploading service account keys blocked by organisation policy, with workloads using attached service accounts or workload identity federation instead?
+  why: >-
+    A service account key is a long-lived credential that works from anywhere without MFA. Keys end
+    up in source code, laptops and CI logs, and leaked keys are one of the most common ways Google
+    Cloud environments are breached.
+  yesLooksLike: >-
+    iam.disableServiceAccountKeyCreation and iam.disableServiceAccountKeyUpload (or their managed
+    equivalents) are enforced at the organisation, exceptions are time-limited and documented,
+    existing user-managed keys are inventoried and being removed, and external workloads use
+    workload identity federation.
+  remediation: >-
+    Enforce the key creation and upload constraints at the organisation node (the default for
+    organisations created on or after 3 May 2024), find existing user-managed keys with Cloud Asset
+    Inventory, replace them with attached service accounts or workload identity federation, and
+    delete keys that are no longer used.
+  effort: M
+  sources: [gcp-restrict-service-accounts, gcp-sa-key-best-practices, gcp-workload-identity-federation]
+  refs:
+    - { framework: cis-gcp, ref: "1.5" }
+    - { framework: cis-gcp, ref: "1.8" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: google-security-guidance, ref: "Service account key best practices" }
+
+- id: GO-CIAM-005
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-service-accounts, gcp-org-iam]
+  severity: high
+  question: Are service accounts given only the roles their workload needs, with no admin roles and tightly limited rights for people to impersonate them?
+  why: >-
+    A service account with Owner, Editor or an admin role is a privileged identity that anyone able
+    to impersonate it, deploy code as it or steal its token can use. Project-wide Service Account
+    User or Token Creator grants let ordinary users borrow those privileges.
+  yesLooksLike: >-
+    No service account holds Owner, Editor or admin roles, default Compute Engine service accounts
+    are not used by workloads and have no Editor grant, and Service Account User and Service Account
+    Token Creator are granted on individual service accounts rather than whole projects.
+  remediation: >-
+    Review service account role bindings and replace basic and admin roles with narrow predefined
+    roles, keep iam.automaticIamGrantsForDefaultServiceAccounts enforced, create a dedicated service
+    account for each workload, and move impersonation roles from project level to the specific
+    service accounts.
+  effort: M
+  sources: [gcp-sa-best-practices, gcp-sa-roles, gcp-restrict-service-accounts]
+  refs:
+    - { framework: cis-gcp, ref: "1.6" }
+    - { framework: cis-gcp, ref: "1.7" }
+    - { framework: cis-gcp, ref: "4.1" }
+    - { framework: cis-gcp, ref: "4.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: GO-CIAM-006
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam]
+  severity: medium
+  question: Are high-privilege Google Cloud roles granted just in time through Privileged Access Manager rather than held permanently?
+  why: >-
+    Standing Owner or Organization Administrator access means a stolen session gives an attacker
+    full control at any moment. Time-bound, approved and logged grants shrink that window.
+  yesLooksLike: >-
+    Privileged Access Manager entitlements cover organisation-level and production admin roles,
+    grants need a justification (and approval for the most sensitive roles), expire within hours,
+    and grant activity is logged and reviewed.
+  remediation: >-
+    Create Privileged Access Manager entitlements for Organization Administrator, IAM admin and
+    production owner roles with short maximum durations and approvers, remove the matching standing
+    bindings, and alert on grant events.
+  effort: M
+  sources: [gcp-pam, gcp-blueprint-authn]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }

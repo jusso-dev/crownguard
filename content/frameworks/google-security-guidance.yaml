@@ -1,0 +1,81 @@
+id: google-security-guidance
+name: Google Workspace and Google Cloud security guidance
+shortName: Google guidance
+publisher: Google
+source: gws-checklist-large
+closed: false
+note: >-
+  Google publishes Workspace security checklists for small (1-100 users) and medium-to-large
+  (100+ users) organisations, administrator account best practices, a Generative AI Privacy Hub,
+  and the Google Cloud enterprise foundations blueprint. References cite the checklist or blueprint
+  section a question is drawn from.
+controls:
+  - id: "Checklist: Administrator accounts"
+    group: Workspace security checklist
+    title: Protect super admin accounts with enhanced security measures
+  - id: "Checklist: Accounts"
+    group: Workspace security checklist
+    title: Enforce multifactor authentication, protect passwords, and prevent and remediate compromised accounts
+  - id: "Checklist: Apps"
+    group: Workspace security checklist
+    title: Review third-party app access, keep a trusted app list and control access to Google core services
+  - id: "Checklist: Calendar"
+    group: Workspace security checklist
+    title: Limit external calendar sharing and warn users when inviting external guests
+  - id: "Checklist: Google Chat"
+    group: Workspace security checklist
+    title: Limit who can chat externally and set a chat invitation policy
+  - id: "Checklist: Chrome"
+    group: Workspace security checklist
+    title: Keep Chrome browser and ChromeOS updated and set browser and device policies
+  - id: "Checklist: Endpoints"
+    group: Workspace security checklist
+    title: Mobile devices, computers and other endpoints (device management security checklist)
+  - id: "Checklist: Drive"
+    group: Workspace security checklist
+    title: Limit external sharing, limit local copies of Drive data and protect sensitive data
+  - id: "Checklist: Gmail"
+    group: Workspace security checklist
+    title: Authenticate email, protect users and organisations, and protect sensitive data in Gmail
+  - id: "Checklist: Google Groups"
+    group: Workspace security checklist
+    title: Use security groups, private group access and restricted group creation
+  - id: "Checklist: Vault"
+    group: Workspace security checklist
+    title: Treat accounts with Vault privileges as sensitive and regularly audit Vault activity
+  - id: "Checklist: Monitoring"
+    group: Workspace security checklist
+    title: Review security settings, investigate activity and review the Admin audit log
+  - id: "Admin accounts: Protect"
+    group: Administrator account best practices
+    title: 2-Step Verification, security keys, individual admin accounts and Advanced Protection for admins
+  - id: "Admin accounts: Super admins"
+    group: Administrator account best practices
+    title: Multiple super admins, separate daily accounts, delegated roles and recovery settings
+  - id: "Admin accounts: Monitor"
+    group: Administrator account best practices
+    title: Admin email alerts and Admin log event review
+  - id: "Admin accounts: Recovery"
+    group: Administrator account best practices
+    title: Recovery options, spare security keys and backup codes for admin accounts
+  - id: "Gemini Privacy Hub"
+    group: Generative AI in Google Workspace
+    title: Gemini honours existing access controls, DLP, IRM, client-side encryption and Vault retention
+  - id: "Blueprint: Organization structure"
+    group: Enterprise foundations blueprint
+    title: Folders and projects separate environments and centralise shared services such as logging
+  - id: "Blueprint: Authentication and authorization"
+    group: Enterprise foundations blueprint
+    title: Cloud Identity as IdP, protected super admins, group-based IAM and privileged access controls
+  - id: "Blueprint: Preventative controls"
+    group: Enterprise foundations blueprint
+    title: Organisation policy constraints and infrastructure-as-code policy checks
+  - id: "Blueprint: Detective controls"
+    group: Enterprise foundations blueprint
+    title: Centralised audit logging, Security Command Center and alerting on high-risk changes
+  - id: "Cloud super admin best practices"
+    group: Google Cloud Resource Manager
+    title: Super admins kept separate from day-to-day Google Cloud administration
+  - id: "Service account key best practices"
+    group: Google Cloud IAM
+    title: Avoid user-managed service account keys; prefer attached service accounts and workload identity federation

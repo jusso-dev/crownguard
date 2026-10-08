@@ -1,0 +1,581 @@
+# Microsoft Learn guidance cited by the Microsoft 365 & Entra ID content pack.
+- id: ms-zt-m365
+  title: Zero Trust deployment with Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/microsoft-365-zero-trust
+  retrieved: 2026-10-08
+- id: ms-zt-identity
+  title: Securing identity with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/identity
+  retrieved: 2026-10-08
+- id: ms-zt-data
+  title: Secure data with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/data
+  retrieved: 2026-10-08
+- id: ms-zt-endpoints
+  title: Secure endpoints with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/endpoints
+  retrieved: 2026-10-08
+- id: ms-zt-applications
+  title: Secure applications with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/applications
+  retrieved: 2026-10-08
+- id: ms-zt-infrastructure
+  title: Secure infrastructure with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/infrastructure
+  retrieved: 2026-10-08
+- id: ms-zt-secops
+  title: Integrated SecOps with Zero Trust
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/deploy/visibility-automation-orchestration
+  retrieved: 2026-10-08
+- id: ms-zt-copilot
+  title: Apply principles of Zero Trust to Microsoft Copilot
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/copilots/zero-trust-microsoft-365-copilot
+  retrieved: 2026-10-08
+- id: ms-enterprise-access-model
+  title: Enterprise access model
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-access-model
+  retrieved: 2026-10-08
+- id: ms-ramp
+  title: Privileged access security rapid modernization plan (RaMP)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/privileged-access-workstations/security-rapid-modernization-plan
+  retrieved: 2026-10-08
+- id: ms-privileged-access-devices
+  title: Securing devices as part of the privileged access story
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-devices
+  retrieved: 2026-10-08
+- id: ms-ir-playbooks
+  title: Incident response playbooks
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/operations/incident-response-playbooks
+  retrieved: 2026-10-08
+- id: ms-entra-secops-privileged
+  title: Microsoft Entra security operations for privileged accounts
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/architecture/security-operations-privileged-accounts
+  retrieved: 2026-10-08
+- id: ms-entra-secops-apps
+  title: Microsoft Entra security operations guide for applications
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/architecture/security-operations-applications
+  retrieved: 2026-10-08
+- id: ms-protect-m365-on-prem
+  title: Protecting Microsoft 365 from on-premises attacks
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/architecture/protect-m365-from-on-premises-attacks
+  retrieved: 2026-10-08
+- id: ms-emergency-access
+  title: Manage emergency access admin accounts
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/security-emergency-access
+  retrieved: 2026-10-08
+- id: ms-entra-role-best-practices
+  title: Best practices for Microsoft Entra roles
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/best-practices
+  retrieved: 2026-10-08
+- id: ms-pim-configure
+  title: "What is Microsoft Entra Privileged Identity Management?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure
+  retrieved: 2026-10-08
+- id: ms-access-reviews
+  title: "What are access reviews?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/id-governance/access-reviews-overview
+  retrieved: 2026-10-08
+- id: ms-ca-plan
+  title: Plan a Conditional Access deployment
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan-conditional-access
+  retrieved: 2026-10-08
+- id: ms-ca-managed-policies
+  title: Microsoft-managed Conditional Access policies
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/managed-policies
+  retrieved: 2026-10-08
+- id: ms-ca-all-users-mfa
+  title: Require MFA strength for all users (Conditional Access policy template)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-mfa-strength
+  retrieved: 2026-10-08
+- id: ms-ca-admin-phish-resistant
+  title: Require phishing-resistant MFA for administrators
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-admin-phish-resistant-mfa
+  retrieved: 2026-10-08
+- id: ms-ca-block-legacy
+  title: Block legacy authentication with Conditional Access
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-block-legacy-authentication
+  retrieved: 2026-10-08
+- id: ms-ca-auth-flows
+  title: Block authentication flows (device code flow and authentication transfer) with Conditional Access
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-block-authentication-flows
+  retrieved: 2026-10-08
+- id: ms-ca-risk-signin
+  title: Require MFA for elevated sign-in risk (Conditional Access policy template)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-risk-based-sign-in
+  retrieved: 2026-10-08
+- id: ms-ca-risk-user
+  title: Require secure password change or remediation for elevated user risk
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-risk-based-user
+  retrieved: 2026-10-08
+- id: ms-ca-compliant-device
+  title: Require a compliant device, hybrid joined device or MFA for all users
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance
+  retrieved: 2026-10-08
+- id: ms-auth-strengths
+  title: Conditional Access authentication strengths
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-strengths
+  retrieved: 2026-10-08
+- id: ms-phish-resistant-deploy
+  title: Deploy phishing-resistant passwordless authentication in Microsoft Entra ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-deploy-phishing-resistant-passwordless-authentication
+  retrieved: 2026-10-08
+- id: ms-auth-methods-manage
+  title: Manage authentication methods for Microsoft Entra ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-methods-manage
+  retrieved: 2026-10-08
+- id: ms-mandatory-mfa
+  title: Planning for mandatory multifactor authentication for Azure and other admin portals
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication
+  retrieved: 2026-10-08
+- id: ms-security-defaults
+  title: Security defaults in Microsoft Entra ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/fundamentals/security-defaults
+  retrieved: 2026-10-08
+- id: ms-id-protection-policies
+  title: Configure and enable risk policies (Microsoft Entra ID Protection)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/id-protection/howto-identity-protection-configure-risk-policies
+  retrieved: 2026-10-08
+- id: ms-user-consent
+  title: Configure how users consent to applications
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent
+  retrieved: 2026-10-08
+- id: ms-admin-consent-workflow
+  title: Configure the admin consent workflow
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-admin-consent-workflow
+  retrieved: 2026-10-08
+- id: ms-app-permissions-review
+  title: Review permissions granted to enterprise applications
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-application-permissions
+  retrieved: 2026-10-08
+- id: ms-consent-phishing
+  title: Protect against consent phishing
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/protect-against-consent-phishing
+  retrieved: 2026-10-08
+- id: ms-app-registration-best-practices
+  title: Security best practices for application properties in Microsoft Entra ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity-platform/security-best-practices-for-app-registration
+  retrieved: 2026-10-08
+- id: ms-workload-identity-federation
+  title: Workload identity federation
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
+  retrieved: 2026-10-08
+- id: ms-managed-identities
+  title: "What are managed identities for Azure resources?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
+  retrieved: 2026-10-08
+- id: ms-entra-agent-id
+  title: "What is Microsoft Entra Agent ID?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/agent-id/what-is-microsoft-entra-agent-id
+  retrieved: 2026-10-08
+- id: ms-risky-agents
+  title: Risky agents in Microsoft Entra ID Protection
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/id-protection/concept-risky-agents
+  retrieved: 2026-10-08
+- id: ms-external-collab
+  title: Configure external collaboration settings for B2B
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/external-id/external-collaboration-settings-configure
+  retrieved: 2026-10-08
+- id: ms-cross-tenant-access
+  title: Cross-tenant access overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/external-id/cross-tenant-access-overview
+  retrieved: 2026-10-08
+- id: ms-entra-connect-prereqs
+  title: "Microsoft Entra Connect: prerequisites and hardware (hardening guidance)"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-prerequisites
+  retrieved: 2026-10-08
+- id: ms-migrate-federation
+  title: Migrate from federation to cloud authentication
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/migrate-from-federation-to-cloud-authentication
+  retrieved: 2026-10-08
+- id: ms-phs
+  title: Implement password hash synchronization with Microsoft Entra Connect Sync
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-password-hash-synchronization
+  retrieved: 2026-10-08
+- id: ms-entra-log-integration
+  title: Integrate Microsoft Entra logs with Azure Monitor logs
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-integrate-activity-logs-with-azure-monitor-logs
+  retrieved: 2026-10-08
+- id: ms-gdap
+  title: Introduction to granular delegated admin privileges (GDAP)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/partner-center/customers/gdap-introduction
+  retrieved: 2026-10-08
+- id: ms-audit-enable
+  title: Turn auditing on or off (Microsoft Purview)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/audit-log-enable-disable
+  retrieved: 2026-10-08
+- id: ms-audit-solutions
+  title: Learn about auditing solutions in Microsoft Purview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/audit-solutions-overview
+  retrieved: 2026-10-08
+- id: ms-sensitivity-labels
+  title: Learn about sensitivity labels
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/sensitivity-labels
+  retrieved: 2026-10-08
+- id: ms-labels-get-started
+  title: Get started with sensitivity labels
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/get-started-with-sensitivity-labels
+  retrieved: 2026-10-08
+- id: ms-labels-containers
+  title: Use sensitivity labels to protect content in Microsoft Teams, Microsoft 365 groups, and SharePoint sites
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/sensitivity-labels-teams-groups-sites
+  retrieved: 2026-10-08
+- id: ms-dlp
+  title: Learn about data loss prevention
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/dlp-learn-about-dlp
+  retrieved: 2026-10-08
+- id: ms-dlp-copilot
+  title: Microsoft Purview DLP for Microsoft 365 Copilot and Cowork
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/dlp-microsoft365-copilot-location-learn-about
+  retrieved: 2026-10-08
+- id: ms-dspm-ai
+  title: Data Security Posture Management for AI
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/dspm-for-ai
+  retrieved: 2026-10-08
+- id: ms-purview-licensing
+  title: Microsoft Purview service description (licensing)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-purview-service-description
+  retrieved: 2026-10-08
+- id: ms-copilot-secure-govern
+  title: "Secure and governed data foundation for Microsoft Copilot: foundational deployment guidance"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/secure-govern-copilot-foundational-deployment-guidance
+  retrieved: 2026-10-08
+- id: ms-copilot-configure-foundation
+  title: Configure a secure and governed foundation for Microsoft Copilot
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/configure-secure-governed-data-foundation-microsoft-365-copilot
+  retrieved: 2026-10-08
+- id: ms-copilot-studio-security
+  title: Security and governance in Microsoft Copilot Studio
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-copilot-studio/security-and-governance
+  retrieved: 2026-10-08
+- id: ms-copilot-studio-sharing
+  title: Control how agents are shared (Copilot Studio)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-copilot-studio/admin-sharing-controls-limits
+  retrieved: 2026-10-08
+- id: ms-power-platform-dlp
+  title: Data policies (Power Platform)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/power-platform/admin/wp-data-loss-prevention
+  retrieved: 2026-10-08
+- id: ms-agent-registry
+  title: Manage agent registry in Microsoft 365 admin center
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry
+  retrieved: 2026-10-08
+- id: ms-mdca-discovered-apps
+  title: Discover and manage cloud apps (Microsoft Defender for Cloud Apps)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-cloud-apps/discovered-apps
+  retrieved: 2026-10-08
+- id: ms-sam
+  title: SharePoint Advanced Management overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/advanced-management
+  retrieved: 2026-10-08
+- id: ms-sam-copilot-licence
+  title: SharePoint Advanced Management features included with Microsoft 365 Copilot
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/sharepoint-advanced-management-features-copilot-license
+  retrieved: 2026-10-08
+- id: ms-restricted-access-control
+  title: Restrict SharePoint site access with Microsoft 365 groups and Entra security groups
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/restricted-access-control
+  retrieved: 2026-10-08
+- id: ms-restricted-content-discovery
+  title: Restrict discovery of SharePoint sites and content
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/restricted-content-discovery
+  retrieved: 2026-10-08
+- id: ms-dag-reports
+  title: Data access governance reports for SharePoint sites
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/data-access-governance-reports
+  retrieved: 2026-10-08
+- id: ms-spo-external-sharing
+  title: Manage sharing settings for SharePoint and OneDrive
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/turn-external-sharing-on-or-off
+  retrieved: 2026-10-08
+- id: ms-spo-default-link
+  title: Change the default sharing link type for a site
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/change-default-sharing-link
+  retrieved: 2026-10-08
+- id: ms-teams-external-access
+  title: Manage external meetings and chat with people and organisations using Microsoft identities
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoftteams/trusted-organizations-external-meetings-chat
+  retrieved: 2026-10-08
+- id: ms-teams-app-management
+  title: Manage apps in Microsoft Teams with app-centric management
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoftteams/app-centric-management
+  retrieved: 2026-10-08
+- id: ms-exo-smtp-auth
+  title: Enable or disable authenticated client SMTP submission (SMTP AUTH) in Exchange Online
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission
+  retrieved: 2026-10-08
+- id: ms-exo-basic-auth
+  title: Deprecation of Basic authentication in Exchange Online
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online
+  retrieved: 2026-10-08
+- id: ms-exo-app-rbac
+  title: Role Based Access Control for Applications in Exchange Online
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac
+  retrieved: 2026-10-08
+- id: ms-mdo-forwarding
+  title: Control automatic external email forwarding in Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-external-email-forwarding
+  retrieved: 2026-10-08
+- id: ms-mdo-presets
+  title: Preset security policies in EOP and Microsoft Defender for Office 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies
+  retrieved: 2026-10-08
+- id: ms-mdo-priority-accounts
+  title: Security recommendations for priority accounts in Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/priority-accounts-security-recommendations
+  retrieved: 2026-10-08
+- id: ms-email-auth
+  title: Email authentication in Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/email-authentication-about
+  retrieved: 2026-10-08
+- id: ms-dmarc
+  title: Set up DMARC to validate the From address domain for senders in Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure
+  retrieved: 2026-10-08
+- id: ms-intune-compliance
+  title: Device compliance policies in Microsoft Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-security/compliance/overview
+  retrieved: 2026-10-08
+- id: ms-intune-asr
+  title: Attack surface reduction policy for endpoint security in Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/attack-surface-reduction
+  retrieved: 2026-10-08
+- id: ms-asr-rules
+  title: Attack surface reduction rules reference
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-reference
+  retrieved: 2026-10-08
+- id: ms-macros-internet
+  title: Macros from the internet are blocked by default in Office
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365-apps/security/internet-macros-blocked
+  retrieved: 2026-10-08
+- id: ms-app-control
+  title: Application Control for Windows
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/appcontrol
+  retrieved: 2026-10-08
+- id: ms-intune-windows-updates
+  title: Manage Windows updates with Microsoft Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-updates/windows/
+  retrieved: 2026-10-08
+- id: ms-m365-apps-channels
+  title: Overview of update channels for Microsoft 365 Apps
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365-apps/updates/overview-update-channels
+  retrieved: 2026-10-08
+- id: ms-edr-block-mode
+  title: Endpoint detection and response in block mode
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/edr-in-block-mode
+  retrieved: 2026-10-08
+- id: ms-tamper-protection
+  title: Protect security settings with tamper protection
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/tamper-protection-overview
+  retrieved: 2026-10-08
+- id: ms-defender-business
+  title: Microsoft Defender for Business overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-business/mdb-overview
+  retrieved: 2026-10-08
+- id: ms-laps
+  title: Windows LAPS support in Microsoft Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-security/laps/overview
+  retrieved: 2026-10-08
+- id: ms-intune-maa
+  title: Use access policies to require multi admin approval (Intune)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/fundamentals/role-based-access-control/multi-admin-approval
+  retrieved: 2026-10-08
+- id: ms-mdi
+  title: "What is Microsoft Defender for Identity?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-for-identity/what-is
+  retrieved: 2026-10-08
+- id: ms-defender-xdr
+  title: "What is Microsoft Defender XDR?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/microsoft-365-defender
+  retrieved: 2026-10-08
+- id: ms-xdr-notifications
+  title: Configure email notifications for incidents in Microsoft Defender XDR
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/configure-email-notifications
+  retrieved: 2026-10-08
+- id: ms-attack-disruption
+  title: Configure automatic attack disruption in Microsoft Defender XDR
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/configure-attack-disruption
+  retrieved: 2026-10-08
+- id: ms-secure-score
+  title: Microsoft Secure Score
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score
+  retrieved: 2026-10-08
+- id: ms-sentinel
+  title: "What is Microsoft Sentinel?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/sentinel/overview
+  retrieved: 2026-10-08
+- id: ms-m365-backup
+  title: Overview of Microsoft 365 Backup
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/backup/backup-overview
+  retrieved: 2026-10-08
+- id: ms-m365-resiliency
+  title: Data resiliency in Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/assurance/assurance-data-resiliency-overview
+  retrieved: 2026-10-08
+- id: ms-mcsb
+  title: Overview of the Microsoft cloud security benchmark v2 (preview)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/benchmark/azure/overview
+  retrieved: 2026-10-08
+- id: ms-mcsb-privileged-access
+  title: "Microsoft cloud security benchmark v2: Privileged Access"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/benchmark/azure/mcsb-v2-privileged-access
+  retrieved: 2026-10-08
+- id: ms-mcsb-ai
+  title: "Microsoft cloud security benchmark v2: Artificial Intelligence Security"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/benchmark/azure/mcsb-v2-artificial-intelligence-security
+  retrieved: 2026-10-08
+- id: ms-mdc
+  title: "What is Microsoft Defender for Cloud?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction
+  retrieved: 2026-10-08
+- id: ms-azure-rbac-best
+  title: Best practices for Azure RBAC
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices
+  retrieved: 2026-10-08
+- id: ms-elevate-access
+  title: Elevate access to manage all Azure subscriptions and management groups
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/role-based-access-control/elevate-access-global-admin
+  retrieved: 2026-10-08
+- id: ms-kv-secure
+  title: Secure your Azure Key Vault
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/general/secure-key-vault
+  retrieved: 2026-10-08
+- id: ms-kv-rbac
+  title: Provide access to Key Vault keys, certificates, and secrets with Azure role-based access control
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide
+  retrieved: 2026-10-08
+- id: ms-kv-soft-delete
+  title: Azure Key Vault soft-delete overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview
+  retrieved: 2026-10-08
+- id: ms-azure-backup-immutable
+  title: Concept of immutable vault for Azure Backup
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/backup/backup-azure-immutable-vault-concept
+  retrieved: 2026-10-08
+- id: ms-azure-backup-mua
+  title: Multi-user authorization using Resource Guard
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/backup/multi-user-authorization-concept
+  retrieved: 2026-10-08
+- id: ms-storage-anon
+  title: Remediate anonymous read access to blob data
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-prevent
+  retrieved: 2026-10-08
+- id: ms-storage-shared-key
+  title: Prevent Shared Key authorization for an Azure Storage account
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/shared-key-authorization-prevent
+  retrieved: 2026-10-08

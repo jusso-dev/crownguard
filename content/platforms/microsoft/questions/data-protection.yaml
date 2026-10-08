@@ -1,0 +1,81 @@
+- id: MS-DP-001
+  module: core
+  domain: data-protection
+  appliesTo: [ms-sensitive-data, ms-sharepoint-sites, ms-exchange-mailboxes]
+  severity: high
+  question: Are sensitivity labels published to all users and applied to the documents and emails that make up your crown jewels?
+  why: >-
+    You cannot protect what you cannot find. Labels make sensitivity visible to people, travel with
+    the file when it leaves SharePoint, and are the signal that DLP, Copilot and Defender use to
+    apply protection.
+  yesLooksLike: >-
+    A short label taxonomy (for example Public, General, Confidential, Highly Confidential) is
+    published to all users in the Office apps, a default label is set, and content in crown-jewel
+    sites and mailboxes is labelled, with label activity visible in Purview.
+  remediation: >-
+    Agree a simple taxonomy with business owners, create and publish labels in the Microsoft Purview
+    portal, set a default label and require justification to downgrade, then label crown-jewel
+    locations using default library labels or, with E5, automatic labelling policies.
+  effort: M
+  licence: [purview-labels]
+  sources: [ms-labels-get-started, ms-sensitivity-labels, ms-zt-data]
+  refs:
+    - { framework: cis-m365, ref: "3.3.1" }
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: DP-1 }
+    - { framework: ms-zero-trust, ref: Data I }
+
+- id: MS-DP-002
+  module: core
+  domain: data-protection
+  appliesTo: [ms-sensitive-data, ms-sharepoint-sites, ms-exchange-mailboxes]
+  severity: high
+  question: Does your most sensitive label apply encryption so that only authorised people can open the content, even after it leaves the tenant?
+  why: >-
+    Encryption in the label protects the file itself. A forwarded attachment, a file copied to a USB
+    stick or a document a former employee kept cannot be opened by the wrong person, and access can
+    be revoked later.
+  yesLooksLike: >-
+    The Highly Confidential (or equivalent) label applies encryption with permissions limited to
+    named groups, it is used on board, HR, legal and finance content, and Copilot and DLP policies
+    respect it.
+  remediation: >-
+    Configure encryption on top-tier labels with permissions assigned to specific groups rather than
+    any authenticated user, test with key external partners, enable co-authoring for encrypted
+    files, and apply the label to crown-jewel libraries.
+  effort: M
+  licence: [purview-labels]
+  sources: [ms-sensitivity-labels, ms-zt-data]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: DP-1 }
+    - { framework: ms-zero-trust, ref: Data II }
+
+- id: MS-DP-003
+  module: core
+  domain: data-protection
+  appliesTo: [ms-sensitive-data, ms-exchange-mailboxes, ms-sharepoint-sites, ms-teams]
+  severity: high
+  question: Do data loss prevention policies detect and block sharing of your regulated information, such as tax file numbers, Medicare numbers and payment card data, in email, SharePoint and OneDrive?
+  why: >-
+    People routinely email or share spreadsheets of personal information by mistake. DLP catches it
+    at the point of sharing and gives you evidence for breach assessments.
+  yesLooksLike: >-
+    DLP policies covering Exchange, SharePoint and OneDrive (and Teams where licensed) use the
+    Australian sensitive information types and your own custom types, block external sharing of
+    high-volume matches with policy tips, and alerts are reviewed.
+  remediation: >-
+    Start from the Purview DLP templates for Australian privacy and financial data, run them in
+    simulation mode, tune false positives, then enforce with policy tips and override justification.
+    Extend to Teams chat, endpoints and Copilot with E5 or E5 Compliance licences.
+  effort: M
+  licence: [purview-dlp]
+  sources: [ms-dlp, ms-purview-licensing]
+  refs:
+    - { framework: cis-m365, ref: "3.2.1" }
+    - { framework: cis-m365, ref: "3.2.2" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: mcsb, ref: DP-2 }
+    - { framework: ms-zero-trust, ref: Data IV }
