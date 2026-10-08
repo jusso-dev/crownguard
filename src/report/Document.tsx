@@ -67,8 +67,14 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, backgroundColor: theme.accent }} />
         <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, textAlign: "center", marginTop: 4 }}>{a.branding.marking}</Text>
         {a.branding.logoDataUrl && (
-          <View style={{ marginTop: 70, alignSelf: "flex-start", backgroundColor: "#ffffff", padding: 12, borderRadius: 4 }}>
-            <Image src={a.branding.logoDataUrl} style={{ maxHeight: 64, maxWidth: 220, objectFit: "contain" }} />
+          <View
+            style={
+              a.branding.logoBackdrop === "white"
+                ? { marginTop: 70, alignSelf: "flex-start", backgroundColor: "#ffffff", padding: 12, borderRadius: 4 }
+                : { marginTop: 70, alignSelf: "flex-start" }
+            }
+          >
+            <Image src={a.branding.logoDataUrl} style={{ maxHeight: 72, maxWidth: 240, objectFit: "contain" }} />
           </View>
         )}
         <View style={{ marginTop: a.branding.logoDataUrl ? 120 : 220 }}>

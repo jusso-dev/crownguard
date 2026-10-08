@@ -40,3 +40,23 @@ test("on a new assessment the logo sets the colours automatically", async ({ pag
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("crownguard:v1")!).state.assessment.branding.primary);
   expect(stored).not.toBe("#1f3a5f");
 });
+
+test("a logo with its own background goes on the cover without a white panel", async ({ page }) => {
+  await page.goto("./");
+  await page.getByTestId("import-input").setInputFiles("e2e/fixtures/branded.crownguard.json");
+  await page.getByTestId("logo-input").setInputFiles("e2e/fixtures/logo-on-red.svg");
+  const group = page.getByRole("radiogroup", { name: "Logo background on the cover" });
+  await expect(group.getByRole("radio", { name: "None" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByAltText("Logo preview")).not.toHaveClass(/bg-surface/);
+
+  await group.getByRole("radio", { name: "White panel" }).click();
+  await expect(page.getByAltText("Logo preview")).toHaveClass(/bg-surface/);
+});
+
+test("a transparent logo that would vanish on the cover colour gets a white panel", async ({ page }) => {
+  await page.goto("./");
+  await page.getByTestId("import-input").setInputFiles("e2e/fixtures/branded.crownguard.json");
+  // Dark-green transparent logo on a dark plum cover: too little contrast.
+  await page.getByTestId("logo-input").setInputFiles("e2e/fixtures/logo.svg");
+  await expect(page.getByRole("radiogroup", { name: "Logo background on the cover" }).getByRole("radio", { name: "White panel" })).toHaveAttribute("aria-checked", "true");
+});

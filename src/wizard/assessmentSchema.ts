@@ -46,6 +46,7 @@ export const assessmentSchema = z.object({
       .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/)
       .max(3_000_000)
       .optional(),
+    logoBackdrop: z.enum(["none", "white"]).optional(),
     primary: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     marking: z.string().max(80),

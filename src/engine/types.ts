@@ -77,6 +77,8 @@ export interface Assessment {
 
 export interface Branding {
   logoDataUrl?: string;
+  /** Panel behind the logo on the cover. "white" helps transparent logos that would vanish on the cover colour. */
+  logoBackdrop?: "none" | "white";
   primary: string;
   accent: string;
   marking: string;

@@ -87,3 +87,38 @@ export function parseHex(input: string): string | null {
   if (/^[0-9a-f]{6}$/i.test(h)) return `#${h}`.toLowerCase();
   return null;
 }
+
+/**
+ * Decide whether a logo needs a white panel behind it on the cover.
+ * Logos with their own background (opaque edges) never get one. Transparent logos get one only when their
+ * average colour would be hard to see on the cover colour.
+ */
+export function chooseLogoBackdrop(pixels: Uint8ClampedArray | number[], width: number, height: number, cover: string): "none" | "white" {
+  const alpha = (x: number, y: number) => pixels[(y * width + x) * 4 + 3];
+  let edge = 0;
+  let solidEdge = 0;
+  for (let x = 0; x < width; x++)
+    for (const y of [0, height - 1]) {
+      edge++;
+      if (alpha(x, y) >= 250) solidEdge++;
+    }
+  for (let y = 1; y < height - 1; y++)
+    for (const x of [0, width - 1]) {
+      edge++;
+      if (alpha(x, y) >= 250) solidEdge++;
+    }
+  if (edge > 0 && solidEdge / edge >= 0.95) return "none";
+
+  const sum: RGB = [0, 0, 0];
+  let n = 0;
+  for (let i = 0; i + 3 < pixels.length; i += 4)
+    if (pixels[i + 3] >= 128) {
+      sum[0] += pixels[i];
+      sum[1] += pixels[i + 1];
+      sum[2] += pixels[i + 2];
+      n++;
+    }
+  if (n === 0) return "none";
+  const avg = toHex(sum.map((c) => Math.round(c / n)) as RGB);
+  return contrast(avg, cover) < 3 ? "white" : "none";
+}

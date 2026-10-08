@@ -1,12 +1,12 @@
 import { useId, useState } from "react";
-import { extractPalette, readableOn } from "../theme/color";
+import { chooseLogoBackdrop, extractPalette, readableOn } from "../theme/color";
 import { emptyAssessment, useStore } from "./store";
 import { Button } from "./ui";
 
 const MAX_SIDE = 600;
 
 /** Re-encode any uploaded image as a bounded PNG (the PDF renderer only takes PNG/JPEG) and sample its colours. */
-async function processLogo(file: File): Promise<{ dataUrl: string; palette: ReturnType<typeof extractPalette> }> {
+async function processLogo(file: File): Promise<{ dataUrl: string; palette: ReturnType<typeof extractPalette>; backdropOn: (cover: string) => "none" | "white" }> {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
@@ -20,8 +20,10 @@ async function processLogo(file: File): Promise<{ dataUrl: string; palette: Retu
     canvas.height = Math.max(1, Math.round(h * scale));
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const palette = extractPalette(ctx.getImageData(0, 0, canvas.width, canvas.height).data);
-    return { dataUrl: canvas.toDataURL("image/png"), palette };
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const palette = extractPalette(pixels);
+    const backdropOn = (cover: string) => chooseLogoBackdrop(pixels, canvas.width, canvas.height, cover);
+    return { dataUrl: canvas.toDataURL("image/png"), palette, backdropOn };
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -39,12 +41,13 @@ export function LogoField({ testId }: { testId: string }) {
     setError(undefined);
     if (file.size > 5_000_000) return setError("Logo must be under 5 MB.");
     try {
-      const { dataUrl, palette } = await processLogo(file);
+      const { dataUrl, palette, backdropOn } = await processLogo(file);
       const fromLogo = palette && { primary: readableOn(palette.primary), accent: palette.accent };
       // Only take colours from the logo while the report still has the default ones; never overwrite chosen colours.
       const defaults = emptyAssessment().branding;
       const untouched = primary === defaults.primary && accent === defaults.accent;
-      setBranding({ logoDataUrl: dataUrl, ...(untouched && fromLogo) });
+      const cover = untouched && fromLogo ? fromLogo.primary : primary;
+      setBranding({ logoDataUrl: dataUrl, logoBackdrop: backdropOn(cover), ...(untouched && fromLogo) });
       setSuggested(!untouched && fromLogo && (fromLogo.primary !== primary || fromLogo.accent !== accent) ? fromLogo : undefined);
     } catch {
       setError("Couldn't read that image. Try a PNG, JPEG or SVG.");

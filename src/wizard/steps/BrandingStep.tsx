@@ -21,6 +21,29 @@ export function BrandingStep() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="max-w-xl space-y-5">
           <LogoField testId="logo-input" />
+          {b.logoDataUrl && (
+            <fieldset>
+              <legend className="text-sm font-medium text-ink">Logo background on the cover</legend>
+              <p className="mt-0.5 text-xs text-muted">Use a white panel only if the logo is hard to see on the cover colour.</p>
+              <div className="mt-2 inline-grid grid-cols-2 overflow-hidden rounded-[var(--radius-control)] border border-field bg-field gap-px" role="radiogroup" aria-label="Logo background on the cover">
+                {(["none", "white"] as const).map((v) => {
+                  const on = (b.logoBackdrop ?? "none") === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setBranding({ logoBackdrop: v })}
+                      className={`min-h-9 px-4 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${on ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken"}`}
+                    >
+                      {v === "none" ? "None" : "White panel"}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <ColorField label="Primary colour" value={b.primary} onChange={(primary) => setBranding({ primary })} />
             <ColorField label="Accent colour" value={b.accent} onChange={(accent) => setBranding({ accent })} />
@@ -56,7 +79,13 @@ export function BrandingStep() {
             <div className="h-2" style={{ background: b.accent }} />
             <div className="aspect-[1/1.414] p-6" style={{ background: b.primary, color: textOn(b.primary) }}>
               <div className="text-[10px] font-semibold tracking-wider opacity-80">{b.marking}</div>
-              {b.logoDataUrl && <img src={b.logoDataUrl} alt="Logo preview" className="mt-6 max-h-14 max-w-[70%] rounded-[4px] bg-surface p-2" />}
+              {b.logoDataUrl && (
+                <img
+                  src={b.logoDataUrl}
+                  alt="Logo preview"
+                  className={`mt-6 max-h-16 max-w-[75%] object-contain ${b.logoBackdrop === "white" ? "rounded-[4px] bg-surface p-2" : ""}`}
+                />
+              )}
               <div className="mt-10 text-[10px] uppercase tracking-widest opacity-80">Crown-jewel risk assessment</div>
               <div className="mt-1 font-display text-xl font-semibold leading-tight tracking-[-0.02em]">{assessment.org.name || "Your organisation"}</div>
               <div className="mt-3 h-0.5 w-10" style={{ background: b.accent }} />

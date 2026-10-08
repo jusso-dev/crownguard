@@ -53,3 +53,24 @@ describe("parseHex", () => {
     for (const bad of ["", "#12", "#12345", "#gggggg", "rgb(0,0,0)", "#1234567"]) expect(parseHex(bad)).toBeNull();
   });
 });
+
+describe("chooseLogoBackdrop", () => {
+  const img = (w: number, h: number, at: (x: number, y: number) => number[]) => {
+    const out: number[] = [];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) out.push(...at(x, y));
+    return out;
+  };
+
+  it("never panels a logo that has its own background", async () => {
+    const { chooseLogoBackdrop } = await import("./color");
+    const redBoxWithWhiteMark = img(10, 6, (x, y) => (x > 3 && x < 6 && y > 1 && y < 4 ? [255, 255, 255, 255] : [185, 40, 20, 255]));
+    expect(chooseLogoBackdrop(redBoxWithWhiteMark, 10, 6, "#b82c14")).toBe("none");
+  });
+
+  it("panels a transparent logo only when it would disappear on the cover colour", async () => {
+    const { chooseLogoBackdrop } = await import("./color");
+    const darkMark = img(10, 6, (x, y) => (x > 2 && x < 7 && y > 1 && y < 5 ? [20, 30, 40, 255] : [0, 0, 0, 0]));
+    expect(chooseLogoBackdrop(darkMark, 10, 6, "#1f3a5f")).toBe("white");
+    expect(chooseLogoBackdrop(darkMark, 10, 6, "#f4f1e8")).toBe("none");
+  });
+});
