@@ -8,6 +8,10 @@ description: >-
   best practices and the Google Cloud enterprise foundations blueprint, cross-referenced to the
   CIS Google Workspace and Google Cloud Platform Foundations Benchmarks.
 
+
+# Licence tiers below are based on these vendor pages.
+sources: [gws-compare-business, gws-compare-enterprise, gws-compare-nonprofits, gws-nonprofits-offering, gcp-identity-editions]
+
 modules:
   - id: core
     name: Google Workspace / Cloud Identity

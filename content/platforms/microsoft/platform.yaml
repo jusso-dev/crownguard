@@ -6,6 +6,10 @@ description: >-
   OneDrive, Teams, Purview, Intune-managed devices, Microsoft 365 Copilot and agents, with an
   optional Azure module for subscriptions, Key Vault and Azure backups.
 
+
+# Licence tiers below are based on these vendor pages.
+sources: [ms-m365-pricing-packaging-2026, ms-nonprofit-faq, ms-nonprofit-offerings]
+
 modules:
   - id: core
     name: Microsoft 365 & Entra ID

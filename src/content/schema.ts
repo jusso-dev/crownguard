@@ -50,6 +50,8 @@ export const platformSchema = z.object({
     .min(1),
   licenceFeatures: z.array(z.object({ id, name: z.string() })),
   domains: z.array(z.object({ id, name: z.string(), description: z.string() })).min(1),
+  /** Vendor pages that back the licence tiers and features (edition comparisons, nonprofit offers). */
+  sources: z.array(id).default([]),
 });
 
 export const assetTypeSchema = z.object({

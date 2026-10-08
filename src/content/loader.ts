@@ -123,6 +123,7 @@ function checkPlatform(
   const modules = new Set(platform.modules.map((m) => m.id));
   const domains = new Set(platform.domains.map((d) => d.id));
   const features = new Set(platform.licenceFeatures.map((f) => f.id));
+  for (const src of platform.sources) if (!sources.has(src)) errors.push(`${at}: unknown source ${src}`);
   for (const t of platform.licenceTiers)
     for (const f of t.features) if (!features.has(f)) errors.push(`${at}: tier ${t.id} has unknown feature ${f}`);
 

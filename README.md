@@ -78,7 +78,25 @@ Sources include Microsoft Learn (Zero Trust deployment guidance, Entra ID securi
 Conditional Access, Microsoft 365 Copilot oversharing guidance, Purview, Defender), Google Workspace Admin Help
 (security checklists, administrator and super admin best practices, Drive, Gmail, Gemini) and Google Cloud
 (enterprise foundations, organisation policies, Security Command Center), plus the ASD Essential Eight Maturity Model
-and NIST CSF 2.0. A weekly workflow checks every cited link still resolves.
+and NIST CSF 2.0.
+
+### Keeping the sources current
+
+Vendor guidance moves, changes and retires. A nightly workflow ([`source-watch.yml`](.github/workflows/source-watch.yml))
+re-reads every cited page and compares it with the fingerprints in [`watch/state.json`](watch/state.json). It opens a
+pull request when a source:
+
+- **breaks**: the page is gone, or fails on consecutive nights;
+- **moves**: the same document now lives at a new address, so the PR updates the URL for you;
+- **redirects elsewhere or retires**: it lands on a hub page, is archived, or is marked retired or "classic";
+- **changes substantially**: sections added or removed, a large share of the text rewritten, or new deprecation or
+  licensing language (with a diff excerpt where the page's licence allows quoting);
+- **has a newer version**: for example a new CIS Benchmark release;
+
+and when **new guidance** appears: new pages next to a cited page in Microsoft Learn's tables of contents, security and
+admin posts on Google Workspace Updates, and deprecations or security notes in Google Cloud release notes. It also
+lists sources nothing cites. Page text is never committed: fingerprints are hashes, section names and word counts,
+and the text needed for diffs stays in the Actions cache. See [Source watch](docs/content-guide.md#source-watch).
 
 CIS Benchmarks are referenced by recommendation number and title only, under CIS's CC BY-NC-SA 4.0 terms. Get the
 benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit and remediation steps.

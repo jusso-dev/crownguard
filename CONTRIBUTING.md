@@ -18,6 +18,9 @@ pnpm dev                 # http://localhost:5173
    asset types with no questions.
 4. Open a pull request. Say which guidance page backs the change and link it.
 
+Cited pages are re-checked every night. When guidance breaks, moves, retires or changes, the source watch opens a pull
+request listing what to review ([how it works](docs/content-guide.md#source-watch)).
+
 Rules that keep the content trustworthy:
 
 - Every question cites at least one page of the vendor's own guidance (Microsoft Learn, Google Workspace

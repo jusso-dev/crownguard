@@ -7,3 +7,8 @@ playwright-report
 
 .env*
 !.env.example
+
+# Source watch
+.watch-cache
+watch-report.md
+watch-pr-body.md

@@ -322,7 +322,7 @@
 - id: ms-agent-registry
   title: Manage agent registry in Microsoft 365 admin center
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry
+  url: https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry?view=o365-worldwide
   retrieved: 2026-10-08
 - id: ms-mdca-discovered-apps
   title: Discover and manage cloud apps (Microsoft Defender for Cloud Apps)
@@ -507,7 +507,7 @@
 - id: ms-m365-backup
   title: Overview of Microsoft 365 Backup
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/backup/backup-overview
+  url: https://learn.microsoft.com/en-us/microsoft-365/backup/backup-overview?view=o365-worldwide
   retrieved: 2026-10-08
 - id: ms-m365-resiliency
   title: Data resiliency in Microsoft 365
