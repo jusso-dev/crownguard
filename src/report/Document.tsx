@@ -1,6 +1,7 @@
 import { Document, Image, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ReactNode } from "react";
 import { exposures } from "../content/schema";
+import { formatAbn, isValidAbn } from "../engine/abn";
 import { bandOf } from "../engine/risk";
 import { answerLabels, classifications, regulations, type Answer } from "../engine/types";
 import type { ReportModel } from "./model";
@@ -14,7 +15,9 @@ const protects = (jewels: { name: string }[]) =>
       ? jewels.map((j) => j.name).join(", ")
       : `${jewels.slice(0, 2).map((j) => j.name).join(", ")} and ${jewels.length - 2} more`;
 const sentence = (t: string) => (/[.?!]$/.test(t) ? t : `${t}.`);
-const dateText = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+/** Full timestamp with time zone, e.g. "8 October 2026 at 5:42 pm AEDT". */
+const stampText = (d: Date) =>
+  d.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
 
 type Styles = ReturnType<typeof makeStyles>;
 
@@ -50,11 +53,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   const high = model.risks.filter((r) => r.band === "High").length;
   const top = model.risks[0];
   const quickWins = model.roadmap.filter((r) => r.phase === "0–30 days").slice(0, 5);
-  const unknownCount = model.questions.filter((q) => (a.answers[q.id] ?? "unknown") === "unknown").length;
+  const unknownCount = model.questions.filter((q) => (model.answers[q.id] ?? "unknown") === "unknown").length;
   const tableProps = { headerBg: theme.tint, zebra: "#fafbfc" };
 
   return (
-    <Document title={`${a.org.name} – Crown-jewel risk assessment`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="Crown-jewel risk assessment">
+    <Document title={`${a.org.name} – Crown-jewel risk assessment`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="Crown-jewel risk assessment" creationDate={model.generatedAt}>
       {/* Cover */}
       <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }}>
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, backgroundColor: theme.accent }} />
@@ -67,13 +70,15 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         <View style={{ marginTop: a.branding.logoDataUrl ? 120 : 220 }}>
           <Text style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", opacity: 0.85 }}>Crown-jewel risk assessment</Text>
           <Text style={{ fontSize: 32, fontWeight: 700, marginTop: 8, lineHeight: 1.15 }}>{a.org.name}</Text>
+          {a.org.abn && isValidAbn(a.org.abn) && <Text style={{ fontSize: 11, marginTop: 6, opacity: 0.9 }}>ABN {formatAbn(a.org.abn)}</Text>}
           <View style={{ height: 3, width: 56, backgroundColor: theme.accent, marginTop: 18, marginBottom: 18 }} />
           <Text style={{ fontSize: 12 }}>{model.platformNames.join(" and ")}</Text>
         </View>
         <View style={{ position: "absolute", bottom: 72, left: 56, right: 56, fontSize: 9.5, lineHeight: 1.6 }}>
           {a.branding.preparedFor && <Text>Prepared for: {a.branding.preparedFor}</Text>}
           {a.branding.preparedBy && <Text>Prepared by: {a.branding.preparedBy}</Text>}
-          <Text>Date: {dateText(model.generatedAt)}</Text>
+          <Text>Generated: {stampText(model.generatedAt)}</Text>
+          <Text>Answers as at: {stampText(new Date(a.updatedAt))}</Text>
         </View>
         <Text style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: 1.2 }}>{a.branding.marking}</Text>
       </Page>
@@ -85,13 +90,52 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           <Text>Crown-jewel risk assessment</Text>
         </View>
         <View fixed style={{ position: "absolute", bottom: 22, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted, borderTopWidth: 0.5, borderColor: line, paddingTop: 6 }}>
-          <Text>{dateText(model.generatedAt)}</Text>
+          <Text>Generated {stampText(model.generatedAt)}</Text>
           <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
           <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>
 
+        {/* About */}
+        <Section s={s} title="About this report" breakBefore={false}>
+          <Text style={s.p}>
+            This report assesses how well {a.org.name} protects its crown jewels in {model.platformNames.join(" and ")}. It was
+            prepared with crownguard, a guided self-assessment, from answers given by the organisation. It is not an audit or a
+            certification.
+          </Text>
+          <Text style={s.h2}>A point-in-time assessment</Text>
+          <Text style={s.p}>
+            It reflects answers recorded as at {stampText(new Date(a.updatedAt))} and was generated on {stampText(model.generatedAt)}.
+            Configurations, licences, threats and vendor guidance all change, so the findings may not hold after this date.
+            Reassess after any significant change, and at least once a year.
+          </Text>
+          <Text style={s.h2}>Scope</Text>
+          {[
+            ...model.licenceNames,
+            `${model.risks.length} crown jewel${model.risks.length === 1 ? "" : "s"} and ${model.questions.length} control questions relevant to them`,
+          ].map((line) => (
+            <View key={line} style={{ flexDirection: "row", gap: 6, marginBottom: 3 }}>
+              <Text style={{ width: 8, color: theme.heading }}>•</Text>
+              <Text style={{ flex: 1, fontSize: 9, lineHeight: 1.4 }}>{line}</Text>
+            </View>
+          ))}
+          <Text style={s.h2}>Standards and guidance assessed against</Text>
+          <Table
+            {...tableProps}
+            rows={model.frameworksUsed}
+            columns={[
+              { header: "Standard or guidance", width: "48%", render: (f) => <Text style={{ fontWeight: 600 }}>{f.name}</Text> },
+              { header: "Publisher", width: "22%", render: (f) => f.publisher },
+              { header: "How it is used", width: "30%", render: (f) => f.role },
+            ]}
+          />
+          <Text style={{ ...s.small, marginTop: 6 }}>
+            Mappings are indicative: they show which recommendations each question relates to, not formal compliance. The method
+            and its limitations are set out at the end of the report.
+          </Text>
+        </Section>
+
         {/* Executive summary */}
-        <Section s={s} title="Executive summary" breakBefore={false}>
+        <Section s={s} title="Executive summary">
           <Text style={s.p}>
             {a.org.name} identified {model.risks.length} crown jewel{model.risks.length === 1 ? "" : "s"} across {model.platformNames.join(" and ")} and
             answered {model.questions.length - unknownCount} of {model.questions.length} control questions drawn from vendor security guidance.
@@ -222,7 +266,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             ))}
           </View>
           {model.domains.map((d) => {
-            const gaps = model.questions.filter((q) => q.domain === d.domain && model.platformOf(q) === d.platform && !["yes", "na"].includes(a.answers[q.id] ?? ""));
+            const gaps = model.questions.filter((q) => q.domain === d.domain && model.platformOf(q) === d.platform && !["yes", "na"].includes(model.answers[q.id] ?? ""));
             if (!gaps.length) return null;
             return (
               <View key={`${d.platform}:${d.domain}`}>
@@ -233,7 +277,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                     <View key={q.id} wrap={false} style={{ marginBottom: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderColor: line }}>
                       <View style={{ flexDirection: "row", gap: 6, alignItems: "center", marginBottom: 2 }}>
                         <Text style={{ fontSize: 7, color: severityColors[q.severity], fontWeight: 700, textTransform: "uppercase" }}>{q.severity}</Text>
-                        <Text style={s.small}>{q.id} · Answer: {answerText(a.answers[q.id])} · Effort {q.effort}</Text>
+                        <Text style={s.small}>{q.id} · Answer: {answerText(model.answers[q.id])} · Effort {q.effort}</Text>
                       </View>
                       <Text style={{ fontWeight: 600, marginBottom: 2 }}>{q.question}</Text>
                       <Text style={{ fontSize: 8.5, color: muted, marginBottom: 2 }}>{q.why}</Text>
@@ -250,6 +294,25 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             );
           })}
         </Section>
+
+        {/* Not applicable */}
+        {model.notApplicable.length > 0 && (
+          <Section s={s} title="Controls marked not applicable" lead="Controls the organisation answered N/A, with the reason it gave. They are left out of scoring, so check each reason holds: a wrong N/A hides a real gap.">
+            <Table
+              {...tableProps}
+              rows={model.notApplicable}
+              columns={[
+                { header: "Control", width: "50%", render: (r) => (
+                  <View>
+                    <Text style={{ fontWeight: 600 }}>{r.question.question}</Text>
+                    <Text style={s.small}>{r.question.id} · {r.question.severity}</Text>
+                  </View>
+                ) },
+                { header: "Reason given", width: "50%", render: (r) => r.reason },
+              ]}
+            />
+          </Section>
+        )}
 
         {/* Roadmap */}
         <Section s={s} title="Remediation roadmap" lead="Gaps ranked by how much risk they remove across your crown jewels per unit of effort. Critical gaps that can be fixed with small or medium effort are brought into the first 30 days.">

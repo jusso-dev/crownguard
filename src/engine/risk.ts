@@ -19,6 +19,16 @@ export function answerValue(a: Answer | undefined): number | null {
 
 export const isGap = (a: Answer | undefined) => a !== "yes" && a !== "na";
 
+/** N/A must be justified. Without a reason it doesn't count as an answer, so it is scored as a gap. */
+export const needsReason = (a: Assessment, questionId: string) => a.answers[questionId] === "na" && !a.notes[questionId]?.trim();
+
+/** The answers the scoring uses: unjustified N/A answers are dropped (treated as unanswered). */
+export function effectiveAnswers(a: Assessment): Record<string, Answer> {
+  const out: Record<string, Answer> = {};
+  for (const [id, ans] of Object.entries(a.answers)) if (!needsReason(a, id)) out[id] = ans;
+  return out;
+}
+
 /**
  * Questions in scope: selected platforms, core module plus enabled optional modules,
  * and either platform-wide ("*") or protecting at least one recorded crown jewel.
@@ -127,7 +137,7 @@ export function assessAll(catalogue: Catalogue, assessment: Assessment): JewelRi
   const questions = activeQuestions(catalogue, assessment);
   return assessment.jewels
     .filter((j) => assessment.platforms.includes(j.platform))
-    .map((j) => assessJewel(j, questions, assessment.answers))
+    .map((j) => assessJewel(j, questions, effectiveAnswers(assessment)))
     .sort((a, b) => b.score - a.score || b.impact - a.impact);
 }
 
@@ -144,21 +154,22 @@ export interface DomainPosture {
 
 export function domainPosture(catalogue: Catalogue, assessment: Assessment): DomainPosture[] {
   const questions = activeQuestions(catalogue, assessment);
+  const answers = effectiveAnswers(assessment);
   return assessment.platforms.flatMap((pid) => {
     const bundle = catalogue.platforms.get(pid);
     if (!bundle) return [];
     return bundle.platform.domains
       .map((d) => {
         const qs = questions.filter((q) => q.domain === d.id && bundle.questions.includes(q));
-        const s = gapStats(qs, assessment.answers);
+        const s = gapStats(qs, answers);
         return {
           platform: pid,
           domain: d.id,
           name: d.name,
           score: s.weight === 0 ? null : 1 - s.gap / s.weight,
           questions: qs.length,
-          gaps: qs.filter((q) => isGap(assessment.answers[q.id])).length,
-          unknown: qs.filter((q) => (assessment.answers[q.id] ?? "unknown") === "unknown").length,
+          gaps: qs.filter((q) => isGap(answers[q.id])).length,
+          unknown: qs.filter((q) => (answers[q.id] ?? "unknown") === "unknown").length,
         };
       })
       .filter((d) => d.questions > 0);
@@ -166,7 +177,7 @@ export function domainPosture(catalogue: Catalogue, assessment: Assessment): Dom
 }
 
 export function overallPosture(catalogue: Catalogue, assessment: Assessment): { score: number | null; confidence: number } {
-  const s = gapStats(activeQuestions(catalogue, assessment), assessment.answers);
+  const s = gapStats(activeQuestions(catalogue, assessment), effectiveAnswers(assessment));
   if (s.weight === 0) return { score: null, confidence: 0 };
   return { score: 1 - s.gap / s.weight, confidence: 1 - s.unknownWeight / s.weight };
 }

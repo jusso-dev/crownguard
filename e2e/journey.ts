@@ -8,9 +8,17 @@ export const MARKING = "OFFICIAL: Sensitive";
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
 /** Walks the whole wizard for one platform and returns the downloaded PDF's text per page. */
+export async function downloadPdf(page: Page): Promise<string[]> {
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Generate PDF report" }).click();
+  const download = await downloadPromise;
+  return pdfText(new Uint8Array(await readFile(await download.path())));
+}
+
 export async function runJourney(page: Page, platformName: string, jewelCount = 4): Promise<string[]> {
   await page.goto("/");
   await page.getByLabel("Organisation name").fill(ORG);
+  await page.getByLabel(/^ABN/).fill("51824753556");
   await page.getByLabel("Sector").selectOption("Health");
   await page.getByRole("checkbox", { name: /Privacy Act/ }).check({ force: true });
   await next(page);
@@ -31,7 +39,7 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
   await next(page);
 
   // Answer every question, cycling through answers so the report has a mix.
-  const cycle = ["Yes", "No", "Partial", "Yes", "Unknown", "No"];
+  const cycle = ["Yes", "No", "Partial", "N/A", "Yes", "Unknown", "No"];
   const chips = page.getByRole("button", { name: /\d+\/\d+$/ });
   const chipCount = await chips.count();
   let n = 0;
@@ -39,7 +47,11 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
     await chips.nth(c).click();
     const cards = page.locator("article[data-question]");
     const count = await cards.count();
-    for (let i = 0; i < count; i++) await cards.nth(i).getByRole("radio", { name: cycle[n++ % cycle.length], exact: true }).click();
+    for (let i = 0; i < count; i++) {
+      const choice = cycle[n++ % cycle.length];
+      await cards.nth(i).getByRole("radio", { name: choice, exact: true }).click();
+      if (choice === "N/A") await cards.nth(i).getByLabel(/Why doesn't this apply/).fill("Cloud-only organisation; not in use.");
+    }
   }
   await expect(page.getByText(/(\d+) of \1 answered/)).toBeVisible();
   await next(page);
@@ -55,7 +67,7 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Generate PDF report" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/^riverbend-health-crown-jewel-risk-\d{4}-\d{2}-\d{2}\.pdf$/);
+  expect(download.suggestedFilename()).toMatch(/^riverbend-health-crown-jewel-risk-\d{4}-\d{2}-\d{2}-\d{4}\.pdf$/);
   const path = await download.path();
   return pdfText(new Uint8Array(await readFile(path)));
 }
@@ -73,11 +85,20 @@ export async function pdfText(data: Uint8Array): Promise<string[]> {
 export function expectReport(pages: string[]) {
   const all = pages.join("\n");
   expect(pages[0]).toContain(ORG);
+  expect(pages[0]).toContain("ABN 51 824 753 556");
+  // Point-in-time stamp on the cover and in every page footer.
+  expect(pages[0]).toMatch(/Generated: \d{1,2} \w+ \d{4} at \d{1,2}:\d{2}/);
+  for (const [i, p] of pages.slice(1).entries()) expect(p, `page ${i + 2} timestamp`).toMatch(/Generated \d{1,2} \w+ \d{4}/);
   for (const heading of [
+    "About this report",
+    "A point-in-time assessment",
+    "Standards and guidance assessed against",
+    "NIST Cybersecurity Framework 2.0",
     "Executive summary",
     "Crown-jewel register",
     "Risk register",
     "Findings by domain",
+    "Controls marked not applicable",
     "Remediation roadmap",
     "Framework alignment",
     "Method and limitations",

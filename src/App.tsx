@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { catalogue } from "./content/catalogue";
-import { activeQuestions } from "./engine/risk";
+import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Assessment } from "./engine/types";
 import { assessmentSchema } from "./wizard/assessmentSchema";
 import { clampStep, hasProgress, steps, storageAvailable, useStep, useStore } from "./wizard/store";
@@ -12,7 +12,7 @@ import { ControlsStep } from "./wizard/steps/ControlsStep";
 import { ReviewStep } from "./wizard/steps/ReviewStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
-import { download, slug } from "./wizard/download";
+import { createFileSaver, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { relativeTime } from "./wizard/time";
 
 const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, ReviewStep, BrandingStep, ReportStep];
@@ -38,9 +38,17 @@ function useNow(ms = 30_000) {
   return now;
 }
 
-function SaveStatus({ persisted }: { persisted: boolean }) {
+function SaveStatus({ persisted, fileSave }: { persisted: boolean; fileSave?: { file: string; at: string; downloaded: boolean } }) {
   const updatedAt = useStore((s) => s.assessment.updatedAt);
-  const now = useNow();
+  const now = useNow(fileSave ? 5_000 : 30_000);
+  // A file save in the last minute takes over the status line; no toast, nothing moves.
+  if (fileSave && now - Date.parse(fileSave.at) < 60_000)
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-ok">
+        <span aria-hidden>✓</span>
+        {fileSave.downloaded ? `Downloaded ${fileSave.file}` : `Saved to ${fileSave.file}`} · {relativeTime(fileSave.at, now)}
+      </span>
+    );
   if (!persisted)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
@@ -61,7 +69,8 @@ function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onS
   const a = useStore((s) => s.assessment);
   const now = useNow();
   const questions = activeQuestions(catalogue, a);
-  const answered = questions.filter((q) => a.answers[q.id]).length;
+  const answers = effectiveAnswers(a);
+  const answered = questions.filter((q) => answers[q.id]).length;
   const at = clampStep(a.progress?.step);
   return (
     <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
@@ -107,9 +116,34 @@ export function App() {
   const [notice, setNotice] = useState<{ kind: "error" | "ok"; text: string }>();
   const [persisted] = useState(storageAvailable);
   const [resuming, setResuming] = useState(() => hasProgress(useStore.getState().assessment));
+  const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
+  const [saver] = useState(createFileSaver);
   const View = views[step] ?? OrgStep;
 
-  const saveFile = () => download(saveFileName(assessment), JSON.stringify(assessment, null, 2), "application/json");
+  /** Save to a file without leaving the current step, question or scroll position. */
+  const saveFile = useCallback(async () => {
+    const a = useStore.getState().assessment;
+    const result = await saver.save(saveFileName(a), JSON.stringify(a, null, 2));
+    if (result.kind === "cancelled") return;
+    setFileSave({ file: result.file, at: new Date().toISOString(), downloaded: result.kind === "downloaded" });
+  }, [saver]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void saveFile();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [saveFile]);
+
+  useEffect(() => {
+    const open = () => fileInput.current?.click();
+    window.addEventListener(OPEN_FILE_EVENT, open);
+    return () => window.removeEventListener(OPEN_FILE_EVENT, open);
+  }, []);
   const go = (i: number) => {
     setStep(i);
     window.scrollTo({ top: 0 });
@@ -121,6 +155,8 @@ export function App() {
       const parsed = assessmentSchema.safeParse(JSON.parse(await file.text()));
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "unrecognised format");
       load(parsed.data);
+      saver.reset();
+      setFileSave(undefined);
       setResuming(false);
       setNotice({ kind: "ok", text: `Opened ${parsed.data.org.name || "assessment"}. Picking up at ${steps[clampStep(parsed.data.progress?.step)]}.` });
     } catch (e) {
@@ -131,6 +167,8 @@ export function App() {
   function startNew() {
     if (!hasProgress(assessment) || confirm("Start a new assessment? The current one will be removed from this browser. Choose Cancel, then Save file, if you want to keep it.")) {
       reset();
+      saver.reset();
+      setFileSave(undefined);
       setResuming(false);
       setNotice(undefined);
     }
@@ -139,6 +177,8 @@ export function App() {
   function onClear() {
     if (confirm("Delete this assessment from this browser? Use Save file first if you want to keep it.")) {
       reset();
+      saver.reset();
+      setFileSave(undefined);
       setNotice(undefined);
     }
   }
@@ -151,11 +191,11 @@ export function App() {
             <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
             <div className="min-w-0">
               <div className="font-display text-[0.9375rem] font-semibold leading-tight tracking-[-0.01em] text-ink">crownguard</div>
-              <SaveStatus persisted={persisted} />
+              <SaveStatus persisted={persisted} fileSave={fileSave} />
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={saveFile} title="Download your progress as a file you can open later">
+            <Button variant="secondary" onClick={() => void saveFile()} title="Save your progress to a file you can open later (Ctrl/⌘ S). You stay where you are.">
               Save file
             </Button>
             <Button variant="secondary" onClick={() => fileInput.current?.click()} title="Continue from a saved file">
@@ -190,7 +230,7 @@ export function App() {
 
       {resuming ? (
         <div className="px-4 py-10 sm:px-6">
-          <ResumeCard onContinue={() => setResuming(false)} onSave={saveFile} onNew={startNew} />
+          <ResumeCard onContinue={() => setResuming(false)} onSave={() => void saveFile()} onNew={startNew} />
         </div>
       ) : (
         <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-[208px_minmax(0,1fr)] lg:py-12">

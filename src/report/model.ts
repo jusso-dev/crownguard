@@ -3,6 +3,7 @@ import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,
   answerValue,
+  effectiveAnswers,
   assessAll,
   domainPosture,
   gapStats,
@@ -33,6 +34,13 @@ export interface FrameworkRow {
 
 export interface ReportModel {
   assessment: Assessment;
+  /** Answers as scored: N/A without a reason is dropped. */
+  answers: Record<string, Answer>;
+  notApplicable: { question: Question; reason: string }[];
+  /** Frameworks the in-scope questions actually map to, vendor guidance first. */
+  frameworksUsed: { name: string; publisher: string; role: string }[];
+  /** Licence tier name per selected platform. */
+  licenceNames: string[];
   generatedAt: Date;
   theme: ReportTheme;
   platformNames: string[];
@@ -61,7 +69,7 @@ const statusOf = (values: (number | null)[]): FrameworkRow["status"] => {
 
 export function buildReport(catalogue: Catalogue, assessment: Assessment, generatedAt = new Date()): ReportModel {
   const questions = activeQuestions(catalogue, assessment);
-  const { answers } = assessment;
+  const answers = effectiveAnswers(assessment);
   const b = assessment.branding;
   const bundles = assessment.platforms.map((p) => catalogue.platforms.get(p)).filter((x) => !!x);
   const jewels = assessment.jewels.filter((j) => assessment.platforms.includes(j.platform));
@@ -101,8 +109,25 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const e8Source = catalogue.frameworks.get("essential-eight")?.source;
   if (e8Source) sourceIds.add(e8Source);
 
+  const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));
+  if (questions.some((q) => q.e8.length)) used.add("essential-eight");
+  const roleOf = (id: string) =>
+    id.startsWith("cis-") ? "Recommendation mapping" : id === "essential-eight" ? "Indicative maturity" : id === "nist-csf-2" ? "Function coverage" : "Vendor guidance the questions are drawn from";
+  const frameworksUsed = [...used]
+    .map((id) => catalogue.frameworks.get(id))
+    .filter((f) => !!f)
+    .map((f) => ({ name: f.name, publisher: f.publisher, role: roleOf(f.id) }))
+    .sort((x, y) => Number(y.role.startsWith("Vendor")) - Number(x.role.startsWith("Vendor")) || x.name.localeCompare(y.name));
+
   return {
     assessment,
+    answers,
+    frameworksUsed,
+    licenceNames: bundles.map((x) => {
+      const tier = x.platform.licenceTiers.find((t) => t.id === assessment.licence[x.platform.id]);
+      return `${x.platform.name}: ${tier?.name ?? "not specified"}`;
+    }),
+    notApplicable: questions.filter((q) => answers[q.id] === "na").map((question) => ({ question, reason: assessment.notes[question.id].trim() })),
     generatedAt,
     theme: {
       primary: b.primary,

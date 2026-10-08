@@ -48,6 +48,8 @@ export interface CrownJewel {
 
 export interface OrgProfile {
   name: string;
+  /** Australian Business Number, digits only. Optional. */
+  abn?: string;
   sector: string;
   size: string;
   jurisdiction: string;

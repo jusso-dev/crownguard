@@ -6,7 +6,7 @@ import { emptyAssessment } from "../wizard/store";
 export function fixtureAssessment(catalogue: Catalogue, platforms: string[]): Assessment {
   const a = emptyAssessment();
   const cycle: Answer[] = ["yes", "no", "partial", "yes", "unknown", "na", "no"];
-  a.org = { name: "Riverbend Health", sector: "Health", size: "200–999 staff", jurisdiction: "Australia", regulations: ["privacy-act"] };
+  a.org = { name: "Riverbend Health", abn: "51824753556", sector: "Health", size: "200–999 staff", jurisdiction: "Australia", regulations: ["privacy-act"] };
   a.platforms = platforms;
   for (const pid of platforms) {
     const b = catalogue.platforms.get(pid)!;
@@ -28,7 +28,11 @@ export function fixtureAssessment(catalogue: Catalogue, platforms: string[]): As
         businessProcesses: i % 2 ? "Payroll, client billing" : "",
       }),
     );
-    b.questions.forEach((q, i) => (a.answers[q.id] = cycle[i % cycle.length]));
+    b.questions.forEach((q, i) => {
+      a.answers[q.id] = cycle[i % cycle.length];
+      // Every second N/A gets a reason; the rest exercise the "reason missing counts as unanswered" rule.
+      if (a.answers[q.id] === "na" && i % 2 === 0) a.notes[q.id] = "Not used here: we have no on-premises infrastructure.";
+    });
   }
   a.notes[catalogue.platforms.get(platforms[0])!.questions[1].id] = "Tracked in change CHG-1042.";
   a.branding = { ...a.branding, preparedBy: "Alex Chen, IT Manager", preparedFor: "Executive Leadership Team" };

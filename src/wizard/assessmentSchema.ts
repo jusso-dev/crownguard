@@ -11,6 +11,7 @@ export const assessmentSchema = z.object({
   version: z.literal(1),
   org: z.object({
     name: z.string().max(200),
+    abn: z.string().regex(/^\d{0,11}$/).optional(),
     sector: z.string().max(200),
     size: z.string().max(100),
     jurisdiction: z.string().max(100),

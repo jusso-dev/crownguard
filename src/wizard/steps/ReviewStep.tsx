@@ -1,5 +1,5 @@
 import { catalogue } from "../../content/catalogue";
-import { activeQuestions, assessAll, domainPosture, overallPosture, type JewelRisk } from "../../engine/risk";
+import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
 import { essentialEight } from "../../engine/maturity";
 import { answerLabels } from "../../engine/types";
 import { useStore } from "../store";
@@ -15,8 +15,10 @@ export function ReviewStep() {
   const posture = overallPosture(catalogue, assessment);
   const domains = domainPosture(catalogue, assessment);
   const questions = activeQuestions(catalogue, assessment);
-  const e8 = essentialEight(questions, assessment.answers).filter((r) => r.level !== null);
-  const unanswered = questions.filter((q) => !assessment.answers[q.id]).length;
+  const answers = effectiveAnswers(assessment);
+  const e8 = essentialEight(questions, answers).filter((r) => r.level !== null);
+  const unanswered = questions.filter((q) => !answers[q.id]).length;
+  const naWithoutReason = questions.filter((q) => needsReason(assessment, q.id)).length;
 
   return (
     <>
@@ -28,7 +30,10 @@ export function ReviewStep() {
 
       {unanswered > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-4 py-2.5 text-sm text-warn">
-          <span>{unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps.</span>
+          <span>
+            {unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps
+            {naWithoutReason > 0 && ` (including ${naWithoutReason} N/A without a reason)`}.
+          </span>
           <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(3)}>Go back to answer them</button>
         </div>
       )}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "org": { "name": "Legacy Health", "sector": "Health", "size": "20–199 staff", "jurisdiction": "Australia", "regulations": ["privacy-act"] },
+  "platforms": ["microsoft"],
+  "modules": {},
+  "licence": { "microsoft": "business-premium" },
+  "jewels": [
+    {
+      "id": "j-legacy-1", "name": "Staff identities", "platform": "microsoft", "assetType": "ms-entra-tenant",
+      "description": "", "classification": "confidential", "confidentiality": 4, "integrity": 4, "availability": 3,
+      "regulations": ["privacy-act"], "exposures": [], "businessProcesses": ""
+    }
+  ],
+  "answers": { "MS-ID-001": "no", "MS-ID-002": "yes" },
+  "notes": {},
+  "branding": { "primary": "#1f3a5f", "accent": "#d97706", "marking": "OFFICIAL: Sensitive", "preparedBy": "", "preparedFor": "" },
+  "createdAt": "2026-09-01T01:00:00.000Z",
+  "updatedAt": "2026-09-01T02:30:00.000Z"
+}

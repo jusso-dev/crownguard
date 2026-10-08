@@ -31,3 +31,17 @@ describe("save and resume", () => {
     expect(assessmentSchema.safeParse({ ...emptyAssessment(), progress: { step: 500 } }).success).toBe(false);
   });
 });
+
+describe("N/A needs a reason", () => {
+  it("drops unjustified N/A answers from scoring, keeps justified ones", async () => {
+    const { effectiveAnswers, needsReason } = await import("../engine/risk");
+    const a = {
+      ...emptyAssessment(),
+      answers: { "MS-ID-001": "na", "MS-ID-002": "na", "MS-ID-003": "no" } as const,
+      notes: { "MS-ID-002": "Cloud-only, no AD", "MS-ID-001": "   " },
+    };
+    expect(needsReason(a, "MS-ID-001")).toBe(true);
+    expect(needsReason(a, "MS-ID-002")).toBe(false);
+    expect(effectiveAnswers(a)).toEqual({ "MS-ID-002": "na", "MS-ID-003": "no" });
+  });
+});

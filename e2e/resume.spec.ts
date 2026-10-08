@@ -2,6 +2,13 @@ import { expect, test, type Page } from "@playwright/test";
 
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
+// These tests exercise the download fallback; the native save picker has its own spec (save.spec.ts).
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker;
+  });
+});
+
 /** Start an assessment and stop part-way through the controls, in the second section. */
 async function startAndStopMidway(page: Page) {
   await page.goto("/");

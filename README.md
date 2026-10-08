@@ -18,12 +18,16 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   CIS Benchmark recommendations, the ASD Essential Eight and NIST CSF 2.0.
 - **Risk per crown jewel.** Impact × likelihood on a 5×5 matrix, driven by your answers, the exposures you record
   and how sensitive or regulated the data is.
-- **A report people will read.** Executive summary, heatmap, crown-jewel register, risk register, findings with
-  fixes and licence notes, a 30/60/90-day roadmap, indicative Essential Eight maturity, NIST CSF coverage and
-  references. Your logo, your colours, your protective marking on every page.
+- **A report people will read.** It opens by stating the scope, the standards it's assessed against and that it is a
+  point-in-time assessment, then an executive summary, heatmap, crown-jewel register, risk register, findings with
+  fixes and licence notes, controls marked N/A with the reason given, a 30/60/90-day roadmap, indicative Essential
+  Eight maturity, NIST CSF coverage and references. Your logo, ABN, colours and protective marking, with the
+  generation time and the time answers were last changed stamped on every report.
 - **Save and come back.** Progress saves automatically in your browser as you go. Return later and you pick up
-  on the same step and section. Use **Save file** to keep a `.crownguard.json` copy, move to another computer or
-  hand over to a colleague, then **Open file** to carry on.
+  on the same step and section. **Save file** (or Ctrl/⌘ S) writes a `.crownguard.json` copy without moving you off
+  the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
+  copy, including older ones: open it, add a logo or ABN, and regenerate the report.
+- **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
 
 ## Use it
 

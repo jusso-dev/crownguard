@@ -1,6 +1,6 @@
 import { catalogue } from "../../content/catalogue";
 import type { Question } from "../../content/schema";
-import { activeQuestions } from "../../engine/risk";
+import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer } from "../../engine/types";
 import { useStore } from "../store";
 import { Button, Progress, SeverityBadge, StepHeader, inputClass } from "../ui";
@@ -21,7 +21,8 @@ export function ControlsStep() {
   const active = useStore((s) => s.assessment.progress?.section);
   const setActive = useStore((s) => s.setSection);
   const group = groups.find((g) => g.key === active) ?? groups[0];
-  const answered = questions.filter((q) => assessment.answers[q.id]).length;
+  const answers = effectiveAnswers(assessment);
+  const answered = questions.filter((q) => answers[q.id]).length;
 
   if (!group) return <StepHeader title="Controls">Add at least one crown jewel to see the relevant controls.</StepHeader>;
   const index = groups.indexOf(group);
@@ -37,7 +38,7 @@ export function ControlsStep() {
 
       <nav className="mt-8 flex flex-wrap gap-x-1 border-b border-rule" aria-label="Control sections">
         {groups.map((g) => {
-          const done = g.questions.filter((q) => assessment.answers[q.id]).length;
+          const done = g.questions.filter((q) => answers[q.id]).length;
           const selected = g.key === group.key;
           const complete = done === g.questions.length;
           return (
@@ -81,6 +82,8 @@ export function ControlsStep() {
 function QuestionCard({ q }: { q: Question }) {
   const { assessment, setAnswer, setNote } = useStore();
   const answer = assessment.answers[q.id];
+  const missingReason = needsReason(assessment, q.id);
+  const reasonId = `${q.id}-na-reason`;
   const platform = [...catalogue.platforms.values()].find((b) => b.questions.includes(q))!.platform;
   const tierFeatures = new Set(platform.licenceTiers.find((t) => t.id === assessment.licence[platform.id])?.features ?? []);
   const missing = q.licence.filter((l) => !tierFeatures.has(l)).map((l) => platform.licenceFeatures.find((f) => f.id === l)?.name ?? l);
@@ -90,7 +93,8 @@ function QuestionCard({ q }: { q: Question }) {
       <div className="flex items-center gap-2.5">
         <SeverityBadge severity={q.severity} />
         <span className="font-mono text-[0.6875rem] text-muted">{q.id}</span>
-        {answer && <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>✓ answered</span>}
+        {answer && !missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>✓ answered</span>}
+        {missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-warn" aria-hidden>reason needed</span>}
       </div>
       <h3 className="mt-3 font-sans text-base font-medium leading-snug tracking-normal">{q.question}</h3>
       <div
@@ -113,6 +117,30 @@ function QuestionCard({ q }: { q: Question }) {
           </button>
         ))}
       </div>
+      {answer === "na" && (
+        <div className="mt-4 max-w-[72ch]">
+          <label htmlFor={reasonId} className="text-sm font-medium text-ink">
+            Why doesn't this apply? <span className="font-normal text-muted">(required)</span>
+          </label>
+          <textarea
+            id={reasonId}
+            rows={2}
+            required
+            aria-required="true"
+            aria-invalid={missingReason}
+            aria-describedby={`${reasonId}-help`}
+            className={`${inputClass} mt-1.5 ${missingReason ? "border-warn!" : ""}`}
+            placeholder="e.g. No on-premises Active Directory; we are cloud-only."
+            value={assessment.notes[q.id] ?? ""}
+            onChange={(e) => setNote(q.id, e.target.value)}
+          />
+          <p id={`${reasonId}-help`} className={`mt-1 text-xs ${missingReason ? "text-warn" : "text-muted"}`}>
+            {missingReason
+              ? "Until you give a reason this counts as unanswered and is scored as a gap."
+              : "Shown in the report's list of controls marked not applicable."}
+          </p>
+        </div>
+      )}
       <details className="group mt-4 border-t border-rule pt-3 text-sm">
         <summary className="text-muted transition-colors [@media(hover:hover)]:hover:text-ink">Why this matters and what good looks like</summary>
         <div className="mt-4 max-w-[72ch] space-y-3 leading-relaxed text-ink-2">
@@ -123,7 +151,9 @@ function QuestionCard({ q }: { q: Question }) {
             <p className="rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-3 py-2 text-warn">Needs {missing.join(", ")}, which your selected licence tier doesn't include.</p>
           )}
           <References q={q} />
-          <textarea className={inputClass} rows={2} placeholder="Notes for the report (optional)" value={assessment.notes[q.id] ?? ""} onChange={(e) => setNote(q.id, e.target.value)} />
+          {answer !== "na" && (
+            <textarea className={inputClass} rows={2} aria-label="Notes for the report" placeholder="Notes for the report (optional)" value={assessment.notes[q.id] ?? ""} onChange={(e) => setNote(q.id, e.target.value)} />
+          )}
         </div>
       </details>
     </article>
