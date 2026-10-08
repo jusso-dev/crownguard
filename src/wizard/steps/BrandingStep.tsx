@@ -56,7 +56,7 @@ export function BrandingStep() {
         Add your logo and we'll pick colours from it. Adjust them if you like; we'll keep text readable. The logo is
         processed in your browser and stored only with this assessment.
       </StepHeader>
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="max-w-xl space-y-5">
           <Field label="Logo" hint="PNG, JPEG, WebP or SVG. A horizontal logo on a transparent background works best.">
             <div className="flex flex-wrap items-center gap-3">
@@ -64,7 +64,7 @@ export function BrandingStep() {
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/svg+xml"
                 data-testid="logo-input"
-                className="min-w-0 max-w-full text-sm file:mr-3 file:rounded-md file:border file:border-line file:bg-white file:px-3 file:py-1.5 file:text-sm"
+                className="min-w-0 max-w-full text-sm text-ink-2 file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-[var(--radius-control)] file:border file:border-solid file:border-rule-2 file:bg-surface file:px-3.5 file:py-1.5 file:text-sm file:font-medium file:text-ink file:transition-colors [@media(hover:hover)]:file:hover:bg-sunken"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) void onLogo(f);
@@ -73,17 +73,17 @@ export function BrandingStep() {
               {b.logoDataUrl && <Button variant="ghost" onClick={() => setBranding({ logoDataUrl: undefined })}>Remove</Button>}
             </div>
           </Field>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <div className="grid grid-cols-2 gap-4">
             <Field label="Primary colour">
-              <input type="color" className="h-10 w-full cursor-pointer rounded border border-line" value={b.primary} onChange={(e) => setBranding({ primary: e.target.value })} />
+              <input type="color" className="h-10 w-full cursor-pointer rounded-[var(--radius-control)] border border-field bg-surface p-1" value={b.primary} onChange={(e) => setBranding({ primary: e.target.value })} />
             </Field>
             <Field label="Accent colour">
-              <input type="color" className="h-10 w-full cursor-pointer rounded border border-line" value={b.accent} onChange={(e) => setBranding({ accent: e.target.value })} />
+              <input type="color" className="h-10 w-full cursor-pointer rounded-[var(--radius-control)] border border-field bg-surface p-1" value={b.accent} onChange={(e) => setBranding({ accent: e.target.value })} />
             </Field>
           </div>
           {primaryContrast < 4.5 && (
-            <p className="text-sm text-amber-800">
+            <p className="text-sm text-warn">
               The primary colour is light, so headings will use a darker shade ({readableOn(b.primary)}) to stay readable.
             </p>
           )}
@@ -106,18 +106,21 @@ export function BrandingStep() {
           </Field>
         </div>
 
-        <Card className="self-start p-0">
-          <div className="overflow-hidden rounded-xl">
+        <figure className="self-start lg:sticky lg:top-24">
+          <figcaption className="mono-label mb-2 text-muted">Cover preview</figcaption>
+          <Card className="p-0">
+          <div className="overflow-hidden rounded-[var(--radius-card)]">
             <div className="h-2" style={{ background: b.accent }} />
             <div className="aspect-[1/1.414] p-6" style={{ background: b.primary, color: textOn(b.primary) }}>
               <div className="text-[10px] font-semibold tracking-wider opacity-80">{b.marking}</div>
-              {b.logoDataUrl && <img src={b.logoDataUrl} alt="Logo preview" className="mt-6 max-h-14 max-w-[70%] rounded bg-white p-2" />}
+              {b.logoDataUrl && <img src={b.logoDataUrl} alt="Logo preview" className="mt-6 max-h-14 max-w-[70%] rounded-[4px] bg-surface p-2" />}
               <div className="mt-10 text-[10px] uppercase tracking-widest opacity-80">Crown-jewel risk assessment</div>
-              <div className="mt-1 text-xl font-semibold leading-tight">{assessment.org.name || "Your organisation"}</div>
+              <div className="mt-1 font-display text-xl font-semibold leading-tight tracking-[-0.02em]">{assessment.org.name || "Your organisation"}</div>
               <div className="mt-3 h-0.5 w-10" style={{ background: b.accent }} />
             </div>
           </div>
-        </Card>
+          </Card>
+        </figure>
       </div>
     </>
   );

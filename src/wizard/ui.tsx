@@ -1,22 +1,45 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { Band } from "../engine/risk";
 
+type Variant = "primary" | "secondary" | "ghost" | "danger";
+
+const variants: Record<Variant, string> = {
+  primary:
+    "border-accent bg-accent text-accent-ink [@media(hover:hover)]:hover:border-accent-hover [@media(hover:hover)]:hover:bg-accent-hover",
+  secondary: "border-rule-2 bg-surface text-ink [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:bg-sunken",
+  ghost: "border-transparent text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink",
+  danger: "border-rule-2 bg-surface text-danger [@media(hover:hover)]:hover:border-danger/50 [@media(hover:hover)]:hover:bg-danger-soft",
+};
+
+/** Button with default, hover, focus, active, disabled and loading states. */
 export function Button({
   variant = "primary",
+  loading = false,
   className = "",
+  children,
+  disabled,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" }) {
-  const styles = {
-    primary: "bg-ink text-white hover:bg-ink-soft disabled:opacity-40",
-    secondary: "border border-line bg-white text-ink hover:border-ink/40",
-    ghost: "text-ink-soft hover:bg-black/5",
-    danger: "border border-red-200 bg-white text-red-700 hover:bg-red-50",
-  }[variant];
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean }) {
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition ${styles} ${className}`}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      className={`inline-flex min-h-9 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] border px-3.5 py-1.5 text-sm font-medium transition-colors duration-150 ease-[var(--ease-out)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 ${variants[variant]} ${className}`}
       {...props}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
+}
+
+export function Spinner() {
+  return (
+    <span
+      aria-hidden
+      className="inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-r-transparent"
+      style={{ animation: "spin 700ms linear infinite" }}
     />
   );
 }
@@ -24,75 +47,97 @@ export function Button({
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
-      {hint && <span className="mt-0.5 block text-xs text-ink-soft/80">{hint}</span>}
+      <span className="text-sm font-medium text-ink">{label}</span>
+      {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
       <div className="mt-1.5">{children}</div>
     </label>
   );
 }
 
-export const inputClass =
-  "w-full rounded-md border border-line bg-white px-3 py-2 text-sm shadow-xs placeholder:text-ink-soft/50 focus:border-gold focus:outline-none";
-
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-xl border border-line bg-white p-5 ${className}`}>{children}</div>;
+/** Label + control group for sets of checkboxes or radios (a <label> must not wrap other labels). */
+export function FieldGroup({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <fieldset className="min-w-0">
+      <legend className="text-sm font-medium text-ink">{label}</legend>
+      {hint && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
+      <div className="mt-2">{children}</div>
+    </fieldset>
+  );
 }
 
-export function StepHeader({ title, children }: { title: string; children?: ReactNode }) {
+/** Border width never changes between states; focus uses the outline slot so nothing shifts. */
+export const inputClass =
+  "w-full rounded-[var(--radius-control)] border border-field bg-surface px-3 py-2 text-sm text-ink outline-2 outline-offset-1 outline-transparent transition-colors duration-150 placeholder:text-muted/70 [@media(hover:hover)]:hover:border-ink-2 focus-visible:border-accent focus-visible:outline-accent/35 disabled:cursor-not-allowed disabled:opacity-50";
+
+export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-[var(--radius-card)] border border-rule bg-surface p-5 ${className}`}>{children}</div>;
+}
+
+export function StepHeader({ title, step, children }: { title: string; step?: string; children?: ReactNode }) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {children && <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink-soft">{children}</p>}
+    <header className="mb-8">
+      {step && <p className="mono-label mb-2 text-accent">{step}</p>}
+      <h1 className="text-[1.75rem] font-semibold leading-tight sm:text-[2rem]">{title}</h1>
+      {children && <p className="mt-3 max-w-[68ch] text-[0.9375rem] leading-relaxed text-ink-2">{children}</p>}
     </header>
   );
 }
 
+/** Toggle chip. Selected = ink fill; the cobalt accent is reserved for actions and focus. */
 export function CheckboxPill({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
   return (
     <label
-      className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition ${
-        checked ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink/40"
+      className={`inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border px-3 py-1.5 text-sm transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${
+        checked ? "border-ink bg-ink text-paper" : "border-rule-2 bg-surface text-ink-2 [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:text-ink"
       }`}
     >
       <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span
+        aria-hidden
+        className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border text-[9px] leading-none ${checked ? "border-paper/60 text-paper" : "border-field"}`}
+      >
+        {checked ? "✓" : ""}
+      </span>
       {children}
     </label>
   );
 }
 
-export const bandColors: Record<Band, { bg: string; fg: string }> = {
-  Low: { bg: "#d9efe1", fg: "#1d5c36" },
-  Medium: { bg: "#fbefc8", fg: "#7a5200" },
-  High: { bg: "#fbd9c4", fg: "#8a3200" },
-  Extreme: { bg: "#f6c9c9", fg: "#8c1414" },
+export const bandClasses: Record<Band, string> = {
+  Low: "bg-band-low text-band-low-ink",
+  Medium: "bg-band-medium text-band-medium-ink",
+  High: "bg-band-high text-band-high-ink",
+  Extreme: "bg-band-extreme text-band-extreme-ink",
 };
 
 export function BandBadge({ band }: { band: Band }) {
-  const c = bandColors[band];
-  return (
-    <span className="rounded px-2 py-0.5 text-xs font-semibold" style={{ background: c.bg, color: c.fg }}>
-      {band}
-    </span>
-  );
+  return <span className={`mono-label rounded-[4px] px-1.5 py-0.5 ${bandClasses[band]}`}>{band}</span>;
 }
 
 const severityStyle = {
-  critical: "bg-red-100 text-red-800",
-  high: "bg-orange-100 text-orange-800",
-  medium: "bg-amber-100 text-amber-800",
-  low: "bg-slate-100 text-slate-700",
+  critical: "bg-sev-critical-soft text-sev-critical",
+  high: "bg-sev-high-soft text-sev-high",
+  medium: "bg-sev-medium-soft text-sev-medium",
+  low: "bg-sunken text-muted",
 };
 
 export function SeverityBadge({ severity }: { severity: keyof typeof severityStyle }) {
-  return <span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${severityStyle[severity]}`}>{severity}</span>;
+  return <span className={`mono-label rounded-[4px] px-1.5 py-0.5 ${severityStyle[severity]}`}>{severity}</span>;
 }
 
 export function Progress({ value, label }: { value: number; label?: string }) {
   return (
     <div>
-      {label && <div className="mb-1 text-xs text-ink-soft">{label}</div>}
-      <div className="h-1.5 overflow-hidden rounded-full bg-line">
-        <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${Math.round(value * 100)}%` }} />
+      {label && <div className="mb-1.5 font-mono text-xs tabular-nums text-muted">{label}</div>}
+      <div
+        className="h-1 overflow-hidden rounded-full bg-rule"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(value * 100)}
+        aria-label={label}
+      >
+        <div className="h-full rounded-full bg-accent transition-[width] duration-300 ease-[var(--ease-out)]" style={{ width: `${Math.round(value * 100)}%` }} />
       </div>
     </div>
   );

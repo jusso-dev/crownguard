@@ -76,8 +76,9 @@ suppliers, physical security). Use it to start the right conversation and to pri
 
 ## Stack
 
-Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. Report font:
-[Inter](https://rsms.me/inter/) (SIL Open Font License, see `src/report/fonts/OFL.txt`).
+Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. Fonts (all SIL
+Open Font License, self-hosted): Space Grotesk, Inter and JetBrains Mono in the app via `@fontsource`; Inter in the
+PDF (`src/report/fonts/OFL.txt`). The UI design system is documented in [design.md](design.md).
 
 ## Licence
 

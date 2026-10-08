@@ -1,6 +1,6 @@
 import { regulations, type Regulation } from "../../engine/types";
 import { useStore } from "../store";
-import { CheckboxPill, Field, inputClass, StepHeader } from "../ui";
+import { CheckboxPill, Field, FieldGroup, inputClass, StepHeader } from "../ui";
 
 const sectors = [
   "Government", "Health", "Education", "Financial services", "Critical infrastructure", "Legal & professional services",
@@ -43,7 +43,7 @@ export function OrgStep() {
           <input className={inputClass} value={org.jurisdiction} onChange={(e) => setOrg({ jurisdiction: e.target.value })} />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Obligations that apply to your organisation" hint="Used to frame impact. You can refine per crown jewel later.">
+          <FieldGroup label="Obligations that apply to your organisation" hint="Used to frame impact. You can refine per crown jewel later.">
             <div className="flex flex-wrap gap-2">
               {(Object.keys(regulations) as Regulation[]).map((r) => (
                 <CheckboxPill key={r} checked={org.regulations.includes(r)} onChange={(on) => toggle(r, on)}>
@@ -51,7 +51,7 @@ export function OrgStep() {
                 </CheckboxPill>
               ))}
             </div>
-          </Field>
+          </FieldGroup>
         </div>
       </div>
     </>

@@ -27,21 +27,21 @@ export function EnvironmentStep() {
         {bundles.map(({ platform }) => {
           const on = assessment.platforms.includes(platform.id);
           return (
-            <Card key={platform.id} className={on ? "ring-2 ring-ink" : ""}>
+            <Card key={platform.id} className={`transition-colors duration-150 ${on ? "border-ink!" : "[@media(hover:hover)]:hover:border-rule-2!"}`}>
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
-                  className="mt-1 h-4 w-4 accent-[var(--color-ink)]"
+                  className="mt-1 h-4 w-4 accent-[var(--color-accent)]"
                   checked={on}
                   onChange={(e) => togglePlatform(platform.id, e.target.checked)}
                 />
                 <span>
-                  <span className="block font-semibold">{platform.name}</span>
-                  <span className="mt-1 block text-sm leading-relaxed text-ink-soft">{platform.description}</span>
+                  <span className="block font-display text-base font-semibold tracking-[-0.01em] text-ink">{platform.name}</span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted">{platform.description}</span>
                 </span>
               </label>
               {on && (
-                <div className="mt-5 space-y-4 border-t border-line pt-4">
+                <div className="mt-5 space-y-4 border-t border-rule pt-4">
                   <Field label="Licence tier">
                     <select
                       className={inputClass}
@@ -61,13 +61,13 @@ export function EnvironmentStep() {
                       <label key={m.id} className="flex cursor-pointer items-start gap-3 text-sm">
                         <input
                           type="checkbox"
-                          className="mt-0.5 h-4 w-4 accent-[var(--color-ink)]"
+                          className="mt-0.5 h-4 w-4 accent-[var(--color-accent)]"
                           checked={assessment.modules[platform.id]?.includes(m.id) ?? false}
                           onChange={(e) => toggleModule(platform.id, m.id, e.target.checked)}
                         />
                         <span>
                           <span className="font-medium">Include {m.name}</span>
-                          <span className="block text-ink-soft">{m.description}</span>
+                          <span className="block text-muted">{m.description}</span>
                         </span>
                       </label>
                     ))}

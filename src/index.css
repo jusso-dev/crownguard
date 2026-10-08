@@ -1,21 +1,149 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: Cobalt · enrichment: none · nav: N9 edge-aligned bar + step rail · footer: none (app)
+ * design-system: design.md · designed-as-app
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ */
 @import "tailwindcss";
 
+/* Locked tokens (see design.md). Tailwind utilities are generated from these: bg-paper, text-ink, border-rule, bg-accent, … */
 @theme {
-  --color-ink: #1f2a44;
-  --color-ink-soft: #3b4663;
-  --color-gold: #b07d1f;
-  --color-gold-soft: #f6ecd8;
-  --color-paper: #f7f6f2;
-  --color-line: #e3e0d8;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-paper: oklch(98.5% 0.004 250);
+  --color-surface: oklch(99.6% 0.002 250);
+  --color-sunken: oklch(96.4% 0.006 252);
+  --color-ink: oklch(24% 0.02 258);
+  --color-ink-2: oklch(34% 0.018 257);
+  --color-muted: oklch(49% 0.016 257);
+  --color-rule: oklch(91.5% 0.008 255);
+  --color-rule-2: oklch(84% 0.01 256);
+  /* Form-control boundaries: >= 3:1 against surface (WCAG 1.4.11). */
+  --color-field: oklch(66% 0.012 256);
+  --color-graphite: oklch(22% 0.016 260);
+  --color-graphite-2: oklch(30% 0.016 260);
+  --color-on-graphite: oklch(96% 0.006 252);
+  --color-on-graphite-2: oklch(76% 0.012 256);
+
+  --color-accent: oklch(53% 0.2 257);
+  --color-accent-hover: oklch(47% 0.2 258);
+  --color-accent-ink: oklch(99% 0.003 250);
+  --color-accent-soft: oklch(95.5% 0.025 256);
+  --color-focus: oklch(53% 0.2 257);
+
+  --color-ok: oklch(44% 0.11 155);
+  --color-ok-soft: oklch(95.5% 0.035 155);
+  --color-warn: oklch(43% 0.09 70);
+  --color-warn-soft: oklch(96.5% 0.04 88);
+  --color-danger: oklch(49% 0.18 27);
+  --color-danger-soft: oklch(96% 0.025 25);
+
+  --color-sev-critical: oklch(48% 0.17 27);
+  --color-sev-critical-soft: oklch(94.5% 0.035 25);
+  --color-sev-high: oklch(50% 0.14 48);
+  --color-sev-high-soft: oklch(95% 0.04 60);
+  --color-sev-medium: oklch(48% 0.1 80);
+  --color-sev-medium-soft: oklch(95.5% 0.05 92);
+
+  --color-band-low: oklch(92% 0.05 155);
+  --color-band-low-ink: oklch(38% 0.09 155);
+  --color-band-medium: oklch(93.5% 0.07 95);
+  --color-band-medium-ink: oklch(42% 0.09 75);
+  --color-band-high: oklch(89.5% 0.07 55);
+  --color-band-high-ink: oklch(43% 0.13 45);
+  --color-band-extreme: oklch(87.5% 0.07 25);
+  --color-band-extreme-ink: oklch(42% 0.15 27);
+
+  --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-control: 6px;
+  --radius-card: 10px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
   background: var(--color-paper);
+  color: var(--color-ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-style: normal;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-accent-soft);
   color: var(--color-ink);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-gold);
-  outline-offset: 2px;
+/* Machine-readout voice: ids, step numbers, counts, small labels. */
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Disclosure marker that rotates instead of the browser triangle. */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin: 0 0.55rem 0.12rem 0.1rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms var(--ease-out);
+}
+details[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

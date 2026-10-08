@@ -3,7 +3,7 @@ import type { Question } from "../../content/schema";
 import { activeQuestions } from "../../engine/risk";
 import { answerLabels, type Answer } from "../../engine/types";
 import { useStore } from "../store";
-import { Progress, SeverityBadge, StepHeader, inputClass } from "../ui";
+import { Button, Progress, SeverityBadge, StepHeader, inputClass } from "../ui";
 
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 
@@ -35,36 +35,43 @@ export function ControlsStep() {
       </StepHeader>
       <Progress value={questions.length ? answered / questions.length : 0} label={`${answered} of ${questions.length} answered`} />
 
-      <div className="mt-6 flex flex-wrap gap-1.5">
+      <nav className="mt-8 flex flex-wrap gap-x-1 border-b border-rule" aria-label="Control sections">
         {groups.map((g) => {
           const done = g.questions.filter((q) => assessment.answers[q.id]).length;
+          const selected = g.key === group.key;
+          const complete = done === g.questions.length;
           return (
             <button
               key={g.key}
               type="button"
+              aria-current={selected ? "true" : undefined}
               onClick={() => setActive(g.key)}
-              className={`rounded-full border px-3 py-1 text-sm ${g.key === group.key ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink/40"}`}
+              className={`-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-2.5 py-2.5 text-sm transition-colors duration-150 ${
+                selected ? "border-accent font-medium text-ink" : "border-transparent text-muted [@media(hover:hover)]:hover:border-rule-2 [@media(hover:hover)]:hover:text-ink"
+              }`}
             >
               {g.domain.name}
-              <span className="ml-1.5 text-xs opacity-70">{done}/{g.questions.length}</span>
+              <span className={`font-mono text-[0.6875rem] tabular-nums ${complete ? "text-ok" : selected ? "text-accent" : "text-muted"}`}>
+                {done}/{g.questions.length}
+              </span>
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      <section className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gold">{group.platform}</p>
-        <h2 className="text-xl font-semibold">{group.domain.name}</h2>
-        <p className="mt-1 text-sm text-ink-soft">{group.domain.description}</p>
-        <div className="mt-5 space-y-4">
+      <section className="mt-8">
+        <p className="mono-label text-muted">{group.platform}</p>
+        <h2 className="mt-1.5 text-[1.375rem] font-semibold leading-tight">{group.domain.name}</h2>
+        <p className="mt-1.5 max-w-[68ch] text-sm text-ink-2">{group.domain.description}</p>
+        <div className="mt-6 space-y-3">
           {group.questions.map((q) => (
             <QuestionCard key={q.id} q={q} />
           ))}
         </div>
         {index < groups.length - 1 && (
-          <button type="button" className="mt-5 text-sm font-medium text-gold hover:underline" onClick={() => { setActive(groups[index + 1].key); window.scrollTo({ top: 0 }); }}>
+          <Button variant="secondary" className="mt-6" onClick={() => { setActive(groups[index + 1].key); window.scrollTo({ top: 0 }); }}>
             Next section: {groups[index + 1].domain.name} →
-          </button>
+          </Button>
         )}
       </section>
     </>
@@ -79,13 +86,18 @@ function QuestionCard({ q }: { q: Question }) {
   const missing = q.licence.filter((l) => !tierFeatures.has(l)).map((l) => platform.licenceFeatures.find((f) => f.id === l)?.name ?? l);
 
   return (
-    <article className="rounded-xl border border-line bg-white p-5" data-question={q.id}>
-      <div className="flex items-center gap-2 text-xs text-ink-soft">
+    <article className="rounded-[var(--radius-card)] border border-rule bg-surface p-5 sm:p-6" data-question={q.id}>
+      <div className="flex items-center gap-2.5">
         <SeverityBadge severity={q.severity} />
-        <span className="font-mono">{q.id}</span>
+        <span className="font-mono text-[0.6875rem] text-muted">{q.id}</span>
+        {answer && <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>✓ answered</span>}
       </div>
-      <h3 className="mt-2 text-[15px] font-medium leading-snug">{q.question}</h3>
-      <div className="mt-3 flex flex-wrap gap-1.5" role="radiogroup" aria-label={q.question}>
+      <h3 className="mt-3 font-sans text-base font-medium leading-snug tracking-normal">{q.question}</h3>
+      <div
+        className="mt-4 grid max-w-md grid-cols-5 gap-px overflow-hidden rounded-[var(--radius-control)] border border-field bg-field"
+        role="radiogroup"
+        aria-label={q.question}
+      >
         {answerOrder.map((a) => (
           <button
             key={a}
@@ -93,20 +105,22 @@ function QuestionCard({ q }: { q: Question }) {
             role="radio"
             aria-checked={answer === a}
             onClick={() => setAnswer(q.id, a)}
-            className={`rounded-md border px-3 py-1.5 text-sm transition ${answer === a ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink/40"}`}
+            className={`min-h-9 px-1 py-1.5 text-[0.8125rem] transition-colors duration-150 focus-visible:-outline-offset-2 sm:px-3 sm:text-sm ${
+              answer === a ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink"
+            }`}
           >
             {answerLabels[a]}
           </button>
         ))}
       </div>
-      <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-ink-soft hover:text-ink">Why this matters and what good looks like</summary>
-        <div className="mt-3 space-y-3 leading-relaxed">
+      <details className="group mt-4 border-t border-rule pt-3 text-sm">
+        <summary className="text-muted transition-colors [@media(hover:hover)]:hover:text-ink">Why this matters and what good looks like</summary>
+        <div className="mt-4 max-w-[72ch] space-y-3 leading-relaxed text-ink-2">
           <p>{q.why}</p>
-          <p><span className="font-medium">Yes looks like: </span>{q.yesLooksLike}</p>
-          <p><span className="font-medium">How to fix: </span>{q.remediation}</p>
+          <p><span className="font-medium text-ink">Yes looks like: </span>{q.yesLooksLike}</p>
+          <p><span className="font-medium text-ink">How to fix: </span>{q.remediation}</p>
           {missing.length > 0 && (
-            <p className="rounded bg-amber-50 px-3 py-2 text-amber-900">Needs {missing.join(", ")}, which your selected licence tier doesn't include.</p>
+            <p className="rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-3 py-2 text-warn">Needs {missing.join(", ")}, which your selected licence tier doesn't include.</p>
           )}
           <References q={q} />
           <textarea className={inputClass} rows={2} placeholder="Notes for the report (optional)" value={assessment.notes[q.id] ?? ""} onChange={(e) => setNote(q.id, e.target.value)} />
@@ -118,15 +132,15 @@ function QuestionCard({ q }: { q: Question }) {
 
 function References({ q }: { q: Question }) {
   return (
-    <div className="text-xs text-ink-soft">
+    <div className="text-xs text-muted">
       <div className="flex flex-wrap gap-1.5">
         {q.refs.map((r) => (
-          <span key={`${r.framework}:${r.ref}`} className="rounded bg-paper px-1.5 py-0.5 font-mono">
+          <span key={`${r.framework}:${r.ref}`} className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">
             {catalogue.frameworks.get(r.framework)?.shortName ?? r.framework} {r.ref}
           </span>
         ))}
         {q.e8.map((t) => (
-          <span key={t.strategy} className="rounded bg-paper px-1.5 py-0.5 font-mono">
+          <span key={t.strategy} className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">
             E8 {catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === t.strategy)?.title ?? t.strategy} ML{t.level}
           </span>
         ))}
@@ -136,7 +150,7 @@ function References({ q }: { q: Question }) {
           const src = catalogue.sources.get(s);
           return src ? (
             <li key={s}>
-              <a className="underline hover:text-ink" href={src.url} target="_blank" rel="noreferrer noopener">{src.title}</a> · {src.publisher}
+              <a className="text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent" href={src.url} target="_blank" rel="noreferrer noopener">{src.title}</a> · {src.publisher}
             </li>
           ) : null;
         })}

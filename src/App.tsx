@@ -4,7 +4,7 @@ import { activeQuestions } from "./engine/risk";
 import type { Assessment } from "./engine/types";
 import { assessmentSchema } from "./wizard/assessmentSchema";
 import { clampStep, hasProgress, steps, storageAvailable, useStep, useStore } from "./wizard/store";
-import { Button, Card } from "./wizard/ui";
+import { Button } from "./wizard/ui";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
 import { JewelsStep } from "./wizard/steps/JewelsStep";
@@ -43,42 +43,59 @@ function SaveStatus({ persisted }: { persisted: boolean }) {
   const now = useNow();
   if (!persisted)
     return (
-      <span role="status" className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
         This browser won't keep your progress. Use <strong>Save file</strong> before you leave.
       </span>
     );
   return (
-    <span role="status" className="text-xs text-ink-soft" title="Progress saves automatically in this browser as you go">
-      <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-green-600 align-middle" />
+    <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted" title="Progress saves automatically in this browser as you go">
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ok" />
       Saved in this browser · {relativeTime(updatedAt, now)}
     </span>
   );
 }
+
+const pad = (n: number) => String(n).padStart(2, "0");
 
 function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onSave: () => void; onNew: () => void }) {
   const a = useStore((s) => s.assessment);
   const now = useNow();
   const questions = activeQuestions(catalogue, a);
   const answered = questions.filter((q) => a.answers[q.id]).length;
+  const at = clampStep(a.progress?.step);
   return (
-    <Card className="mx-auto mt-6 max-w-xl p-7">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gold">Welcome back</p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">{a.org.name || "Your assessment"}</h1>
-      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
-        <dt className="text-ink-soft">You were on</dt><dd>{steps[clampStep(a.progress?.step)]}</dd>
-        <dt className="text-ink-soft">Crown jewels</dt><dd>{a.jewels.length}</dd>
-        <dt className="text-ink-soft">Questions answered</dt><dd>{answered} of {questions.length}</dd>
-        <dt className="text-ink-soft">Last saved</dt><dd>{relativeTime(a.updatedAt, now)}</dd>
-      </dl>
-      <div className="mt-6 flex flex-wrap gap-2">
+    <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
+      <div className="p-7">
+        <p className="mono-label text-accent">Welcome back</p>
+        <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">{a.org.name || "Your assessment"}</h1>
+        <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
+          <dt className="text-muted">You were on</dt>
+          <dd className="text-ink">
+            <span className="mr-2 font-mono text-xs text-muted">{pad(at + 1)}</span>
+            <span>{steps[at]}</span>
+          </dd>
+          <dt className="text-muted">Crown jewels</dt>
+          <dd className="tabular-nums text-ink">{a.jewels.length}</dd>
+          <dt className="text-muted">Questions answered</dt>
+          <dd className="tabular-nums text-ink">{answered} of {questions.length}</dd>
+          <dt className="text-muted">Last saved</dt>
+          <dd className="text-ink">{relativeTime(a.updatedAt, now)}</dd>
+        </dl>
+        {questions.length > 0 && (
+          <div className="mt-5 h-1 overflow-hidden rounded-full bg-rule" aria-hidden>
+            <div className="h-full bg-accent" style={{ width: `${Math.round((answered / questions.length) * 100)}%` }} />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-t border-rule bg-paper px-7 py-4">
         <Button onClick={onContinue} autoFocus>Continue where you left off</Button>
         <Button variant="secondary" onClick={onSave}>Save file</Button>
-        <Button variant="ghost" onClick={onNew}>Start a new assessment</Button>
+        <Button variant="ghost" className="sm:ml-auto" onClick={onNew}>Start a new assessment</Button>
       </div>
-      <p className="mt-5 text-xs leading-relaxed text-ink-soft">
-        Progress is kept in this browser only. To continue on another computer, or to keep a copy, use <strong>Save file</strong> and open it later.
+      <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
+        Progress is kept in this browser only. To continue on another computer, or to keep a copy, use <strong className="font-medium text-ink-2">Save file</strong> and open it later.
       </p>
-    </Card>
+    </div>
   );
 }
 
@@ -93,6 +110,10 @@ export function App() {
   const View = views[step] ?? OrgStep;
 
   const saveFile = () => download(saveFileName(assessment), JSON.stringify(assessment, null, 2), "application/json");
+  const go = (i: number) => {
+    setStep(i);
+    window.scrollTo({ top: 0 });
+  };
 
   async function onOpen(file: File) {
     setNotice(undefined);
@@ -124,83 +145,95 @@ export function App() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-          <img src="/favicon.svg" alt="" className="h-7 w-7" />
-          <div className="mr-auto">
-            <div className="font-semibold tracking-tight">crownguard</div>
-            <SaveStatus persisted={persisted} />
+      <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
+          <div className="mr-auto flex min-w-0 items-center gap-3">
+            <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+            <div className="min-w-0">
+              <div className="font-display text-[0.9375rem] font-semibold leading-tight tracking-[-0.01em] text-ink">crownguard</div>
+              <SaveStatus persisted={persisted} />
+            </div>
           </div>
-          <Button variant="secondary" onClick={saveFile} title="Download your progress as a file you can open later">
-            Save file
-          </Button>
-          <Button variant="secondary" onClick={() => fileInput.current?.click()} title="Continue from a saved file">
-            Open file
-          </Button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".json,application/json"
-            className="hidden"
-            data-testid="import-input"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onOpen(f);
-              e.target.value = "";
-            }}
-          />
-          <Button variant="danger" onClick={onClear}>
-            Clear data
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={saveFile} title="Download your progress as a file you can open later">
+              Save file
+            </Button>
+            <Button variant="secondary" onClick={() => fileInput.current?.click()} title="Continue from a saved file">
+              Open file
+            </Button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              data-testid="import-input"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onOpen(f);
+                e.target.value = "";
+              }}
+            />
+            <Button variant="danger" onClick={onClear}>
+              Clear data
+            </Button>
+          </div>
         </div>
         {notice && (
-          <div role={notice.kind === "error" ? "alert" : "status"} className={`px-6 py-2 text-sm ${notice.kind === "error" ? "bg-red-50 text-red-800" : "bg-green-50 text-green-900"}`}>
-            {notice.text}
+          <div
+            role={notice.kind === "error" ? "alert" : "status"}
+            className={`border-t px-4 py-2 text-sm sm:px-6 ${notice.kind === "error" ? "border-danger/20 bg-danger-soft text-danger" : "border-ok/20 bg-ok-soft text-ok"}`}
+          >
+            <div className="mx-auto max-w-6xl">{notice.text}</div>
           </div>
         )}
       </header>
 
       {resuming ? (
-        <div className="px-4 py-8 sm:px-6">
+        <div className="px-4 py-10 sm:px-6">
           <ResumeCard onContinue={() => setResuming(false)} onSave={saveFile} onNew={startNew} />
         </div>
       ) : (
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[200px_1fr]">
-          <nav aria-label="Steps" className="min-w-0 lg:sticky lg:top-6 lg:self-start">
-            <ol className="flex gap-1 overflow-x-auto lg:flex-col">
-              {steps.map((label, i) => (
-                <li key={label}>
-                  <button
-                    type="button"
-                    disabled={i > reachable}
-                    aria-current={i === step ? "step" : undefined}
-                    onClick={() => setStep(i)}
-                    className={`flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                      i === step ? "bg-ink text-white" : "hover:bg-black/5"
-                    }`}
-                  >
-                    <span
-                      className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-semibold ${
-                        i === step ? "bg-gold text-white" : "bg-line text-ink-soft"
+        <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-[208px_minmax(0,1fr)] lg:py-12">
+          <nav aria-label="Steps" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+            <ol className="-mx-1 flex gap-0.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:gap-0 lg:px-0 lg:pb-0">
+              {steps.map((label, i) => {
+                const current = i === step;
+                const done = i < step;
+                return (
+                  <li key={label} className="shrink-0">
+                    <button
+                      type="button"
+                      disabled={i > reachable}
+                      aria-current={current ? "step" : undefined}
+                      onClick={() => go(i)}
+                      className={`relative flex w-full items-center gap-3 whitespace-nowrap rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 lg:rounded-none lg:border-l-2 lg:pl-4 ${
+                        current
+                          ? "bg-accent-soft font-medium text-ink lg:border-accent lg:bg-transparent"
+                          : "text-ink-2 lg:border-rule [@media(hover:hover)]:enabled:hover:text-ink [@media(hover:hover)]:enabled:hover:bg-sunken lg:[@media(hover:hover)]:enabled:hover:bg-transparent lg:[@media(hover:hover)]:enabled:hover:border-ink-2"
                       }`}
                     >
-                      {i + 1}
-                    </span>
-                    {label}
-                  </button>
-                </li>
-              ))}
+                      <span className={`w-4 shrink-0 font-mono text-[0.6875rem] tabular-nums ${current ? "text-accent" : done ? "text-ok" : "text-muted"}`}>
+                        {done ? "✓" : pad(i + 1)}
+                      </span>
+                      {label}
+                    </button>
+                  </li>
+                );
+              })}
             </ol>
           </nav>
 
           <main className="min-w-0">
+            <p className="mono-label mb-2 text-muted">
+              Step {pad(step + 1)} / {pad(steps.length)}
+            </p>
             <View />
-            <div className="mt-10 flex justify-between border-t border-line pt-5">
-              <Button variant="ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>
+            <div className="mt-12 flex items-center justify-between gap-3 border-t border-rule pt-5">
+              <Button variant="ghost" disabled={step === 0} onClick={() => go(step - 1)}>
                 ← Back
               </Button>
               {step < steps.length - 1 && (
-                <Button disabled={step + 1 > reachable} onClick={() => { setStep(step + 1); window.scrollTo({ top: 0 }); }}>
+                <Button disabled={step + 1 > reachable} onClick={() => go(step + 1)}>
                   Next: {steps[step + 1]} →
                 </Button>
               )}

@@ -11,7 +11,7 @@ import {
   type Regulation,
 } from "../../engine/types";
 import { useStore } from "../store";
-import { Button, Card, CheckboxPill, Field, inputClass, StepHeader } from "../ui";
+import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, StepHeader } from "../ui";
 
 export const tierLabels: Record<Tier, string> = {
   identity: "Identity plane",
@@ -41,14 +41,14 @@ export function JewelsStep() {
           !bundle.platform.modules.find((m) => m.id === a.module)?.optional || assessment.modules[pid]?.includes(a.module);
         const types = bundle.assetTypes.filter(enabled);
         return (
-          <section key={pid} className="mb-10">
-            <h2 className="mb-4 text-lg font-semibold">{bundle.platform.name}</h2>
+          <section key={pid} className="mb-12">
+            <h2 className="mb-6 text-[1.375rem] font-semibold leading-tight">{bundle.platform.name}</h2>
             {tiers
               .filter((t) => types.some((a) => a.tier === t))
               .map((tier) => (
-                <div key={tier} className="mb-6">
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gold">{tierLabels[tier]}</h3>
-                  <div className="space-y-3">
+                <div key={tier} className="mb-8">
+                  <h3 className="mono-label mb-3 font-mono text-muted">{tierLabels[tier]}</h3>
+                  <div className="space-y-2.5">
                     {types
                       .filter((a) => a.tier === tier)
                       .map((a) => (
@@ -88,27 +88,27 @@ function AssetCard({ platform, asset }: { platform: string; asset: AssetType }) 
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h4 className="font-semibold">{asset.name}</h4>
-          <p className="mt-1 text-sm leading-relaxed text-ink-soft">{asset.description}</p>
+          <h4 className="text-base font-semibold leading-snug">{asset.name}</h4>
+          <p className="mt-1 max-w-[68ch] text-sm leading-relaxed text-ink-2">{asset.description}</p>
         </div>
         <Button variant="secondary" onClick={() => setEditing(blank())} aria-label={`Add crown jewel: ${asset.name}`}>
           + Add
         </Button>
       </div>
       <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-ink-soft hover:text-ink">Questions to help you decide</summary>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-soft">
+        <summary className="text-muted transition-colors [@media(hover:hover)]:hover:text-ink">Questions to help you decide</summary>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-ink-2 marker:text-rule-2">
           {asset.discoveryPrompts.map((p) => <li key={p}>{p}</li>)}
         </ul>
-        <p className="mt-2 text-xs text-ink-soft">Examples: {asset.examples.join(" · ")}</p>
+        <p className="mt-3 text-xs text-muted"><span className="mono-label mr-2">Examples</span>{asset.examples.join(" · ")}</p>
       </details>
 
       {jewels.length > 0 && (
-        <ul className="mt-4 divide-y divide-line rounded-lg border border-line">
+        <ul className="mt-4 divide-y divide-rule overflow-hidden rounded-[var(--radius-control)] border border-rule bg-paper">
           {jewels.map((j) => (
             <li key={j.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5 text-sm">
-              <span className="font-medium">{j.name}</span>
-              <span className="text-ink-soft">
+              <span className="font-medium text-ink">{j.name}</span>
+              <span className="text-muted">
                 Impact {impactOf(j)}/5 · {classifications[j.classification]}
               </span>
               <span className="ml-auto flex gap-1">
@@ -132,7 +132,7 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
 
   return (
     <form
-      className="mt-4 space-y-5 rounded-lg border border-gold/40 bg-gold-soft/40 p-4"
+      className="mt-4 space-y-6 rounded-[var(--radius-control)] border border-rule-2 bg-paper p-4 sm:p-5"
       onSubmit={(e) => {
         e.preventDefault();
         upsertJewel({ ...j, name: j.name.trim() || asset.name });
@@ -160,8 +160,8 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
       <div className="grid gap-4 sm:grid-cols-3">
         {(["confidentiality", "integrity", "availability"] as const).map((k) => (
           <fieldset key={k}>
-            <legend className="text-sm font-medium capitalize">{k} impact</legend>
-            <div className="mt-1.5 flex gap-1" role="radiogroup">
+            <legend className="text-sm font-medium capitalize text-ink">{k} impact</legend>
+            <div className="mt-1.5 flex overflow-hidden rounded-[var(--radius-control)] border border-field bg-surface" role="radiogroup">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
@@ -171,18 +171,18 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
                   aria-label={`${k} ${n} ${impactLabels[n - 1]}`}
                   title={impactLabels[n - 1]}
                   onClick={() => set({ [k]: n as ImpactRating })}
-                  className={`h-8 flex-1 rounded text-sm font-medium ${j[k] === n ? "bg-ink text-white" : "border border-line bg-white"}`}
+                  className={`h-9 flex-1 font-mono text-sm tabular-nums transition-colors duration-150 focus-visible:-outline-offset-2 ${n > 1 ? "border-l border-rule-2" : ""} ${j[k] === n ? "bg-ink font-medium text-paper" : "text-ink-2 [@media(hover:hover)]:hover:bg-sunken"}`}
                 >
                   {n}
                 </button>
               ))}
             </div>
-            <div className="mt-1 text-xs text-ink-soft">{impactLabels[j[k] - 1]}</div>
+            <div className="mt-1.5 text-xs text-muted">{impactLabels[j[k] - 1]}</div>
           </fieldset>
         ))}
       </div>
 
-      <Field label="Exposure" hint="Tick everything that's true today. Each one raises likelihood.">
+      <FieldGroup label="Exposure" hint="Tick everything that's true today. Each one raises likelihood.">
         <div className="flex flex-wrap gap-2">
           {asset.exposures.map((x) => (
             <CheckboxPill key={x} checked={j.exposures.includes(x)} onChange={(on) => set({ exposures: toggle(j.exposures, x, on) })}>
@@ -190,9 +190,9 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
             </CheckboxPill>
           ))}
         </div>
-      </Field>
+      </FieldGroup>
 
-      <Field label="Obligations covering this data">
+      <FieldGroup label="Obligations covering this data">
         <div className="flex flex-wrap gap-2">
           {(Object.keys(regulations) as Regulation[]).map((r) => (
             <CheckboxPill key={r} checked={j.regulations.includes(r)} onChange={(on) => set({ regulations: toggle(j.regulations, r, on) })}>
@@ -200,7 +200,7 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
             </CheckboxPill>
           ))}
         </div>
-      </Field>
+      </FieldGroup>
 
       <Field label="Business processes that depend on it" hint="Optional. Appears in the crown-jewel register.">
         <input className={inputClass} value={j.businessProcesses} onChange={(e) => set({ businessProcesses: e.target.value })} placeholder="e.g. Payroll, client billing" />

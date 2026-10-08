@@ -3,7 +3,7 @@ import { activeQuestions, assessAll, domainPosture, overallPosture, type JewelRi
 import { essentialEight } from "../../engine/maturity";
 import { answerLabels } from "../../engine/types";
 import { useStore } from "../store";
-import { BandBadge, bandColors, Card, StepHeader } from "../ui";
+import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";
 
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
@@ -27,36 +27,37 @@ export function ReviewStep() {
       </StepHeader>
 
       {unanswered > 0 && (
-        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps.{" "}
-          <button type="button" className="font-medium underline" onClick={() => setStep(3)}>Go back to answer them</button>
+        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-4 py-2.5 text-sm text-warn">
+          <span>{unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps.</span>
+          <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(3)}>Go back to answer them</button>
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Control posture" value={pct(posture.score)} />
+      {/* The page's one dark beat: the headline numbers. */}
+      <div className="grid overflow-hidden rounded-[var(--radius-card)] bg-graphite text-on-graphite sm:grid-cols-3">
+        <Stat label="Control posture" value={pct(posture.score)} hint="Severity-weighted controls in place" />
         <Stat label="Answer confidence" value={pct(posture.confidence)} hint="Share of answers that aren't Unknown" />
         <Stat label="High or extreme risks" value={String(risks.filter((r) => r.band === "High" || r.band === "Extreme").length)} hint={`of ${risks.length} crown jewels`} />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[auto_1fr]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
         <Card>
-          <h2 className="mb-3 font-semibold">Risk heatmap</h2>
+          <h2 className="mb-4 text-base font-semibold">Risk heatmap</h2>
           <Heatmap risks={risks} />
         </Card>
         <Card className="overflow-x-auto">
-          <h2 className="mb-3 font-semibold">Crown jewels by risk</h2>
+          <h2 className="mb-4 text-base font-semibold">Crown jewels by risk</h2>
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-ink-soft [&_th]:pb-2 [&_th]:pr-3 [&_th]:font-medium">
+            <thead className="mono-label text-left text-muted [&_th]:whitespace-nowrap [&_th]:pb-2.5 [&_th]:pr-3 [&_th]:font-medium">
               <tr><th>Crown jewel</th><th>Impact</th><th>Likelihood</th><th>Risk</th><th>Open gaps</th></tr>
             </thead>
-            <tbody className="divide-y divide-line [&_td]:pr-3">
+            <tbody className="divide-y divide-rule tabular-nums [&_td]:py-2.5 [&_td]:pr-3">
               {risks.map((r) => (
                 <tr key={r.jewel.id}>
-                  <td className="py-2 pr-3 font-medium">{r.jewel.name}</td>
+                  <td className="font-medium text-ink">{r.jewel.name}</td>
                   <td>{r.impact}</td>
                   <td>{r.likelihood}</td>
-                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="text-ink-soft">{r.score}</span></td>
+                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="ml-1 font-mono text-xs text-muted">{r.score}/25</span></td>
                   <td>{r.gaps.length}</td>
                 </tr>
               ))}
@@ -65,28 +66,28 @@ export function ReviewStep() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
-          <h2 className="mb-3 font-semibold">Posture by domain</h2>
+          <h2 className="mb-4 text-base font-semibold">Posture by domain</h2>
           <ul className="space-y-2.5">
             {domains.map((d) => (
               <li key={`${d.platform}:${d.domain}`} className="text-sm">
-                <div className="flex justify-between"><span>{d.name}</span><span className="text-ink-soft">{pct(d.score)}</span></div>
-                <div className="mt-1 h-1.5 rounded-full bg-line"><div className="h-full rounded-full bg-ink" style={{ width: pct(d.score ?? 0) }} /></div>
+                <div className="flex justify-between gap-3"><span className="text-ink">{d.name}</span><span className="font-mono text-xs tabular-nums text-muted">{pct(d.score)}</span></div>
+                <div className="mt-1.5 h-1 rounded-full bg-rule"><div className="h-full rounded-full bg-ink-2" style={{ width: pct(d.score ?? 0) }} /></div>
               </li>
             ))}
           </ul>
         </Card>
         <Card>
-          <h2 className="mb-1 font-semibold">Essential Eight (indicative)</h2>
-          <p className="mb-3 text-xs text-ink-soft">Based only on the cloud-platform controls asked here, not a full ASD assessment.</p>
+          <h2 className="mb-1 text-base font-semibold">Essential Eight (indicative)</h2>
+          <p className="mb-4 text-xs text-muted">Based only on the cloud-platform controls asked here, not a full ASD assessment.</p>
           <table className="w-full text-sm">
-            <tbody className="divide-y divide-line">
+            <tbody className="divide-y divide-rule">
               {e8.map((r) => (
                 <tr key={r.strategy}>
-                  <td className="py-1.5">{catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === r.strategy)?.title ?? r.strategy}</td>
-                  <td className="text-right font-medium">ML{r.level}</td>
-                  <td className="w-24 text-right text-xs text-ink-soft">of ML{r.ceiling} asked</td>
+                  <td className="py-2 pr-3 text-ink">{catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === r.strategy)?.title ?? r.strategy}</td>
+                  <td className="text-right font-mono text-sm font-medium text-ink">ML{r.level}</td>
+                  <td className="w-28 pl-3 text-right font-mono text-[0.6875rem] text-muted">of ML{r.ceiling} asked</td>
                 </tr>
               ))}
             </tbody>
@@ -95,13 +96,15 @@ export function ReviewStep() {
       </div>
 
       {risks[0] && risks[0].gaps.length > 0 && (
-        <Card className="mt-6">
-          <h2 className="mb-3 font-semibold">Biggest gaps for “{risks[0].jewel.name}”</h2>
-          <ul className="space-y-2 text-sm">
+        <Card className="mt-4">
+          <h2 className="mb-4 text-base font-semibold">Biggest gaps for “{risks[0].jewel.name}”</h2>
+          <ul className="space-y-3 text-sm">
             {risks[0].gaps.slice(0, 5).map((g) => (
-              <li key={g.question.id}>
-                <span className="font-mono text-xs text-ink-soft">{g.question.id}</span> {g.question.question}{" "}
-                <span className="text-ink-soft">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+              <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
+                <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
+                <span className="text-ink">
+                  {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                </span>
               </li>
             ))}
           </ul>
@@ -113,29 +116,27 @@ export function ReviewStep() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card>
-      <div className="text-xs font-medium uppercase tracking-wider text-ink-soft">{label}</div>
-      <div className="mt-1 text-3xl font-semibold tabular-nums">{value}</div>
-      {hint && <div className="mt-0.5 text-xs text-ink-soft">{hint}</div>}
-    </Card>
+    <div className="border-graphite-2 p-5 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l">
+      <div className="mono-label text-on-graphite-2">{label}</div>
+      <div className="mt-2 font-display text-[2.25rem] font-semibold leading-none tracking-[-0.03em] tabular-nums text-on-graphite">{value}</div>
+      {hint && <div className="mt-2 text-xs text-on-graphite-2">{hint}</div>}
+    </div>
   );
 }
 
 function Heatmap({ risks }: { risks: JewelRisk[] }) {
   return (
-    <div className="inline-grid grid-cols-[auto_repeat(5,2.75rem)] gap-1 text-xs">
+    <div className="inline-grid grid-cols-[auto_repeat(5,2.75rem)] gap-1 font-mono text-[0.6875rem]">
       {[5, 4, 3, 2, 1].map((impact) => (
         <div key={impact} className="contents">
-          <div className="pr-1.5 text-right leading-[2.75rem] text-ink-soft">{impact}</div>
+          <div className="pr-1.5 text-right leading-[2.75rem] text-muted">{impact}</div>
           {[1, 2, 3, 4, 5].map((likelihood) => {
             const here = risks.filter((r) => r.impact === impact && r.likelihood === likelihood);
-            const c = bandColors[bandOf(impact * likelihood)];
             return (
               <div
                 key={likelihood}
                 title={here.map((r) => r.jewel.name).join(", ")}
-                className="grid h-11 place-items-center rounded font-semibold"
-                style={{ background: c.bg, color: c.fg }}
+                className={`grid h-11 place-items-center rounded-[4px] text-sm font-medium ${bandClasses[bandOf(impact * likelihood)]}`}
               >
                 {here.length || ""}
               </div>
@@ -144,9 +145,9 @@ function Heatmap({ risks }: { risks: JewelRisk[] }) {
         </div>
       ))}
       <div />
-      {[1, 2, 3, 4, 5].map((l) => <div key={l} className="text-center text-ink-soft">{l}</div>)}
+      {[1, 2, 3, 4, 5].map((l) => <div key={l} className="pt-1 text-center text-muted">{l}</div>)}
       <div />
-      <div className="col-span-5 text-center text-ink-soft">Likelihood →  ·  ↑ Impact</div>
+      <div className="col-span-5 pt-1 text-center text-muted">Likelihood → · rows: impact</div>
     </div>
   );
 }

@@ -34,23 +34,27 @@ export function ReportStep() {
         The PDF is built in your browser. It includes an executive summary, your crown-jewel register, a risk register,
         findings with recommended fixes, a 30/60/90-day roadmap, framework alignment and references.
       </StepHeader>
-      <Card className="max-w-xl">
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-ink-soft">Organisation</dt><dd>{assessment.org.name}</dd>
-          <dt className="text-ink-soft">Platforms</dt><dd>{model.platformNames.join(", ")}</dd>
-          <dt className="text-ink-soft">Crown jewels</dt><dd>{model.risks.length}</dd>
-          <dt className="text-ink-soft">Questions answered</dt><dd>{model.questions.filter((q) => assessment.answers[q.id]).length} of {model.questions.length}</dd>
-          <dt className="text-ink-soft">Roadmap actions</dt><dd>{model.roadmap.length}</dd>
-          <dt className="text-ink-soft">Marking</dt><dd>{assessment.branding.marking}</dd>
+      <Card className="max-w-xl overflow-hidden p-0!">
+        <div className="p-6">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-2.5 text-sm [&_dd]:text-ink [&_dd]:tabular-nums">
+          <dt className="text-muted">Organisation</dt><dd>{assessment.org.name}</dd>
+          <dt className="text-muted">Platforms</dt><dd>{model.platformNames.join(", ")}</dd>
+          <dt className="text-muted">Crown jewels</dt><dd>{model.risks.length}</dd>
+          <dt className="text-muted">Questions answered</dt><dd>{model.questions.filter((q) => assessment.answers[q.id]).length} of {model.questions.length}</dd>
+          <dt className="text-muted">Roadmap actions</dt><dd>{model.roadmap.length}</dd>
+          <dt className="text-muted">Marking</dt><dd>{assessment.branding.marking}</dd>
         </dl>
-        <Button className="mt-6 w-full py-3" disabled={status === "working"} onClick={() => void generate()}>
+        </div>
+        <div className="border-t border-rule bg-paper p-6">
+        <Button className="w-full py-2.5" loading={status === "working"} onClick={() => void generate()}>
           {status === "working" ? "Building PDF…" : "Generate PDF report"}
         </Button>
-        {status === "done" && <p className="mt-3 text-sm text-green-800" role="status">Report downloaded. Check your downloads folder.</p>}
-        {status === "error" && <p className="mt-3 text-sm text-red-700" role="alert">Couldn't build the PDF: {error}</p>}
-        <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-          Tip: use <strong>Export</strong> at the top of the page to save your answers as a file. You can import it later to update the assessment.
+        {status === "done" && <p className="mt-3 text-sm text-ok" role="status">Report downloaded. Check your downloads folder.</p>}
+        {status === "error" && <p className="mt-3 text-sm text-danger" role="alert">Couldn't build the PDF: {error}</p>}
+        <p className="mt-4 text-xs leading-relaxed text-muted">
+          Your progress is saved in this browser. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report.
         </p>
+        </div>
       </Card>
     </>
   );
