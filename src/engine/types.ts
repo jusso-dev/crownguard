@@ -56,6 +56,27 @@ export interface OrgProfile {
   regulations: Regulation[];
 }
 
+export type ScanStatus = "pass" | "fail" | "warning" | "review" | "info" | "unknown" | "notlicensed";
+
+/** Automated-scan results attached to a question when an import pre-filled (or tried to pre-fill) it. */
+export interface Evidence {
+  source: string;
+  tenant: string;
+  scannedAt: string;
+  /** The answer the scan suggested, if its results were decisive. */
+  suggested?: Answer;
+  checks: { id: string; status: ScanStatus; setting: string; current: string; expected: string }[];
+}
+
+export interface ImportRecord {
+  source: string;
+  tenant: string;
+  scannedAt: string;
+  importedAt: string;
+  /** Answers the import set. */
+  applied: number;
+}
+
 export interface Assessment {
   version: 1;
   org: OrgProfile;
@@ -69,6 +90,9 @@ export interface Assessment {
   answers: Record<string, Answer>;
   notes: Record<string, string>;
   branding: Branding;
+  /** Scan evidence per question id, from optional automated imports. */
+  evidence?: Record<string, Evidence>;
+  imports?: ImportRecord[];
   /** Where the user was, so a reload or an opened file resumes in the same place. */
   progress?: { step: number; section?: string };
   createdAt: string;

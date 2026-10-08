@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
+import type { ScanResult } from "../imports/m365Secure";
 
 export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "Review", "Branding", "Report"] as const;
 
@@ -52,6 +53,8 @@ interface State {
   setNote: (questionId: string, note: string) => void;
   upsertJewel: (jewel: CrownJewel) => void;
   removeJewel: (id: string) => void;
+  /** Apply an automated scan: attach evidence everywhere, set answers where decisive. Returns answers set. */
+  applyScan: (scan: ScanResult, opts: { platform: string; overwrite: boolean; licence: boolean }) => number;
   load: (a: Assessment) => void;
   reset: () => void;
 }
@@ -75,6 +78,28 @@ export const useStore = create<State>()(
             jewels: a.jewels.some((x) => x.id === j.id) ? a.jewels.map((x) => (x.id === j.id ? j : x)) : [...a.jewels, j],
           })),
         removeJewel: (id) => update((a) => ({ jewels: a.jewels.filter((j) => j.id !== id) })),
+        applyScan: (scan, { platform, overwrite, licence }) => {
+          let applied = 0;
+          update((a) => {
+            const answers = { ...a.answers };
+            const evidence = { ...a.evidence };
+            for (const { question, evidence: ev } of scan.suggestions) {
+              evidence[question] = ev;
+              if (ev.suggested && (overwrite || !answers[question])) {
+                answers[question] = ev.suggested;
+                applied++;
+              }
+            }
+            const now = new Date().toISOString();
+            return {
+              answers,
+              evidence,
+              licence: licence && scan.licence ? { ...a.licence, [platform]: scan.licence } : a.licence,
+              imports: [...(a.imports ?? []), { source: "M365-Secure", tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied }],
+            };
+          });
+          return applied;
+        },
         load: (assessment) => set({ assessment: { ...assessment, progress: { ...assessment.progress, step: clampStep(assessment.progress?.step) } } }),
         reset: () => set({ assessment: emptyAssessment() }),
       };

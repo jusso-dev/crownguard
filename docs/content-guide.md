@@ -98,3 +98,22 @@ Writing rules:
 - `e8` levels follow the ASD Essential Eight Maturity Model: tag the lowest maturity level the requirement first appears at.
   A strategy reaches a level only when every question tagged at or below that level is answered Yes.
 - Severity reflects how directly the gap enables compromise of a crown jewel, not how hard the fix is.
+
+## Scan imports
+
+`content/imports/<tool>.yaml` maps an automated scanner's check ids to questions so its results can pre-fill answers.
+
+```yaml
+id: m365-secure
+name: M365-Secure
+platform: microsoft
+url: https://github.com/jusso-dev/M365-Secure
+mappings:
+  - question: MS-ID-001
+    checks: [ENTRA-CA-001, ENTRA-CA-004]
+    rationale: These checks confirm a Conditional Access policy requires MFA for all users.
+```
+
+Only map a check when its pass or fail genuinely answers the question. When several checks map to one question,
+all pass gives Yes, all fail gives No, and anything mixed (or a warning) gives Partial. Statuses that can't settle
+a question (review, info, unknown, not licensed) leave it for the assessor.

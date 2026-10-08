@@ -1,0 +1,30 @@
+{
+  "summary": {
+    "tenant": {
+      "tenant_id": "00000000-0000-0000-0000-000000000000",
+      "display_name": "Contoso Example",
+      "verified_domains": ["contoso.example"],
+      "primary_domain": "contoso.example",
+      "license_skus": [{ "sku_id": "x", "sku_part_number": "SPB", "consumed_units": 10, "prepaid_units": 10, "service_plans": [] }]
+    },
+    "timestamp": "2026-10-01T03:00:00Z",
+    "duration_seconds": 12.5,
+    "total_checks": 8,
+    "status_counts": {},
+    "severity_counts": {},
+    "score": 50,
+    "modules_run": ["entra", "exchange"],
+    "modules_failed": []
+  },
+  "findings": [
+    { "check_id": "CA-MFA-ALL-001", "category": "Entra", "section": "CA", "setting": "MFA required for all users", "description": "", "status": "pass", "severity": "critical", "current_value": "Policy 'Require MFA' enabled", "expected_value": "Enabled", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "CA-LEGACYAUTH-001", "category": "Entra", "section": "CA", "setting": "Legacy authentication blocked", "description": "", "status": "fail", "severity": "high", "current_value": "No blocking policy", "expected_value": "Blocked", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "DNS-SPF-001", "category": "DNS", "section": "Mail", "setting": "SPF record", "description": "", "status": "pass", "severity": "high", "current_value": "v=spf1 include:spf.protection.outlook.com -all", "expected_value": "", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "DNS-DKIM-001", "category": "DNS", "section": "Mail", "setting": "DKIM selectors", "description": "", "status": "pass", "severity": "high", "current_value": "selector1, selector2", "expected_value": "", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "DNS-DMARC-001", "category": "DNS", "section": "Mail", "setting": "DMARC policy", "description": "", "status": "warning", "severity": "high", "current_value": "p=none", "expected_value": "p=quarantine or p=reject", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "EXO-AUDIT-001", "category": "Exchange", "section": "Audit", "setting": "Mailbox auditing", "description": "", "status": "pass", "severity": "high", "current_value": "AuditDisabled: False", "expected_value": "False", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "ENTRA-GUEST-001", "category": "Entra", "section": "Guests", "setting": "Guest user access", "description": "", "status": "review", "severity": "medium", "current_value": "", "expected_value": "", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" },
+    { "check_id": "SOME-UNMAPPED-001", "category": "Other", "section": "Other", "setting": "Unmapped", "description": "", "status": "fail", "severity": "low", "current_value": "", "expected_value": "", "remediation": "", "framework_mappings": {}, "timestamp": "2026-10-01T03:00:00Z" }
+  ],
+  "compliance": []
+}

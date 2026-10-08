@@ -1,9 +1,10 @@
 import { catalogue } from "../../content/catalogue";
 import type { Question } from "../../content/schema";
 import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
-import { answerLabels, type Answer } from "../../engine/types";
+import { answerLabels, type Answer, type Evidence } from "../../engine/types";
 import { useStore } from "../store";
 import { Button, Progress, SeverityBadge, StepHeader, inputClass } from "../ui";
+import { ScanImport, stamp, statusStyle } from "../ScanImport";
 
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 
@@ -35,6 +36,7 @@ export function ControlsStep() {
         <strong> Unknown</strong>: it counts as a gap, and the report flags it so someone can check.
       </StepHeader>
       <Progress value={questions.length ? answered / questions.length : 0} label={`${answered} of ${questions.length} answered`} />
+      <ScanImport />
 
       <nav className="mt-8 flex flex-wrap gap-x-1 border-b border-rule" aria-label="Control sections">
         {groups.map((g) => {
@@ -83,6 +85,7 @@ function QuestionCard({ q }: { q: Question }) {
   const { assessment, setAnswer, setNote } = useStore();
   const answer = assessment.answers[q.id];
   const missingReason = needsReason(assessment, q.id);
+  const evidence = assessment.evidence?.[q.id];
   const reasonId = `${q.id}-na-reason`;
   const platform = [...catalogue.platforms.values()].find((b) => b.questions.includes(q))!.platform;
   const tierFeatures = new Set(platform.licenceTiers.find((t) => t.id === assessment.licence[platform.id])?.features ?? []);
@@ -117,6 +120,7 @@ function QuestionCard({ q }: { q: Question }) {
           </button>
         ))}
       </div>
+      {evidence && <EvidencePanel evidence={evidence} answer={answer} />}
       {answer === "na" && (
         <div className="mt-4 max-w-[72ch]">
           <label htmlFor={reasonId} className="text-sm font-medium text-ink">
@@ -157,6 +161,47 @@ function QuestionCard({ q }: { q: Question }) {
         </div>
       </details>
     </article>
+  );
+}
+
+function EvidencePanel({ evidence, answer }: { evidence: Evidence; answer: Answer | undefined }) {
+  const tally = Object.entries(
+    evidence.checks.reduce<Record<string, number>>((acc, c) => ({ ...acc, [c.status]: (acc[c.status] ?? 0) + 1 }), {}),
+  )
+    .map(([k, n]) => `${n} ${k}`)
+    .join(", ");
+  return (
+    <details className="mt-3 rounded-[var(--radius-control)] border border-rule bg-paper px-3 py-2 text-sm" data-testid="evidence">
+      <summary className="text-ink-2">
+        <span className="mono-label mr-2 text-muted">Scan evidence</span>
+        {evidence.suggested
+          ? answer && answer !== evidence.suggested
+            ? `You changed this from the scan's ${answerLabels[evidence.suggested]}`
+            : `${evidence.source} suggests ${answerLabels[evidence.suggested]}`
+          : `${evidence.source} couldn't decide; check this one yourself`}
+        <span className="text-muted"> · {tally}</span>
+      </summary>
+      <p className="mt-2 text-xs text-muted">
+        {evidence.tenant}, scanned {stamp(evidence.scannedAt)}
+      </p>
+      <ul className="mt-2 space-y-2">
+        {evidence.checks.map((c, i) => (
+          <li key={`${c.id}-${i}`} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5">
+            <span className={`mono-label self-start rounded-[4px] px-1.5 py-0.5 ${statusStyle[c.status]}`}>{c.status}</span>
+            <span className="text-ink">
+              {c.setting || c.id} <span className="font-mono text-[0.6875rem] text-muted">{c.id}</span>
+            </span>
+            {(c.current || c.expected) && (
+              <span className="col-start-2 text-xs text-muted">
+                {c.current && <>Found: {c.current}</>}
+                {c.current && c.expected && " · "}
+                {c.expected && <>Expected: {c.expected}</>}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

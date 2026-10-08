@@ -53,6 +53,32 @@ export const assessmentSchema = z.object({
     preparedBy: z.string().max(200),
     preparedFor: z.string().max(200),
   }),
+  evidence: z
+    .record(
+      z.string(),
+      z.object({
+        source: z.string().max(80),
+        tenant: z.string().max(300),
+        scannedAt: z.string().max(60),
+        suggested: z.enum(["yes", "partial", "no", "unknown", "na"]).optional(),
+        checks: z
+          .array(
+            z.object({
+              id: z.string().max(80),
+              status: z.enum(["pass", "fail", "warning", "review", "info", "unknown", "notlicensed"]),
+              setting: z.string().max(500),
+              current: z.string().max(2000),
+              expected: z.string().max(2000),
+            }),
+          )
+          .max(50),
+      }),
+    )
+    .optional(),
+  imports: z
+    .array(z.object({ source: z.string().max(80), tenant: z.string().max(300), scannedAt: z.string().max(60), importedAt: z.string().max(60), applied: z.number().int().min(0) }))
+    .max(50)
+    .optional(),
   progress: z.object({ step: z.number().int().min(0).max(20), section: z.string().max(120).optional() }).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

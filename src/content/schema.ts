@@ -96,6 +96,28 @@ export const questionSchema = z.object({
   e8: z.array(z.object({ strategy: z.enum(e8Strategies), level: z.union([z.literal(1), z.literal(2), z.literal(3)]) })).default([]),
 });
 
+/** Maps an automated scanner's check ids to questions, so its results can pre-fill answers. */
+export const importMappingSchema = z.object({
+  id,
+  name: z.string(),
+  platform: id,
+  url: z.url(),
+  mappings: z
+    .array(
+      z.object({
+        question: z.string(),
+        checks: z.array(z.string().min(1)).min(1),
+        rationale: z.string().min(5),
+        /** "partial": the checks cover only part of the question, so a pass gives Partial, not Yes. */
+        cap: z.literal("partial").optional(),
+        /** The checks have known false fails, so a fail sends the question to review instead of No. */
+        failIsInconclusive: z.boolean().optional(),
+      }),
+    )
+    .min(1),
+});
+export type ImportMapping = z.infer<typeof importMappingSchema>;
+
 export const questionFileSchema = z.array(questionSchema);
 export const assetFileSchema = z.array(assetTypeSchema);
 export const sourceFileSchema = z.array(sourceSchema);
@@ -117,4 +139,5 @@ export interface Catalogue {
   sources: Map<string, Source>;
   frameworks: Map<string, Framework>;
   platforms: Map<string, PlatformBundle>;
+  imports: Map<string, ImportMapping>;
 }

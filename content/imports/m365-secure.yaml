@@ -1,0 +1,38 @@
+id: m365-secure
+name: M365-Secure
+platform: microsoft
+url: https://github.com/jusso-dev/M365-Secure
+mappings:
+  - question: MS-ID-001
+    checks: [CA-MFA-ALL-001]
+    rationale: Passes only when an enabled Conditional Access policy targeting All users requires the MFA grant control.
+    # The check only recognises the plain MFA grant, so tenants using an authentication strength or Security Defaults fail wrongly.
+    failIsInconclusive: true
+  - question: MS-ID-002
+    checks: [CA-LEGACYAUTH-001]
+    rationale: Passes only when an enabled Conditional Access policy blocks the Exchange ActiveSync or other (legacy) client app types.
+  - question: MS-ID-006
+    checks: [CA-SIGNINRISK-001, CA-USERRISK-001]
+    rationale: Each checks for an enabled Conditional Access policy conditioned on medium or high sign-in risk and user risk respectively.
+    # Confirms the risk policies exist, not what they enforce.
+    cap: partial
+  - question: MS-ID-008
+    checks: [ENTRA-GUEST-001, ENTRA-GUEST-002]
+    rationale: Read the authorization policy for a restricted guest user role and for invitations limited to admins and Guest Inviters.
+  - question: MS-EXO-003
+    checks: [DNS-SPF-001, DNS-DKIM-001, DNS-DMARC-001]
+    rationale: Per-domain DNS lookups for an SPF record, both Microsoft DKIM selectors, and a DMARC record at p=quarantine or p=reject.
+  - question: MS-LOG-001
+    checks: [EXO-AUDIT-001]
+    rationale: Confirms organisation-wide mailbox auditing is on (AuditDisabled is false), one part of the audit logging requirement.
+    # Doesn't cover unified audit logging or audit bypass.
+    cap: partial
+  - question: MS-SPO-001
+    checks: [SPO-SHARING-001, SPO-SHARING-004]
+    rationale: Fails on Anyone-level sharingCapability and passes on New and existing guests or stricter, and checks guests cannot reshare.
+  - question: MS-TMS-001
+    checks: [TEAMS-EXTACCESS-001, TEAMS-EXTACCESS-004]
+    rationale: Check that Teams external access is not open to all domains and that chat with unmanaged Teams accounts is blocked.
+  - question: MS-END-009
+    checks: [INTUNE-MULTIAPPROVAL-001]
+    rationale: Passes when at least one Intune multi-admin approval (operation approval) policy exists.

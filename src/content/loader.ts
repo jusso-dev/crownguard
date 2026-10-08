@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   assetFileSchema,
   frameworkSchema,
+  importMappingSchema,
   platformSchema,
   questionFileSchema,
   sourceFileSchema,
@@ -38,7 +39,7 @@ const rel = (path: string) => path.slice(path.indexOf("content/"));
 
 export function loadCatalogue(files: ContentFiles): LoadResult {
   const errors: string[] = [];
-  const catalogue: Catalogue = { sources: new Map(), frameworks: new Map(), platforms: new Map() };
+  const catalogue: Catalogue = { sources: new Map(), frameworks: new Map(), platforms: new Map(), imports: new Map() };
   const entries = Object.entries(files)
     .map(([p, t]) => [rel(p), t] as const)
     .sort(([a], [b]) => a.localeCompare(b));
@@ -77,6 +78,21 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
       .filter(([p]) => p.startsWith(`${prefix}questions/`))
       .flatMap(([p, t]) => parseFile(p, t, questionFileSchema, errors) ?? []);
     catalogue.platforms.set(platform.id, { platform, assetTypes, questions });
+  }
+
+  for (const [path, text] of entries) {
+    if (!path.startsWith("content/imports/")) continue;
+    const m = parseFile(path, text, importMappingSchema, errors);
+    if (!m) continue;
+    const bundle = catalogue.platforms.get(m.platform);
+    if (!bundle) errors.push(`${path}: unknown platform ${m.platform}`);
+    const seen = new Set<string>();
+    for (const row of m.mappings) {
+      if (seen.has(row.question)) errors.push(`${path}: ${row.question} mapped twice`);
+      seen.add(row.question);
+      if (bundle && !bundle.questions.some((q) => q.id === row.question)) errors.push(`${path}: unknown question ${row.question}`);
+    }
+    catalogue.imports.set(m.id, m);
   }
 
   errors.push(...crossCheck(catalogue));

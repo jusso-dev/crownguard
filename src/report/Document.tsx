@@ -122,6 +122,10 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           {[
             ...model.licenceNames,
             `${model.risks.length} crown jewel${model.risks.length === 1 ? "" : "s"} and ${model.questions.length} control questions relevant to them`,
+            ...(a.imports ?? []).map(
+              (imp) =>
+                `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
+            ),
           ].map((line) => (
             <View key={line} style={{ flexDirection: "row", gap: 6, marginBottom: 3 }}>
               <Text style={{ width: 8, color: theme.heading }}>•</Text>
@@ -323,6 +327,13 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                       <Text style={{ fontSize: 8.5 }}><Text style={{ fontWeight: 600 }}>Recommendation: </Text>{q.remediation}</Text>
                       {lic.length > 0 && <Text style={{ fontSize: 8, color: "#7a5200", marginTop: 2 }}>Licence: needs {lic.join(", ")}.</Text>}
                       {a.notes[q.id] && <Text style={{ fontSize: 8, marginTop: 2, fontStyle: "italic" }}>Note: {a.notes[q.id]}</Text>}
+                      {a.evidence?.[q.id] && (
+                        <Text style={{ fontSize: 8, marginTop: 2, color: muted }}>
+                          Scan evidence ({a.evidence[q.id].source}, {stampText(new Date(a.evidence[q.id].scannedAt))}):{" "}
+                          {a.evidence[q.id].checks.slice(0, 6).map((c) => `${c.setting || c.id} – ${c.status}`).join("; ")}
+                          {a.evidence[q.id].checks.length > 6 ? `; +${a.evidence[q.id].checks.length - 6} more` : ""}
+                        </Text>
+                      )}
                       <Text style={{ ...s.small, marginTop: 2 }}>
                         {[...q.refs.map((r) => `${model.frameworkName(r.framework)} ${r.ref}`), ...q.e8.map((t) => `E8 ${t.strategy} ML${t.level}`)].join(" · ")}
                       </Text>
@@ -429,6 +440,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             "Answers score Yes = 1, Partial = 0.5, No = 0. Unknown and unanswered questions also score 0, so uncertainty is never counted as protection. N/A questions are excluded. Questions are weighted by severity: critical 4, high 3, medium 2, low 1.",
             "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions relevant to a crown jewel, plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
             "Risk bands: 1–4 Low, 5–9 Medium, 10–19 High, 20–25 Extreme.",
+            "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). The assessor reviewed and could change every answer; scan evidence is shown against each finding.",
             "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). Strategies outside the scope of a cloud collaboration platform, or levels not asked, are reported as not assessed.",
             "crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, CIS, ASD or NIST. Product names are trademarks of their owners.",
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
