@@ -21,12 +21,23 @@ modules:
 # need them always show the licence gap. Business Premium includes Defender for Business, which
 # provides endpoint detection and response comparable to Defender for Endpoint Plan 2 for
 # organisations of up to 300 users, so it is mapped to defender-endpoint-p2.
+# Nonprofit tiers are the discounted "Nonprofit Staff Pricing" versions of the same plans and
+# carry the same security features. Business Basic is the only remaining broad grant (up to 300
+# users); the Business Premium and Office 365 E1 grants were retired on 1 July 2025, and Office 365
+# E1 is now discounted (grants only in limited Enterprise Agreement scenarios). Office 365 E1
+# includes no listed security features: sensitivity labels and Purview DLP start at Office 365 E3.
 licenceTiers:
   - id: business-basic
     name: Microsoft 365 Business Basic
     features: []
+  - id: business-basic-nonprofit
+    name: Microsoft 365 Business Basic (Nonprofit grant)
+    features: []
   - id: business-standard
     name: Microsoft 365 Business Standard
+    features: []
+  - id: business-standard-nonprofit
+    name: Microsoft 365 Business Standard (Nonprofit)
     features: []
   - id: business-premium
     name: Microsoft 365 Business Premium
@@ -38,14 +49,44 @@ licenceTiers:
       - defender-endpoint-p2
       - purview-labels
       - purview-dlp
+  - id: business-premium-nonprofit
+    name: Microsoft 365 Business Premium (Nonprofit)
+    features:
+      - entra-p1
+      - intune
+      - defender-office-p1
+      - defender-endpoint-p1
+      - defender-endpoint-p2
+      - purview-labels
+      - purview-dlp
+  - id: office-365-e1-nonprofit
+    name: Office 365 E1 (Nonprofit)
+    features: []
   - id: office-365-e3
     name: Office 365 E3
     features:
+      - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
+      - purview-labels
+      - purview-dlp
+  - id: office-365-e3-nonprofit
+    name: Office 365 E3 (Nonprofit)
+    features:
+      - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - purview-labels
       - purview-dlp
   - id: microsoft-365-e3
     name: Microsoft 365 E3
     features:
+      - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
+      - entra-p1
+      - intune
+      - defender-endpoint-p1
+      - purview-labels
+      - purview-dlp
+  - id: microsoft-365-e3-nonprofit
+    name: Microsoft 365 E3 (Nonprofit)
+    features:
+      - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - entra-p1
       - intune
       - defender-endpoint-p1
@@ -67,6 +108,23 @@ licenceTiers:
       - purview-dlp
   - id: microsoft-365-e5
     name: Microsoft 365 E5
+    features:
+      - entra-p1
+      - entra-p2
+      - intune
+      - defender-office-p1
+      - defender-office-p2
+      - defender-endpoint-p1
+      - defender-endpoint-p2
+      - defender-identity
+      - defender-cloud-apps
+      - purview-labels
+      - purview-auto-labelling
+      - purview-dlp
+      - purview-dlp-advanced
+      - purview-audit-premium
+  - id: microsoft-365-e5-nonprofit
+    name: Microsoft 365 E5 (Nonprofit)
     features:
       - entra-p1
       - entra-p2

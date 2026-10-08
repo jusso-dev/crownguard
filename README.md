@@ -21,7 +21,9 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **A report people will read.** Executive summary, heatmap, crown-jewel register, risk register, findings with
   fixes and licence notes, a 30/60/90-day roadmap, indicative Essential Eight maturity, NIST CSF coverage and
   references. Your logo, your colours, your protective marking on every page.
-- **Portable.** Autosaves in your browser. Export to a `.crownguard.json` file and import it later to update.
+- **Save and come back.** Progress saves automatically in your browser as you go. Return later and you pick up
+  on the same step and section. Use **Save file** to keep a `.crownguard.json` copy, move to another computer or
+  hand over to a colleague, then **Open file** to carry on.
 
 ## Use it
 

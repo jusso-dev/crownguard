@@ -480,3 +480,13 @@
   publisher: Google
   url: https://docs.cloud.google.com/storage/docs/bucket-lock
   retrieved: 2026-10-08
+- id: gws-nonprofits-offering
+  title: "Google Workspace for Nonprofits"
+  publisher: Google
+  url: https://www.google.com/nonprofits/offerings/workspace/
+  retrieved: 2026-10-08
+- id: gws-compare-nonprofits
+  title: "Compare Google Workspace features for nonprofits"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/billing/compare-google-workspace-features-for-nonprofits
+  retrieved: 2026-10-08

@@ -51,6 +51,7 @@ export const assessmentSchema = z.object({
     preparedBy: z.string().max(200),
     preparedFor: z.string().max(200),
   }),
+  progress: z.object({ step: z.number().int().min(0).max(20), section: z.string().max(120).optional() }).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 }) satisfies z.ZodType<Assessment>;

@@ -579,3 +579,18 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/storage/common/shared-key-authorization-prevent
   retrieved: 2026-10-08
+- id: ms-nonprofit-offerings
+  title: Nonprofit offerings and products - Microsoft for Nonprofits
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/industry/nonprofit/microsoft-for-nonprofits/nonprofit-offerings-products
+  retrieved: 2026-10-08
+- id: ms-nonprofit-faq
+  title: Microsoft for Nonprofits FAQ
+  publisher: Microsoft
+  url: https://www.microsoft.com/en-us/nonprofits/faq
+  retrieved: 2026-10-08
+- id: ms-m365-pricing-packaging-2026
+  title: Microsoft 365 pricing and packaging updates (including nonprofit pricing)
+  publisher: Microsoft
+  url: https://www.microsoft.com/en-us/licensing/news/2026-m365-packaging-pricing-updates
+  retrieved: 2026-10-08

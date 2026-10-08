@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import type { Question } from "../../content/schema";
 import { activeQuestions } from "../../engine/risk";
@@ -18,7 +17,9 @@ export function ControlsStep() {
       .map((d) => ({ key: `${pid}:${d.id}`, platform: bundle.platform.name, domain: d, questions: questions.filter((q) => q.domain === d.id && bundle.questions.includes(q)) }))
       .filter((g) => g.questions.length > 0);
   });
-  const [active, setActive] = useState(groups[0]?.key);
+  // The open section is saved with the assessment so you come back to where you left off.
+  const active = useStore((s) => s.assessment.progress?.section);
+  const setActive = useStore((s) => s.setSection);
   const group = groups.find((g) => g.key === active) ?? groups[0];
   const answered = questions.filter((q) => assessment.answers[q.id]).length;
 

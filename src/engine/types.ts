@@ -67,6 +67,8 @@ export interface Assessment {
   answers: Record<string, Answer>;
   notes: Record<string, string>;
   branding: Branding;
+  /** Where the user was, so a reload or an opened file resumes in the same place. */
+  progress?: { step: number; section?: string };
   createdAt: string;
   updatedAt: string;
 }

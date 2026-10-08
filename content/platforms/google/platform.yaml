@@ -22,23 +22,47 @@ modules:
 # and Cloud Identity "Editions" pages (retrieved 2026-10-08). Business editions cover up to 300 users.
 # Google Cloud services (Security Command Center Premium, Backup and DR, etc.) are billed separately
 # from Workspace editions, so gcp-scc-premium is not part of any tier.
+# Nonprofit tiers follow "Compare Google Workspace features for nonprofits" (retrieved 2026-10-08).
+# Discounted Business and Enterprise editions for nonprofits are the same editions as above
+# (Business editions for nonprofits allow up to 2,000 users). The free Google Workspace for
+# Nonprofits edition has no security sandbox, data regions, classification labels, Vault,
+# advanced endpoint management or DLP, so it matches Business Starter.
 licenceTiers:
   - id: business-starter
     name: Business Starter
     features: [alert-center, gemini]
+  - id: workspace-nonprofits
+    name: Google Workspace for Nonprofits (free)
+    features: [alert-center, gemini]
   - id: business-standard
     name: Business Standard
     features: [alert-center, gemini, security-sandbox, data-regions, drive-labels]
+  - id: business-standard-nonprofit
+    name: Business Standard (Nonprofit)
+    features: [alert-center, gemini, security-sandbox, data-regions, drive-labels]
   - id: business-plus
     name: Business Plus
+    features: [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control]
+  - id: business-plus-nonprofit
+    name: Business Plus (Nonprofit)
     features: [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control]
   - id: enterprise-standard
     name: Enterprise Standard
     features:
       [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
        context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval]
+  - id: enterprise-standard-nonprofit
+    name: Enterprise Standard (Nonprofit)
+    features:
+      [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
+       context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval]
   - id: enterprise-plus
     name: Enterprise Plus
+    features:
+      [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
+       context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval, client-side-encryption]
+  - id: enterprise-plus-nonprofit
+    name: Enterprise Plus (Nonprofit)
     features:
       [alert-center, gemini, security-sandbox, data-regions, drive-labels, vault, advanced-endpoint-management, session-control,
        context-aware-access, dlp, trust-rules, security-center, bigquery-export, multi-party-approval, client-side-encryption]
