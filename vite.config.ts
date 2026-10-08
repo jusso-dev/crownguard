@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 // Everything is served from our own origin. 'wasm-unsafe-eval' is needed by the PDF layout engine (yoga wasm).
-const csp = [
+const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
@@ -15,8 +15,9 @@ const csp = [
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'none'",
-  "frame-ancestors 'none'",
-].join("; ");
+];
+// frame-ancestors only works as a header, so it's left out of the meta tag.
+const csp = [...cspDirectives, "frame-ancestors 'none'"].join("; ");
 
 const securityHeaders = {
   "Content-Security-Policy": csp,
@@ -26,18 +27,23 @@ const securityHeaders = {
   "Cross-Origin-Opener-Policy": "same-origin",
 };
 
-/** Emits a `_headers` file (read by many static hosts) so production gets the same headers as `vite preview`. */
-const headersFile = (): Plugin => ({
-  name: "crownguard-headers",
+/**
+ * GitHub Pages can't send custom headers, so production builds carry the policy as meta tags.
+ * Dev skips them because Vite's hot reload injects inline scripts.
+ */
+const securityMeta = (): Plugin => ({
+  name: "crownguard-security-meta",
   apply: "build",
-  generateBundle() {
-    const lines = Object.entries(securityHeaders).map(([k, v]) => `  ${k}: ${v}`);
-    this.emitFile({ type: "asset", fileName: "_headers", source: `/*\n${lines.join("\n")}\n` });
-  },
+  transformIndexHtml: () => [
+    { tag: "meta", attrs: { "http-equiv": "Content-Security-Policy", content: cspDirectives.join("; ") }, injectTo: "head-prepend" },
+    { tag: "meta", attrs: { name: "referrer", content: "no-referrer" }, injectTo: "head-prepend" },
+  ],
 });
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), headersFile()],
+  // Served from /crownguard/ on GitHub Pages; BASE_PATH is set by the Pages workflow.
+  base: process.env.BASE_PATH ?? "/",
+  plugins: [react(), tailwindcss(), securityMeta()],
   preview: { headers: securityHeaders },
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],

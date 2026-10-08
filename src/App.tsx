@@ -188,7 +188,7 @@ export function App() {
       <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
-            <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+            <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="h-7 w-7 shrink-0" />
             <div className="min-w-0">
               <div className="font-display text-[0.9375rem] font-semibold leading-tight tracking-[-0.01em] text-ink">crownguard</div>
               <SaveStatus persisted={persisted} fileSave={fileSave} />

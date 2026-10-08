@@ -6,7 +6,7 @@ test("every step fits a 390px phone screen without horizontal scroll", async ({ 
     const w = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(w, name).toBeLessThanOrEqual(390);
   };
-  await page.goto("/");
+  await page.goto("./");
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await noOverflow("org");
   await page.getByRole("button", { name: /^Next:/ }).click();

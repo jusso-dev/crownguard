@@ -16,7 +16,7 @@ export async function downloadPdf(page: Page): Promise<string[]> {
 }
 
 export async function runJourney(page: Page, platformName: string, jewelCount = 4): Promise<string[]> {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByLabel("Organisation name").fill(ORG);
   await page.getByLabel(/^ABN/).fill("51824753556");
   await page.getByLabel("Sector").selectOption("Health");

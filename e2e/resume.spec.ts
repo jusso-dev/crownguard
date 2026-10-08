@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 
 /** Start an assessment and stop part-way through the controls, in the second section. */
 async function startAndStopMidway(page: Page) {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByLabel("Organisation name").fill("Resume Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
@@ -27,7 +27,7 @@ async function startAndStopMidway(page: Page) {
 }
 
 test("a fresh visit goes straight to the first step", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.getByText("Welcome back")).toHaveCount(0);
   await expect(page.getByLabel("Organisation name")).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Saved in this browser" })).toBeVisible();
@@ -77,7 +77,7 @@ test("a saved file reopens at the same place, even after clearing the browser", 
 });
 
 test("a bad file is rejected and the current assessment is untouched", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByLabel("Organisation name").fill("Keep Me Pty Ltd");
   await page.getByTestId("import-input").setInputFiles({ name: "bad.json", mimeType: "application/json", buffer: Buffer.from('{"version":2}') });
   await expect(page.getByText(/Couldn't open that file/)).toBeVisible();

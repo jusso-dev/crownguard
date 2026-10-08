@@ -5,6 +5,7 @@ import type { Band } from "../engine/risk";
 export const ink = "#1c2333";
 export const muted = "#5b6478";
 export const line = "#e2e5eb";
+export const good = "#1d6b3f";
 
 export const bandColors: Record<Band, { bg: string; fg: string }> = {
   Low: { bg: "#d9efe1", fg: "#1d5c36" },

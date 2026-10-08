@@ -31,7 +31,9 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 
 ## Use it
 
-Run it yourself:
+Hosted: **https://jusso-dev.github.io/crownguard/** (GitHub Pages, built from `main`)
+
+Or run it yourself:
 
 ```sh
 pnpm install
@@ -39,9 +41,13 @@ pnpm dev        # http://localhost:5173
 pnpm build      # static site in dist/, host anywhere
 ```
 
-The build is a static site with no server code. Serve `dist/` from any static host. The generated `dist/_headers`
-file sets a strict Content Security Policy on hosts that read it; elsewhere, copy the headers defined in
-`vite.config.ts` into your host's config.
+The build is a static site with no server code. Serve `dist/` from any static host; set `BASE_PATH` when it lives
+under a sub-path (the Pages workflow uses `/crownguard/`). The Content Security Policy ships as a `<meta>` tag
+because GitHub Pages can't send custom headers; on a host that can, also send the headers defined in
+`vite.config.ts` (including `frame-ancestors 'none'`, which only works as a header).
+
+Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account,
+so for sensitive assessments prefer **Save file**, a private window, or self-hosting on your own domain.
 
 ## How risk is scored
 

@@ -37,6 +37,16 @@ export interface ReportModel {
   /** Answers as scored: N/A without a reason is dropped. */
   answers: Record<string, Answer>;
   notApplicable: { question: Question; reason: string }[];
+  /** What is already working, shown before the risks in the executive summary. */
+  strengths: {
+    inPlace: number;
+    partial: number;
+    assessed: number;
+    /** Controls answered Yes, most severe first. */
+    passes: Question[];
+    /** Domains at 70 % or better, strongest first. */
+    strongDomains: DomainPosture[];
+  };
   /** Frameworks the in-scope questions actually map to, vendor guidance first. */
   frameworksUsed: { name: string; publisher: string; role: string }[];
   /** Licence tier name per selected platform. */
@@ -119,9 +129,20 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     .map((f) => ({ name: f.name, publisher: f.publisher, role: roleOf(f.id) }))
     .sort((x, y) => Number(y.role.startsWith("Vendor")) - Number(x.role.startsWith("Vendor")) || x.name.localeCompare(y.name));
 
+  const domains = domainPosture(catalogue, assessment);
+  const severityRank = { critical: 0, high: 1, medium: 2, low: 3 } as const;
+  const strengths = {
+    inPlace: questions.filter((q) => answers[q.id] === "yes").length,
+    partial: questions.filter((q) => answers[q.id] === "partial").length,
+    assessed: questions.filter((q) => answers[q.id] && answers[q.id] !== "na").length,
+    passes: questions.filter((q) => answers[q.id] === "yes").sort((x, y) => severityRank[x.severity] - severityRank[y.severity] || x.id.localeCompare(y.id)),
+    strongDomains: domains.filter((d) => d.score !== null && d.score >= 0.7).sort((x, y) => (y.score ?? 0) - (x.score ?? 0)),
+  };
+
   return {
     assessment,
     answers,
+    strengths,
     frameworksUsed,
     licenceNames: bundles.map((x) => {
       const tier = x.platform.licenceTiers.find((t) => t.id === assessment.licence[x.platform.id]);
@@ -139,7 +160,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     platformNames: bundles.map((x) => x.platform.name),
     posture: overallPosture(catalogue, assessment),
     risks: assessAll(catalogue, assessment),
-    domains: domainPosture(catalogue, assessment),
+    domains,
     e8: essentialEight(questions, answers).map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy })),
     roadmap: buildRoadmap(questions, jewels, answers),
     questions,

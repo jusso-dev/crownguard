@@ -5,7 +5,7 @@ import { formatAbn, isValidAbn } from "../engine/abn";
 import { bandOf } from "../engine/risk";
 import { answerLabels, classifications, regulations, type Answer } from "../engine/types";
 import type { ReportModel } from "./model";
-import { Badge, bandColors, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
+import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
 
 const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
 const protects = (jewels: { name: string }[]) =>
@@ -14,6 +14,8 @@ const protects = (jewels: { name: string }[]) =>
     : jewels.length <= 3
       ? jewels.map((j) => j.name).join(", ")
       : `${jewels.slice(0, 2).map((j) => j.name).join(", ")} and ${jewels.length - 2} more`;
+const firstSentence = (t: string) => t.split(/(?<=\.)\s/)[0];
+const listText = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
 const sentence = (t: string) => (/[.?!]$/.test(t) ? t : `${t}.`);
 /** Full timestamp with time zone, e.g. "8 October 2026 at 5:42 pm AEDT". */
 const stampText = (d: Date) =>
@@ -49,6 +51,8 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   const { assessment: a, theme } = model;
   const s = makeStyles(theme);
 
+  const st = model.strengths;
+  const e8Reached = model.e8.filter((r) => (r.level ?? 0) >= 1);
   const extreme = model.risks.filter((r) => r.band === "Extreme").length;
   const high = model.risks.filter((r) => r.band === "High").length;
   const top = model.risks[0];
@@ -136,19 +140,30 @@ export function ReportDocument({ model }: { model: ReportModel }) {
 
         {/* Executive summary */}
         <Section s={s} title="Executive summary">
+          {/* Lead with what is working, then where to focus. */}
           <Text style={s.p}>
-            {a.org.name} identified {model.risks.length} crown jewel{model.risks.length === 1 ? "" : "s"} across {model.platformNames.join(" and ")} and
-            answered {model.questions.length - unknownCount} of {model.questions.length} control questions drawn from vendor security guidance.
+            {st.inPlace > 0
+              ? `${a.org.name} has ${st.inPlace} of the ${st.assessed} controls assessed fully in place`
+              : `${a.org.name} assessed ${st.assessed} controls`}
+            {st.partial > 0 ? `, with a further ${st.partial} partly in place` : ""}.
+            {st.strongDomains.length > 0 ? ` Its strongest areas are ${listText(st.strongDomains.slice(0, 3).map((d) => `${d.name} (${pct(d.score)})`))}.` : ""}
+            {e8Reached.length > 0 ? ` It reaches indicative Essential Eight Maturity Level 1 or above for ${listText(e8Reached.map((r) => `${r.title.toLowerCase()} (ML${r.level})`))}.` : ""}
+            {model.notApplicable.length > 0
+              ? ` ${model.notApplicable.length} control${model.notApplicable.length === 1 ? " was" : "s were"} confirmed not applicable, each with a documented reason.`
+              : ""}
+          </Text>
+          <Text style={s.p}>
+            The assessment covered {model.risks.length} crown jewel{model.risks.length === 1 ? "" : "s"} across {model.platformNames.join(" and ")}.
             {extreme + high > 0
-              ? ` ${extreme + high} crown jewel${extreme + high === 1 ? " is" : "s are"} at high or extreme risk${top ? `, led by “${top.jewel.name}” (${top.band.toLowerCase()}, ${top.score}/25)` : ""}.`
-              : " No crown jewel is currently rated high or extreme risk."}
-            {unknownCount > 0 ? ` ${unknownCount} control${unknownCount === 1 ? " is" : "s are"} unknown and treated as gaps until confirmed.` : ""}
+              ? ` ${extreme + high} ${extreme + high === 1 ? "is" : "are"} rated high or extreme risk${top ? `, led by “${top.jewel.name}” (${top.band.toLowerCase()}, ${top.score}/25)` : ""}, and the priority actions below address them first.`
+              : " None is currently rated high or extreme risk."}
+            {unknownCount > 0 ? ` ${unknownCount} control${unknownCount === 1 ? " is" : "s are"} still unknown and treated as gaps until confirmed.` : ""}
           </Text>
 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 8, marginBottom: 6 }}>
             {[
-              ["Control posture", pct(model.posture.score), "Severity-weighted controls in place"],
-              ["Answer confidence", pct(model.posture.confidence), "Answers that aren't Unknown"],
+              ["Controls in place", `${st.inPlace}/${st.assessed}`, st.partial ? `plus ${st.partial} partly in place` : "fully implemented"],
+              ["Control posture", pct(model.posture.score), "Severity-weighted, partial counts half"],
               ["High / extreme risks", String(extreme + high), `of ${model.risks.length} crown jewels`],
             ].map(([label, value, hint]) => (
               <View key={label} style={{ flex: 1, backgroundColor: theme.tint, borderRadius: 4, padding: 10 }}>
@@ -159,13 +174,31 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             ))}
           </View>
 
-          <View style={{ flexDirection: "row", gap: 18, marginTop: 6 }}>
+          <Text style={s.h2} minPresenceAhead={60}>What's working well</Text>
+          {st.passes.length === 0 ? (
+            <Text style={s.p}>No controls are fully in place yet. The priority actions below are the quickest wins.</Text>
+          ) : (
             <View>
-              <Text style={s.h2}>Risk heatmap</Text>
+              {st.passes.slice(0, 6).map((q) => (
+                <View key={q.id} wrap={false} style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
+                  <Text style={{ width: 10, color: good, fontWeight: 700 }}>✓</Text>
+                  <Text style={{ flex: 1, fontSize: 9, lineHeight: 1.4 }}>
+                    {firstSentence(q.yesLooksLike)} <Text style={{ color: muted, fontSize: 7.5 }}>{q.id}</Text>
+                  </Text>
+                </View>
+              ))}
+              {st.passes.length > 6 && <Text style={s.small}>+ {st.passes.length - 6} more controls in place.</Text>}
+            </View>
+          )}
+
+          <Text style={{ ...s.h2, marginTop: 16 }} minPresenceAhead={120}>Where to focus</Text>
+          <View style={{ flexDirection: "row", gap: 18, marginTop: 2 }}>
+            <View>
+              <Text style={{ ...s.h3, color: theme.heading }}>Risk heatmap</Text>
               <Heatmap model={model} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.h2}>Highest risks</Text>
+              <Text style={{ ...s.h3, color: theme.heading }}>Highest risks</Text>
               {model.risks.slice(0, 6).map((r) => (
                 <View key={r.jewel.id} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 3.5, borderBottomWidth: 0.5, borderColor: line }}>
                   <Badge {...bandColors[r.band]}>{r.band.toUpperCase()}</Badge>
@@ -178,7 +211,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
 
           {quickWins.length > 0 && (
             <>
-              <Text style={s.h2} minPresenceAhead={90}>Priority actions (next 30 days)</Text>
+              <Text style={{ ...s.h3, color: theme.heading, marginTop: 14 }} minPresenceAhead={90}>Priority actions (next 30 days)</Text>
               {quickWins.map((r, i) => (
                 <View key={r.question.id} wrap={false} style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
                   <Text style={{ width: 12, fontWeight: 700, color: theme.heading }}>{i + 1}.</Text>

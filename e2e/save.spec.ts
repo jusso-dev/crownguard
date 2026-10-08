@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
 async function toSecondControlsSection(page: Page) {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByLabel("Organisation name").fill("Save Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
@@ -88,7 +88,7 @@ test("N/A needs a reason before it counts as answered", async ({ page }) => {
 });
 
 test("ABN is checked against the ATO check digit", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   const abn = page.getByLabel(/^ABN/);
   await abn.fill("51 824 753 557");
   await abn.blur();
@@ -99,7 +99,7 @@ test("ABN is checked against the ATO check digit", async ({ page }) => {
 });
 
 test("an older saved file can be reopened to add a logo and ABN, then regenerated", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Open saved file" }).click({ trial: true });
   await page.getByTestId("import-input").setInputFiles("e2e/fixtures/legacy.crownguard.json");
   await expect(page.getByText("Opened Legacy Health. Picking up at Organisation.")).toBeVisible();
