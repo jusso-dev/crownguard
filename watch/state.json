@@ -1,58 +1,87 @@
 {
   "feeds": {
     "asd-news": {
-      "latest": "2026-09-25T01:33:24.000Z"
+      "latest": "2026-09-25T01:33:24.000Z",
+      "seen": []
     },
     "asd-publications": {
-      "latest": "2026-09-25T04:27:55.000Z"
+      "latest": "2026-09-25T04:27:55.000Z",
+      "seen": []
     },
     "cis-blog": {
-      "latest": "2026-10-07T20:14:00.000Z"
+      "latest": "2026-10-07T20:14:00.000Z",
+      "seen": []
     },
     "gcp-access-context-manager": {
-      "latest": "2026-09-21T07:00:00.000Z"
+      "latest": "2026-09-21T07:00:00.000Z",
+      "seen": []
     },
     "gcp-backupdr": {
-      "latest": "2026-09-30T07:00:00.000Z"
+      "latest": "2026-09-30T07:00:00.000Z",
+      "seen": [
+        "f3f2274c8d57"
+      ]
     },
     "gcp-bigquery": {
-      "latest": "2026-10-07T07:00:00.000Z"
+      "latest": "2026-10-08T07:00:00.000Z",
+      "seen": []
     },
     "gcp-cloud-sql-mysql": {
-      "latest": "2026-09-28T07:00:00.000Z"
+      "latest": "2026-10-08T07:00:00.000Z",
+      "seen": []
     },
     "gcp-cloudidentity": {
-      "latest": "2026-07-03T07:00:00.000Z"
+      "latest": "2026-07-03T07:00:00.000Z",
+      "seen": []
     },
     "gcp-cloudresourcemanager": {
-      "latest": "2026-08-04T07:00:00.000Z"
+      "latest": "2026-08-04T07:00:00.000Z",
+      "seen": []
     },
     "gcp-dlp": {
-      "latest": "2026-10-03T07:00:00.000Z"
+      "latest": "2026-10-03T07:00:00.000Z",
+      "seen": []
     },
     "gcp-iam": {
-      "latest": "2026-10-06T07:00:00.000Z"
+      "latest": "2026-10-06T07:00:00.000Z",
+      "seen": []
     },
     "gcp-kms": {
-      "latest": "2026-09-23T07:00:00.000Z"
+      "latest": "2026-09-23T07:00:00.000Z",
+      "seen": []
     },
     "gcp-logging": {
-      "latest": "2026-09-28T07:00:00.000Z"
+      "latest": "2026-09-28T07:00:00.000Z",
+      "seen": [
+        "1a841f678472",
+        "9103ef704301"
+      ]
     },
     "gcp-scc": {
-      "latest": "2026-10-06T07:00:00.000Z"
+      "latest": "2026-10-06T07:00:00.000Z",
+      "seen": [
+        "3a37f56f2f1d"
+      ]
     },
     "gcp-storage": {
-      "latest": "2026-09-30T07:00:00.000Z"
+      "latest": "2026-09-30T07:00:00.000Z",
+      "seen": []
     },
     "gcp-vpc-sc": {
-      "latest": "2026-09-30T07:00:00.000Z"
+      "latest": "2026-09-30T07:00:00.000Z",
+      "seen": []
     },
     "nist-cybersecurity-insights": {
-      "latest": "2026-10-05T12:00:00.000Z"
+      "latest": "2026-10-05T12:00:00.000Z",
+      "seen": []
+    },
+    "soc-cmm-community": {
+      "latest": "2026-09-03T12:56:46.000Z",
+      "seen": []
     },
     "workspace-updates": {
-      "latest": "2026-10-06T19:40:59.499Z"
+      "latest": "2026-10-08T15:34:24.249Z",
+      "seen": []
     }
   },
   "neighbours": {
@@ -130,6 +159,15 @@
       "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure",
       "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-overview",
       "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-prevent"
+    ],
+    "https://learn.microsoft.com/en-us/compliance/anz/toc.json#ACSC Essential Eight": [
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-admin",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-app-control",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-app-harden",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-backups",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-macro",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-overview",
+      "https://learn.microsoft.com/en-us/compliance/anz/e8-patch-app"
     ],
     "https://learn.microsoft.com/en-us/compliance/assurance/toc.json#Resiliency & continuity > Microsoft 365": [
       "https://learn.microsoft.com/en-us/compliance/assurance/assurance-data-resiliency-overview",
@@ -215,13 +253,6 @@
       "https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-protection-about",
       "https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-restore-restricted-users",
       "https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-sending-limits-troubleshoot"
-    ],
-    "https://learn.microsoft.com/en-us/defender-xdr/toc.json#Microsoft Defender XDR > Assess and improve security posture": [
-      "https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score",
-      "https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-history-metrics-trends",
-      "https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions",
-      "https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-whats-new",
-      "https://learn.microsoft.com/en-us/defender-xdr/secure-score-data-storage-privacy"
     ],
     "https://learn.microsoft.com/en-us/defender-xdr/toc.json#Microsoft Defender XDR > Automate investigation and response > Attack disruption": [
       "https://learn.microsoft.com/en-us/defender-xdr/autoad-results",
@@ -440,6 +471,20 @@
       "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-upgrade-previous-version",
       "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/security-updates-pks"
     ],
+    "https://learn.microsoft.com/en-us/entra/identity/hybrid/toc.json#Connect sync reference > How-to guides > Manage Microsoft Entra Connect": [
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/admin-audit-logging",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/authenticate-application-id",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-azureadaccount",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-configure-ad-ds-connector-account",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-device-options",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-device-writeback",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-group-writeback-enable",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-preview",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sync-change-addsacct-pass",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sync-change-serviceacct-pass",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sync-feature-prevent-accidental-deletes",
+      "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-sync-recycle-bin"
+    ],
     "https://learn.microsoft.com/en-us/entra/identity/hybrid/toc.json#Connect sync reference > How-to guides > Plan and design > Migration": [
       "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-migrate-groups",
       "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-staged-rollout",
@@ -569,6 +614,28 @@
       "https://learn.microsoft.com/en-us/officeupdates/release-notes-microsoft365-apps",
       "https://learn.microsoft.com/en-us/officeupdates/update-history-microsoft365-apps-by-date"
     ],
+    "https://learn.microsoft.com/en-us/microsoft-365/admin/toc.json#Microsoft 365 admin center help > Manage your data and services > Agents in Microsoft 365 admin center > Manage agent inventory": [
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-details",
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-local",
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-map",
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-multi-tenant",
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry",
+      "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-requests"
+    ],
+    "https://learn.microsoft.com/en-us/microsoft-365/backup/toc.json#(top)": [
+      "https://learn.microsoft.com/en-us/microsoft-365/backup",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-billing",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-faq",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-offboarding",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-overview",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-pricing",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-privacy-security",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-restore-data",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-setup",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-video-library",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-view-edit-policies",
+      "https://learn.microsoft.com/en-us/microsoft-365/backup/backup-whats-new"
+    ],
     "https://learn.microsoft.com/en-us/microsoft-365/copilot/toc.json#Implement > Secure and governed foundation": [
       "https://learn.microsoft.com/en-us/microsoft-365/copilot/configure-secure-governed-data-foundation-microsoft-365-copilot"
     ],
@@ -655,11 +722,15 @@
       "https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-data-policies",
       "https://learn.microsoft.com/en-us/power-platform/admin/wp-data-loss-prevention"
     ],
-    "https://learn.microsoft.com/en-us/purview/toc.json#Data Security Posture Management > Previous versions of DSPM > Data security posture management for AI (classic)": [
-      "https://learn.microsoft.com/en-us/purview/ai-microsoft-purview-permissions",
+    "https://learn.microsoft.com/en-us/purview/toc.json#Data Security Posture Management": [
       "https://learn.microsoft.com/en-us/purview/ai-microsoft-purview-supported-sites",
-      "https://learn.microsoft.com/en-us/purview/dspm-for-ai",
-      "https://learn.microsoft.com/en-us/purview/dspm-for-ai-considerations"
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-application-card",
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-considerations",
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-learn-about",
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-oversharing",
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-permissions",
+      "https://learn.microsoft.com/en-us/purview/data-security-posture-management-setup",
+      "https://learn.microsoft.com/en-us/purview/dspm-task-mapping"
     ],
     "https://learn.microsoft.com/en-us/purview/toc.json#Data compliance solutions > Audit": [
       "https://learn.microsoft.com/en-us/purview/audit-get-started",
@@ -869,6 +940,7 @@
     "asd-e8-explained": {
       "contentHash": "d92bc6787dc394d0",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "Introduction",
@@ -916,6 +988,7 @@
     "asd-e8-maturity-model": {
       "contentHash": "208c74e87390a84d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "Introduction",
@@ -1002,9 +1075,32 @@
       "url": "https://www.cyber.gov.au/publication/essential-eight-maturity-model",
       "words": 11875
     },
+    "cc-by-sa-4": {
+      "contentHash": "44d746abec444ba3",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "Canonical URL",
+          "hash": "5be3f45044c7",
+          "words": 5
+        },
+        {
+          "h": "Footnotes",
+          "hash": "4f593589deef",
+          "words": 206
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "Creative Commons",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "words": 214
+    },
     "chrome-extensions": {
       "contentHash": "a98a6ac5d6da046d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1031,6 +1127,7 @@
     "chrome-policy-management": {
       "contentHash": "ded27bceea6ac814",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1082,6 +1179,7 @@
     "chrome-update-strategies": {
       "contentHash": "11c582041f75cc9d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1108,6 +1206,7 @@
     "chromeos-updates": {
       "contentHash": "3416870efd430d15",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1139,6 +1238,7 @@
     "cis-gcp": {
       "contentHash": "cc6229c1cbcd7c43",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1200,6 +1300,7 @@
     "cis-gws": {
       "contentHash": "b65f9e720d4c9cb6",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1261,6 +1362,7 @@
     "cis-m365": {
       "contentHash": "63f04b1324713328",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1332,6 +1434,7 @@
     "gcp-aggregated-sinks": {
       "contentHash": "f63dee9aae7be170",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1418,6 +1521,7 @@
     "gcp-audit-logs": {
       "contentHash": "4c70f5346f098aca",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1531,9 +1635,7 @@
         }
       ],
       "status": "ok",
-      "terms": [
-        "replaced by"
-      ],
+      "terms": [],
       "title": "Cloud Audit Logs overview",
       "url": "https://docs.cloud.google.com/logging/docs/audit",
       "words": 2827
@@ -1541,6 +1643,7 @@
     "gcp-backup-vault": {
       "contentHash": "a9258ff744e4b3aa",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -1637,6 +1740,7 @@
     "gcp-bigquery-iam": {
       "contentHash": "e00a43a142fd6a3e",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2098,6 +2202,7 @@
     "gcp-blueprint-authn": {
       "contentHash": "7e06b6c5cb5974d2",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2144,6 +2249,7 @@
     "gcp-blueprint-detective": {
       "contentHash": "79fefd1b3e39bed8",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2185,6 +2291,7 @@
     "gcp-blueprint-preventative": {
       "contentHash": "57955ec56cf9b50f",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2216,6 +2323,7 @@
     "gcp-bucket-lock": {
       "contentHash": "cd3bd661886d33e4",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2267,6 +2375,7 @@
     "gcp-cloudsql-backups": {
       "contentHash": "ab493c406f080908",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2353,6 +2462,7 @@
     "gcp-cloudsql-deletion-protection": {
       "contentHash": "312c9ae82f09bc0b",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2449,6 +2559,7 @@
     "gcp-cloudsql-private-ip": {
       "contentHash": "74316c96498e6de9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2594,95 +2705,10 @@
       "url": "https://docs.cloud.google.com/sql/docs/mysql/configure-private-ip",
       "words": 5780
     },
-    "gcp-cmek": {
-      "contentHash": "e73bb86f810c3c50",
-      "httpStatus": 200,
-      "sections": [
-        {
-          "h": "(top)",
-          "hash": "47285db619c4",
-          "words": 39
-        },
-        {
-          "h": "Comparison of CMEK and Google-owned and Google-managed encryption keys",
-          "hash": "948421fe30f2",
-          "words": 296
-        },
-        {
-          "h": "Default encryption with Google-owned and Google-managed encryption keys",
-          "hash": "efd877255b4f",
-          "words": 105
-        },
-        {
-          "h": "Customer-managed encryption keys (CMEK)",
-          "hash": "313db34db043",
-          "words": 204
-        },
-        {
-          "h": "Customer-managed encryption keys (CMEK) with Cloud KMS Autokey",
-          "hash": "ea3e14d2a0db",
-          "words": 166
-        },
-        {
-          "h": "When to use customer-managed encryption keys",
-          "hash": "2d9a3c3d97df",
-          "words": 123
-        },
-        {
-          "h": "What a CMEK-integrated service provides",
-          "hash": "cfe859db3754",
-          "words": 110
-        },
-        {
-          "h": "CMEK-integrated services track keys and resources",
-          "hash": "391cec502a75",
-          "words": 46
-        },
-        {
-          "h": "CMEK-integrated services handle resource access",
-          "hash": "bc2a348a4624",
-          "words": 165
-        },
-        {
-          "h": "Using Autokey for CMEK",
-          "hash": "e3bbad7b96e2",
-          "words": 296
-        },
-        {
-          "h": "Manually creating CMEKs",
-          "hash": "9f79d82b7954",
-          "words": 279
-        },
-        {
-          "h": "CMEK compliance",
-          "hash": "d7d0e1ba5697",
-          "words": 43
-        },
-        {
-          "h": "Key usage tracking",
-          "hash": "69bb93c7875d",
-          "words": 56
-        },
-        {
-          "h": "CMEK organization policies",
-          "hash": "1d70b57d4f19",
-          "words": 75
-        },
-        {
-          "h": "What's next",
-          "hash": "4820b562aa86",
-          "words": 34
-        }
-      ],
-      "status": "ok",
-      "terms": [],
-      "title": "Customer-managed encryption keys (CMEK)",
-      "url": "https://docs.cloud.google.com/kms/docs/cmek",
-      "words": 2105
-    },
     "gcp-data-access-logs": {
       "contentHash": "75b185fc448762a9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2829,6 +2855,7 @@
     "gcp-domain-restricted-sharing": {
       "contentHash": "64ed46bb1399b165",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -2985,6 +3012,7 @@
     "gcp-iam-securely": {
       "contentHash": "da3708c7efd3e6d3",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3026,6 +3054,7 @@
     "gcp-identity-editions": {
       "contentHash": "2d44ee353120ddd9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3119,6 +3148,7 @@
     "gcp-log-based-alerts": {
       "contentHash": "b5e75eeaee48c9ba",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3190,6 +3220,7 @@
     "gcp-log-buckets": {
       "contentHash": "5596779e8a07f428",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3511,6 +3542,7 @@
     "gcp-org-policy-constraints": {
       "contentHash": "772090f7c2e341e9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3556,6 +3588,7 @@
     "gcp-pam": {
       "contentHash": "5204f5c60b6250b9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3667,6 +3700,7 @@
     "gcp-public-access-prevention": {
       "contentHash": "c9ee7522a3d89f29",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3718,6 +3752,7 @@
     "gcp-restrict-service-accounts": {
       "contentHash": "c52ed4f309f1ebbc",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -3919,6 +3954,7 @@
     "gcp-role-recommendations": {
       "contentHash": "ea320f58dd82e5dc",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4125,6 +4161,7 @@
     "gcp-sa-best-practices": {
       "contentHash": "e3299c341b59358c",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4296,6 +4333,7 @@
     "gcp-sa-key-best-practices": {
       "contentHash": "4b226abeaf0a1db8",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4442,6 +4480,7 @@
     "gcp-sa-roles": {
       "contentHash": "e8be70471dd69115",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4518,6 +4557,7 @@
     "gcp-scc-overview": {
       "contentHash": "1afcd4cb84eac557",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4553,6 +4593,7 @@
     "gcp-scc-tiers": {
       "contentHash": "5a1978c02a3ec1e8",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4574,6 +4615,7 @@
     "gcp-security-foundations": {
       "contentHash": "62d293d8c3926b8d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4610,6 +4652,7 @@
     "gcp-sensitive-data-discovery": {
       "contentHash": "86cd800024988fdc",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4786,6 +4829,7 @@
     "gcp-storage-soft-delete": {
       "contentHash": "4875f824862c1a8f",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4847,6 +4891,7 @@
     "gcp-super-admin": {
       "contentHash": "de3d08561ae11109",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4900,6 +4945,7 @@
     "gcp-uniform-bucket-access": {
       "contentHash": "927c11178f34c2a9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -4976,6 +5022,7 @@
     "gcp-vpc-service-controls": {
       "contentHash": "fff91324e94ff110",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5057,6 +5104,7 @@
     "gcp-workload-identity-federation": {
       "contentHash": "76060c37b3d39eaf",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5133,6 +5181,7 @@
     "gws-activity-rules": {
       "contentHash": "11b7d0890708f717",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5172,8 +5221,9 @@
       "words": 1188
     },
     "gws-admin-best-practices": {
-      "contentHash": "fe7e6df71c3ab7bd",
+      "contentHash": "976417712a7f4d5d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5192,8 +5242,8 @@
         },
         {
           "h": "Monitor activity on admin accounts",
-          "hash": "dfdccdebff5a",
-          "words": 118
+          "hash": "6ebaeb369dfe",
+          "words": 117
         },
         {
           "h": "Prepare for admin account recovery",
@@ -5210,11 +5260,12 @@
       "terms": [],
       "title": "Security best practices for administrator accounts",
       "url": "https://knowledge.workspace.google.com/admin/users/security-best-practices-for-administrator-accounts",
-      "words": 1128
+      "words": 1127
     },
     "gws-admin-roles": {
       "contentHash": "3e8ebce8a54ac297",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5286,6 +5337,7 @@
     "gws-advanced-mobile": {
       "contentHash": "6767221fb9a2307b",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5337,6 +5389,7 @@
     "gws-advanced-phishing-malware": {
       "contentHash": "99439bbfdb60cfc5",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5368,6 +5421,7 @@
     "gws-advanced-protection": {
       "contentHash": "b98f58b56ba5052d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5399,6 +5453,7 @@
     "gws-alert-center": {
       "contentHash": "807689b771ec845b",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5445,6 +5500,7 @@
     "gws-app-access-control": {
       "contentHash": "721f37cd2aef2777",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5471,6 +5527,7 @@
     "gws-auto-forwarding": {
       "contentHash": "ddb78483c50931ce",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5517,6 +5574,7 @@
     "gws-bigquery-export": {
       "contentHash": "6540e8dd169507c4",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5590,6 +5648,7 @@
     "gws-calendar-sharing": {
       "contentHash": "36b8672d264c710d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5626,6 +5685,7 @@
     "gws-chat-apps": {
       "contentHash": "7467789fb6ca162a",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5677,6 +5737,7 @@
     "gws-chat-external": {
       "contentHash": "0de32d8393dd1f11",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5723,6 +5784,7 @@
     "gws-checklist-large": {
       "contentHash": "751f7f4b90ed71c1",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5749,6 +5811,7 @@
     "gws-checklist-small": {
       "contentHash": "637b285c041ec8e9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5780,6 +5843,7 @@
     "gws-classification-labels": {
       "contentHash": "0e75710fcc87fdfa",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5846,6 +5910,7 @@
     "gws-client-side-encryption": {
       "contentHash": "b8319f8fde606a5a",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5887,6 +5952,7 @@
     "gws-cloud-session-length": {
       "contentHash": "5a23a50601fc9872",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -5923,6 +5989,7 @@
     "gws-compare-business": {
       "contentHash": "0a410a72f4fdb9ed",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6095,6 +6162,7 @@
     "gws-compare-enterprise": {
       "contentHash": "b66c2071e2bae734",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6277,6 +6345,7 @@
     "gws-compare-nonprofits": {
       "contentHash": "468cf9cc12a005f3",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6328,6 +6397,7 @@
     "gws-context-aware-access": {
       "contentHash": "c678a1d89e9e51eb",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6377,6 +6447,7 @@
     "gws-deploy-2sv": {
       "contentHash": "e23ee0f8f1f21f11",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6458,6 +6529,7 @@
     "gws-dkim": {
       "contentHash": "5a97982d8a24c12d",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6514,6 +6586,7 @@
     "gws-dlp": {
       "contentHash": "4e3e8a03f9463aef",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6550,6 +6623,7 @@
     "gws-dmarc": {
       "contentHash": "20d7a9ff6ed7d047",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6606,6 +6680,7 @@
     "gws-domain-wide-delegation": {
       "contentHash": "ffc3b1ff67096aaa",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6622,6 +6697,7 @@
     "gws-drive-external-sharing": {
       "contentHash": "15df4d863a2c0a97",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6695,13 +6771,14 @@
       "words": 2016
     },
     "gws-endpoint-verification": {
-      "contentHash": "3abdd2c4fdfbf444",
+      "contentHash": "4a6bfefbc90b3425",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
-          "hash": "603c4f5355ed",
-          "words": 150
+          "hash": "7a2b75bcb390",
+          "words": 151
         },
         {
           "h": "Supported computers",
@@ -6750,11 +6827,12 @@
       ],
       "title": "Turn endpoint verification on or off",
       "url": "https://knowledge.workspace.google.com/admin/devices/turn-endpoint-verification-on-or-off",
-      "words": 1432
+      "words": 1433
     },
     "gws-gcds": {
       "contentHash": "c724ddc9a5a56fb7",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6786,6 +6864,7 @@
     "gws-gemini-app-toggle": {
       "contentHash": "9f92f3999b9706f2",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6913,6 +6992,7 @@
     "gws-gemini-privacy-hub": {
       "contentHash": "4993d49c0c9d0bd8",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -6989,6 +7069,7 @@
     "gws-groups-policies": {
       "contentHash": "6ba076883b37144e",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7035,6 +7116,7 @@
     "gws-investigation-tool": {
       "contentHash": "1687ef749602f455",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7059,6 +7141,7 @@
     "gws-mail-delegation": {
       "contentHash": "506abe54c9a72f6e",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7105,6 +7188,7 @@
     "gws-marketplace-allowlist": {
       "contentHash": "4656a7928b6bdcd3",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7146,6 +7230,7 @@
     "gws-multi-party-approval": {
       "contentHash": "c186d740aab24b11",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7192,6 +7277,7 @@
     "gws-nonprofits-offering": {
       "contentHash": "4c04a19cca9523ee",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7232,6 +7318,7 @@
     "gws-offboarding": {
       "contentHash": "cb6e67fbc715fe91",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7248,6 +7335,7 @@
     "gws-passkeys": {
       "contentHash": "ebe2ca389797765c",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7294,52 +7382,10 @@
       "url": "https://knowledge.workspace.google.com/admin/users/allow-users-to-skip-passwords-at-sign-in",
       "words": 1107
     },
-    "gws-pop-imap": {
-      "contentHash": "baeec9d26dd5458f",
-      "httpStatus": 200,
-      "sections": [
-        {
-          "h": "(top)",
-          "hash": "5aa44cde2150",
-          "words": 168
-        },
-        {
-          "h": "Before you begin",
-          "hash": "188c8e466f21",
-          "words": 364
-        },
-        {
-          "h": "Step 1: Turn on POP & IMAP",
-          "hash": "c2fd2de87051",
-          "words": 244
-        },
-        {
-          "h": "Find the OAuth ID for your email client",
-          "hash": "725d242ec0ec",
-          "words": 89
-        },
-        {
-          "h": "Make universal changes on a parent organizational unit",
-          "hash": "5ce128321e66",
-          "words": 131
-        },
-        {
-          "h": "Step 2: Enable POP & IMAP in user accounts (only for clients without OAuth)",
-          "hash": "ecdc0155d7eb",
-          "words": 78
-        }
-      ],
-      "status": "ok",
-      "terms": [
-        "no longer supported"
-      ],
-      "title": "Turn POP & IMAP on or off for users",
-      "url": "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
-      "words": 1112
-    },
     "gws-pre-delivery-scanning": {
       "contentHash": "c1fa2a9cf15b7cdd",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7361,6 +7407,7 @@
     "gws-recover-drive": {
       "contentHash": "2d98aa34a0a0e9b4",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7407,6 +7454,7 @@
     "gws-security-dashboard": {
       "contentHash": "ecab93f40fb4c0ee",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7615,6 +7663,7 @@
     "gws-security-health": {
       "contentHash": "dfd40c36c7a98ca6",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7664,6 +7713,7 @@
     "gws-security-sandbox": {
       "contentHash": "b4d4ebb609c87256",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7698,6 +7748,7 @@
     "gws-session-length": {
       "contentHash": "282b74b8cc9680c4",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7738,6 +7789,7 @@
     "gws-share-with-gcp": {
       "contentHash": "32c82f1489bfa577",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7775,6 +7827,7 @@
     "gws-shared-drives": {
       "contentHash": "e6228fc80a2e31da",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7840,6 +7893,7 @@
     "gws-spf": {
       "contentHash": "fcf3cfa1a23c96a5",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7891,6 +7945,7 @@
     "gws-sso": {
       "contentHash": "c84c53cdac89b174",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -7967,6 +8022,7 @@
     "gws-super-admin-recovery": {
       "contentHash": "7ad4fc80e7ab52fc",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8000,6 +8056,7 @@
     "gws-takeout": {
       "contentHash": "7a864afcb2d7f188",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8041,6 +8098,7 @@
     "gws-transfer-drive": {
       "contentHash": "50ca7d4cd10ccd3a",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8122,6 +8180,7 @@
     "gws-transfer-tool": {
       "contentHash": "bba06a32914615ac",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8178,6 +8237,7 @@
     "gws-trust-rules": {
       "contentHash": "60e858a235565aeb",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8240,6 +8300,7 @@
     "gws-vault-faq": {
       "contentHash": "9483de184db14118",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "Licensing & accounts",
@@ -8277,6 +8338,7 @@
     "gws-vault-overview": {
       "contentHash": "938b09c5c7c785cc",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8334,6 +8396,7 @@
     "gws-vault-retention": {
       "contentHash": "4e5b38cbc94a98da",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8372,6 +8435,670 @@
       "url": "https://knowledge.workspace.google.com/vault/retention/how-retention-works",
       "words": 2039
     },
+    "idcf": {
+      "contentHash": "cad3f83730c77747",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "Page 1",
+          "hash": "e3b0c44298fc",
+          "words": 0
+        },
+        {
+          "h": "Page 2",
+          "hash": "dc79b90518f0",
+          "words": 157
+        },
+        {
+          "h": "Page 3",
+          "hash": "ecf718ebec3c",
+          "words": 197
+        },
+        {
+          "h": "Page 4",
+          "hash": "b1b26fb4a724",
+          "words": 250
+        },
+        {
+          "h": "Page 5",
+          "hash": "5afe0340580f",
+          "words": 249
+        },
+        {
+          "h": "Page 6",
+          "hash": "bb0d133bc42f",
+          "words": 83
+        },
+        {
+          "h": "Page 7",
+          "hash": "2aa8175140d7",
+          "words": 9
+        },
+        {
+          "h": "Page 8",
+          "hash": "afe101929025",
+          "words": 137
+        },
+        {
+          "h": "Page 9",
+          "hash": "c1efa3ef2863",
+          "words": 40
+        },
+        {
+          "h": "Page 10",
+          "hash": "b3335dd9122b",
+          "words": 348
+        },
+        {
+          "h": "Page 11",
+          "hash": "4f300abbafbe",
+          "words": 235
+        },
+        {
+          "h": "Page 12",
+          "hash": "7509baaad0c2",
+          "words": 429
+        },
+        {
+          "h": "Page 13",
+          "hash": "ead2ccf3b9ee",
+          "words": 386
+        },
+        {
+          "h": "Page 14",
+          "hash": "be1ae90b2d8f",
+          "words": 263
+        },
+        {
+          "h": "Page 15",
+          "hash": "0885bba9e600",
+          "words": 597
+        },
+        {
+          "h": "Page 16",
+          "hash": "884ea841c36f",
+          "words": 370
+        },
+        {
+          "h": "Page 17",
+          "hash": "4f325c71f1b4",
+          "words": 203
+        },
+        {
+          "h": "Page 18",
+          "hash": "820aa1bfbac5",
+          "words": 58
+        },
+        {
+          "h": "Page 19",
+          "hash": "87417b7de1fd",
+          "words": 350
+        },
+        {
+          "h": "Page 20",
+          "hash": "3ee79d36d8e4",
+          "words": 446
+        },
+        {
+          "h": "Page 21",
+          "hash": "3f4954c22b9c",
+          "words": 425
+        },
+        {
+          "h": "Page 22",
+          "hash": "ff1a250ea36f",
+          "words": 254
+        },
+        {
+          "h": "Page 23",
+          "hash": "9d196c400234",
+          "words": 432
+        },
+        {
+          "h": "Page 24",
+          "hash": "221989648be7",
+          "words": 185
+        },
+        {
+          "h": "Page 25",
+          "hash": "e123ff419d2a",
+          "words": 163
+        },
+        {
+          "h": "Page 26",
+          "hash": "fc433dbe61ba",
+          "words": 494
+        },
+        {
+          "h": "Page 27",
+          "hash": "46c91de151c7",
+          "words": 517
+        },
+        {
+          "h": "Page 28",
+          "hash": "90864187228b",
+          "words": 631
+        },
+        {
+          "h": "Page 29",
+          "hash": "e52c568016cd",
+          "words": 657
+        },
+        {
+          "h": "Page 30",
+          "hash": "c8f357c94c5b",
+          "words": 589
+        },
+        {
+          "h": "Page 31",
+          "hash": "073eb964c1e8",
+          "words": 420
+        },
+        {
+          "h": "Page 32",
+          "hash": "943ce37351cc",
+          "words": 428
+        },
+        {
+          "h": "Page 33",
+          "hash": "a48e04454c48",
+          "words": 371
+        },
+        {
+          "h": "Page 34",
+          "hash": "c7d368cb0cc8",
+          "words": 505
+        },
+        {
+          "h": "Page 35",
+          "hash": "d18aff5f5c24",
+          "words": 309
+        },
+        {
+          "h": "Page 36",
+          "hash": "152fd9c29a01",
+          "words": 377
+        },
+        {
+          "h": "Page 37",
+          "hash": "27d5a04f8b45",
+          "words": 303
+        },
+        {
+          "h": "Page 38",
+          "hash": "29cbae43ba9a",
+          "words": 484
+        },
+        {
+          "h": "Page 39",
+          "hash": "b37350504e9c",
+          "words": 316
+        },
+        {
+          "h": "Page 40",
+          "hash": "0a78421dbdb3",
+          "words": 340
+        },
+        {
+          "h": "Page 41",
+          "hash": "ed39715e6cd6",
+          "words": 367
+        },
+        {
+          "h": "Page 42",
+          "hash": "339be4955a35",
+          "words": 302
+        },
+        {
+          "h": "Page 43",
+          "hash": "646e51744607",
+          "words": 392
+        },
+        {
+          "h": "Page 44",
+          "hash": "5f2217229c27",
+          "words": 388
+        },
+        {
+          "h": "Page 45",
+          "hash": "1c3b491ec513",
+          "words": 267
+        },
+        {
+          "h": "Page 46",
+          "hash": "1b9a8aa5f101",
+          "words": 376
+        },
+        {
+          "h": "Page 47",
+          "hash": "b93546626a2e",
+          "words": 234
+        },
+        {
+          "h": "Page 48",
+          "hash": "f4bed3806db9",
+          "words": 459
+        },
+        {
+          "h": "Page 49",
+          "hash": "98d189828867",
+          "words": 333
+        },
+        {
+          "h": "Page 50",
+          "hash": "080e708cdc83",
+          "words": 436
+        },
+        {
+          "h": "Page 51",
+          "hash": "4b00f96a3090",
+          "words": 238
+        },
+        {
+          "h": "Page 52",
+          "hash": "22f904512380",
+          "words": 543
+        },
+        {
+          "h": "Page 53",
+          "hash": "9a8b074410a4",
+          "words": 343
+        },
+        {
+          "h": "Page 54",
+          "hash": "28c8d566f367",
+          "words": 372
+        },
+        {
+          "h": "Page 55",
+          "hash": "1fb85563cc42",
+          "words": 341
+        },
+        {
+          "h": "Page 56",
+          "hash": "cab41ecde84a",
+          "words": 391
+        },
+        {
+          "h": "Page 57",
+          "hash": "6b1b66fe0f25",
+          "words": 345
+        },
+        {
+          "h": "Page 58",
+          "hash": "b3c6d98ce8fe",
+          "words": 183
+        },
+        {
+          "h": "Page 59",
+          "hash": "ee8fe70b1879",
+          "words": 52
+        },
+        {
+          "h": "Page 60",
+          "hash": "27b91f3d8ddc",
+          "words": 410
+        },
+        {
+          "h": "Page 61",
+          "hash": "625b9e7759b1",
+          "words": 405
+        },
+        {
+          "h": "Page 62",
+          "hash": "c8f75b9a5763",
+          "words": 424
+        },
+        {
+          "h": "Page 63",
+          "hash": "449e074d7e50",
+          "words": 473
+        },
+        {
+          "h": "Page 64",
+          "hash": "769c92721ebd",
+          "words": 393
+        },
+        {
+          "h": "Page 65",
+          "hash": "64ae75e64660",
+          "words": 255
+        },
+        {
+          "h": "Page 66",
+          "hash": "3071ddd0c2bc",
+          "words": 505
+        },
+        {
+          "h": "Page 67",
+          "hash": "818b9471205f",
+          "words": 501
+        },
+        {
+          "h": "Page 68",
+          "hash": "812d8332feab",
+          "words": 420
+        },
+        {
+          "h": "Page 69",
+          "hash": "f18c6d95bd94",
+          "words": 426
+        },
+        {
+          "h": "Page 70",
+          "hash": "d227bc11f787",
+          "words": 480
+        },
+        {
+          "h": "Page 71",
+          "hash": "58d58c9cd0e7",
+          "words": 413
+        },
+        {
+          "h": "Page 72",
+          "hash": "409368b4ee47",
+          "words": 411
+        },
+        {
+          "h": "Page 73",
+          "hash": "ec37341499ec",
+          "words": 266
+        },
+        {
+          "h": "Page 74",
+          "hash": "3d9968f21e2e",
+          "words": 428
+        },
+        {
+          "h": "Page 75",
+          "hash": "901de9e098a1",
+          "words": 393
+        },
+        {
+          "h": "Page 76",
+          "hash": "3c566866eea5",
+          "words": 532
+        },
+        {
+          "h": "Page 77",
+          "hash": "4299204b050c",
+          "words": 311
+        },
+        {
+          "h": "Page 78",
+          "hash": "117a9e8d7b71",
+          "words": 496
+        },
+        {
+          "h": "Page 79",
+          "hash": "f3b2ed90567f",
+          "words": 492
+        },
+        {
+          "h": "Page 80",
+          "hash": "384ab171a5f5",
+          "words": 334
+        },
+        {
+          "h": "Page 81",
+          "hash": "290af2f4e7c8",
+          "words": 396
+        },
+        {
+          "h": "Page 82",
+          "hash": "1367e26a4661",
+          "words": 356
+        },
+        {
+          "h": "Page 83",
+          "hash": "2ea258552fc3",
+          "words": 369
+        },
+        {
+          "h": "Page 84",
+          "hash": "f4c42942c076",
+          "words": 479
+        },
+        {
+          "h": "Page 85",
+          "hash": "1d5fd2e3472f",
+          "words": 451
+        },
+        {
+          "h": "Page 86",
+          "hash": "55ec7c141675",
+          "words": 443
+        },
+        {
+          "h": "Page 87",
+          "hash": "b92f9c446e91",
+          "words": 402
+        },
+        {
+          "h": "Page 88",
+          "hash": "377c1a1ae2be",
+          "words": 627
+        },
+        {
+          "h": "Page 89",
+          "hash": "fe2085a292fa",
+          "words": 418
+        },
+        {
+          "h": "Page 90",
+          "hash": "7fcf4275f2e4",
+          "words": 581
+        },
+        {
+          "h": "Page 91",
+          "hash": "1177c9d8484b",
+          "words": 640
+        },
+        {
+          "h": "Page 92",
+          "hash": "f3b83383f6fc",
+          "words": 516
+        },
+        {
+          "h": "Page 93",
+          "hash": "b781e955cf14",
+          "words": 148
+        },
+        {
+          "h": "Page 94",
+          "hash": "10759a6700e1",
+          "words": 78
+        },
+        {
+          "h": "Page 95",
+          "hash": "6dc71def85b2",
+          "words": 391
+        },
+        {
+          "h": "Page 96",
+          "hash": "1c471d15de4e",
+          "words": 440
+        },
+        {
+          "h": "Page 97",
+          "hash": "69330245d133",
+          "words": 488
+        },
+        {
+          "h": "Page 98",
+          "hash": "b245aced48b5",
+          "words": 323
+        },
+        {
+          "h": "Page 99",
+          "hash": "0e63051f4997",
+          "words": 490
+        },
+        {
+          "h": "Page 100",
+          "hash": "61c1bdac98ef",
+          "words": 231
+        },
+        {
+          "h": "Page 101",
+          "hash": "d0a3e2b58cb2",
+          "words": 4
+        },
+        {
+          "h": "Page 102",
+          "hash": "47ed9599d1f3",
+          "words": 345
+        },
+        {
+          "h": "Page 103",
+          "hash": "ce49a302e0ee",
+          "words": 389
+        },
+        {
+          "h": "Page 104",
+          "hash": "6c4ab6024023",
+          "words": 383
+        },
+        {
+          "h": "Page 105",
+          "hash": "7355454fb74f",
+          "words": 312
+        },
+        {
+          "h": "Page 106",
+          "hash": "09cb130ac7f7",
+          "words": 258
+        },
+        {
+          "h": "Page 107",
+          "hash": "feebf192f3a5",
+          "words": 154
+        },
+        {
+          "h": "Page 108",
+          "hash": "48527f8135ac",
+          "words": 278
+        },
+        {
+          "h": "Page 109",
+          "hash": "352e9d4b785c",
+          "words": 303
+        },
+        {
+          "h": "Page 110",
+          "hash": "7bf2e1b8d9f3",
+          "words": 271
+        },
+        {
+          "h": "Page 111",
+          "hash": "ee7342b4b4bc",
+          "words": 259
+        },
+        {
+          "h": "Page 112",
+          "hash": "26cfe11097a8",
+          "words": 187
+        },
+        {
+          "h": "Page 113",
+          "hash": "9e6763a77a3f",
+          "words": 266
+        },
+        {
+          "h": "Page 114",
+          "hash": "7aab1f2a7b9e",
+          "words": 172
+        },
+        {
+          "h": "Page 115",
+          "hash": "b1b5a4dacd97",
+          "words": 160
+        },
+        {
+          "h": "Page 116",
+          "hash": "09f47381a054",
+          "words": 47
+        },
+        {
+          "h": "Page 117",
+          "hash": "1fa0d49ed750",
+          "words": 222
+        },
+        {
+          "h": "Page 118",
+          "hash": "d9837ece496a",
+          "words": 219
+        },
+        {
+          "h": "Page 119",
+          "hash": "269e025d86d2",
+          "words": 249
+        },
+        {
+          "h": "Page 120",
+          "hash": "ccb3308c56cb",
+          "words": 169
+        },
+        {
+          "h": "Page 121",
+          "hash": "e3b0c44298fc",
+          "words": 0
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "Industry Data Classification Framework",
+      "url": "https://www.homeaffairs.gov.au/cyber-security-subsite/idcf/Documents/industry-data-classification-framework.pdf",
+      "words": 41051
+    },
+    "idcf-system-security": {
+      "contentHash": "a6702efecd9d9626",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "Page 1",
+          "hash": "0991f12b2f00",
+          "words": 355
+        },
+        {
+          "h": "Page 2",
+          "hash": "7982de4b9d83",
+          "words": 369
+        },
+        {
+          "h": "Page 3",
+          "hash": "f1a1e1e4166d",
+          "words": 528
+        },
+        {
+          "h": "Page 4",
+          "hash": "c12aaf977088",
+          "words": 265
+        },
+        {
+          "h": "Page 5",
+          "hash": "57001017b88a",
+          "words": 430
+        },
+        {
+          "h": "Page 6",
+          "hash": "13c5a59d3350",
+          "words": 306
+        },
+        {
+          "h": "Page 7",
+          "hash": "ce81b16107ba",
+          "words": 368
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "IDCF A guide to system security",
+      "url": "https://www.homeaffairs.gov.au/cyber-security-subsite/idcf/Documents/idcf-a-guide-to-system-security.pdf",
+      "words": 2621
+    },
     "ms-access-reviews": {
       "contentHash": "6842c03a9b1672e3",
       "httpStatus": 200,
@@ -8382,6 +9109,7 @@
         "path": "docs/id-governance/access-reviews-overview.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8435,6 +9163,7 @@
         "path": "docs/identity/enterprise-apps/configure-admin-consent-workflow.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8479,6 +9208,7 @@
         "path": "microsoft-365/admin/manage/agent-registry.md",
         "repo": "MicrosoftDocs/microsoft-365-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8658,6 +9388,7 @@
         "documentId": "e0449dc9-eb45-5b84-de50-b805c3b2af0a",
         "path": "windows/security/application-security/application-control/app-control-for-business/appcontrol.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8702,6 +9433,7 @@
         "path": "docs/identity/enterprise-apps/manage-application-permissions.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8786,6 +9518,7 @@
         "path": "docs/identity-platform/security-best-practices-for-app-registration.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8858,6 +9591,7 @@
         "documentId": "340a0f8c-90ef-f5e9-a860-48c1651c86bf",
         "path": "defender-endpoint/attack-surface-reduction-rules-reference.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8915,6 +9649,7 @@
         "documentId": "79289c42-5893-0a9f-108c-fb2662393457",
         "path": "defender-xdr/configure-attack-disruption.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -8976,6 +9711,7 @@
         "documentId": "96c630c6-a6f8-c916-268e-48d875f25463",
         "path": "Purview/audit-log-enable-disable.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9042,6 +9778,9 @@
         "documentId": "92306b80-af26-3b0f-0ff3-51c07b94efad",
         "path": "Purview/audit-solutions-overview.md"
       },
+      "passed": [
+        "2023-11-30"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -9111,6 +9850,10 @@
         "path": "docs/identity/authentication/concept-authentication-methods-manage.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [
+        "2023-03-31",
+        "2025-09-30"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -9172,6 +9915,7 @@
         "path": "docs/identity/authentication/concept-authentication-strengths.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9248,6 +9992,7 @@
         "path": "articles/backup/backup-azure-immutable-vault-concept.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9312,6 +10057,7 @@
         "path": "articles/backup/multi-user-authorization-concept.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9361,6 +10107,7 @@
         "path": "articles/role-based-access-control/best-practices.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9425,6 +10172,7 @@
         "path": "docs/identity/conditional-access/policy-admin-phish-resistant-mfa.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9479,6 +10227,7 @@
         "path": "docs/identity/conditional-access/policy-all-users-mfa-strength.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9538,6 +10287,7 @@
         "path": "docs/identity/conditional-access/policy-block-authentication-flows.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9587,6 +10337,7 @@
         "path": "docs/identity/conditional-access/policy-block-legacy-authentication.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9643,6 +10394,7 @@
         "path": "docs/identity/conditional-access/policy-all-users-device-compliance.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9707,6 +10459,7 @@
         "path": "docs/identity/conditional-access/managed-policies.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -9900,6 +10653,7 @@
         "path": "docs/identity/conditional-access/plan-conditional-access.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10057,6 +10811,7 @@
         "path": "docs/identity/conditional-access/policy-risk-based-sign-in.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10113,6 +10868,7 @@
         "path": "docs/identity/conditional-access/policy-risk-based-user.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10164,6 +10920,7 @@
         "path": "docs/identity/enterprise-apps/protect-against-consent-phishing.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10213,6 +10970,7 @@
         "path": "copilot/configure-secure-governed-data-foundation-microsoft-365-copilot.md",
         "repo": "MicrosoftDocs/microsoft-365-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10320,6 +11078,7 @@
         "path": "copilot/secure-govern-copilot-foundational-deployment-guidance.md",
         "repo": "MicrosoftDocs/microsoft-365-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10362,6 +11121,7 @@
         "documentId": "c7034308-b622-990d-06b0-3f58ada51141",
         "path": "copilot-studio/security-and-governance.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10411,6 +11171,7 @@
         "documentId": "e6b80c2f-6e40-9a75-2987-e5d258128255",
         "path": "copilot-studio/admin-sharing-controls-limits.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10445,6 +11206,7 @@
         "path": "docs/external-id/cross-tenant-access-overview.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10559,6 +11321,7 @@
         "documentId": "bd05a015-115f-0e1d-e607-64a0c08a77a1",
         "path": "SharePoint/SharePointOnline/data-access-governance-reports.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10653,6 +11416,7 @@
         "documentId": "75049d1c-b8fd-f3aa-8bc0-710905e9bd25",
         "path": "defender-business/mdb-overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10699,6 +11463,7 @@
         "documentId": "f40be2e8-cf32-599c-2d3f-920c2af1284e",
         "path": "defender-xdr/microsoft-365-defender.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10731,6 +11496,7 @@
         "documentId": "8500a360-3500-115e-dfcb-a310fb9eb85e",
         "path": "Purview/dlp-learn-about-dlp.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10835,6 +11601,7 @@
         "documentId": "5cbec236-bc0a-5145-ede6-91c929379ea8",
         "path": "Purview/dlp-microsoft365-copilot-location-learn-about.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -10944,6 +11711,7 @@
         "documentId": "b4bf638d-f0bf-ba88-c032-9ac741fe102b",
         "path": "defender-office-365/email-authentication-dmarc-configure.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11023,40 +11791,50 @@
       "url": "https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure",
       "words": 5801
     },
-    "ms-dspm-ai": {
-      "contentHash": "bbc22b25188ad1a6",
+    "ms-dspm": {
+      "contentHash": "ab2552c7e2402632",
       "httpStatus": 200,
       "learn": {
         "commit": "fa947f98128cb7875820006c21dad82452039581",
-        "documentId": "79b758ae-bae0-2520-99f4-539f3fc3661f",
-        "path": "Purview/dspm-for-ai.md"
+        "documentId": "c1d214d9-8cb1-fcce-03b4-24cdf065be55",
+        "path": "Purview/data-security-posture-management-learn-about.md"
       },
-      "retired": "title marks it as classic",
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
-          "hash": "18ff016f7373",
-          "words": 218
+          "hash": "75bdb30b8fbf",
+          "words": 519
         },
         {
-          "h": "How to use Data Security Posture Management for AI",
-          "hash": "6ec38d457db1",
-          "words": 2841
+          "h": "Data security objectives",
+          "hash": "f2662020efc2",
+          "words": 304
+        },
+        {
+          "h": "How AI helps achieve data security outcomes",
+          "hash": "921dc1d1b061",
+          "words": 285
+        },
+        {
+          "h": "How to use Data Security Posture Management",
+          "hash": "03ceabebe7c5",
+          "words": 740
         },
         {
           "h": "Next steps",
-          "hash": "f4341e141ef4",
-          "words": 67
+          "hash": "1b0aa287dbdd",
+          "words": 81
         }
       ],
       "status": "ok",
       "terms": [
         "microsoft 365 copilot"
       ],
-      "title": "Learn about Data Security Posture Management for AI - (classic)",
-      "updated": "2025-12-15",
-      "url": "https://learn.microsoft.com/en-us/purview/dspm-for-ai",
-      "words": 3137
+      "title": "Learn about Data Security Posture Management",
+      "updated": "2026-05-26",
+      "url": "https://learn.microsoft.com/en-us/purview/data-security-posture-management-learn-about",
+      "words": 1948
     },
     "ms-edr-block-mode": {
       "contentHash": "2e89950dd83af8a6",
@@ -11066,6 +11844,7 @@
         "documentId": "4db0e76a-4562-6523-4c34-dc837ec70c30",
         "path": "defender-endpoint/edr-in-block-mode.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11140,6 +11919,7 @@
         "path": "articles/role-based-access-control/elevate-access-global-admin.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11312,6 +12092,7 @@
         "documentId": "6b18436f-aea2-4401-4ccf-84175f599434",
         "path": "defender-office-365/email-authentication-about.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11361,6 +12142,7 @@
         "path": "docs/identity/role-based-access-control/security-emergency-access.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11468,6 +12250,7 @@
         "documentId": "0b36b279-1be4-1202-7d28-f00730da46c3",
         "path": "security-docs/privileged-access-workstations/privileged-access-access-model.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11517,6 +12300,7 @@
         "path": "docs/agent-id/what-is-microsoft-entra-agent-id.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11553,6 +12337,111 @@
       "url": "https://learn.microsoft.com/en-us/entra/agent-id/what-is-microsoft-entra-agent-id",
       "words": 432
     },
+    "ms-entra-connect-app-auth": {
+      "contentHash": "9e9201fea1852146",
+      "httpStatus": 200,
+      "learn": {
+        "branch": "main",
+        "commit": "d621fd6eddbd83d0ea0d4b33ce45de97d50bd35e",
+        "documentId": "a1598194-39b4-1ced-2021-53ccf4c72260",
+        "path": "docs/identity/hybrid/connect/authenticate-application-id.md",
+        "repo": "MicrosoftDocs/entra-docs"
+      },
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "3aba78ed4bee",
+          "words": 221
+        },
+        {
+          "h": "Managed by Microsoft Entra Connect (default)",
+          "hash": "7e04ca9a634e",
+          "words": 211
+        },
+        {
+          "h": "Bring Your Own Certificate",
+          "hash": "90ba522feb1c",
+          "words": 166
+        },
+        {
+          "h": "Bring Your Own Application",
+          "hash": "6729ee54198a",
+          "words": 94
+        },
+        {
+          "h": "Prerequisites",
+          "hash": "6cf386cdba0e",
+          "words": 252
+        },
+        {
+          "h": "View the current authentication configuration",
+          "hash": "2ae50ef3f4b8",
+          "words": 206
+        },
+        {
+          "h": "Installation and upgrade (managed by Microsoft Entra Connect)",
+          "hash": "5a73ee663667",
+          "words": 38
+        },
+        {
+          "h": "Onboard to application-based authentication",
+          "hash": "e3b0c44298fc",
+          "words": 0
+        },
+        {
+          "h": "Automatic",
+          "hash": "d72307cf9f16",
+          "words": 41
+        },
+        {
+          "h": "Manual",
+          "hash": "9006ba13ccc4",
+          "words": 1585
+        },
+        {
+          "h": "Remove a legacy service account",
+          "hash": "8bc64c6b34f1",
+          "words": 149
+        },
+        {
+          "h": "Roll back to a legacy service account by using PowerShell",
+          "hash": "4bed69a2f05d",
+          "words": 140
+        },
+        {
+          "h": "Certificate rotation",
+          "hash": "d7469ff0535a",
+          "words": 76
+        },
+        {
+          "h": "Automatic",
+          "hash": "bcae69895ce7",
+          "words": 110
+        },
+        {
+          "h": "Manual",
+          "hash": "cbc91afd5ba5",
+          "words": 1177
+        },
+        {
+          "h": "Certificate revocation process",
+          "hash": "2602b325fced",
+          "words": 55
+        },
+        {
+          "h": "Related content",
+          "hash": "b26eb2b40986",
+          "words": 15
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "Authenticate to Microsoft Entra ID by using application identity",
+      "updated": "2025-11-20",
+      "url": "https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/authenticate-application-id",
+      "words": 4594
+    },
     "ms-entra-connect-prereqs": {
       "contentHash": "7c7f07a82131d35c",
       "httpStatus": 200,
@@ -11563,6 +12452,7 @@
         "path": "docs/identity/hybrid/connect/how-to-connect-install-prerequisites.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11683,6 +12573,7 @@
       "status": "ok",
       "terms": [
         "entra id p1",
+        "is being retired",
         "no longer supported"
       ],
       "title": "Prerequisites for Microsoft Entra Connect",
@@ -11700,6 +12591,7 @@
         "path": "docs/identity/monitoring-health/howto-integrate-activity-logs-with-azure-monitor-logs.yml",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11744,6 +12636,7 @@
         "path": "docs/identity/role-based-access-control/best-practices.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11833,6 +12726,7 @@
         "path": "docs/architecture/security-operations-applications.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -11942,6 +12836,7 @@
         "path": "docs/architecture/security-operations-privileged-accounts.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12021,6 +12916,56 @@
       "url": "https://learn.microsoft.com/en-us/entra/architecture/security-operations-privileged-accounts",
       "words": 3674
     },
+    "ms-essential-eight": {
+      "contentHash": "9673adf2ced4678f",
+      "httpStatus": 200,
+      "learn": {
+        "commit": "84c82c75f2f2e2bbe355d339ba3d92eb70fdb7a1",
+        "documentId": "33fd4702-4815-3854-1483-ac3680aea779",
+        "path": "compliance/anz/e8-overview.md"
+      },
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "154bd353de9a",
+          "words": 89
+        },
+        {
+          "h": "Audience",
+          "hash": "b0d7fe1ef4b6",
+          "words": 148
+        },
+        {
+          "h": "What are the Essential Eight pillars?",
+          "hash": "e4bc362d5875",
+          "words": 43
+        },
+        {
+          "h": "Microsoft licensing for the Essential Eight",
+          "hash": "62667b9e4b91",
+          "words": 61
+        },
+        {
+          "h": "Moving from Essential Eight implementation to monitoring and continuous compliance",
+          "hash": "d0f5a1e6e82b",
+          "words": 101
+        },
+        {
+          "h": "Microsoft Copilot for Microsoft 365",
+          "hash": "ab4294cf6ab6",
+          "words": 50
+        }
+      ],
+      "status": "ok",
+      "terms": [
+        "microsoft 365 copilot"
+      ],
+      "title": "ACSC Essential Eight",
+      "updated": "2025-03-24",
+      "url": "https://learn.microsoft.com/en-us/compliance/anz/e8-overview",
+      "words": 520
+    },
     "ms-exo-app-rbac": {
       "contentHash": "7a6e2cc6e807adb7",
       "httpStatus": 200,
@@ -12029,6 +12974,7 @@
         "documentId": "097c6b33-5517-e82f-b844-272ae7e9d4d7",
         "path": "Exchange/ExchangeOnline/permissions-exo/application-rbac.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12146,6 +13092,7 @@
         "documentId": "19cf826a-aaf1-91ed-8a8f-637d869e47df",
         "path": "Exchange/ExchangeOnline/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12216,8 +13163,7 @@
       "status": "ok",
       "terms": [
         "deprecation",
-        "has been deprecated",
-        "retirement"
+        "has been deprecated"
       ],
       "title": "Deprecation of Basic authentication in Exchange Online",
       "updated": "2026-07-16",
@@ -12232,6 +13178,7 @@
         "documentId": "4f463d2b-dfa3-1061-4e34-01fdfd8b5032",
         "path": "Exchange/ExchangeOnline/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12281,6 +13228,26 @@
       "url": "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission",
       "words": 919
     },
+    "ms-exo-smtp-basic-timeline": {
+      "contentHash": "ad27eca63cb9578a",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "ad27eca63cb9",
+          "words": 223
+        }
+      ],
+      "status": "ok",
+      "terms": [
+        "deprecation"
+      ],
+      "title": "Updated Exchange Online SMTP AUTH Basic Authentication Deprecation Timeline",
+      "updated": "2026-01-29",
+      "url": "https://techcommunity.microsoft.com/blog/exchange/updated-exchange-online-smtp-auth-basic-authentication-deprecation-timeline/4489835",
+      "words": 223
+    },
     "ms-external-collab": {
       "contentHash": "af012720c0d8a18a",
       "httpStatus": 200,
@@ -12291,6 +13258,7 @@
         "path": "docs/external-id/external-collaboration-settings-configure.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12363,6 +13331,7 @@
         "documentId": "ea14df05-9dfa-feef-3833-2341dc2061dc",
         "path": "partner-center/customers/gdap-introduction.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12397,6 +13366,9 @@
         "path": "docs/id-protection/howto-identity-protection-configure-risk-policies.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [
+        "2026-10-01"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -12493,6 +13465,9 @@
         "documentId": "3631eabe-3de0-efda-317e-b054f28e0a38",
         "path": "intune/device-configuration/endpoint-security/attack-surface-reduction.md"
       },
+      "passed": [
+        "2025-10-14"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -12572,6 +13547,7 @@
         "documentId": "a1a25388-1434-ecb8-a0de-249b1442433c",
         "path": "intune/device-security/compliance/overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12610,9 +13586,7 @@
         }
       ],
       "status": "ok",
-      "terms": [
-        "retirement"
-      ],
+      "terms": [],
       "title": "Use compliance policies to set rules for devices you manage with Intune",
       "updated": "2026-07-02",
       "url": "https://learn.microsoft.com/en-us/intune/device-security/compliance/overview",
@@ -12626,6 +13600,7 @@
         "documentId": "d4342d05-a199-83c8-90d0-9835e0d6d794",
         "path": "intune/fundamentals/role-based-access-control/multi-admin-approval.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12713,6 +13688,7 @@
         "documentId": "ebd63f80-fadd-c5ee-8f98-d94b47fabb70",
         "path": "intune/device-updates/windows/index.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12760,6 +13736,7 @@
         "documentId": "d4593568-2741-3759-399a-633fe2a8dc19",
         "path": "security-docs/operations/incident-response-playbooks.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12787,6 +13764,7 @@
         "documentId": "44b9a84f-6765-67dc-bb7b-04303e070c03",
         "path": "articles/key-vault/general/rbac-guide.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12904,6 +13882,7 @@
         "documentId": "82155262-0372-85d6-c5dc-26e10b2094b6",
         "path": "articles/key-vault/general/secure-key-vault.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -12971,6 +13950,7 @@
         "documentId": "5fb5d787-c259-1083-c021-97fb0790122e",
         "path": "articles/key-vault/general/soft-delete-overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13043,6 +14023,7 @@
         "documentId": "7f95a739-c527-1c8b-6ea5-b3ab01be617d",
         "path": "Purview/sensitivity-labels-teams-groups-sites.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13165,6 +14146,7 @@
         "documentId": "992f56b8-4ca9-57ed-e651-38ca779ce082",
         "path": "Purview/get-started-with-sensitivity-labels.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13217,6 +14199,9 @@
         "documentId": "b2f60278-2893-4250-db93-f48e92f6eabb",
         "path": "intune/device-security/laps/overview.md"
       },
+      "passed": [
+        "2025-10-14"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -13323,6 +14308,124 @@
       "url": "https://learn.microsoft.com/en-us/intune/device-security/laps/overview",
       "words": 1941
     },
+    "ms-m365-apps-channel-unification": {
+      "contentHash": "f8e1f6dba79a7e16",
+      "httpStatus": 200,
+      "learn": {
+        "commit": "22c4706f226a812e47ff664c8b229ab1da333ea9",
+        "documentId": "7f9e714f-1385-d141-6507-e93d9d46b3a9",
+        "path": "microsoft-365-apps/updates/unified-update-channels.md"
+      },
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "c9c60f61bd6b",
+          "words": 113
+        },
+        {
+          "h": "What changes on devices",
+          "hash": "10adc73ea6be",
+          "words": 147
+        },
+        {
+          "h": "Preparing for the change",
+          "hash": "9622dd417e52",
+          "words": 40
+        },
+        {
+          "h": "What to expect with Cloud Update",
+          "hash": "f65cd65c6615",
+          "words": 126
+        },
+        {
+          "h": "What to expect with other management tools",
+          "hash": "902dd9d323e6",
+          "words": 137
+        },
+        {
+          "h": "Recommended admin actions",
+          "hash": "78e58dce3a25",
+          "words": 129
+        },
+        {
+          "h": "Frequently asked questions",
+          "hash": "e3b0c44298fc",
+          "words": 0
+        },
+        {
+          "h": "Do admins need to take action for Semi-Annual Enterprise Channel devices to receive the July update?",
+          "hash": "5a86777ed407",
+          "words": 36
+        },
+        {
+          "h": "Will users see a change in Microsoft 365 Apps after the update?",
+          "hash": "e5cbc6bbebc4",
+          "words": 28
+        },
+        {
+          "h": "Will existing update policies and deployment tools continue to work?",
+          "hash": "55a14d9df92c",
+          "words": 38
+        },
+        {
+          "h": "Can I start moving devices to Monthly Enterprise Channel now?",
+          "hash": "5c55f206c089",
+          "words": 45
+        },
+        {
+          "h": "Will the first update be larger than a typical monthly update?",
+          "hash": "f2d20414c207",
+          "words": 35
+        },
+        {
+          "h": "Does this change affect Microsoft Copilot eligibility?",
+          "hash": "47faa96da272",
+          "words": 34
+        },
+        {
+          "h": "Why are the build numbers different for Semi-Annual Enterprise Channel and Monthly Enterprise Channel?",
+          "hash": "b919918da8a7",
+          "words": 65
+        },
+        {
+          "h": "Can organizations keep using other update channels?",
+          "hash": "84c39863d059",
+          "words": 32
+        },
+        {
+          "h": "Why does the app backstage show Monthly Enterprise Channel, but our management tools or reports still show Semi-Annual Enterprise Channel?",
+          "hash": "f17f72273084",
+          "words": 59
+        },
+        {
+          "h": "Will Cloud Update automatically manage affected devices after the transition?",
+          "hash": "fd9af65df1d2",
+          "words": 42
+        },
+        {
+          "h": "How do I prevent these devices from automatically onboarding with Cloud Update?",
+          "hash": "c8e22e4fec42",
+          "words": 64
+        },
+        {
+          "h": "Can our organization stay on Semi-Annual Enterprise Channel until September?",
+          "hash": "991c8734a026",
+          "words": 43
+        },
+        {
+          "h": "Should I move devices to Monthly Enterprise Channel after the 2606 update?",
+          "hash": "96e0f47d50eb",
+          "words": 67
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "Upcoming channel unification: Semi-Annual Enterprise Channel to Monthly Enterprise Channel",
+      "updated": "2026-07-15",
+      "url": "https://learn.microsoft.com/en-us/microsoft-365-apps/updates/unified-update-channels",
+      "words": 1458
+    },
     "ms-m365-apps-channels": {
       "contentHash": "9b6b9659a6d9b17f",
       "httpStatus": 200,
@@ -13331,6 +14434,7 @@
         "documentId": "921ff722-6ea2-7fe8-53ab-dca5b6bdbebb",
         "path": "microsoft-365-apps/updates/overview-update-channels.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13492,6 +14596,7 @@
         "path": "microsoft-365/backup/backup-overview.md",
         "repo": "MicrosoftDocs/microsoft-365-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13569,6 +14674,7 @@
     "ms-m365-pricing-packaging-2026": {
       "contentHash": "b843420cf704b6f4",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13599,6 +14705,7 @@
         "documentId": "3897314e-036d-9e59-e6d4-7edab24c3b35",
         "path": "compliance/assurance/assurance-data-resiliency-overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13636,6 +14743,9 @@
         "documentId": "4990bfbb-6d38-fa74-2ec1-2143e55aee5b",
         "path": "microsoft-365-apps/security/internet-macros-blocked.md"
       },
+      "passed": [
+        "2025-07-31"
+      ],
       "sections": [
         {
           "h": "(top)",
@@ -13760,7 +14870,6 @@
       ],
       "status": "ok",
       "terms": [
-        "replaced by",
         "will be deprecated"
       ],
       "title": "Macros from the internet are blocked by default in Office",
@@ -13778,6 +14887,7 @@
         "path": "docs/identity/managed-identities-azure-resources/overview.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13842,6 +14952,7 @@
         "path": "docs/identity/authentication/concept-mandatory-multifactor-authentication.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13942,6 +15053,7 @@
         "documentId": "28d13bd5-9349-cc50-40c5-3b5c7b4b2126",
         "path": "benchmark/azure/overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -13988,6 +15100,7 @@
         "documentId": "81b2d4e1-756d-1d1d-11a2-278573b9d311",
         "path": "benchmark/azure/mcsb-v2-artificial-intelligence-security.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14290,6 +15403,7 @@
         "documentId": "ddcb0647-0410-16e1-fc68-fb37a185c5bd",
         "path": "benchmark/azure/mcsb-v2-privileged-access.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14637,6 +15751,7 @@
         "documentId": "f11148c5-754d-be54-c66e-b2d763a6b739",
         "path": "defender-for-cloud/defender-for-cloud-introduction.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14699,6 +15814,7 @@
         "documentId": "10d693fc-e579-4a12-0664-fc5c0bbb137a",
         "path": "defender-for-cloud-apps/discovered-apps.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14769,6 +15885,7 @@
         "documentId": "81189541-c7e6-43b6-9766-63da782702e2",
         "path": "defender-for-identity/what-is.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14836,6 +15953,7 @@
         "documentId": "cd3ec995-778f-0763-f78e-72a16642ac2b",
         "path": "defender-office-365/outbound-spam-policies-external-email-forwarding.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14873,6 +15991,7 @@
         "documentId": "0a6b87c2-1fb2-1492-64ea-eb107ad8203c",
         "path": "defender-office-365/preset-security-policies.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -14977,6 +16096,7 @@
         "documentId": "aa727faf-7228-3bb5-b236-1edb779f3824",
         "path": "defender-office-365/priority-accounts-security-recommendations.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15034,6 +16154,7 @@
         "path": "docs/identity/hybrid/connect/migrate-from-federation-to-cloud-authentication.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15233,6 +16354,7 @@
     "ms-nonprofit-faq": {
       "contentHash": "42f05f0479217c0c",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15257,6 +16379,7 @@
         "documentId": "c1a1657e-53e5-38ff-6bb0-28e6647d40b7",
         "path": "microsoft-for-nonprofits/nonprofit-offerings-products.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15319,6 +16442,7 @@
         "path": "docs/identity/authentication/how-to-deploy-phishing-resistant-passwordless-authentication.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15445,6 +16569,7 @@
         "path": "docs/identity/hybrid/connect/how-to-connect-password-hash-synchronization.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15529,6 +16654,7 @@
         "path": "docs/id-governance/privileged-identity-management/pim-configure.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15645,6 +16771,7 @@
         "path": "power-platform/admin/wp-data-loss-prevention.md",
         "repo": "MicrosoftDocs/power-platform"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15717,6 +16844,7 @@
         "documentId": "560aa063-1da0-1a34-a768-1e1e57f3f5d7",
         "path": "security-docs/privileged-access-workstations/privileged-access-devices.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15766,6 +16894,7 @@
         "path": "docs/architecture/protect-m365-from-on-premises-attacks.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -15855,6 +16984,7 @@
         "documentId": "85dd1b74-7b54-b05d-1ed1-aacd9fe6e5b8",
         "path": "Office365-ServiceDescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-purview-service-description.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16142,6 +17272,7 @@
         "documentId": "46bc3224-7f85-e604-7bb3-a8f82ca02ddd",
         "path": "security-docs/privileged-access-workstations/security-rapid-modernization-plan.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16234,6 +17365,7 @@
         "documentId": "d2a6bba1-8b74-6bf5-ba60-3871122334d6",
         "path": "SharePoint/SharePointOnline/restricted-access-control.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16394,13 +17526,14 @@
       "words": 2131
     },
     "ms-restricted-content-discovery": {
-      "contentHash": "60f0ddb3678c385a",
+      "contentHash": "4edd2698bc2af1ec",
       "httpStatus": 200,
       "learn": {
-        "commit": "a185adae7ebc7735f24912af289128f2602d5c60",
+        "commit": "b79b6425275438d0bb066b0628cfc4dcc08a1b02",
         "documentId": "7cfd7903-7802-3e73-8ee4-0f75328ad89a",
         "path": "SharePoint/SharePointOnline/restricted-content-discovery.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16414,8 +17547,8 @@
         },
         {
           "h": "How Restricted Content Discovery works",
-          "hash": "13171ffe9062",
-          "words": 117
+          "hash": "1e2651f4bab2",
+          "words": 105
         },
         {
           "h": "Prerequisites",
@@ -16526,9 +17659,9 @@
       "status": "ok",
       "terms": [],
       "title": "Restrict discovery of SharePoint sites and content",
-      "updated": "2026-09-22",
+      "updated": "2026-10-08",
       "url": "https://learn.microsoft.com/en-us/sharepoint/restricted-content-discovery",
-      "words": 1297
+      "words": 1285
     },
     "ms-risky-agents": {
       "contentHash": "6b4fa51ce2ea460f",
@@ -16540,6 +17673,7 @@
         "path": "docs/id-protection/concept-risky-agents.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16617,6 +17751,7 @@
         "documentId": "e9aa1a91-e838-41c6-45cb-6a2a4dbf1a7a",
         "path": "SharePoint/SharePointOnline/advanced-management.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16664,6 +17799,7 @@
         "documentId": "26912410-ef1d-3409-ac82-3421da850b21",
         "path": "SharePoint/SharePointOnline/sharepoint-advanced-management-features-copilot-license.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16688,83 +17824,6 @@
       "url": "https://learn.microsoft.com/en-us/sharepoint/sharepoint-advanced-management-features-copilot-license",
       "words": 748
     },
-    "ms-secure-score": {
-      "contentHash": "14fba3b4b0580e31",
-      "httpStatus": 200,
-      "learn": {
-        "commit": "fb83fce146952702e4a094a5587a350fa1f8f7c0",
-        "documentId": "bcfd0250-01f7-5d5e-04a1-1cb2078611f3",
-        "path": "defender-xdr/microsoft-secure-score.md"
-      },
-      "sections": [
-        {
-          "h": "(top)",
-          "hash": "01422dd09d2c",
-          "words": 150
-        },
-        {
-          "h": "How it works",
-          "hash": "0839e0e7a9ef",
-          "words": 238
-        },
-        {
-          "h": "How recommended actions are scored",
-          "hash": "44a733d1804f",
-          "words": 99
-        },
-        {
-          "h": "Get started with Microsoft Secure Score",
-          "hash": "a1f5dd88d825",
-          "words": 26
-        },
-        {
-          "h": "Products included in Secure Score",
-          "hash": "d960340be2eb",
-          "words": 89
-        },
-        {
-          "h": "Security defaults",
-          "hash": "86fed0bfc787",
-          "words": 117
-        },
-        {
-          "h": "Secure Score permissions",
-          "hash": "967f6f00f9e0",
-          "words": 18
-        },
-        {
-          "h": "Manage permissions with Microsoft Defender Unified role-based access control (RBAC)",
-          "hash": "25aa6b61a878",
-          "words": 187
-        },
-        {
-          "h": "Microsoft Entra global roles permissions",
-          "hash": "525e09a13f5f",
-          "words": 190
-        },
-        {
-          "h": "Risk awareness",
-          "hash": "197fc6d91a40",
-          "words": 84
-        },
-        {
-          "h": "We want to hear from you",
-          "hash": "ea2ee2d16ef0",
-          "words": 15
-        },
-        {
-          "h": "Related resources",
-          "hash": "97ff29e46613",
-          "words": 42
-        }
-      ],
-      "status": "ok",
-      "terms": [],
-      "title": "Microsoft Secure Score",
-      "updated": "2026-03-07",
-      "url": "https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score",
-      "words": 1304
-    },
     "ms-security-defaults": {
       "contentHash": "55497a97cc48c61e",
       "httpStatus": 200,
@@ -16775,6 +17834,7 @@
         "path": "docs/fundamentals/security-defaults.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16895,6 +17955,7 @@
         "documentId": "a046ef0e-0423-6221-d8f6-0c987ffda66c",
         "path": "Purview/sensitivity-labels.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -16984,6 +18045,7 @@
         "documentId": "97d99c58-f56b-e951-06d6-e6d358d89bc9",
         "path": "sentinel/overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17032,9 +18094,7 @@
         }
       ],
       "status": "ok",
-      "terms": [
-        "retirement"
-      ],
+      "terms": [],
       "title": "What is Microsoft Sentinel security information and event management (SIEM)?",
       "updated": "2026-05-14",
       "url": "https://learn.microsoft.com/en-us/azure/sentinel/overview",
@@ -17048,6 +18108,7 @@
         "documentId": "7d4d52c4-16bf-1a8c-ae40-e19e82976c8a",
         "path": "SharePoint/SharePointOnline/change-default-sharing-link.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17090,6 +18151,7 @@
         "documentId": "6ed46514-8036-a543-d690-73d48acef690",
         "path": "SharePoint/SharePointOnline/turn-external-sharing-on-or-off.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17164,6 +18226,7 @@
         "path": "articles/storage/blobs/anonymous-read-access-prevent.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17273,6 +18336,7 @@
         "path": "articles/storage/common/shared-key-authorization-prevent.md",
         "repo": "MicrosoftDocs/azure-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17385,6 +18449,7 @@
         "documentId": "7655a2b2-841b-5be4-1c56-c222c6472f77",
         "path": "defender-endpoint/tamper-protection-overview.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17492,6 +18557,7 @@
         "documentId": "4f0f6177-da44-cc08-d8d3-ca1d90bd4d2d",
         "path": "Teams/app-centric-management.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17569,6 +18635,7 @@
         "documentId": "59900927-5e5f-77a4-04be-e05a91330fca",
         "path": "Teams/trusted-organizations-external-meetings-chat.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17658,6 +18725,7 @@
         "path": "docs/identity/enterprise-apps/configure-user-consent.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17732,6 +18800,7 @@
         "path": "docs/workload-id/workload-identity-federation.md",
         "repo": "MicrosoftDocs/entra-docs"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17774,6 +18843,7 @@
         "documentId": "f4498d32-0e32-5251-3f08-e194bf2b05c1",
         "path": "defender-xdr/configure-email-notifications.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17821,6 +18891,7 @@
         "documentId": "5e5d4375-6e01-ea51-bb55-1167118e1d80",
         "path": "security-docs/zero-trust/deploy/applications.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -17903,6 +18974,7 @@
         "documentId": "e2fb87ab-10b5-703b-2b20-036223d72547",
         "path": "security-docs/zero-trust/copilots/zero-trust-microsoft-365-copilot.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18071,6 +19143,7 @@
         "documentId": "79343709-0480-e6d0-bf6f-71d36cd24eb3",
         "path": "security-docs/zero-trust/deploy/data.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18143,6 +19216,7 @@
         "documentId": "294d86dc-26fd-2782-0b3a-724dcbaa320e",
         "path": "security-docs/zero-trust/deploy/endpoints.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18210,6 +19284,7 @@
         "documentId": "a706bd23-2b8d-3c52-24f5-bed82418a41e",
         "path": "security-docs/zero-trust/deploy/identity.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18282,6 +19357,7 @@
         "documentId": "80d81697-3ade-f1da-c79e-7de6277a2c2a",
         "path": "security-docs/zero-trust/deploy/infrastructure.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18369,6 +19445,7 @@
         "documentId": "b5008a63-8821-c0b2-0a7d-627e8b5fc6f2",
         "path": "security-docs/zero-trust/microsoft-365-zero-trust.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18431,6 +19508,7 @@
         "documentId": "a0479ee3-2a1a-af65-838e-05b4afe1a078",
         "path": "security-docs/zero-trust/deploy/visibility-automation-orchestration.md"
       },
+      "passed": [],
       "sections": [
         {
           "h": "(top)",
@@ -18488,6 +19566,7 @@
     "nist-csf-2": {
       "contentHash": "be784893aca1a1e9",
       "httpStatus": 200,
+      "passed": [],
       "sections": [
         {
           "h": "Page 1",

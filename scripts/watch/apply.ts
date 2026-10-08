@@ -28,7 +28,7 @@ function yamlScalar(url: string): string {
 export function applyUrlUpdates(files: Record<string, string>, updates: UrlUpdate[]): Record<string, string> {
   const changed: Record<string, string> = {};
   for (const update of updates) {
-    if (!isHttpUrl(update.url)) throw new Error(`${update.id}: refusing non-http URL ${update.url}`);
+    if (!isHttpUrl(update.url) || !update.url.startsWith("https://")) throw new Error(`${update.id}: refusing non-https URL ${update.url}`);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(update.retrieved)) throw new Error(`${update.id}: bad retrieved date ${update.retrieved}`);
     const path = Object.keys(files).find((p) => new RegExp(`^\\s*-\\s+id:\\s*["']?${escapeRegExp(update.id)}["']?\\s*(#.*)?$`, "m").test(changed[p] ?? files[p]));
     if (!path) throw new Error(`${update.id}: not found in content/sources`);
@@ -97,7 +97,7 @@ const sourceState = z
   .object({
     url: z.string(),
     finalUrl: z.string().optional(),
-    status: z.enum(["ok", "broken", "unverifiable"]),
+    status: z.enum(["ok", "broken", "unmonitored"]),
     httpStatus: z.number().int().optional(),
     title: z.string().optional(),
     contentHash: z.string().optional(),
@@ -111,6 +111,7 @@ const sourceState = z
     terms: z.array(z.string()).optional(),
     versions: z.array(z.string()).optional(),
     retired: z.string().optional(),
+    passed: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
   })
   .strict();
 
@@ -120,7 +121,7 @@ export const stateSchema = z
     version: z.literal(1),
     sources: z.record(z.string().regex(/^[a-z0-9][a-z0-9-]*$/), sourceState),
     neighbours: z.record(z.string(), z.array(z.string())).default({}),
-    feeds: z.record(z.string(), z.object({ latest: z.string() }).strict()).default({}),
+    feeds: z.record(z.string(), z.object({ latest: z.string(), seen: z.array(z.string()).optional() }).strict()).default({}),
   })
   .strict();
 

@@ -19,14 +19,14 @@ const input = (id = "ms-ca-plan"): TriageInput => ({
   diffText: "- old\n+ new",
 });
 
-type ParseArgs = Parameters<Anthropic["beta"]["messages"]["parse"]>[0];
+type CreateArgs = Parameters<Anthropic["beta"]["messages"]["create"]>[0];
 
-function fakeClient(reply: (args: ParseArgs) => unknown) {
-  const calls: ParseArgs[] = [];
+function fakeClient(reply: (args: CreateArgs) => unknown) {
+  const calls: CreateArgs[] = [];
   const client = {
     beta: {
       messages: {
-        parse: async (args: ParseArgs) => {
+        create: async (args: CreateArgs) => {
           calls.push(args);
           return reply(args);
         },
@@ -36,11 +36,14 @@ function fakeClient(reply: (args: ParseArgs) => unknown) {
   return { client, calls };
 }
 
-const ok = (impact = "review") => ({
-  stop_reason: "end_turn",
+const answer = (impact = "review") =>
+  JSON.stringify({ impact, summary: "The page added a rollout section.", questions: [{ id: "MS-ID-001", note: "Mention report-only mode." }, { id: "MS-XX-999", note: "not ours" }] });
+
+const ok = (impact = "review", stop = "end_turn", text = answer(impact)) => ({
+  stop_reason: stop,
   model: TRIAGE_MODEL,
   usage: { input_tokens: 900, output_tokens: 120 },
-  parsed_output: { impact, summary: "The page added a rollout section.", questions: [{ id: "MS-ID-001", note: "Mention report-only mode." }, { id: "MS-XX-999", note: "not ours" }] },
+  content: [{ type: "text", text }],
 });
 
 describe("triageChanges", () => {
@@ -71,7 +74,7 @@ describe("triageChanges", () => {
   });
 
   it("handles refusals and stops on authentication errors", async () => {
-    const refused = fakeClient(() => ({ ...ok(), stop_reason: "refusal", stop_details: { category: "cyber" }, parsed_output: null }));
+    const refused = fakeClient(() => ({ ...ok("review", "refusal", ""), stop_details: { category: "cyber" } }));
     const r1 = await triageChanges([input()], { client: refused.client });
     expect(r1.results.size).toBe(0);
     expect(r1.skipped[0]).toMatch(/declined ms-ca-plan \(cyber\)/);
@@ -82,5 +85,23 @@ describe("triageChanges", () => {
     const r2 = await triageChanges([input("a"), input("b")], { client: denied.client });
     expect(denied.calls).toHaveLength(1);
     expect(r2.skipped[0]).toMatch(/disabled/);
+  });
+
+  it("treats a cut-off answer as unusable instead of failing", async () => {
+    const cut = fakeClient(() => ok("review", "max_tokens", '{"impact":"rev'));
+    const r = await triageChanges([input()], { client: cut.client });
+    expect(r.results.size).toBe(0);
+    expect(r.skipped[0]).toMatch(/no usable answer for ms-ca-plan \(max_tokens\)/);
+  });
+
+  it("stops starting requests when the time budget runs out", async () => {
+    let t = 0;
+    const slow = fakeClient(() => {
+      t += 6 * 60_000;
+      return ok();
+    });
+    const r = await triageChanges([input("a"), input("b"), input("c")], { client: slow.client, now: () => t });
+    expect(slow.calls).toHaveLength(2);
+    expect(r.skipped.at(-1)).toMatch(/1 changed pages not triaged \(time budget used up\)/);
   });
 });

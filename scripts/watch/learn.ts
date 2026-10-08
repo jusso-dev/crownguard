@@ -53,7 +53,8 @@ export interface TocSection {
 
 /** The TOC section that lists `pageUrl`: its parent's direct children. Undefined when the page isn't in the TOC. */
 export function sectionOf(nodes: TocNode[], pageUrl: string): TocSection | undefined {
-  const target = normalizeUrl(pageUrl);
+  // TOC links carry no query string, while a cited page may (`?view=o365-worldwide`).
+  const target = withoutQuery(pageUrl);
   const find = (list: TocNode[], trail: string[]): TocSection | undefined => {
     if (list.some((n) => n.url === target))
       return {
@@ -67,6 +68,31 @@ export function sectionOf(nodes: TocNode[], pageUrl: string): TocSection | undef
     return undefined;
   };
   return find(nodes, []);
+}
+
+/** Every section path in a TOC, in the form `sectionOf` gives (`(top)` for the root list). */
+export function tocPaths(nodes: TocNode[]): Set<string> {
+  const out = new Set<string>(["(top)"]);
+  const walk = (list: TocNode[], trail: string[]) => {
+    for (const n of list)
+      if (n.children.length) {
+        out.add([...trail, n.title].join(" > "));
+        walk(n.children, [...trail, n.title]);
+      }
+  };
+  walk(nodes, []);
+  return out;
+}
+
+/** A Learn URL normalised without its query string, the form TOC entries use. */
+export function withoutQuery(url: string): string {
+  try {
+    const u = new URL(url);
+    u.search = "";
+    return normalizeUrl(u.toString());
+  } catch {
+    return url;
+  }
 }
 
 /** Where a page's table of contents lives, from its `toc_rel` meta. */

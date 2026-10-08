@@ -40,13 +40,18 @@ const changed: Finding = {
 };
 
 describe("md escaping", () => {
-  it("neutralises markdown, HTML, mentions and issue references from page text", () => {
-    const evil = "**bold** [x](javascript:alert(1)) <img src=x> @octocat fixes #12 &#64;team\n# heading";
-    const out = md(evil);
+  it("neutralises markdown, HTML, mentions, issue references and links from page text", () => {
+    const evil = "**bold** [x](javascript:alert(1)) <img src=x> @octocat Fixes #12, GH-7, owner/repo#3, https://x.test www.y.test /issues/9 &#64;team\n# heading";
+    const out = md(evil, 400);
     expect(out).not.toMatch(/(^|[^\\])\*\*/);
     expect(out).not.toContain("<img");
-    expect(out).not.toContain("@octocat");
-    expect(out).not.toContain("#12");
+    // What GitHub would turn into a mention, reference or link:
+    expect(out).not.toMatch(/@\w/);
+    expect(out).not.toMatch(/#\d/);
+    expect(out).not.toMatch(/\bgh-\d/i);
+    expect(out).not.toMatch(/https?:\/\//);
+    expect(out).not.toMatch(/\bwww\.\w/);
+    expect(out).not.toMatch(/\/issues\/\d/);
     expect(out).not.toContain("&#64;team");
     expect(out).not.toContain("\n");
   });

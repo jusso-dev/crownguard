@@ -123,9 +123,10 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         return result("network", res.status, { contentType, error: `body read failed: ${(e as Error).message}` });
       }
 
-      const challenged =
-        res.headers.get("cf-mitigated") === "challenge" || (body !== undefined && CHALLENGE_MARKERS.some((re) => re.test(body.slice(0, 50_000))));
       const s = res.status;
+      // Challenge pages come with an error status; normal pages on some sites embed Cloudflare's detection script.
+      const challenged =
+        res.headers.get("cf-mitigated") === "challenge" || (s >= 400 && body !== undefined && CHALLENGE_MARKERS.some((re) => re.test(body.slice(0, 50_000))));
       let outcome: FetchOutcome;
       if (challenged) outcome = "challenge";
       else if (s >= 200 && s < 300) outcome = "ok";

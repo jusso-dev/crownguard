@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadCatalogue } from "../../src/content/loader";
 import {
-  citedByIndex,
   citedVersion,
   classifyChange,
   compareSections,
@@ -9,7 +7,7 @@ import {
   diffTexts,
   equivalentUrls,
   excerpt,
-  housekeeping,
+  newLifecycleWording,
   redirectKind,
   versionsOnPage,
 } from "./compare";
@@ -91,6 +89,16 @@ describe("classifyChange", () => {
     expect(c.detail.newTitle).toBe("Microsoft Entra documentation");
   });
 
+  it("treats a reworded heading over an unchanged body as a rename, not a section removed and added", () => {
+    const before = [{ h: "Before you begin", hash: "x", words: 78 }, { h: "Steps", hash: "y", words: 200 }];
+    const after = [{ h: "Prerequisites", hash: "x", words: 78 }, { h: "Steps", hash: "y", words: 200 }];
+    const s = compareSections(before, after);
+    expect(s).toMatchObject({ added: [], removed: [], renamed: [{ before: before[0], after: after[0] }] });
+    const c = classifyChange(state({ sections: before }), state({ sections: after, contentHash: "b" }));
+    expect(c.severity).toBe("minor");
+    expect(c.detail.sectionsChanged).toEqual(["Before you begin → Prerequisites"]);
+  });
+
   it("matches repeated headings by occurrence", () => {
     const s = compareSections(
       [{ h: "Example", hash: "1", words: 50 }, { h: "Example", hash: "2", words: 50 }],
@@ -144,22 +152,32 @@ describe("redirects", () => {
   });
 });
 
-describe("housekeeping", () => {
-  const files = {
-    "content/sources/a.yaml": `- { id: used, title: Used page, publisher: Microsoft, url: "https://learn.microsoft.com/en-us/a", retrieved: 2026-01-01 }
-- { id: unused, title: Unused page, publisher: Microsoft, url: "https://learn.microsoft.com/en-us/b", retrieved: 2026-01-01 }
-- { id: twin, title: Same page, publisher: Microsoft, url: "https://learn.microsoft.com/en-us/A/", retrieved: 2026-01-01 }`,
-    "content/frameworks/f.yaml": "id: f\nname: F\nshortName: F\npublisher: X\nsource: twin\nclosed: false\n",
-  };
+describe("lifecycle wording", () => {
+  it("counts only wording the change introduced", () => {
+    const before = "Legacy MFA settings are still available.\nUse report-only mode first.";
+    const after = "Legacy MFA settings will be retired on 30 September 2026.\nUse report-only mode first.";
+    expect(newLifecycleWording(diffTexts(before, after))).toEqual(["will be retired"]);
+    const reworded = "The legacy agent will be retired in 2027 as announced.";
+    expect(newLifecycleWording(diffTexts("The legacy agent will be retired in 2027.", reworded))).toEqual([]);
+  });
 
-  it("finds orphans and duplicate pages, and indexes citations", () => {
-    const { catalogue } = loadCatalogue(files);
-    const citedBy = citedByIndex(catalogue);
-    expect(citedBy.get("twin")).toEqual(["framework:f"]);
-    const found = housekeeping(catalogue, citedBy, {});
-    expect(found.filter((f) => f.kind === "orphan").map((f) => f.sourceId)).toEqual(["unused", "used"]);
-    const dup = found.find((f) => f.kind === "duplicate");
-    expect(dup?.sourceId).toBe("twin");
-    expect(dup?.detail).toContain("used");
+  it("needs lifecycle context, so device actions and navigation notes aren't retirement notices", () => {
+    const words = (before: string, after: string) => newLifecycleWording(diffTexts(before, after));
+    expect(words("Use Retire to remove company data.", "Use Retire to remove company data from devices marked for retirement.")).toEqual([]);
+    expect(words("The setting is on the Users page.", "The setting has moved to the Users page.")).toEqual([]);
+    expect(words("Use {tenant}.", "{tenant} is replaced by your tenant ID.")).toEqual([]);
+    expect(words("Classic Search is available.", "Classic Search retired on November 30, 2023.")).toEqual(["retired on"]);
+    expect(words("Read the guide.", "This article has moved. Update your bookmarks.")).toEqual(["this article has moved", "update your bookmarks"]);
+    expect(words("Use the old API.", "The old API will be replaced by the v2 API.")).toEqual(["will be replaced by"]);
+  });
+
+  it("makes a change major when it adds lifecycle wording or drops a lifecycle term", () => {
+    const base = state({ terms: ["will be retired"] });
+    const added = classifyChange(state(), state({ contentHash: "b" }), diffTexts("Feature X is available.", "Feature X is deprecated."));
+    expect(added.severity).toBe("major");
+    expect(added.lifecycle).toEqual(["deprecated"]);
+    const gone = classifyChange(base, state({ terms: [] }), diffTexts("It will be retired soon.", "It is available."));
+    expect(gone.severity).toBe("major");
+    expect(gone.reasons).toContain('no longer says "will be retired"');
   });
 });

@@ -2,8 +2,9 @@
  * Shared types for the nightly source watch (`pnpm watch:sources`).
  *
  * The watch fetches every page cited in `content/sources/`, fingerprints its main content, and compares the
- * fingerprints with the committed baseline in `watch/state.json`. Page text is never committed: Google Workspace
- * Help and CIS pages aren't openly licensed, so full-text snapshots used for diffs live only in the Actions cache.
+ * fingerprints with the committed baseline in `watch/state.json`. Page text is never committed: the Google Help
+ * Center, CIS and most Microsoft Learn pages aren't openly licensed, so full-text snapshots used for diffs live only in
+ * the Actions cache.
  */
 
 /** How much of a page the report may quote. */
@@ -36,6 +37,8 @@ export interface HostProfile {
   excerpts: ExcerptPolicy;
   /** Licence line shown under excerpts, e.g. `CC BY 4.0`. */
   licence?: string;
+  /** Link to the licence text, required for attribution under Creative Commons licences. */
+  licenceUrl?: string;
   /** The host challenges automated clients from cloud IP ranges; a challenge is "unverifiable", never "broken". */
   botProtected?: boolean;
   /** Maximum concurrent requests to this host. */
@@ -146,13 +149,18 @@ export interface Extracted {
   isLanding: boolean;
   /** Why the page itself counts as retired (archived, "(retired)" or "(classic)" in its title, a retirement notice at the top). */
   retired?: string;
+  /** Dates (YYYY-MM-DD) the page gives for a retirement, deprecation or similar change, sorted. */
+  deadlines: string[];
+  /** The text of each block (paragraph, list item, PDF page) on one line, for quoting the line a deadline comes from. */
+  blocks: string[];
   /** False when no content selector matched and the extractor fell back to `<body>`. */
   matchedSelector: boolean;
   /** `<html lang>`. */
   lang?: string;
 }
 
-export type SourceStatus = "ok" | "broken" | "unverifiable";
+/** "unmonitored": the page couldn't be checked for a week of nights in a row (blocked or failing). */
+export type SourceStatus = "ok" | "broken" | "unmonitored";
 
 /** Committed fingerprint of one source. Deterministic: no fields that change when the page doesn't. */
 export interface SourceState {
@@ -179,6 +187,8 @@ export interface SourceState {
   versions?: string[];
   /** Why the page itself is retired, if it is. */
   retired?: string;
+  /** Lifecycle dates on the page that had passed when last acknowledged (YYYY-MM-DD, sorted). */
+  passed?: string[];
 }
 
 export interface WatchState {
@@ -186,13 +196,19 @@ export interface WatchState {
   sources: Record<string, SourceState>;
   /** Learn table-of-contents sections that hold cited pages, keyed `<toc.json URL>#<section path>`, mapped to the sorted URLs of every page in that section. */
   neighbours: Record<string, string[]>;
-  /** Feed id to the ISO timestamp of the newest entry already reviewed. */
-  feeds: Record<string, { latest: string }>;
+  /** Feed id to the ISO timestamp of the newest entry already reviewed, and the items already reported at it. */
+  feeds: Record<string, { latest: string; seen?: string[] }>;
 }
 
 export type FindingKind =
   /** 404/410, or a fetch failure that persisted across consecutive runs. */
   | "broken"
+  /** A source recorded as broken, unmonitored or retired is fine again. */
+  | "recovered"
+  /** A date the page gives for a retirement or change has passed. */
+  | "deadline"
+  /** The source couldn't be checked for a week of nights in a row, so nobody is watching it. */
+  | "unmonitored"
   /** Redirects to the same document at a new URL; the URL is updated in this PR. */
   | "moved"
   /** Redirects to a different page (hub, landing or unrelated); someone must pick a replacement. */
@@ -201,17 +217,15 @@ export type FindingKind =
   | "retired"
   /** The cited guidance changed. `severity` says whether it needs a look. */
   | "changed"
+  /** Many pages on one host changed together, like a change to the site's page furniture; merging re-baselines them. */
+  | "template"
   /** The product named in the source title has a newer version than the one cited. */
   | "version"
   /** New guidance worth considering as a source. */
   | "candidate"
-  /** A source no question or framework cites. */
-  | "orphan"
-  /** Two sources point at the same page. */
-  | "duplicate"
   /** Couldn't be checked this run (bot protection, transient failure). Informational. */
   | "unverifiable"
-  /** First fingerprint for a source added since the baseline. Informational. */
+  /** Bookkeeping: a source, feed or Learn section started or stopped being tracked. */
   | "baseline";
 
 export interface Commit {
@@ -254,6 +268,8 @@ export interface ChangeDetail {
   excerpt?: string;
   /** Licence attribution for the excerpt, or why there is none. */
   excerptNote?: string;
+  /** Link to the excerpt's licence. */
+  excerptLicenceUrl?: string;
   /** No earlier text was available to diff against, so word counts are estimates from section hashes. */
   noPreviousText?: boolean;
   triage?: Triage;
@@ -269,6 +285,8 @@ export interface CandidateDetail {
   near?: string;
   /** Short plain-text description from front matter or the feed, truncated. */
   summary?: string;
+  /** Licence of any quoted feed text, with its link. */
+  licence?: { label: string; url: string };
 }
 
 export interface Finding {
@@ -281,14 +299,18 @@ export interface Finding {
   /** Target of a move or redirect. */
   newUrl?: string;
   severity?: "major" | "minor";
-  /** True when the finding needs a maintainer: only actionable findings open a PR. */
+  /** True when the finding is new since the baseline and changes it: only actionable findings open a PR. */
   actionable: boolean;
+  /** Already recorded in the baseline by an earlier merged PR but still unresolved. Informational. */
+  acknowledged?: boolean;
   /** One-line plain-text summary. */
   detail: string;
   /** Question and framework ids that cite this source. */
   citedBy: string[];
   change?: ChangeDetail;
   candidate?: CandidateDetail;
+  /** Template findings: the source ids held on that host, which merging re-baselines. */
+  held?: string[];
   /** The fix was written to content/sources in this run. */
   applied?: boolean;
 }
@@ -317,12 +339,46 @@ export interface RunResult {
   simulated: boolean;
 }
 
-/** Snapshot store for diffs and failure counters, kept in the Actions cache between runs. */
+/** Snapshot store for diffs and counters, kept in the Actions cache between runs. */
+/** What the cache remembers about a feed between runs (never in watch/state.json, so reading changes no baseline). */
+export interface FeedMemo {
+  /** Publication time of the newest entry read on the last successful fetch. */
+  lastRead?: string;
+  /** Items reported on the last run, by item key, with their entry's publication time. */
+  reported?: Record<string, string>;
+}
+
+/** What the cache remembers about a source between runs. */
+export interface SourceMemo {
+  /** Normalised URL the failure counters belong to: a different URL means a maintainer re-pointed the source. */
+  url?: string;
+  /** Learn commit seen on the last successful load, so only a commit new since then counts as a fresh edit. */
+  commit?: string;
+  /** Page hash when its host was flagged for a template change; the page stays held while it keeps that hash. */
+  template?: string;
+  /** Page hash at the last successful load: a different hash tonight means the page changed since then. */
+  last?: string;
+  /** Page hash whose change was reported as substantial and not yet merged, so a template hold can't swallow it. */
+  reported?: string;
+}
+
 export interface WatchCache {
   readSnapshot(sourceId: string, hash: string): string | undefined;
   writeSnapshot(sourceId: string, hash: string, text: string): void;
   /** Consecutive failed runs per source id. */
   failures: Record<string, number>;
+  /** Consecutive runs per source id in which the source couldn't be checked (blocked, wrong language, layout). */
+  unverified: Record<string, number>;
+  /** The date `key` was first seen, recording `date` the first time; keeps proposed edits stable across nights. */
+  firstSeen(key: string, date: string): string;
+  /** Add one to a counter, at most once per `date` (manual or re-run workflows on the same day don't count twice). */
+  bump(counter: "failures" | "unverified", id: string, date: string): number;
+  /** Clear a source's counters (its URL changed, or it was removed). */
+  forget(id: string): void;
+  /** Per-source memory, keyed by source id. */
+  memos: Record<string, SourceMemo>;
+  /** Per-feed memory, keyed by feed id. */
+  feeds: Record<string, FeedMemo>;
   /** Delete snapshots except the listed hashes per source id. */
   prune(keep: Record<string, string[]>): void;
   save(): void;

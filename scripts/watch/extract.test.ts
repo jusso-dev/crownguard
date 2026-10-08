@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { extractHtml } from "./extract";
+import { extractHtml, lifecycleDates, lifecycleLine } from "./extract";
 import { checkFeeds, parseFeed } from "./feeds";
+import type { FeedMemo } from "./types";
 import { compareUrl, createGitHub, markdownBody } from "./github";
-import { profileFor } from "./hosts";
+import { licenceFor, profileFor } from "./hosts";
 import { parseToc, sectionOf, tocHref, tocUrlFor } from "./learn";
 
 const learn = profileFor("learn.microsoft.com");
@@ -57,15 +58,53 @@ describe("extractHtml on Learn", () => {
     expect(extractHtml(learnHtml("<p>x</p>", { h1: "Old agent (retired)" }), learn).retired).toBe("title marks it as retired");
     expect(extractHtml(learnHtml("<p>x</p>", { meta: '<meta name="is_archived" content="true">' }), learn).retired).toMatch(/archived/);
     const notice = extractHtml(learnHtml('<div class="NOTE"><p>Note</p><p>This article is for the classic version of DSPM for AI that is now replaced with a new version.</p></div><p>Body</p>'), learn);
-    expect(notice.retired).toMatch(/notice at the top/);
+    expect(notice.retired).toBe('a notice at the top says "classic version of"');
     const feature = extractHtml(learnHtml('<p>Intro</p><div class="WARNING"><p>The legacy risk policies will be retired on October 1, 2026.</p></div>'), learn);
     expect(feature.retired).toBeUndefined();
     expect(feature.terms).toContain("will be retired");
   });
 
+  it("only takes notices above the first section heading as page-level retirement", () => {
+    const deep = extractHtml(learnHtml('<h2>Overview</h2><p>Body</p><h2>Legacy MFA</h2><div class="NOTE"><p>This feature is deprecated. Convert per-user MFA to Conditional Access.</p></div>'), learn);
+    expect(deep.retired).toBeUndefined();
+    const top = extractHtml(learnHtml('<div class="IMPORTANT"><p>This feature is deprecated.</p></div><h2>Overview</h2><p>Body</p>'), learn);
+    expect(top.retired).toBe('a notice at the top says "this feature is deprecated"');
+  });
+
+  it("reads Google DevSite deprecation asides", () => {
+    const html = `<html lang="en"><head><meta property="og:title" content="Old tool | Admin | Google Workspace Help"></head><body>
+<article class="devsite-article"><div class="devsite-article-body"><aside class="caution">This feature is deprecated and no longer supported.</aside><p>Body</p></div></article></body></html>`;
+    expect(extractHtml(html, profileFor("knowledge.workspace.google.com")).retired).toBe('a notice at the top says "this feature is deprecated"');
+  });
+
   it("flags hub pages as landing pages", () => {
     const e = extractHtml(learnHtml('<ul><li><a href="a">Alpha</a></li><li><a href="b">Beta</a></li></ul>', { meta: '<meta name="ms.topic" content="landing-page">' }), learn);
     expect(e.isLanding).toBe(true);
+  });
+});
+
+describe("lifecycle dates", () => {
+  it("reads dates from lines about retirement or switching things off", () => {
+    const lines = [
+      "The legacy risk policies configured in ID Protection will be retired on October 1, 2026.",
+      "Beginning 30 September 2025, methods can't be managed in the legacy policies, and they will no longer be supported.",
+      "Basic authentication for SMTP AUTH will be disabled by default at the end of December 2026.",
+      "Windows 10 reached end of support on 2025-10-14.",
+      "Released on 12 March 2026 with new reports.",
+    ];
+    expect(lifecycleDates(lines)).toEqual(["2025-09-30", "2025-10-14", "2026-10-01", "2026-12-31"]);
+    expect(lifecycleLine(lines, "2026-12-31")).toBe(lines[2]);
+    expect(lifecycleLine(lines, "2026-03-12")).toBeUndefined();
+  });
+
+  it("reads a date from a sentence the page's HTML source hard-wraps, without changing the fingerprinted text", () => {
+    const html = `<html lang="en"><head><meta property="og:title" content="Reports | Admin | Google Workspace Help"></head><body>
+<article class="devsite-article"><div class="devsite-article-body"><p>The legacy reports page will be retired on
+January 15, 2027. Use the new reports instead.</p></div></article></body></html>`;
+    const e = extractHtml(html, profileFor("knowledge.workspace.google.com"));
+    expect(e.deadlines).toEqual(["2027-01-15"]);
+    expect(e.text).toBe("The legacy reports page will be retired on\nJanuary 15, 2027. Use the new reports instead.");
+    expect(lifecycleLine(e.blocks, "2027-01-15")).toBe("The legacy reports page will be retired on January 15, 2027. Use the new reports instead.");
   });
 });
 
@@ -88,10 +127,26 @@ describe("Learn tables of contents", () => {
     expect(section?.path).toBe("Identity > Conditional Access");
     expect(section?.pages.map((p) => p.title)).toEqual(["Overview", "Plan"]);
     expect(sectionOf(nodes, "https://learn.microsoft.com/en-us/nowhere")).toBeUndefined();
+    expect(sectionOf(nodes, "https://learn.microsoft.com/en-us/entra/identity/conditional-access/plan?view=o365-worldwide")?.path).toBe("Identity > Conditional Access");
   });
 });
 
 describe("feeds", () => {
+  it("warns when a feed's window skipped entries no run read, or dropped items still waiting in the pull request", async () => {
+    const xml = `<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>2</id><title>Newer post</title><link href="https://blog.test/2"/><published>2026-10-05T00:00:00Z</published></entry><entry><id>1</id><title>Post</title><link href="https://blog.test/1"/><published>2026-09-25T00:00:00Z</published></entry></feed>`;
+    const fetcher = { fetchPage: async (url: string) => ({ requestedUrl: url, finalUrl: url, redirects: [], elapsedMs: 1, status: 200, outcome: "ok" as const, body: xml }) };
+    const def = { id: "t", name: "Test", url: "https://feeds.test/atom", kind: "posts" as const, include: [/nothing matches/] };
+    const cursor = { t: { latest: "2026-09-01T00:00:00.000Z", seen: [] } };
+    const memory: Record<string, FeedMemo> = { t: { lastRead: "2026-09-10T00:00:00.000Z", reported: { abc123: "2026-09-12T00:00:00.000Z" } } };
+    const behind = await checkFeeds([def], cursor, fetcher, new Map(), memory);
+    expect(behind.skipped.join(" ")).toMatch(/entries between 2026-09-10 and 2026-09-25 were never read/);
+    expect(behind.skipped.join(" ")).toMatch(/1 item reported earlier left the feed's window/);
+    expect(memory.t).toEqual({ lastRead: "2026-10-05T00:00:00.000Z", reported: {} });
+    // A strict filter keeps the cursor behind, but everything was read last time: nothing to warn about.
+    const again = await checkFeeds([def], cursor, fetcher, new Map(), memory);
+    expect(again.skipped).toEqual([]);
+  });
+
   it("reads Atom and RSS entries, newest first, skipping entries without dates or http links", () => {
     const atom = parseFeed(`<feed xmlns="http://www.w3.org/2005/Atom">
 <entry><id>a</id><title type="html">Passkeys &amp;lt;b&amp;gt;for admins&amp;lt;/b&amp;gt;</title><link rel="alternate" href="https://blog.test/a"/><published>2026-10-02T10:00:00Z</published><summary>New &lt;b&gt;controls&lt;/b&gt;</summary></entry>
@@ -113,9 +168,22 @@ describe("feeds", () => {
     expect(entry.notes.map((n) => n.type)).toEqual(["Deprecated", "Feature", "Feature"]);
     const fetcher = { fetchPage: async () => ({ requestedUrl: "", finalUrl: "", redirects: [], status: 200, outcome: "ok" as const, body: xml, elapsedMs: 1 }) };
     const cited = new Map([["https://docs.cloud.google.com/security-command-center/docs/security-command-center-overview", "gcp-scc-overview"]]);
-    const def = { id: "scc", name: "Security Command Center", url: "https://x.test/feed", kind: "release-notes" as const, noteTypes: ["Deprecated"], linksToCited: true, excerpts: true };
+    const def = {
+      id: "scc",
+      name: "Security Command Center",
+      url: "https://x.test/feed",
+      kind: "release-notes" as const,
+      noteTypes: ["Deprecated"],
+      linksToCited: true,
+      excerpts: true,
+      licence: { label: "CC BY 4.0, Google", url: "https://creativecommons.org/licenses/by/4.0/" },
+    };
     const first = await checkFeeds([def], {}, fetcher, cited);
-    expect(first.findings).toEqual([]);
+    expect(first.findings.map((f) => f.kind)).toEqual(["baseline"]);
+    // Entries the filter drops don't move the cursor.
+    const quiet = await checkFeeds([{ ...def, noteTypes: ["Breaking"], linksToCited: false }], { scc: { latest: "2026-10-01T00:00:00.000Z" } }, fetcher, cited);
+    expect(quiet.findings).toEqual([]);
+    expect(quiet.feeds.scc.latest).toBe("2026-10-01T00:00:00.000Z");
     const run = await checkFeeds([def], { scc: { latest: "2026-10-01T00:00:00.000Z" } }, fetcher, cited);
     expect(run.findings.map((f) => f.title)).toEqual(["Security Command Center: Artifact guard is deprecated.", "Security Command Center: New detector."]);
     expect(run.findings[1].detail).toContain("links to cited source gcp-scc-overview");
@@ -147,5 +215,16 @@ describe("github helpers", () => {
     expect(gh.limited()).toMatch(/rate limit/);
     expect(await gh.commitsBetween("MicrosoftDocs/entra-docs", "docs/a.md", "a", "b")).toBeUndefined();
     expect(calls).toBe(3);
+  });
+});
+
+describe("licenceFor", () => {
+  it("allows quotes only from openly licensed pages", () => {
+    expect(licenceFor("https://knowledge.workspace.google.com/admin/x")?.label).toBe("CC BY 4.0, Google");
+    expect(licenceFor("https://support.google.com/chrome/a/answer/1")).toBeUndefined();
+    expect(licenceFor("https://learn.microsoft.com/en-us/purview/x")).toBeUndefined();
+    expect(licenceFor("https://learn.microsoft.com/en-us/entra/x", "MicrosoftDocs/entra-docs")?.label).toMatch(/^MIT/);
+    expect(licenceFor("https://learn.microsoft.com/en-us/x", "MicrosoftDocs/defender-docs")).toBeUndefined();
+    expect(licenceFor("not a url")).toBeUndefined();
   });
 });

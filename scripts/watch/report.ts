@@ -7,23 +7,33 @@ export const PR_BODY_LIMIT = 65_000;
 export interface ReportOptions {
   /** Link to the workflow run, shown when the report had to be shortened. */
   runUrl?: string;
+  /** Absolute link to the content guide's source watch section (a PR body can't use repo-relative links). */
+  guideUrl?: string;
   maxChars?: number;
 }
+
+export const DEFAULT_GUIDE_URL = "https://github.com/jusso-dev/crownguard/blob/main/docs/content-guide.md#source-watch";
 
 /**
  * Escape text from fetched pages and feeds for Markdown: no formatting, links, HTML, mentions or issue references
  * can be injected through a page title or feed entry.
  */
 export function md(text: string, max = 200): string {
+  // GitHub decodes entities before it links mentions and references, so those are broken with a zero-width space
+  // (added after truncate(), whose collapse() would strip it).
+  const zw = "\u200B";
   return truncate(text, max)
     .replace(/&/g, "&amp;")
-    .replace(/#(?=\d)/g, "&#35;")
-    .replace(/@/g, "&#64;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/[\\`*_[\]|~]/g, (c) => `\\${c}`)
     .replace(/^([#+\-=]|\d+\.)(\s)/, "\\$1$2")
-    .replace(/(https?):\/\//gi, "$1&#58;//");
+    .replace(/@/g, `@${zw}`)
+    .replace(/#(?=\d)/g, `#${zw}`)
+    .replace(/\b(gh)-(?=\d)/gi, `$1${zw}-`)
+    .replace(/(https?):\/\//gi, `$1:/${zw}/`)
+    .replace(/\bwww\./gi, `www${zw}.`)
+    .replace(/\/(issues|pull|discussions)\/(?=\d)/gi, `/$1${zw}/`);
 }
 
 function safeUrl(url: string): string | undefined {
@@ -54,12 +64,19 @@ const GROUPS: { kind: FindingKind; heading: string; lead?: string; info?: boolea
   { kind: "broken", heading: "Broken", lead: "These pages are gone or have failed on consecutive runs. Replace or remove the source, and check the questions that cite it." },
   { kind: "moved", heading: "Moved: URL updated in this PR", lead: "Each page now lives at a new address with the same content, so this PR updates the citation." },
   { kind: "redirected", heading: "Redirected elsewhere", lead: "These now land on a different page (often a hub or landing page). Pick the replacement guidance by hand." },
+  { kind: "deadline", heading: "Dates passed", lead: "These pages give a date for a retirement or change that has now passed. Check the guidance and the questions that cite it." },
   { kind: "retired", heading: "Retired or deprecated", lead: "These pages are retired or archived, or newly carry deprecation or retirement language. Check whether the cited guidance still stands, and cite the current page." },
   { kind: "changed", heading: "Changed substantially", lead: "The cited guidance changed enough to re-read it against the questions that cite it." },
+  {
+    kind: "template",
+    heading: "Site template changes",
+    lead: "Many pages on one site changed together, which usually means the site's page furniture changed rather than its guidance. Merging re-baselines the listed pages: open one or two first, and if the watch now picks up navigation or boilerplate, fix the selectors in scripts/watch/hosts.ts instead.",
+  },
   { kind: "version", heading: "Newer version available", lead: "The publisher has a newer version than the one cited." },
   { kind: "candidate", heading: "New guidance to consider", lead: "New pages and announcements that may deserve a question or a citation." },
-  { kind: "orphan", heading: "Not cited anywhere", lead: "No question, framework or platform cites these sources. Cite them or remove them." },
-  { kind: "duplicate", heading: "Duplicate sources", lead: "These sources point at the same page." },
+  { kind: "unmonitored", heading: "Not being monitored", lead: "These couldn't be checked for a week of nights in a row. Check them by hand, or adjust their host profile." },
+  { kind: "recovered", heading: "Recovered", lead: "Sources recorded as broken, unmonitored, redirected or retired that are fine again." },
+  { kind: "baseline", heading: "Baseline updates", lead: "Bookkeeping: sources, feeds and Learn sections that started or stopped being tracked." },
 ];
 
 function citedBy(f: Finding): string {
@@ -97,7 +114,16 @@ function changeBlock(f: Finding, withExcerpts: boolean): string[] {
       for (const q of t.questions.slice(0, 8)) lines.push(`  - ${code(q.id)}: ${md(q.note, 300)}`);
     }
     if (withExcerpts && c.excerpt) {
-      lines.push("", `<details><summary>Diff excerpt${c.excerptNote ? ` (${md(c.excerptNote, 160)})` : ""}</summary>`, "", fence(c.excerpt, "diff"), "", "</details>");
+      lines.push(
+        "",
+        "<details><summary>Diff excerpt</summary>",
+        "",
+        fence(c.excerpt, "diff"),
+        "",
+        `Quoted from ${link(f.title, f.newUrl ?? f.url, 120)} under ${c.excerptLicenceUrl ? link(c.excerptNote ?? "its licence", c.excerptLicenceUrl, 120) : md(c.excerptNote ?? "its licence", 120)}.`,
+        "",
+        "</details>",
+      );
     } else if (c.excerptNote && !c.excerpt) lines.push(`- ${md(c.excerptNote, 200)}`);
   }
   lines.push("");
@@ -113,10 +139,16 @@ function findingLine(f: Finding): string {
     case "candidate": {
       const c = f.candidate;
       const where = c?.origin === "feed" ? `${md(c.feedName ?? "feed", 60)}${c.published ? `, ${c.published}` : ""}` : `new page beside ${code(c?.near ?? "")}`;
-      return `- ${link(f.title, f.url, 160)} · ${where}${c?.summary ? `\n  ${md(c.summary, 300)}` : ""}`;
+      const licence = c?.licence ? ` (text: ${link(c.licence.label, c.licence.url, 60)})` : "";
+      return `- ${link(f.title, f.url, 160)} · ${where}${c?.summary ? `\n  ${md(c.summary, 300)}${licence}` : ""}`;
     }
-    case "orphan":
-      return `- ${sourceLine(f)}`;
+    case "baseline":
+      return f.sourceId ? `- ${sourceLine(f)}\n  ${md(f.detail, 400)}` : `- ${md(f.detail, 400)}`;
+    case "template": {
+      const held = f.held ?? [];
+      // Every held page is listed: merging re-baselines exactly these.
+      return `- ${link(f.title, f.url, 120)}: ${md(f.detail, 400)}\n\n  <details><summary>The ${held.length} pages</summary>\n\n  ${held.map(code).join(", ")}\n\n  </details>`;
+    }
     default:
       return `- ${sourceLine(f)}${citedBy(f)}\n  ${md(f.detail, 400)}`;
   }
@@ -125,23 +157,30 @@ function findingLine(f: Finding): string {
 interface RenderParts {
   excerpts: boolean;
   info: boolean;
+  runDetails: boolean;
+  /** Set when the report had to be shortened: shown right under the headline. */
+  shortened?: string;
 }
 
-function render(result: RunResult, parts: RenderParts): string {
+function render(result: RunResult, parts: RenderParts, guide: string): string {
   const actionable = result.findings.filter((f) => f.actionable);
-  const attention = new Set(actionable.filter((f) => f.kind !== "candidate").map((f) => f.sourceId ?? f.url)).size;
-  const candidates = actionable.filter((f) => f.kind === "candidate").length;
+  const { attention, candidates, recovered, bookkeeping } = tally(result);
   const out: string[] = [];
   if (result.simulated) out.push("> [!WARNING]", "> Simulated run to test the pull request path. Close this PR without merging.", "");
   out.push(`## Source watch · ${result.date}`, "");
-  const headline = actionable.length
-    ? `${plural(attention, "source needs", "sources need")} attention${candidates ? ` and ${plural(candidates, "new page or announcement", "new pages or announcements")} may be worth citing` : ""}.`
-    : "Nothing needs attention.";
+  const said = [
+    attention ? `${plural(attention, "source needs", "sources need")} attention` : "",
+    candidates ? `${plural(candidates, "new page or announcement", "new pages or announcements")} may be worth citing` : "",
+    recovered ? `${plural(recovered, "source")} recovered` : "",
+    bookkeeping ? `${plural(bookkeeping, "baseline update")}` : "",
+  ].filter(Boolean);
+  const headline = said.length ? `${said.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) : "Nothing needs attention.";
   out.push(`${headline} Checked ${result.stats.checked} sources.`, "");
+  if (parts.shortened) out.push(`_${parts.shortened}_`, "");
 
   const counts = GROUPS.map((g) => [g, actionable.filter((f) => f.kind === g.kind)] as const).filter(([, list]) => list.length);
   if (counts.length) {
-    out.push("| Needs attention | Count |", "|---|---|", ...counts.map(([g, list]) => `| ${g.heading} | ${list.length} |`), "");
+    out.push("| In this PR | Count |", "|---|---|", ...counts.map(([g, list]) => `| ${g.heading} | ${list.length} |`), "");
   }
 
   for (const [g, list] of counts) {
@@ -154,14 +193,24 @@ function render(result: RunResult, parts: RenderParts): string {
     out.push("");
   }
 
+  const acknowledged = result.findings.filter((f) => f.acknowledged);
+  if (acknowledged.length) {
+    out.push(
+      "### Still unresolved",
+      "",
+      "Accepted into the baseline by an earlier PR but not fixed yet. They don't open a PR on their own.",
+      "",
+      ...acknowledged.map(findingLine),
+      "",
+    );
+  }
+
   if (parts.info) {
     const minor = result.findings.filter((f) => !f.actionable && f.kind === "changed");
     const unverifiable = result.findings.filter((f) => f.kind === "unverifiable");
-    const baseline = result.findings.filter((f) => f.kind === "baseline");
     const details = (summary: string, lines: string[]) => out.push(`<details><summary>${summary}</summary>`, "", ...lines, "", "</details>", "");
     if (minor.length) details(`For information: ${plural(minor.length, "minor change")}`, minor.map(findingLine));
     if (unverifiable.length) details(`For information: ${plural(unverifiable.length, "source")} couldn't be checked this run`, unverifiable.map(findingLine));
-    if (baseline.length) details(`For information: ${plural(baseline.length, "new source")} fingerprinted for the first time`, baseline.map(findingLine));
   }
 
   const s = result.stats;
@@ -178,14 +227,14 @@ function render(result: RunResult, parts: RenderParts): string {
     `- GitHub API calls: ${s.githubCalls}${s.triageCalls ? ` · Claude triage calls: ${s.triageCalls}` : ""} · took ${Math.round(s.durationMs / 1000)}s`,
     ...s.skipped.map((x) => `- Skipped: ${md(x, 300)}`),
   ];
-  out.push("<details><summary>Run details</summary>", "", ...runLines, "", "</details>", "");
+  if (parts.runDetails) out.push("<details><summary>Run details</summary>", "", ...runLines, "", "</details>", "");
 
   out.push(
     "---",
     "",
     "**Handling this PR.** Merging accepts the new baseline in `watch/state.json` and any URL updates above, so the next run compares against it. " +
       "Fix broken or redirected sources and update affected questions in a separate PR; this branch is rewritten on every run. " +
-      "Closing without merging just means the next run reports the same items again. See [the content guide](docs/content-guide.md#source-watch).",
+      `Closing without merging just means the next run reports the same items again. See ${link("the content guide", guide)}.`,
   );
   return `${out.join("\n").replace(/\n{3,}/g, "\n\n").trim()}\n`;
 }
@@ -196,25 +245,47 @@ function render(result: RunResult, parts: RenderParts): string {
  */
 export function renderReport(result: RunResult, opts: ReportOptions = {}): string {
   const max = opts.maxChars ?? Infinity;
+  const guide = opts.guideUrl ?? DEFAULT_GUIDE_URL;
+  const full = render(result, { excerpts: true, info: true, runDetails: true }, guide);
+  if (full.length <= max) return full;
+  const shortened = `Report shortened to fit.${opts.runUrl && safeUrl(opts.runUrl) ? ` The full report is in the [workflow run](${safeUrl(opts.runUrl)}).` : ""}`;
   for (const parts of [
-    { excerpts: true, info: true },
-    { excerpts: false, info: true },
-    { excerpts: false, info: false },
+    { excerpts: false, info: true, runDetails: true },
+    { excerpts: false, info: false, runDetails: true },
+    { excerpts: false, info: false, runDetails: false },
   ]) {
-    const text = render(result, parts);
+    const text = render(result, { ...parts, shortened }, guide);
     if (text.length <= max) return text;
   }
-  const note = `\n\n_Report shortened to fit.${opts.runUrl && safeUrl(opts.runUrl) ? ` The full report is in the [workflow run](${safeUrl(opts.runUrl)}).` : ""}_\n`;
-  const text = render(result, { excerpts: false, info: false });
-  const cut = text.slice(0, max - note.length);
-  return `${cut.slice(0, cut.lastIndexOf("\n"))}${note}`;
+  // Last resort: cut at a line boundary and close any <details> left open so the rest of the page renders.
+  const text = render(result, { excerpts: false, info: false, runDetails: false, shortened }, guide);
+  let cut = text.slice(0, max - 200);
+  cut = cut.slice(0, cut.lastIndexOf("\n"));
+  const open = (cut.match(/<details>/g) ?? []).length - (cut.match(/<\/details>/g) ?? []).length;
+  return `${cut}\n${"\n</details>\n".repeat(Math.max(0, open))}\n_…list cut short._\n`;
+}
+
+/** Counts behind the headline and title: sources needing attention, new guidance, recoveries and bookkeeping. */
+function tally(result: RunResult) {
+  const actionable = result.findings.filter((f) => f.actionable);
+  const quiet = new Set(["candidate", "baseline", "recovered", "template"]);
+  return {
+    attention: new Set(actionable.filter((f) => !quiet.has(f.kind)).map((f) => f.sourceId ?? f.url)).size,
+    templates: actionable.filter((f) => f.kind === "template").length,
+    candidates: actionable.filter((f) => f.kind === "candidate").length,
+    recovered: new Set(actionable.filter((f) => f.kind === "recovered").map((f) => f.sourceId)).size,
+    bookkeeping: actionable.filter((f) => f.kind === "baseline").length,
+  };
 }
 
 export function prTitle(result: RunResult): string {
-  const actionable = result.findings.filter((f) => f.actionable);
-  const sources = new Set(actionable.filter((f) => f.kind !== "candidate").map((f) => f.sourceId ?? f.url)).size;
-  const candidates = actionable.filter((f) => f.kind === "candidate").length;
-  const parts = [sources ? plural(sources, "source needs", "sources need") + " attention" : "", candidates ? plural(candidates, "new guidance item") : ""].filter(Boolean);
+  const { attention, candidates, recovered, templates } = tally(result);
+  const parts = [
+    attention ? plural(attention, "source needs", "sources need") + " attention" : "",
+    templates ? plural(templates, "site template change") : "",
+    candidates ? plural(candidates, "new guidance item") : "",
+    recovered ? plural(recovered, "source") + " recovered" : "",
+  ].filter(Boolean);
   return `${result.simulated ? "[simulated] " : ""}Source watch: ${parts.join(", ") || "baseline update"} (${result.date})`;
 }
 

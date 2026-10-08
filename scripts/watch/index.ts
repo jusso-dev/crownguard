@@ -7,7 +7,7 @@
  * `actionable` and `title` step outputs that decide whether a pull request is opened.
  */
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { loadCatalogue } from "../../src/content/loader";
 import { readContentFiles } from "../read-content";
@@ -17,7 +17,7 @@ import { createFetcher } from "./fetch";
 import { FEEDS } from "./feeds";
 import { createGitHub } from "./github";
 import { profileFor } from "./hosts";
-import { PR_BODY_LIMIT, prTitle, renderReport, summaryLine } from "./report";
+import { DEFAULT_GUIDE_URL, PR_BODY_LIMIT, prTitle, renderReport, summaryLine } from "./report";
 import { runWatch } from "./run";
 import { triageChanges } from "./triage";
 import { runDate, stableStringify } from "./util";
@@ -39,8 +39,12 @@ const { values: args } = parseArgs({
 });
 
 const env = process.env;
-const statePath = join(root, args.state!);
+// resolve(), not join(): the workflow passes absolute paths under $RUNNER_TEMP.
+const statePath = resolve(root, args.state!);
+const reportPath = resolve(root, args.report!);
 const runUrl = env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY && env.GITHUB_RUN_ID ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` : undefined;
+const guideUrl =
+  env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/main/docs/content-guide.md#source-watch` : DEFAULT_GUIDE_URL;
 
 const { catalogue, errors } = loadCatalogue(readContentFiles());
 if (errors.length) {
@@ -48,15 +52,16 @@ if (errors.length) {
   process.exit(1);
 }
 
-const cache = openCache(join(root, args.cache!));
+const cache = openCache(resolve(root, args.cache!));
 const github = createGitHub({ token: env.GITHUB_TOKEN || env.GH_TOKEN || undefined });
 const apiKey = env.ANTHROPIC_API_KEY || undefined;
 
+const baseline = readState(statePath);
 let result;
 try {
   result = await runWatch({
     catalogue,
-    baseline: readState(statePath),
+    baseline,
     cache,
     fetcher: createFetcher({
       concurrencyFor: (host) => profileFor(host).concurrency,
@@ -78,14 +83,19 @@ try {
 
 const applied: UrlUpdate[] = [];
 if (!args["dry-run"]) {
-  const updates = Object.entries(result.urlUpdates).map(([id, url]) => ({ id, url, retrieved: result.date }));
+  // `retrieved` is the night the move was first seen, so an unmerged fix doesn't change (and force-push) nightly.
+  const updates = Object.entries(result.urlUpdates).map(([id, url]) => ({ id, url, retrieved: cache.firstSeen(`moved:${id}:${url}`, result.date) }));
   if (updates.length) {
     const dir = join(root, "content", "sources");
     const files = Object.fromEntries(readdirSync(dir).filter((f) => f.endsWith(".yaml")).map((f) => [join(dir, f), readFileSync(join(dir, f), "utf8")]));
     for (const update of updates) {
       const f = result.findings.find((x) => x.kind === "moved" && x.sourceId === update.id);
       try {
-        for (const [path, text] of Object.entries(applyUrlUpdates(files, [update]))) {
+        const edited = applyUrlUpdates(files, [update]);
+        // Backstop: the edited content must still validate (for example, no two sources on one page).
+        const check = loadCatalogue({ ...readContentFiles(), ...Object.fromEntries(Object.entries({ ...files, ...edited }).map(([p, t]) => [relative(root, p), t])) });
+        if (check.errors.length) throw new Error(check.errors[0]);
+        for (const [path, text] of Object.entries(edited)) {
           files[path] = text;
           writeFileSync(path, text);
         }
@@ -101,17 +111,20 @@ if (!args["dry-run"]) {
   }
   writeState(statePath, result.state);
 }
+// Actionable means the PR would have a diff: a failed URL update can leave a move finding with nothing to commit.
+result.actionable = applied.length > 0 || stableStringify(result.state) !== stableStringify(baseline);
 
-const report = renderReport(result, { runUrl });
-const prBody = renderReport(result, { runUrl, maxChars: PR_BODY_LIMIT });
-writeFileSync(join(root, args.report!), report);
-if (args["pr-body"]) writeFileSync(join(root, args["pr-body"]), prBody);
+const report = renderReport(result, { runUrl, guideUrl });
+const prBody = renderReport(result, { runUrl, guideUrl, maxChars: PR_BODY_LIMIT });
+writeFileSync(reportPath, report);
+if (args["pr-body"]) writeFileSync(resolve(root, args["pr-body"]), prBody);
 if (args.out) {
-  mkdirSync(args.out, { recursive: true });
-  writeFileSync(join(args.out, "state.json"), stableStringify(result.state));
-  writeFileSync(join(args.out, "url-updates.json"), stableStringify(applied));
-  writeFileSync(join(args.out, "report.md"), report);
-  writeFileSync(join(args.out, "pr-body.md"), prBody);
+  const out = resolve(root, args.out);
+  mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, "state.json"), stableStringify(result.state));
+  writeFileSync(join(out, "url-updates.json"), stableStringify(applied));
+  writeFileSync(join(out, "report.md"), report);
+  writeFileSync(join(out, "pr-body.md"), prBody);
 }
 if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, report.slice(0, 1_000_000));
 if (env.GITHUB_OUTPUT) {
@@ -120,7 +133,8 @@ if (env.GITHUB_OUTPUT) {
   if (!/^[\w ,:()[\]-]+$/.test(title)) throw new Error(`unexpected PR title: ${title}`);
   appendFileSync(env.GITHUB_OUTPUT, `actionable=${result.actionable}\ntitle=${title}\n`);
 }
-cache.save();
+// Dry and simulated runs don't advance failure counters or first-seen dates.
+if (!args["dry-run"] && !result.simulated) cache.save();
 
 console.log(summaryLine(result));
-console.log(`report: ${relative(process.cwd(), join(root, args.report!))}${args["dry-run"] ? " (dry run: nothing written to content or state)" : ""}`);
+console.log(`report: ${relative(process.cwd(), reportPath)}${args["dry-run"] ? " (dry run: nothing written to content or state)" : ""}`);

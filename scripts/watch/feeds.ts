@@ -1,6 +1,6 @@
 import { DOMParser } from "linkedom";
-import type { Fetcher, Finding, WatchState } from "./types";
-import { collapse, isHttpUrl, normalizeUrl, truncate } from "./util";
+import type { FeedMemo, Fetcher, Finding, WatchState } from "./types";
+import { collapse, isHttpUrl, normalizeUrl, shortHash, truncate } from "./util";
 
 export interface FeedDef {
   id: string;
@@ -21,6 +21,8 @@ export interface FeedDef {
   max?: number;
   /** Quote a short excerpt (only for openly licensed feeds). */
   excerpts?: boolean;
+  /** Licence of the feed's text, shown with any quote. Quotes are only made when this is set. */
+  licence?: { label: string; url: string };
 }
 
 export interface FeedNote {
@@ -136,24 +138,38 @@ function citedKey(url: string): string {
 
 export interface FeedRun {
   findings: Finding[];
+  /** Proposed cursors: the baseline's, advanced only past entries this run reports. */
   feeds: WatchState["feeds"];
   skipped: string[];
 }
 
+/** A feed whose newest entry is older than this has probably moved or stopped. */
+const STALE_DAYS = 365;
+
 /**
- * New entries since each feed's baseline timestamp that match its filters. The first time a feed is seen it only
- * records the newest timestamp, so the first run doesn't report a feed's whole history.
- * `cited` maps normalised cited URLs to source ids.
+ * New entries since each feed's baseline cursor that match its filters, oldest first, at most `max` per feed. The
+ * cursor only advances past entries that are reported, so filtered-out entries never change the baseline and capped
+ * entries are reported next time. A feed seen for the first time starts at its newest entry.
+ * `cited` maps normalised cited URLs to source ids. `memory` (the cache's per-feed memos, updated in place) lets the run
+ * warn when the feed's window no longer reaches back far enough.
  */
-export async function checkFeeds(defs: FeedDef[], baseline: WatchState["feeds"], fetcher: Fetcher, cited: Map<string, string>): Promise<FeedRun> {
+export async function checkFeeds(
+  defs: FeedDef[],
+  baseline: WatchState["feeds"],
+  fetcher: Fetcher,
+  cited: Map<string, string>,
+  memory: Record<string, FeedMemo> = {},
+): Promise<FeedRun> {
   const run: FeedRun = { findings: [], feeds: {}, skipped: [] };
   const hits = (links: string[]) => [...new Set(links.map((l) => cited.get(citedKey(l))).filter((id): id is string => !!id))].sort();
 
   for (const def of defs) {
-    const res = await fetcher.fetchPage(def.url, { accept: "application/atom+xml, application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5" });
+    const since = baseline[def.id]?.latest;
+    const seenAtCursor = new Set(baseline[def.id]?.seen ?? []);
     const keepBaseline = () => {
       if (baseline[def.id]) run.feeds[def.id] = baseline[def.id];
     };
+    const res = await fetcher.fetchPage(def.url, { accept: "application/atom+xml, application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5" });
     if (res.outcome !== "ok" || res.body === undefined) {
       run.skipped.push(`${def.name} feed: ${res.error ?? res.outcome}`);
       keepBaseline();
@@ -166,39 +182,90 @@ export async function checkFeeds(defs: FeedDef[], baseline: WatchState["feeds"],
       continue;
     }
     const newest = entries[0].published;
-    const since = baseline[def.id]?.latest;
-    run.feeds[def.id] = { latest: since && since > newest ? since : newest };
-    if (!since) continue;
-
-    const found: Finding[] = [];
-    for (const e of entries.filter((x) => x.published > since)) {
-      const date = e.published.slice(0, 10);
-      if (def.kind === "posts") {
-        if (def.exclude?.some((re) => re.test(e.title))) continue;
-        const why: string[] = [];
-        const labels = e.labels.filter((l) => def.labels?.includes(l));
-        if (labels.length) why.push(`labelled ${labels.join(", ")}`);
-        else if (def.include?.some((re) => re.test(e.title))) why.push("security-related title");
-        const linked = def.linksToCited ? hits(e.links) : [];
-        if (linked.length) why.push(`links to cited ${linked.length === 1 ? "source" : "sources"} ${linked.join(", ")}`);
-        if (!why.length) continue;
-        found.push(candidate(def, e.title || e.url, e.url, date, why.join("; "), def.excerpts ? e.summary : undefined));
-      } else {
-        for (const note of e.notes) {
-          const linked = def.linksToCited ? hits(note.links) : [];
-          const typed = def.noteTypes?.some((t) => t.toLowerCase() === note.type.toLowerCase());
-          if (!typed && !linked.length) continue;
-          const first = note.text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? note.text;
-          const why = [`${note.type} note`, ...(linked.length ? [`links to cited ${linked.length === 1 ? "source" : "sources"} ${linked.join(", ")}`] : [])];
-          found.push(candidate(def, `${def.name}: ${truncate(first, 140)}`, e.url, date, why.join("; "), def.excerpts ? note.text : undefined));
-        }
-      }
+    const oldest = entries.at(-1)!.published;
+    const memo = (memory[def.id] ??= {});
+    // A gap no run ever read: the window starts after the newest entry the last successful read saw.
+    if (memo.lastRead && oldest > memo.lastRead)
+      run.skipped.push(`${def.name} feed: entries between ${memo.lastRead.slice(0, 10)} and ${oldest.slice(0, 10)} were never read (the feed's window moved on); check the feed by hand`);
+    memo.lastRead = newest;
+    if (Date.parse(newest) < Date.now() - STALE_DAYS * 86_400_000)
+      run.skipped.push(`${def.name} feed: newest entry is from ${newest.slice(0, 10)}; the feed may have moved or stopped (scripts/watch/feeds.ts)`);
+    if (!since) {
+      const startSeen = [...new Set(entries.filter((e) => e.published === newest).flatMap((e) => matches(def, e, hits).map(itemKey)))].sort();
+      run.feeds[def.id] = { latest: newest, seen: startSeen };
+      run.findings.push({ kind: "baseline", title: def.name, url: def.url, actionable: true, detail: `Started following the ${def.name} feed from ${newest.slice(0, 10)}.`, citedBy: [] });
+      continue;
     }
+
     const max = def.max ?? 10;
-    run.findings.push(...found.slice(0, max));
-    if (found.length > max) run.skipped.push(`${def.name} feed: ${found.length - max} more matching items not listed (cap ${max})`);
+    const found: Finding[] = [];
+    let cursor = since;
+    let atCursor = [...seenAtCursor];
+    let more = 0;
+    const publishedOf = new Map<Finding, string>();
+    // Entries at the cursor's own timestamp are checked again: a release-notes day can gain notes after it was read.
+    // (A cursor saved before `seen` existed can't tell what was reported at it, so it keeps the strict comparison.)
+    const legacy = baseline[def.id]?.seen === undefined;
+    for (const e of entries.filter((x) => (legacy ? x.published > since : x.published >= since)).reverse()) {
+      const items = matches(def, e, hits).filter((f) => !(e.published === since && seenAtCursor.has(itemKey(f))));
+      if (!items.length) continue;
+      // Whole entries only, and never split entries that share a timestamp: the cursor can't tell them apart.
+      if (found.length >= max && e.published !== cursor) {
+        more += items.length;
+        continue;
+      }
+      found.push(...items);
+      for (const f of items) publishedOf.set(f, e.published);
+      if (e.published !== cursor) atCursor = [];
+      cursor = e.published;
+      atCursor.push(...items.map(itemKey));
+    }
+    run.feeds[def.id] = found.length ? { latest: cursor, seen: [...new Set(atCursor)].sort() } : baseline[def.id];
+    run.findings.push(...found);
+    // Items an earlier run reported that aren't merged yet (still after the cursor) but have left the window drop out
+    // of the rebuilt pull request without a trace: say so.
+    const keys = new Set(found.map(itemKey));
+    const vanished = Object.entries(memo.reported ?? {}).filter(([key, at]) => at > since && at < oldest && !keys.has(key)).length;
+    if (vanished)
+      run.skipped.push(`${def.name} feed: ${vanished} item${vanished === 1 ? "" : "s"} reported earlier left the feed's window before the pull request was merged and ${vanished === 1 ? "is" : "are"} no longer listed`);
+    memo.reported = Object.fromEntries(found.map((f) => [itemKey(f), publishedOf.get(f) ?? newest]));
+    if (more) run.skipped.push(`${def.name} feed: ${more} more matching items wait for the next run (cap ${max})`);
   }
+
+  for (const id of Object.keys(baseline))
+    if (!defs.some((d) => d.id === id))
+      run.findings.push({ kind: "baseline", title: id, url: "", actionable: true, detail: `Stopped following the ${id} feed (removed from scripts/watch/feeds.ts).`, citedBy: [] });
   return run;
+}
+
+/** Identity of a reported item, so it isn't reported twice when its entry is read again. */
+function itemKey(f: Finding): string {
+  return shortHash(`${f.url}\n${f.title}`).slice(0, 12);
+}
+
+function matches(def: FeedDef, e: FeedEntry, hits: (links: string[]) => string[]): Finding[] {
+  const date = e.published.slice(0, 10);
+  if (def.kind === "posts") {
+    if (def.exclude?.some((re) => re.test(e.title))) return [];
+    const why: string[] = [];
+    const labels = e.labels.filter((l) => def.labels?.includes(l));
+    if (labels.length) why.push(`labelled ${labels.join(", ")}`);
+    else if (def.include?.some((re) => re.test(e.title))) why.push("matching title");
+    const linked = def.linksToCited ? hits(e.links) : [];
+    if (linked.length) why.push(`links to cited ${linked.length === 1 ? "source" : "sources"} ${linked.join(", ")}`);
+    return why.length ? [candidate(def, e.title || e.url, e.url, date, why.join("; "), def.excerpts && def.licence ? e.summary : undefined)] : [];
+  }
+  const out: Finding[] = [];
+  for (const note of e.notes) {
+    const linked = def.linksToCited ? hits(note.links) : [];
+    const typed = def.noteTypes?.some((t) => t.toLowerCase() === note.type.toLowerCase());
+    if (!typed && !linked.length) continue;
+    const first = note.text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? note.text;
+    const why = [`${note.type} note`, ...(linked.length ? [`links to cited ${linked.length === 1 ? "source" : "sources"} ${linked.join(", ")}`] : [])];
+    const quoted = def.excerpts && def.licence;
+    out.push(candidate(def, quoted ? `${def.name}: ${truncate(first, 140)}` : `${def.name} ${note.type.toLowerCase()} note, ${date}`, e.url, date, why.join("; "), quoted ? note.text : undefined));
+  }
+  return out;
 }
 
 function candidate(def: FeedDef, title: string, url: string, published: string, why: string, excerpt?: string): Finding {
@@ -209,7 +276,14 @@ function candidate(def: FeedDef, title: string, url: string, published: string, 
     actionable: true,
     detail: `${def.name}, ${published}: ${why}`,
     citedBy: [],
-    candidate: { origin: "feed", feedId: def.id, feedName: def.name, published, summary: excerpt ? `${why}. ${truncate(excerpt, 280)}` : why },
+    candidate: {
+      origin: "feed",
+      feedId: def.id,
+      feedName: def.name,
+      published,
+      summary: excerpt ? `${why}. ${truncate(excerpt, 280)}` : why,
+      ...(excerpt && def.licence ? { licence: def.licence } : {}),
+    },
   };
 }
 
@@ -221,6 +295,7 @@ const releaseNotes = (slug: string, name: string): FeedDef => ({
   noteTypes: ["Deprecated", "Breaking", "Security", "Announcement"],
   linksToCited: true,
   excerpts: true,
+  licence: { label: "CC BY 4.0, Google", url: "https://creativecommons.org/licenses/by/4.0/" },
   max: 5,
 });
 
@@ -236,7 +311,8 @@ export const FEEDS: FeedDef[] = [
   {
     id: "workspace-updates",
     name: "Google Workspace Updates",
-    url: "https://workspaceupdates.googleblog.com/feeds/posts/default?redirect=false&max-results=50",
+    // About two months of posts, so the window still reaches the cursor if a pull request sits unmerged for weeks.
+    url: "https://workspaceupdates.googleblog.com/feeds/posts/default?redirect=false&max-results=100",
     kind: "posts",
     labels: ["Security and Compliance", "Admin console", "Identity", "SSO", "SAML", "MDM", "Google Vault", "Admin SDK"],
     include: [
@@ -289,6 +365,17 @@ export const FEEDS: FeedDef[] = [
     url: "https://www.nist.gov/blogs/cybersecurity-insights/rss.xml",
     kind: "posts",
     include: [/\b(?:CSF|Cybersecurity Framework)\b/i],
+    max: 3,
+  },
+  {
+    // The SOC-CMM site blocks automated requests, so new model and tool releases are picked up from its forum.
+    id: "soc-cmm-community",
+    name: "SOC-CMM user community",
+    url: "https://soc-cmm.discourse.group/latest.rss",
+    kind: "posts",
+    // Version numbers and release words; bare "model" would catch every discussion thread.
+    include: [/\b(?:v?\d+\.\d+(?:\.\d+)?|release[sd]?|new version|licen[cs]e|assessment tool|screening tool)\b/i],
+    exclude: [/^About the /i],
     max: 3,
   },
 ];

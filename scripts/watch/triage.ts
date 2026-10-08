@@ -41,8 +41,11 @@ export interface TriageOptions {
   apiKey?: string;
   /** Most pages to triage in one run. */
   max?: number;
+  /** Stop starting new requests after this many milliseconds, so triage can't push the job past its time limit. */
+  budgetMs?: number;
   client?: Pick<Anthropic, "beta">;
   log?: (line: string) => void;
+  now?: () => number;
 }
 
 export interface TriageRun {
@@ -60,49 +63,78 @@ export async function triageChanges(inputs: TriageInput[], opts: TriageOptions =
   const run: TriageRun = { results: new Map(), calls: 0, skipped: [] };
   const log = opts.log ?? (() => {});
   if (!opts.client && !opts.apiKey) return run;
-  const client = opts.client ?? new Anthropic({ apiKey: opts.apiKey, maxRetries: 3 });
+  // The SDK default (10 minutes per attempt, retried) could outlast the whole job, so cap each attempt, and abort
+  // whatever is still running when the run's triage budget is spent.
+  const client = opts.client ?? new Anthropic({ apiKey: opts.apiKey, maxRetries: 2, timeout: 300_000 });
   const max = opts.max ?? 8;
+  const now = opts.now ?? Date.now;
+  const budgetMs = opts.budgetMs ?? 10 * 60_000;
+  const deadline = now() + budgetMs;
+  const stop = new AbortController();
+  const timer = setTimeout(() => stop.abort(), budgetMs);
   const queue = inputs.filter((i) => i.questions.length > 0);
   if (queue.length > max) run.skipped.push(`Claude triage: ${queue.length - max} of ${queue.length} changed pages not triaged (cap ${max} per run)`);
 
-  for (const input of queue.slice(0, max)) {
-    const id = input.finding.sourceId ?? input.finding.url;
-    try {
-      run.calls++;
-      const response = await client.beta.messages.parse({
-        model: TRIAGE_MODEL,
-        max_tokens: 8000,
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
-        system: SYSTEM,
-        output_config: { effort: "medium", format: betaZodOutputFormat(TriageSchema) },
-        messages: [{ role: "user", content: prompt(input) }],
-      });
-      log(`triage ${id}: ${response.stop_reason}, ${response.usage.input_tokens} in / ${response.usage.output_tokens} out (${response.model})`);
-      if (response.stop_reason === "refusal") {
-        run.skipped.push(`Claude triage declined ${id}${response.stop_details?.category ? ` (${response.stop_details.category})` : ""}`);
-        continue;
-      }
-      if (response.stop_reason === "max_tokens" || !response.parsed_output) {
-        run.skipped.push(`Claude triage returned no usable answer for ${id} (${response.stop_reason})`);
-        continue;
-      }
-      const known = new Set(input.questions.map((q) => q.id));
-      const out = response.parsed_output;
-      run.results.set(id, {
-        impact: out.impact,
-        summary: truncate(out.summary, 800),
-        questions: out.questions.filter((q) => known.has(q.id)).map((q) => ({ id: q.id, note: truncate(q.note, 400) })),
-        model: response.model,
-      });
-    } catch (e) {
-      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-        run.skipped.push(`Claude triage disabled: ${e.status} ${e.message}`);
+  const work = queue.slice(0, max);
+  try {
+    for (const [i, input] of work.entries()) {
+      const id = input.finding.sourceId ?? input.finding.url;
+      if (now() > deadline) {
+        run.skipped.push(`Claude triage: ${work.length - i} changed pages not triaged (time budget used up)`);
         break;
       }
-      const reason = e instanceof Anthropic.APIError ? `${e.status ?? "network"} ${e.message}` : (e as Error).message;
-      run.skipped.push(`Claude triage failed for ${id}: ${truncate(reason, 200)}`);
+      try {
+        run.calls++;
+        // create(), not parse(): parse() throws on a partial answer before stop_reason can be checked.
+        const response = await client.beta.messages.create(
+          {
+            model: TRIAGE_MODEL,
+            // Thinking can't be turned off on this model and counts against the limit.
+            max_tokens: 16000,
+            betas: ["server-side-fallback-2026-07-01"],
+            fallbacks: "default",
+            system: SYSTEM,
+            output_config: { effort: "medium", format: betaZodOutputFormat(TriageSchema) },
+            messages: [{ role: "user", content: prompt(input) }],
+          },
+          { signal: stop.signal },
+        );
+        log(`triage ${id}: ${response.stop_reason}, ${response.usage.input_tokens} in / ${response.usage.output_tokens} out (${response.model})`);
+        if (response.stop_reason === "refusal") {
+          run.skipped.push(`Claude triage declined ${id}${response.stop_details?.category ? ` (${response.stop_details.category})` : ""}`);
+          continue;
+        }
+        const text = response.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+        let parsed: z.infer<typeof TriageSchema> | undefined;
+        try {
+          const r = TriageSchema.safeParse(JSON.parse(text));
+          if (r.success) parsed = r.data;
+        } catch {
+          parsed = undefined;
+        }
+        if (response.stop_reason !== "end_turn" || !parsed) {
+          run.skipped.push(`Claude triage returned no usable answer for ${id} (${response.stop_reason})`);
+          continue;
+        }
+        const known = new Set(input.questions.map((q) => q.id));
+        const out = parsed;
+        run.results.set(id, {
+          impact: out.impact,
+          summary: truncate(out.summary, 800),
+          questions: out.questions.filter((q) => known.has(q.id)).map((q) => ({ id: q.id, note: truncate(q.note, 400) })),
+          model: response.model,
+        });
+      } catch (e) {
+        if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
+          run.skipped.push(`Claude triage disabled: ${e.status} ${e.message}`);
+          break;
+        }
+        const reason = e instanceof Anthropic.APIError ? `${e.status ?? "network"} ${e.message}` : (e as Error).message;
+        run.skipped.push(`Claude triage failed for ${id}: ${truncate(reason, 200)}`);
+      }
     }
+  } finally {
+    clearTimeout(timer);
   }
   return run;
 }

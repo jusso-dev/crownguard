@@ -21,7 +21,8 @@ const routes: Record<string, (req: IncomingMessage, res: ServerResponse) => void
   },
   "/down": (_req, res) => res.writeHead(500).end(),
   "/cf": (_req, res) => res.writeHead(403, { "content-type": "text/html", "cf-mitigated": "challenge" }).end("<title>Just a moment...</title>"),
-  "/cf200": (_req, res) => res.writeHead(200, { "content-type": "text/html" }).end("<html><head><title>Just a moment...</title></head></html>"),
+  "/cf503": (_req, res) => res.writeHead(503, { "content-type": "text/html" }).end("<html><head><title>Just a moment...</title></head></html>"),
+  "/cfjs": (_req, res) => res.writeHead(200, { "content-type": "text/html" }).end('<html><script src="/cdn-cgi/challenge-platform/scripts/jsd/main.js"></script><p>Real page</p></html>'),
   "/signin": (_req, res) => res.writeHead(302, { location: "https://accounts.google.com/ServiceLogin?continue=x" }).end(),
   "/loop": (_req, res) => res.writeHead(302, { location: "/loop" }).end(),
   "/js": (_req, res) => res.writeHead(302, { location: "javascript:alert(1)" }).end(),
@@ -63,7 +64,8 @@ describe("fetchPage", () => {
 
   it("recognises bot challenges and sign-in walls", async () => {
     expect((await fetcher().fetchPage(`${base}/cf`)).outcome).toBe("challenge");
-    expect((await fetcher().fetchPage(`${base}/cf200`)).outcome).toBe("challenge");
+    expect((await fetcher().fetchPage(`${base}/cf503`)).outcome).toBe("challenge");
+    expect((await fetcher().fetchPage(`${base}/cfjs`)).outcome).toBe("ok");
     const signin = await fetcher().fetchPage(`${base}/signin`);
     expect(signin.outcome).toBe("challenge");
     expect(signin.error).toMatch(/sign-in/);

@@ -37,11 +37,27 @@ export const PROFILES: HostProfile[] = [
     ],
     volatile: [],
     sectionHeadings: "h2, h3",
-    excerpts: "cc-by-4.0",
-    licence: "CC BY 4.0, Microsoft",
+    // Learn's terms of use don't allow republishing; only pages whose public GitHub mirror carries an open licence
+    // may be quoted (LEARN_MIRROR_LICENCES).
+    excerpts: "none",
     concurrency: 4,
   },
 ];
+
+/** Licences of the public MicrosoftDocs mirrors (checked October 2026). Pages from other Learn repos aren't quoted. */
+export const LEARN_MIRROR_LICENCES: Record<string, { label: string; url: string }> = {
+  "MicrosoftDocs/entra-docs": { label: "MIT licence, © Microsoft Corporation", url: "https://github.com/MicrosoftDocs/entra-docs/blob/main/LICENSE" },
+  "MicrosoftDocs/azure-docs": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },
+  "MicrosoftDocs/power-platform": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },
+};
+
+/** The licence under which text from `url` may be quoted, or undefined when it may not. */
+export function licenceFor(url: string, repo?: string): { label: string; url?: string } | undefined {
+  if (!URL.canParse(url)) return undefined;
+  const p = profileFor(new URL(url).hostname.toLowerCase());
+  if (p.excerpts !== "none") return { label: p.licence ?? p.label, url: p.licenceUrl };
+  return repo ? LEARN_MIRROR_LICENCES[repo] : undefined;
+}
 
 /** Google's DevSite engine serves both Workspace Help and Cloud docs: same markup, CC BY 4.0 text. */
 const devsite = (host: string, label: string): HostProfile => ({
@@ -71,6 +87,7 @@ const devsite = (host: string, label: string): HostProfile => ({
   ignoreUpdated: true,
   excerpts: "cc-by-4.0",
   licence: "CC BY 4.0, Google",
+  licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
   concurrency: 3,
 });
 
@@ -125,12 +142,15 @@ PROFILES.push(
     label: "Cyber.gov.au",
     // The body plus the download link, whose text carries the edition, e.g. "(November 2023)".
     content: ["main article.node--type-publication .field--name--page-components, main .direct-downloads"],
+    // Both parts must match: the body alone or the download link alone means the theme changed.
+    expectRoots: 2,
     strip: [".reading-time-badge-inc", ".readspeaker", ".cga-glossary-search", "details.content-page-sidebar__audience-topics", ".direct-download__file-size"],
     volatile: [],
     sectionHeadings: "h2, h3",
     updatedSelector: ".field--name--date-last-reviewed time[datetime]",
     excerpts: "cc-by-4.0",
     licence: "CC BY 4.0, © Commonwealth of Australia (ASD)",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
     botProtected: true,
     // Its firewall resets or hangs connections it doesn't like instead of answering, so retrying only wastes time.
     blockedOnNetworkError: true,
@@ -149,6 +169,33 @@ PROFILES.push(
     licence: "public domain, US Government work (NIST)",
     botProtected: true,
     concurrency: 1,
+  },
+  {
+    host: "www.homeaffairs.gov.au",
+    label: "Department of Home Affairs",
+    // Cited as PDFs (the IDCF and its guide). The framework is CC BY 4.0 but its companions are CC BY 3.0 AU, so no quoting.
+    content: ["main", "#content"],
+    strip: [],
+    volatile: [],
+    sectionHeadings: "h2, h3",
+    excerpts: "none",
+    concurrency: 1,
+  },
+  {
+    host: "www.soc-cmm.com",
+    label: "SOC-CMM",
+    // Answers 403 to non-browser user agents (checked 2026-10-09). The watch never pretends to be a browser, so these
+    // sources stay "unverifiable" until SOC-CMM allows its user agent; the community feed below covers new releases.
+    content: ["div.content[id^=content_]"],
+    expectRoots: 1,
+    strip: ["#cookiemelding", ".survey_banner", "#main_nav", ".breadcrumb", "#newsletter", "#cta", "#footer", "#bottom_placeholder"],
+    volatile: [],
+    sectionHeadings: "h1, h2, h3",
+    // The site's prose states no licence (only the tools are CC BY-SA), so no quoting.
+    excerpts: "none",
+    concurrency: 1,
+    // robots.txt asks for 10 seconds between requests.
+    delayMs: 10_000,
   },
   {
     host: "www.microsoft.com",

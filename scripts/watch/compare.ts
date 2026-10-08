@@ -1,6 +1,6 @@
 import { diffLines, diffWords } from "diff";
 import type { Catalogue } from "../../src/content/schema";
-import type { ChangeDetail, Extracted, Finding, Section, SourceState } from "./types";
+import type { ChangeDetail, Extracted, Section, SourceState } from "./types";
 import { cleanTitle, collapse, escapeRegExp, hostOf, isLifecycleTerm, normalizeUrl, titleSimilarity, truncate, wordCount } from "./util";
 
 /** Thresholds for calling a change "major" (worth a maintainer's look). */
@@ -115,15 +115,43 @@ export function compareSections(before: Section[] = [], after: Section[] = []) {
   };
   const a = keyed(before);
   const b = keyed(after);
-  const added = [...b].filter(([k]) => !a.has(k)).map(([, s]) => s);
-  const removed = [...a].filter(([k]) => !b.has(k)).map(([, s]) => s);
+  let added = [...b].filter(([k]) => !a.has(k)).map(([, s]) => s);
+  let removed = [...a].filter(([k]) => !b.has(k)).map(([, s]) => s);
   const changed = [...b].filter(([k, s]) => a.has(k) && a.get(k)!.hash !== s.hash).map(([k, s]) => ({ before: a.get(k)!, after: s }));
-  return { added, removed, changed };
+  // A heading reworded over an unchanged body is a rename, not one section removed and another added.
+  const renamed: { before: Section; after: Section }[] = [];
+  for (const s of added) {
+    const twin = removed.find((r) => r.hash === s.hash && r.words > 0);
+    if (!twin) continue;
+    renamed.push({ before: twin, after: s });
+    removed = removed.filter((r) => r !== twin);
+  }
+  added = added.filter((s) => !renamed.some((r) => r.after === s));
+  return { added, removed, changed, renamed };
+}
+
+/** Retirement and deprecation wording, matched on changed lines only (whole pages are full of unrelated "legacy" and "shutdown"). */
+// Retirement needs lifecycle context: Intune's "Retire" device action and "devices marked for retirement" aren't notices.
+const LIFECYCLE =
+  /\b(?:deprecat\w*|will be (?:shut ?down|retired|removed|discontinued|turned down)|shut(?:s|ting)? down on|no longer (?:available|supported)|end of (?:support|life|sale)|reached (?:its )?end of support|this (?:page|article|content|topic|documentation) ha(?:s|ve) moved|update your bookmarks|is being replaced|(?:will be|has been|have been|is being|are being) replaced by|retired (?:on|in|as of)|(?:is|are|was|were|has been|have been|being) retired|retirement (?:date|timeline|of))\b/gi;
+
+/** Lifecycle phrases on added lines that weren't already on the removed lines they replace. */
+export function newLifecycleWording(diff: TextDiff): string[] {
+  const count = (op: "+" | "-") => {
+    const m = new Map<string, number>();
+    for (const l of diff.lines) if (l?.op === op) for (const hit of l.text.matchAll(LIFECYCLE)) m.set(hit[0].toLowerCase(), (m.get(hit[0].toLowerCase()) ?? 0) + 1);
+    return m;
+  };
+  const added = count("+");
+  const removed = count("-");
+  return [...added].filter(([phrase, n]) => n > (removed.get(phrase) ?? 0)).map(([phrase]) => phrase).sort();
 }
 
 export interface Classified {
   severity: "major" | "minor";
   detail: ChangeDetail;
+  /** Lifecycle wording the change introduced. */
+  lifecycle: string[];
   /** Plain-text reasons, most important first. */
   reasons: string[];
 }
@@ -162,8 +190,11 @@ export function classifyChange(baseline: SourceState, current: SourceState, diff
   const titleChanged = !!oldTitle && !!newTitle && oldTitle !== newTitle;
 
   const reasons: string[] = [];
-  const lifecycle = termsAdded.filter(isLifecycleTerm);
+  // Lifecycle terms new to the page, plus lifecycle wording on changed lines (which catches rewording of a notice).
+  const lifecycle = [...new Set([...termsAdded.filter(isLifecycleTerm), ...(diff ? newLifecycleWording(diff) : [])])].sort();
   if (lifecycle.length) reasons.push(`now says ${lifecycle.map((t) => `"${t}"`).join(", ")}`);
+  const lifecycleGone = termsRemoved.filter(isLifecycleTerm);
+  if (lifecycleGone.length) reasons.push(`no longer says ${lifecycleGone.map((t) => `"${t}"`).join(", ")}`);
   if (titleChanged && titleSimilarity(oldTitle, newTitle) < MAJOR.titleSimilarity) reasons.push(`retitled "${newTitle}"`);
   const bigAdded = sections.added.filter((s) => s.words >= MAJOR.sectionWords);
   const bigRemoved = sections.removed.filter((s) => s.words >= MAJOR.sectionWords);
@@ -180,19 +211,20 @@ export function classifyChange(baseline: SourceState, current: SourceState, diff
   if (!reasons.length) {
     if (wordsAdded + wordsRemoved > 0) reasons.push(`small edit (+${wordsAdded}/−${wordsRemoved} words)`);
     else if (titleChanged) reasons.push(`title reworded to "${newTitle}"`);
-    else if (sections.changed.length || sections.added.length || sections.removed.length) reasons.push("formatting or wording tweaks");
+    else if (sections.changed.length || sections.added.length || sections.removed.length || sections.renamed.length) reasons.push("formatting or wording tweaks");
   }
 
   return {
     severity,
     reasons,
+    lifecycle,
     detail: {
       changedRatio: Math.round(changedRatio * 1000) / 1000,
       wordsAdded,
       wordsRemoved,
       sectionsAdded: sections.added.map((s) => s.h),
       sectionsRemoved: sections.removed.map((s) => s.h),
-      sectionsChanged: sections.changed.map((c) => c.after.h),
+      sectionsChanged: [...sections.changed.map((c) => c.after.h), ...sections.renamed.map((r) => `${r.before.h} → ${r.after.h}`)],
       termsAdded,
       termsRemoved,
       ...(titleChanged ? { oldTitle, newTitle } : {}),
@@ -304,37 +336,7 @@ export function citedByIndex(catalogue: Catalogue): Map<string, string[]> {
     for (const q of bundle.questions) for (const s of q.sources) add(s, q.id);
     for (const s of bundle.platform.sources) add(s, `platform:${bundle.platform.id}`);
   }
-  for (const f of catalogue.frameworks.values()) add(f.source, `framework:${f.id}`);
+  for (const f of catalogue.frameworks.values()) for (const s of [f.source, ...f.sources]) add(s, `framework:${f.id}`);
   for (const [k, v] of index) index.set(k, [...new Set(v)].sort());
   return index;
-}
-
-/** Sources nothing cites, and sources that point at the same page. Both are housekeeping for a maintainer. */
-export function housekeeping(catalogue: Catalogue, citedBy: Map<string, string[]>, states: Record<string, SourceState>): Finding[] {
-  const findings: Finding[] = [];
-  const sources = [...catalogue.sources.values()].sort((a, b) => a.id.localeCompare(b.id));
-  for (const s of sources)
-    if (!citedBy.get(s.id)?.length)
-      findings.push({ kind: "orphan", sourceId: s.id, title: s.title, url: s.url, actionable: true, detail: "Not cited by any question, framework or platform.", citedBy: [] });
-
-  const byPage = new Map<string, string[]>();
-  for (const s of sources) {
-    // Citing two sections of one page (different fragments) is deliberate, so fragments stay in the key.
-    const page = `${comparable(states[s.id]?.finalUrl ?? s.url)}${URL.canParse(s.url) ? new URL(s.url).hash : ""}`;
-    byPage.set(page, [...(byPage.get(page) ?? []), s.id]);
-  }
-  for (const ids of byPage.values()) {
-    if (ids.length < 2) continue;
-    const [first, ...rest] = ids.map((id) => catalogue.sources.get(id)!);
-    findings.push({
-      kind: "duplicate",
-      sourceId: first.id,
-      title: first.title,
-      url: first.url,
-      actionable: true,
-      detail: `Same page as ${rest.map((r) => r.id).join(", ")}; merge them so each page is cited once.`,
-      citedBy: [...new Set(ids.flatMap((id) => citedBy.get(id) ?? []))].sort(),
-    });
-  }
-  return findings;
 }

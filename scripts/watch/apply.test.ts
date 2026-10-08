@@ -38,7 +38,8 @@ describe("applyUrlUpdates", () => {
 
   it("refuses unknown ids and non-http URLs", () => {
     expect(() => applyUrlUpdates({ "a.yaml": SOURCES }, [{ id: "nope", url: "https://x.test/", retrieved: "2026-10-09" }])).toThrow(/not found/);
-    expect(() => applyUrlUpdates({ "a.yaml": SOURCES }, [{ id: "ms-one", url: "javascript:alert(1)", retrieved: "2026-10-09" }])).toThrow(/non-http/);
+    expect(() => applyUrlUpdates({ "a.yaml": SOURCES }, [{ id: "ms-one", url: "javascript:alert(1)", retrieved: "2026-10-09" }])).toThrow(/non-https/);
+    expect(() => applyUrlUpdates({ "a.yaml": SOURCES }, [{ id: "ms-one", url: "http://example.com/a", retrieved: "2026-10-09" }])).toThrow(/non-https/);
   });
 
   it("applies several updates to one file", () => {
@@ -82,6 +83,10 @@ describe("cache", () => {
     cache.writeSnapshot("ms-one", "bbbb", "new text");
     cache.writeSnapshot("ms-gone", "cccc", "x");
     cache.failures["ms-one"] = 2;
+    cache.unverified["ms-two"] = 3;
+    expect(cache.firstSeen("moved:ms-one", "2026-10-01")).toBe("2026-10-01");
+    expect(cache.firstSeen("moved:ms-one", "2026-10-05")).toBe("2026-10-01");
+    cache.firstSeen("moved:old", "2026-09-01");
     cache.prune({ "ms-one": ["bbbb"] });
     cache.save();
 
@@ -90,6 +95,11 @@ describe("cache", () => {
     expect(again.readSnapshot("ms-one", "bbbb")).toBe("new text");
     expect(again.readSnapshot("ms-gone", "cccc")).toBeUndefined();
     expect(again.failures).toEqual({ "ms-one": 2 });
+    expect(again.unverified).toEqual({ "ms-two": 3 });
+    expect(again.firstSeen("moved:ms-one", "2026-10-09")).toBe("2026-10-01");
+    again.save();
+    // Dates nobody asked for in a run are forgotten, so a fix needed again later gets a fresh date.
+    expect(openCache(dir).firstSeen("moved:old", "2026-10-09")).toBe("2026-10-09");
   });
 
   it("refuses path-like keys", () => {

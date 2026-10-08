@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       simulate:
-        description: Add a fake change to test the pull request path (close that PR without merging)
+        description: Add a fake change to test the pull request path, on its own branch (close that PR without merging)
         type: boolean
         default: false
 
@@ -67,7 +67,8 @@ jobs:
           --out "$RUNNER_TEMP/source-watch"
 
       - name: Save page snapshots
-        if: always() && steps.scan.outcome == 'success'
+        # A simulated run must not leave its snapshots or bookkeeping in the cache the nightly run restores.
+        if: always() && steps.scan.outcome == 'success' && !inputs.simulate
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/source-watch-cache
@@ -124,7 +125,8 @@ jobs:
         id: pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          branch: bot/source-watch
+          # A simulated run gets its own branch so it never rewrites or closes the real PR.
+          branch: ${{ inputs.simulate && 'bot/source-watch-simulated' || 'bot/source-watch' }}
           base: main
           add-paths: |
             watch/state.json

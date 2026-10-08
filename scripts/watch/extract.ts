@@ -13,6 +13,8 @@ const BLOCKS = new Set([
 
 /** Marks a section heading line during extraction; never appears in page text. */
 const HEADING = "\u0001";
+/** Marks block boundaries during extraction (collapse() strips it from page text). */
+const BLOCK = "\u0002";
 
 /** "Last updated" style statements in page chrome, used when no metadata states a date. */
 const UPDATED_PATTERNS = [
@@ -76,15 +78,20 @@ function contentRoots(document: Doc, selectors: string[], expect?: number): { ro
   return { roots: document.body ? [document.body as El] : [], matched: false };
 }
 
-/** Text lines of an element, one per block, with section headings marked. */
-function blockLines(root: El, headingSelector: string): string[] {
+/**
+ * Text lines of an element, one per line of the page source, with section headings marked; plus the text of each
+ * block on one line. Lines feed the fingerprint; blocks feed lifecycle dates, because sites such as DevSite hard-wrap
+ * sentences in their HTML ("will be shut\ndown on October 30, 2026").
+ */
+function blockLines(root: El, headingSelector: string): { lines: string[]; blocks: string[] } {
   for (const h of root.querySelectorAll(headingSelector)) h.prepend(HEADING);
   for (const el of root.querySelectorAll("*")) {
     if (!BLOCKS.has(el.tagName)) continue;
-    el.before("\n");
-    el.after("\n");
+    el.before(`${BLOCK}\n`);
+    el.after(`${BLOCK}\n`);
   }
-  return (root.textContent ?? "")
+  const raw = root.textContent ?? "";
+  const lines = raw
     .split("\n")
     .map((line) => {
       const marked = line.includes(HEADING);
@@ -92,6 +99,11 @@ function blockLines(root: El, headingSelector: string): string[] {
       return marked && text ? `${HEADING}${text}` : text;
     })
     .filter(Boolean);
+  const blocks = raw
+    .split(BLOCK)
+    .map((b) => collapse(b.replaceAll(HEADING, "").replace(/\s+/g, " ")))
+    .filter(Boolean);
+  return { lines, blocks };
 }
 
 function stripVolatile(lines: string[], volatile: RegExp[]): string[] {
@@ -178,11 +190,12 @@ export function extractHtml(html: string, profile: HostProfile): Extracted {
   for (const img of document.querySelectorAll('img[alt="and then"]')) img.replaceWith(" > ");
 
   const { roots, matched } = contentRoots(document, profile.content, profile.expectRoots);
-  const retired = retirement(title, learn, roots);
+  const retired = retirement(title, learn, roots, profile.sectionHeadings);
   for (const root of roots) for (const sel of profile.strip) for (const el of root.querySelectorAll(sel)) el.remove();
   const density = linkDensity(roots);
+  const extracted = roots.map((r) => blockLines(r, profile.sectionHeadings));
   const lines = stripVolatile(
-    roots.flatMap((r) => blockLines(r, profile.sectionHeadings)),
+    extracted.flatMap((x) => x.lines),
     profile.volatile,
   );
   const { text, sections } = sectionsOf(lines);
@@ -200,27 +213,76 @@ export function extractHtml(html: string, profile: HostProfile): Extracted {
     terms: findTerms(text),
     isLanding,
     ...(retired ? { retired } : {}),
+    deadlines: lifecycleDates(extracted.flatMap((x) => x.blocks)),
+    blocks: extracted.flatMap((x) => x.blocks),
     matchedSelector: matched,
     ...(lang ? { lang } : {}),
   };
 }
 
+const LIFECYCLE_LINE =
+  /\b(?:retir\w*|deprecat\w*|end of (?:support|life|sale)|shut(?:s|ting)? down|will be (?:removed|disabled|discontinued|turned off|turned down)|no longer (?:be )?(?:supported|available)|stop(?:s|ped)? (?:working|synchroni[sz]ing)|disabled by default|switched off|sunset)\b/i;
+const MONTH = "(January|February|March|April|May|June|July|August|September|October|November|December)";
+const DATES = new RegExp(`(\\d{1,2}) ${MONTH},? (\\d{4})|${MONTH} (\\d{1,2}),? (\\d{4})|(\\d{4})-(\\d{2})-(\\d{2})|${MONTH} (\\d{4})`, "g");
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+
+/**
+ * Dates given on lines that talk about retirement, deprecation or switching something off, as YYYY-MM-DD. A month
+ * without a day counts as its last day, so "December 2026" passes only once December is over.
+ */
+export function lifecycleDates(lines: string[]): string[] {
+  return [...new Set(lines.flatMap(datesOnLine))].sort();
+}
+
+/** The first block with lifecycle wording that gives `date`. */
+export function lifecycleLine(blocks: string[], date: string): string | undefined {
+  return blocks.find((b) => datesOnLine(b).includes(date));
+}
+
+function datesOnLine(line: string): string[] {
+  if (!LIFECYCLE_LINE.test(line)) return [];
+  const out = new Set<string>();
+  const iso = (y: number, m: number, d: number) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  for (const m of line.matchAll(DATES)) {
+    if (m[1]) out.add(iso(+m[3], MONTHS.indexOf(m[2].toLowerCase()) + 1, +m[1]));
+    else if (m[4]) out.add(iso(+m[6], MONTHS.indexOf(m[4].toLowerCase()) + 1, +m[5]));
+    else if (m[7]) out.add(iso(+m[7], +m[8], +m[9]));
+    else if (m[10]) {
+      const y = +m[11];
+      const month = MONTHS.indexOf(m[10].toLowerCase()) + 1;
+      out.add(iso(y, month, new Date(Date.UTC(y, month, 0)).getUTCDate()));
+    }
+  }
+  return [...out].filter((d) => /^(19|20)\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(d));
+}
+
 const RETIRED_TITLE = /\((retired|deprecated|classic|archived)\)/i;
 const RETIRED_NOTICE = /this (?:article|page|content|feature) (?:is|has been) (?:retired|deprecated|archived)|replaced (?:with|by) a new version|classic version of|no longer (?:supported|maintained|updated)/i;
 
+/** Learn alert boxes and Google DevSite asides (lowercase classes). */
+const ALERTS = ".NOTE, .IMPORTANT, .WARNING, .CAUTION, .alert, [role=alert], aside.caution, aside.warning, aside.deprecated, aside.special";
+
 /**
- * Page-level retirement only: archived pages, "(retired)"-style titles, or a notice in the first alert box. Notes about
- * a feature retiring further down the page are tracked as terms instead, because they rarely mean the page is obsolete.
+ * Page-level retirement only: archived pages, "(retired)"-style titles, or a notice at the top, before the first
+ * section heading. Notes about a feature retiring further down the page are tracked as terms instead, because they
+ * rarely mean the page is obsolete.
  */
-function retirement(title: string, learn: LearnMeta | undefined, roots: El[]): string | undefined {
+function retirement(title: string, learn: LearnMeta | undefined, roots: El[], headingSelector: string): string | undefined {
   if (learn?.archived) return "archived by Microsoft (moved to previous versions)";
   const t = title.match(RETIRED_TITLE);
   if (t) return `title marks it as ${t[1].toLowerCase()}`;
-  for (const root of roots) {
-    const alert = root.querySelector(".NOTE, .IMPORTANT, .WARNING, .CAUTION, .alert, [role=alert]");
-    const text = collapse(alert?.textContent ?? "");
-    if (text && RETIRED_NOTICE.test(text)) return `notice at the top: "${text.length > 160 ? `${text.slice(0, 157)}…` : text}"`;
-    if (alert) break;
+  // The first two notices above the first section heading.
+  const alerts: El[] = [];
+  for (const root of roots)
+    for (const el of root.querySelectorAll("*")) {
+      if (el.matches(headingSelector)) break;
+      if (el.matches(ALERTS) && !alerts.some((a) => a.contains(el))) alerts.push(el as El);
+    }
+  alerts.splice(2);
+  for (const alert of alerts) {
+    // Only the matched stock phrase is kept: notice prose isn't always openly licensed, and this ends up in state.json.
+    const hit = collapse(alert.textContent ?? "").match(RETIRED_NOTICE);
+    if (hit) return `a notice at the top says "${hit[0].toLowerCase()}"`;
   }
   return undefined;
 }
@@ -241,6 +303,8 @@ export async function extractPdf(bytes: Uint8Array): Promise<Extracted> {
   const text = pages.join("\n");
   return {
     title: collapse(info?.Title ?? ""),
+    deadlines: lifecycleDates(pages),
+    blocks: pages,
     text,
     contentHash: shortHash(text),
     words: wordCount(text),
