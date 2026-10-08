@@ -4,7 +4,8 @@ import { LogoField } from "../LogoField";
 import { useStore } from "../store";
 import { Card, Field, inputClass, StepHeader } from "../ui";
 
-const markings = ["OFFICIAL", "OFFICIAL: Sensitive", "PROTECTED", "Confidential", "Internal use only"];
+// PSPF markings for government, IDCF Data Security Levels for everyone else, and plain labels.
+const markings = ["OFFICIAL", "OFFICIAL: Sensitive", "PROTECTED", "DSL-2", "DSL-3", "DSL-3, Confidential", "DSL-4", "Confidential", "Internal use only"];
 export function BrandingStep() {
   const { assessment, setBranding } = useStore();
   const b = assessment.branding;
@@ -53,7 +54,10 @@ export function BrandingStep() {
               The primary colour is light, so headings will use a darker shade ({readableOn(b.primary).toUpperCase()}) to stay readable.
             </p>
           )}
-          <Field label="Protective marking" hint="Printed in the header and footer of every page.">
+          <Field
+            label="Protective marking"
+            hint="Printed in the header and footer of every page. OFFICIAL, OFFICIAL: Sensitive and PROTECTED are Australian Government (PSPF) markings. If your organisation uses the IDCF, you can use a Data Security Level instead (DSL-3 or higher suits a report that describes security gaps); applying a DSL label means you are treated as using the IDCF and its code of conduct."
+          >
             <select
               className={inputClass}
               value={custom ? "__custom" : b.marking}

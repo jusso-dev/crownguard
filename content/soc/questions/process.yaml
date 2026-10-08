@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see ../NOTICE.md)
+# Process domain. One maturity question per aspect; levels are 0 (Non-existent) to 5 (Optimising).
+- id: SOC-PRC-001
+  aspect: soc-management
+  question: Is the SOC run as a managed service, with planning, quality checks and a way to improve how it works?
+  why: >-
+    Planning, supplier and relationship management, quality assurance and continuous improvement turn a group of
+    analysts, or a contract, into a dependable service.
+  levels:
+    - There's no management process; the SOC only reacts.
+    - Management is ad hoc and depends on the manager of the day.
+    - Some routines exist (for example monthly reviews), but quality checks and improvements are irregular.
+    - Documented management processes for planning, supplier management, quality assurance and an improvement backlog are followed.
+    - Quality and improvement are measured (for example case quality reviews and backlog progress) and reported.
+    - Management practices are refined continuously from quality results, audits and lessons learned.
+  refs: [{ framework: nist-csf-2, ref: GV.OV-03 }, { framework: nist-csf-2, ref: ID.IM-01 }]
+
+- id: SOC-PRC-002
+  aspect: operations-facilities
+  question: How standardised and resilient are day-to-day SOC operations, including procedures, shift handovers, after-hours cover and exercises?
+  why: >-
+    Attacks on cloud tenants often start outside business hours. Operations need to work at 3 am on a Sunday, and
+    when a key system or person is unavailable.
+  levels:
+    - No operating procedures and no cover outside business hours.
+    - Work follows individual habits; after-hours response depends on goodwill.
+    - Some procedures and an on-call or shift arrangement exist, but handovers, coverage or tooling are inconsistent.
+    - Standard procedures, handover routines, defined coverage hours (including on-call) and regular exercises are in place and followed.
+    - Operational performance (coverage, handover quality, exercise results) is measured and reviewed.
+    - Operations are refined continuously from exercises and incidents, including how resilient communications and facilities are.
+  refs: [{ framework: nist-csf-2, ref: ID.IM-02 }]
+
+- id: SOC-PRC-003
+  aspect: reporting-communication
+  question: Do SOC reports and advisories give each audience what it needs to act?
+  why: >-
+    Leadership funds what it can see. Good reporting turns SOC work into decisions, and clear advisories get
+    vulnerabilities fixed.
+  levels:
+    - The SOC produces no reports.
+    - Reports are produced on request, in whatever format the author chooses.
+    - Regular reports exist but are mostly raw alert counts that mean little to their readers.
+    - Agreed reports for operational, management and executive audiences, with defined metrics and an advisory process, are delivered on schedule.
+    - Readers' feedback on usefulness is collected, and metrics are tracked against targets.
+    - Reports and metrics are refined from feedback and changing risks, and they drive decisions.
+  refs: [{ framework: nist-csf-2, ref: GV.OV-03 }, { framework: nist-csf-2, ref: DE.AE-06 }]
+
+- id: SOC-PRC-004
+  aspect: use-case-management
+  question: Are detections chosen and maintained deliberately from your risks, crown jewels and the attack techniques that matter (for example MITRE ATT&CK)?
+  why: >-
+    Detections should follow the attacks most likely to reach your crown jewels, such as token theft, consent
+    phishing, malicious inbox rules and admin takeover, not just vendor defaults.
+  levels:
+    - Only vendor default alerts are used, and nobody knows what they cover.
+    - Some custom detections exist, added after incidents or on request.
+    - There's a list of use cases, but it isn't tied to risks or attack techniques and isn't reviewed.
+    - A documented process links each detection to crown jewels, threats and ATT&CK techniques, with an owner and regular review.
+    - Coverage of prioritised techniques and data sources, and how well each use case performs, are measured.
+    - Coverage improves continuously from threat intelligence, hunting, incidents and test results.
+  refs: [{ framework: nist-csf-2, ref: ID.RA-03 }, { framework: nist-csf-2, ref: DE.AE-02 }]
+
+- id: SOC-PRC-005
+  aspect: detection-engineering
+  question: Are detection rules built, changed and tested in a controlled way, and regularly checked to prove they still fire?
+  why: >-
+    Rules break silently when log formats, licences or APIs change. Testing, for example attack simulation or purple
+    teaming, proves detection works.
+  levels:
+    - Detection rules aren't engineered or tested.
+    - Rules are written or changed straight in production, with no review or testing.
+    - Some review or testing happens, but not consistently, and nobody checks that rules still work.
+    - A defined process (version control, peer review, change control, testing before release) is followed, and detections are re-tested on a schedule, for example with attack simulation.
+    - "Detection quality and test results are measured: techniques tested, rules failing and time to fix."
+    - Detections are managed as code and tested continuously, and failures are fixed as soon as they are found.
+  refs: [{ framework: nist-csf-2, ref: DE.AE-02 }, { framework: nist-csf-2, ref: ID.IM-02 }]
+
+- id: SOC-PRC-006
+  aspect: automation-engineering
+  question: Is automation in the SOC, including any AI assistance, designed, tested and governed?
+  why: >-
+    Automated enrichment and response (for example disabling a compromised account) cuts response time, but untested
+    automation can lock out the wrong people. AI assistants need the same care.
+  levels:
+    - No automation; every step is manual.
+    - A few scripts or playbooks exist, built and run by individuals.
+    - Some automations have an owner or are tested before use, but there's no consistent design, testing and approval process; AI use is ad hoc.
+    - Automation and AI use follow a defined process (backlog, design, testing, approval, owner) and an agreed approach to adopting AI.
+    - The effect of automation (time saved, errors, share of use cases automated) is measured.
+    - Automation is extended and tuned continuously from those measures, and AI risks and results are reviewed regularly.
+  refs: [{ framework: nist-csf-2, ref: RS.MA-02 }, { framework: nist-csf-2, ref: RS.MI-01 }]
+
+- id: SOC-PRC-007
+  aspect: log-management
+  question: "Is log collection managed: which sources are collected, how long logs are kept, who can access them, and whether anything important is missing?"
+  why: >-
+    Most cloud investigations rely on audit logs (Microsoft Purview audit, Entra sign-in logs, Google Workspace audit
+    logs and Cloud Audit Logs) that are often kept only briefly or not collected centrally.
+  levels:
+    - Logs aren't managed; they stay in each product with default retention.
+    - Some logs are collected centrally after someone needed them.
+    - A central log store exists, but sources, retention and access aren't defined, and missing sources go unnoticed.
+    - A documented process, backed by policy, defines required sources (including every crown jewel), retention, integrity and access, and is followed.
+    - Log source health, coverage and retention are monitored, with an alert when a source stops sending.
+    - Log requirements are reviewed as systems, threats and regulations change, and coverage gaps are closed before they're needed.
+  refs: [{ framework: nist-csf-2, ref: PR.PS-04 }]

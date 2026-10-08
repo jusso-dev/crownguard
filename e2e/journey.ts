@@ -15,7 +15,15 @@ export async function downloadPdf(page: Page): Promise<string[]> {
   return pdfText(new Uint8Array(await readFile(await download.path())));
 }
 
-export async function runJourney(page: Page, platformName: string, jewelCount = 4): Promise<string[]> {
+export interface JourneyOptions {
+  jewelCount?: number;
+  /** Include the optional SOC maturity step and answer every question. */
+  soc?: boolean;
+  /** IDCF Data Security Level for the first crown jewel, e.g. "DSL-3". */
+  dsl?: string;
+}
+
+export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl }: JourneyOptions = {}): Promise<string[]> {
   await page.goto("./");
   await page.getByLabel("Organisation name").fill(ORG);
   await page.getByLabel(/^ABN/).fill("51824753556");
@@ -34,6 +42,7 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
     const form = page.locator("form").first();
     await form.getByRole("radio", { name: /confidentiality 5/ }).click();
     await form.locator("label", { hasText: /./ }).filter({ has: page.locator("input[type=checkbox]") }).first().click();
+    if (dsl && i === 0) await form.getByLabel("IDCF Data Security Level").selectOption({ label: dsl });
     await form.getByRole("button", { name: "Save crown jewel" }).click();
   }
   await next(page);
@@ -56,7 +65,13 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
   await expect(page.getByText(/(\d+) of \1 answered/)).toBeVisible();
   await next(page);
 
+  // The SOC maturity step is optional.
+  await expect(page.getByRole("heading", { name: "How mature are your security operations?" })).toBeVisible();
+  if (soc) await answerSoc(page);
+  await next(page);
+
   await expect(page.getByRole("heading", { name: "Risk heatmap" })).toBeVisible();
+  if (soc) await expect(page.getByRole("heading", { name: "SOC maturity (indicative)" })).toBeVisible();
   await next(page);
 
   await page.getByTestId("logo-input").setInputFiles("e2e/fixtures/logo.svg");
@@ -70,6 +85,29 @@ export async function runJourney(page: Page, platformName: string, jewelCount = 
   expect(download.suggestedFilename()).toMatch(/^riverbend-health-crown-jewel-risk-\d{4}-\d{2}-\d{2}-\d{4}\.pdf$/);
   const path = await download.path();
   return pdfText(new Uint8Array(await readFile(path)));
+}
+
+/** Include SOC maturity, leave network monitoring out of scoring and rate every other question. */
+export async function answerSoc(page: Page) {
+  await page.getByRole("button", { name: "Include SOC maturity in this report" }).click();
+  await page.getByRole("radiogroup", { name: "Who runs your security operations?" }).getByRole("radio", { name: "Managed provider (MSSP or MDR)" }).click();
+  const picks = ["3", "2", "4", "1", "3", "Unknown", "2"];
+  const domains = page.getByRole("navigation", { name: "SOC maturity domains" }).getByRole("button");
+  let n = 0;
+  for (let d = 0; d < (await domains.count()); d++) {
+    await domains.nth(d).click();
+    const scope = page.locator('[data-aspect="network-monitoring"]').getByRole("checkbox");
+    if (await scope.count()) await scope.check();
+    const cards = page.locator("article[data-soc-question]");
+    for (let i = 0; i < (await cards.count()); i++) {
+      const card = cards.nth(i);
+      // Maturity questions go to 5 and capability questions to 3; the last radio is Unknown.
+      const top = (await card.getByRole("radio").count()) - 2;
+      const pick = picks[n++ % picks.length];
+      await card.getByRole("radio", { name: pick === "Unknown" ? "Unknown" : new RegExp(`^${Math.min(Number(pick), top)} `) }).click();
+    }
+  }
+  await expect(page.getByText(/(\d+) of \1 answered/)).toBeVisible();
 }
 
 export async function pdfText(data: Uint8Array): Promise<string[]> {

@@ -2,8 +2,9 @@ import { catalogue } from "../../content/catalogue";
 import type { Question } from "../../content/schema";
 import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer, type Evidence } from "../../engine/types";
+import { NOTE_MAX } from "../assessmentSchema";
 import { useStore } from "../store";
-import { Button, Progress, SeverityBadge, StepHeader, inputClass } from "../ui";
+import { Button, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
 import { ScanImport, stamp, statusStyle } from "../ScanImport";
 
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
@@ -32,7 +33,7 @@ export function ControlsStep() {
     <>
       <StepHeader title="How well are they protected?">
         These questions come from Microsoft and Google security guidance, mapped to CIS Benchmarks, the ASD Essential
-        Eight and NIST CSF 2.0. Only questions relevant to your crown jewels are shown. If you're not sure, answer
+        Eight, NIST CSF 2.0 and the IDCF. Only questions relevant to your crown jewels are shown. If you're not sure, answer
         <strong> Unknown</strong>: it counts as a gap, and the report flags it so someone can check.
       </StepHeader>
       <Progress value={questions.length ? answered / questions.length : 0} label={`${answered} of ${questions.length} answered`} />
@@ -104,13 +105,15 @@ function QuestionCard({ q }: { q: Question }) {
         className="mt-4 grid max-w-md grid-cols-5 gap-px overflow-hidden rounded-[var(--radius-control)] border border-field bg-field"
         role="radiogroup"
         aria-label={q.question}
+        onKeyDown={radioKeys}
       >
-        {answerOrder.map((a) => (
+        {answerOrder.map((a, i) => (
           <button
             key={a}
             type="button"
             role="radio"
             aria-checked={answer === a}
+            tabIndex={radioTab(answer === a, i, answer !== undefined)}
             onClick={() => setAnswer(q.id, a)}
             className={`min-h-9 px-1 py-1.5 text-[0.8125rem] transition-colors duration-150 focus-visible:-outline-offset-2 sm:px-3 sm:text-sm ${
               answer === a ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink"
@@ -136,6 +139,7 @@ function QuestionCard({ q }: { q: Question }) {
             className={`${inputClass} mt-1.5 ${missingReason ? "border-warn!" : ""}`}
             placeholder="e.g. No on-premises Active Directory; we are cloud-only."
             value={assessment.notes[q.id] ?? ""}
+            maxLength={NOTE_MAX}
             onChange={(e) => setNote(q.id, e.target.value)}
           />
           <p id={`${reasonId}-help`} className={`mt-1 text-xs ${missingReason ? "text-warn" : "text-muted"}`}>
@@ -156,7 +160,7 @@ function QuestionCard({ q }: { q: Question }) {
           )}
           <References q={q} />
           {answer !== "na" && (
-            <textarea className={inputClass} rows={2} aria-label="Notes for the report" placeholder="Notes for the report (optional)" value={assessment.notes[q.id] ?? ""} onChange={(e) => setNote(q.id, e.target.value)} />
+            <textarea className={inputClass} rows={2} maxLength={NOTE_MAX} aria-label={`Notes for the report on ${q.id}`} placeholder="Notes for the report (optional)" value={assessment.notes[q.id] ?? ""} onChange={(e) => setNote(q.id, e.target.value)} />
           )}
         </div>
       </details>

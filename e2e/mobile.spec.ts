@@ -20,6 +20,11 @@ test("every step fits a 390px phone screen without horizontal scroll", async ({ 
   await page.locator("article[data-question] details").first().click();
   await noOverflow("controls");
   await page.getByRole("button", { name: /^Next:/ }).click();
+  await noOverflow("soc intro");
+  await page.getByRole("button", { name: "Include SOC maturity in this report" }).click();
+  await page.locator("article[data-soc-question] details").first().click();
+  await noOverflow("soc");
+  await page.getByRole("button", { name: /^Next:/ }).click();
   await noOverflow("review");
   await page.getByRole("button", { name: /^Next:/ }).click();
   await noOverflow("brand");

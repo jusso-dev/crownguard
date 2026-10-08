@@ -24,6 +24,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-CDAT-002
   module: gcp
@@ -47,6 +48,7 @@
   refs:
     - { framework: cis-gcp, ref: "7.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-CDAT-003
   module: gcp
@@ -98,6 +100,7 @@
     - { framework: cis-gcp, ref: "3.8" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
 
 - id: GO-CDAT-005
   module: gcp
@@ -121,6 +124,7 @@
   refs:
     - { framework: cis-gcp, ref: "7.4" }
     - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: idcf, ref: "Risk assessment" }
 
 - id: GO-CDAT-006
   module: gcp

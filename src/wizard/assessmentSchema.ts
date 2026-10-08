@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { exposures, type ExposureId } from "../content/schema";
-import { classifications, regulations, type Assessment, type Classification, type Regulation } from "../engine/types";
+import { socProviders, type SocProvider } from "../engine/soc";
+import { classifications, dsls, regulations, type Assessment, type Classification, type Dsl, type Regulation } from "../engine/types";
 
 const keys = <K extends string>(o: Record<K, unknown>) => Object.keys(o) as [K, ...K[]];
+/** Notes are capped at NOTE_MAX when typed; longer ones in older files are shortened rather than refused. */
+export const NOTE_MAX = 4000;
+const note = z
+  .string()
+  .max(100_000)
+  .transform((t) => t.slice(0, NOTE_MAX));
 const rating = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
 const regulation = z.enum(keys<Regulation>(regulations));
 
@@ -29,6 +36,7 @@ export const assessmentSchema = z.object({
         assetType: z.string().max(80),
         description: z.string().max(2000),
         classification: z.enum(keys<Classification>(classifications)),
+        dsl: z.enum(keys<Dsl>(dsls)).optional(),
         confidentiality: rating,
         integrity: rating,
         availability: rating,
@@ -39,7 +47,7 @@ export const assessmentSchema = z.object({
     )
     .max(200),
   answers: z.record(z.string(), z.enum(["yes", "partial", "no", "unknown", "na"])),
-  notes: z.record(z.string(), z.string().max(4000)),
+  notes: z.record(z.string(), note),
   branding: z.object({
     logoDataUrl: z
       .string()
@@ -79,7 +87,28 @@ export const assessmentSchema = z.object({
     .array(z.object({ source: z.string().max(80), tenant: z.string().max(300), scannedAt: z.string().max(60), importedAt: z.string().max(60), applied: z.number().int().min(0) }))
     .max(50)
     .optional(),
-  progress: z.object({ step: z.number().int().min(0).max(20), section: z.string().max(120).optional() }).optional(),
+  soc: z
+    .object({
+      answers: z.record(z.string().max(20), z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal("unknown")])),
+      notes: z.record(z.string().max(20), note).optional(),
+      outOfScope: z.array(z.string().max(60)).max(60),
+      targets: z
+        .record(
+          z.string().max(40),
+          z.object({ maturity: z.number().min(1).max(5).multipleOf(0.5).optional(), capability: z.number().min(1).max(3).multipleOf(0.5).optional() }),
+        )
+        .optional(),
+      provider: z.enum(keys<SocProvider>(socProviders)).optional(),
+    })
+    .optional(),
+  progress: z
+    .object({
+      step: z.number().int().min(0).max(20),
+      section: z.string().max(120).optional(),
+      socSection: z.string().max(60).optional(),
+      layout: z.number().int().min(1).max(20).optional(),
+    })
+    .optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 }) satisfies z.ZodType<Assessment>;

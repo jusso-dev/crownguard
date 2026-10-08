@@ -1,6 +1,7 @@
 import { catalogue } from "../../content/catalogue";
 import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
 import { essentialEight } from "../../engine/maturity";
+import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../engine/types";
 import { useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
@@ -100,6 +101,8 @@ export function ReviewStep() {
         </Card>
       </div>
 
+      <SocCard />
+
       {risks[0] && risks[0].gaps.length > 0 && (
         <Card className="mt-4">
           <h2 className="mb-4 text-base font-semibold">Biggest gaps for “{risks[0].jewel.name}”</h2>
@@ -116,6 +119,51 @@ export function ReviewStep() {
         </Card>
       )}
     </>
+  );
+}
+
+/** The optional SOC maturity result, reported separately from crown-jewel risk. */
+function SocCard() {
+  const soc = useStore((s) => s.assessment.soc);
+  const setStep = useStore((s) => s.setStep);
+  const module = catalogue.soc;
+  if (!soc || !module) return null;
+  const r = socMaturity(module.model, module.questions, soc);
+  const outOfScope = r.domains.reduce((n, d) => n + d.aspects.filter((a) => !a.inScope).length, 0);
+  return (
+    <Card className="mt-4" data-testid="soc-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-base font-semibold">SOC maturity (indicative)</h2>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(4)}>
+          Edit SOC answers
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        {r.answered} of {r.total} answered{r.unknown ? `, ${r.unknown} unknown (scored 0)` : ""}
+        {outOfScope ? `, ${outOfScope} aspect${outOfScope === 1 ? "" : "s"} left out of scoring` : ""}. Reported separately; it doesn&apos;t change the risk ratings.
+      </p>
+      <ul className="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-5">
+        {r.domains.map((d) => (
+          <li key={d.id} className="text-sm">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <span className="text-ink">{d.name}</span>
+              <span className="whitespace-nowrap font-mono text-xs tabular-nums text-muted">{d.maturity === null ? "not assessed" : `${d.maturity.toFixed(1)} of 5`}</span>
+            </div>
+            <div
+              className="relative mt-1.5 h-1 rounded-full bg-rule"
+              role="img"
+              aria-label={d.maturity === null ? `${d.name}: not assessed` : `${d.name}: maturity ${d.maturity.toFixed(1)} of 5, target ${d.target.maturity.toFixed(1)}`}
+            >
+              <div className="h-full rounded-full bg-ink-2" style={{ width: `${((d.maturity ?? 0) / 5) * 100}%` }} />
+              <div className="absolute -top-0.5 h-2 w-px bg-accent" style={{ left: `${(d.target.maturity / 5) * 100}%` }} />
+            </div>
+            <div className="mt-1 text-xs text-muted">
+              {d.maturity !== null && `${levelFor(module.model.scales.maturity, d.maturity).name} · `}target {d.target.maturity.toFixed(1)}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

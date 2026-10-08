@@ -21,6 +21,7 @@
     - { framework: cis-gws, ref: "1.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-ADM-002
   module: core
@@ -181,6 +182,7 @@
   sources: [gws-multi-party-approval, gws-domain-wide-delegation]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
 
 - id: GO-ADM-008
   module: core
@@ -203,5 +205,6 @@
   sources: [gws-admin-roles, gws-admin-best-practices, gcp-role-recommendations]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }

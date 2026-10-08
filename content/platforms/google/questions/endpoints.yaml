@@ -24,6 +24,9 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: google-security-guidance, ref: "Checklist: Endpoints" }
+    - { framework: idcf, ref: "DSL-2 Physical" }
+    - { framework: idcf, ref: "DSL-3 Physical" }
+    - { framework: idcf, ref: "Whole system" }
 
 - id: GO-END-002
   module: core

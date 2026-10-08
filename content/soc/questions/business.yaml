@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see ../NOTICE.md)
+# Business domain. One maturity question per aspect; levels are 0 (Non-existent) to 5 (Optimising).
+- id: SOC-BUS-001
+  aspect: business-drivers
+  question: How clearly are the business outcomes your security operations protect defined, and do they steer the SOC's priorities?
+  why: >-
+    A SOC that knows what the organisation can't afford to lose, often the crown jewels named earlier, spends its
+    time on the alerts that matter. Evidence: a strategy, contract or service description that names them.
+  levels:
+    - No one has agreed what the SOC is there to protect; it works on whatever comes in.
+    - A few people could name these outcomes, but they aren't written down or agreed.
+    - They're partly written down (for example in a contract or project brief) but rarely shape decisions.
+    - They're documented, agreed with business owners, linked to the crown jewels and used to set monitoring and response priorities.
+    - How well SOC work supports them is reported to business owners and reviewed on a set schedule.
+    - They're revisited whenever the business, its crown jewels or the threat picture changes, and SOC priorities move with them.
+  refs: [{ framework: nist-csf-2, ref: GV.OC-01 }, { framework: nist-csf-2, ref: GV.OC-05 }]
+
+- id: SOC-BUS-002
+  aspect: customers-stakeholders
+  question: How well does the SOC know who relies on it, what each of them needs, and whether they are getting it?
+  why: >-
+    Executives, IT, risk, legal and service owners need different things from the SOC, and an outsourced SOC needs a
+    named owner on your side.
+  levels:
+    - Nobody has worked out who the SOC serves beyond "IT".
+    - Main contacts are known informally; their needs are assumed rather than asked.
+    - A stakeholder list exists, but expectations, contact paths or service levels are incomplete or out of date.
+    - Stakeholders, what they need, how to reach them and the agreed service levels are documented and kept current.
+    - Delivery against those service levels, and stakeholder satisfaction, are measured and discussed with them.
+    - Stakeholder feedback and changing needs regularly reshape the SOC's services, reports and service levels.
+  refs: [{ framework: nist-csf-2, ref: GV.OC-02 }]
+
+- id: SOC-BUS-003
+  aspect: charter
+  question: Is the SOC's purpose, scope and authority to act set out in an approved charter (or provider contract) that guides real decisions?
+  why: >-
+    A charter settles arguments before an incident: what the SOC may do (isolate a device, disable an account), when,
+    and on whose authority.
+  levels:
+    - No charter, contract scope or equivalent exists.
+    - The SOC's role is understood informally, and authority to act is negotiated during incidents.
+    - A draft or partial charter (or contract scope) exists but isn't approved, current or widely known.
+    - An approved charter or contract sets out purpose, services, scope, hours and authority to act, and staff and stakeholders know it.
+    - What the charter commits to is checked against what the SOC actually delivers, and gaps go to leadership.
+    - The charter is reviewed at least yearly and after major changes, and updates flow into procedures and contracts.
+  refs: [{ framework: nist-csf-2, ref: GV.RR-02 }]
+
+- id: SOC-BUS-004
+  aspect: governance
+  question: "How well is the SOC governed: who oversees its performance, budget and risks, and how regularly?"
+  why: >-
+    Without governance the SOC drifts away from the business, budgets surprise people and nobody owns its risks. With
+    a provider, this is how you manage the service.
+  levels:
+    - No one oversees the SOC or the provider beyond paying the bill.
+    - Oversight happens only when something goes wrong.
+    - There's an owner and occasional reviews, but costs, risks and decisions aren't tracked consistently.
+    - A named owner, regular governance meetings, a managed budget and a SOC risk register are in place and followed.
+    - Governance runs on agreed performance and cost measures, and actions are tracked to completion.
+    - Governance itself is reviewed, and SOC strategy is adjusted from performance, cost and risk trends.
+  refs: [{ framework: nist-csf-2, ref: GV.RR-01 }, { framework: nist-csf-2, ref: GV.RR-03 }, { framework: nist-csf-2, ref: GV.OV-03 }]
+
+- id: SOC-BUS-005
+  aspect: privacy-policy
+  question: Do approved policies give the SOC its mandate to monitor and investigate, and is monitoring done within privacy and workplace surveillance laws?
+  why: >-
+    Looking into staff email, Teams chats or Drive activity needs a policy mandate and privacy safeguards (in
+    Australia, for example, the Privacy Act 1988 and state and territory workplace surveillance laws).
+  levels:
+    - No policy covers security monitoring or investigations, and privacy hasn't been considered.
+    - Monitoring happens without a written mandate; privacy questions are handled case by case.
+    - Some policies exist (for example acceptable use) but don't clearly cover SOC monitoring, investigations or privacy.
+    - Approved policies cover monitoring, incident reporting and investigations, and privacy requirements are built into SOC procedures.
+    - Compliance with those policies and privacy safeguards is checked (for example reviews of who accessed investigation data) and exceptions are reported.
+    - Policies and privacy impact assessments are revisited whenever monitoring tools, data sources or laws change.
+  refs: [{ framework: nist-csf-2, ref: GV.PO-01 }, { framework: nist-csf-2, ref: GV.OC-03 }]

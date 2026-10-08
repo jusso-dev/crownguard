@@ -3,6 +3,8 @@ name: ASD Essential Eight Maturity Model (November 2023)
 shortName: Essential Eight
 publisher: Australian Signals Directorate
 source: asd-e8-maturity-model
+# Supporting pages: the guide for each pillar or section the controls come from.
+sources: [asd-e8-explained]
 closed: true
 note: >-
   The maturity model defines four levels. Maturity Level Zero signals weaknesses in overall posture;

@@ -161,3 +161,4 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }

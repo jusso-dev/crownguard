@@ -26,6 +26,7 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-APP-002
   module: core
@@ -51,6 +52,7 @@
     - { framework: nist-csf-2, ref: ID.AM-04 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-APP-003
   module: core
@@ -77,3 +79,4 @@
     - { framework: cis-gws, ref: "4.2.1.4" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: idcf, ref: "Rule 1" }

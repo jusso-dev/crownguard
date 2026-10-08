@@ -17,6 +17,8 @@ export const frameworkSchema = z.object({
   shortName: z.string(),
   publisher: z.string(),
   source: id,
+  /** Supporting pages, such as the guide for each pillar or section the controls come from. */
+  sources: z.array(id).default([]),
   // When true, every question ref to this framework must match a control id below.
   closed: z.boolean().default(true),
   note: z.string().optional(),
@@ -120,6 +122,67 @@ export const importMappingSchema = z.object({
 });
 export type ImportMapping = z.infer<typeof importMappingSchema>;
 
+/**
+ * Optional SOC maturity module. Its structure (domains, aspects, level names, default targets) follows the SOC-CMM®
+ * model; the content files carry their own CC BY-SA 4.0 licence (content/soc/NOTICE.md).
+ */
+const socLevel = z.object({ level: z.number().int().min(0).max(5), name: z.string().min(3), description: z.string().min(10) });
+
+export const socModelSchema = z
+  .object({
+    id,
+    name: z.string(),
+    shortName: z.string(),
+    /** Source id of the model this module is aligned to. */
+    source: id,
+    licence: z.literal("CC BY-SA 4.0"),
+    /** Source id of the licence text. */
+    licenceSource: id,
+    /** Further pages describing the model. */
+    sources: z.array(id).default([]),
+    /** Version of the SOC-CMM tool the structure was taken from. */
+    basisVersion: z.string().regex(/^\d+\.\d+(\.\d+)?$/),
+    attribution: z.string().min(40),
+    scales: z.object({ maturity: z.array(socLevel).length(6), capability: z.array(socLevel).length(4) }),
+    /** Default targets: maturity for every domain, capability for the capability domains. */
+    targets: z.object({ maturity: z.number().min(1).max(5), capability: z.number().min(1).max(3) }),
+    domains: z
+      .array(
+        z.object({
+          id,
+          name: z.string(),
+          description: z.string().min(10),
+          /** Technology and service aspects can be left out of scoring when the SOC genuinely doesn't need them. */
+          scopable: z.boolean().default(false),
+          /** Aspects in this domain are also rated for capability (0-3). */
+          capability: z.boolean().default(false),
+          aspects: z.array(z.object({ id, name: z.string() })).min(1),
+        }),
+      )
+      .length(5),
+  })
+  .refine((m) => [m.scales.maturity, m.scales.capability].every((scale) => scale.every((l, i) => l.level === i)), "levels must be listed in order from 0");
+
+export const socQuestionSchema = z
+  .object({
+    id: z.string().regex(/^SOC-(BUS|PPL|PRC|TEC|SVC)-\d{3}$/, "e.g. SOC-BUS-001"),
+    aspect: id,
+    /** Maturity questions are rated 0-5, capability questions 0-3. */
+    kind: z.enum(["maturity", "capability"]).default("maturity"),
+    question: z.string().min(10).refine((s) => s.trim().endsWith("?"), "question must end with ?"),
+    why: z.string().min(20),
+    /** What each level looks like for this question, from level 0 up. */
+    levels: z.array(z.string().min(8).max(260)),
+    refs: z.array(z.object({ framework: id, ref: z.string().min(1) })).default([]),
+  })
+  .refine((q) => q.levels.length === (q.kind === "maturity" ? 6 : 4), {
+    path: ["levels"],
+    message: "maturity questions need 6 levels (0-5), capability questions 4 (0-3)",
+  });
+
+export type SocModel = z.infer<typeof socModelSchema>;
+export type SocQuestion = z.infer<typeof socQuestionSchema>;
+
 export const questionFileSchema = z.array(questionSchema);
 export const assetFileSchema = z.array(assetTypeSchema);
 export const sourceFileSchema = z.array(sourceSchema);
@@ -142,4 +205,6 @@ export interface Catalogue {
   frameworks: Map<string, Framework>;
   platforms: Map<string, PlatformBundle>;
   imports: Map<string, ImportMapping>;
+  /** The optional SOC maturity module, when its content is present. */
+  soc?: { model: SocModel; questions: SocQuestion[] };
 }

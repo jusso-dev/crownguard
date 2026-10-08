@@ -24,6 +24,7 @@
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Copilot step 1 }
     - { framework: ms-zero-trust, ref: M365 swim lane 4 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-AI-002
   module: core
@@ -52,6 +53,7 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: mcsb, ref: AI-2 }
     - { framework: ms-zero-trust, ref: Copilot step 1 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
 
 - id: MS-AI-003
   module: core
@@ -63,20 +65,24 @@
     Without visibility you cannot tell whether AI is surfacing sensitive data to the wrong people, or
     whether staff are pasting confidential information into consumer AI services.
   yesLooksLike: >-
-    Auditing captures Copilot interactions, Data Security Posture Management for AI is enabled with
-    its recommended policies, someone reviews its reports on sensitive data in prompts and responses,
-    and generative AI apps are discovered and unsanctioned ones blocked.
+    Auditing captures Copilot interactions, Purview Data Security Posture Management (DSPM) has its
+    setup tasks done and its AI one-click policies turned on, someone reviews AI observability and the
+    AI activities in Activity explorer for sensitive data in prompts and responses, and generative AI
+    apps are discovered and unsanctioned ones blocked.
   remediation: >-
-    Confirm unified auditing is on, enable Purview DSPM for AI and apply its recommended policies,
-    review its activity and oversharing reports monthly, and use Defender for Cloud Apps discovery
-    (or web content filtering) to find and block unsanctioned generative AI apps.
+    Confirm unified auditing is on, open DSPM in the Purview portal (it replaces DSPM for AI, now marked
+    classic), complete its setup tasks and turn on the AI one-click policies under Remediation actions,
+    review AI observability, the AI activities tab in Activity explorer and data risk assessments
+    monthly, and use Defender for Cloud Apps discovery (or web content filtering) to find and block
+    unsanctioned generative AI apps.
   effort: M
   licence: []
-  sources: [ms-dspm-ai, ms-audit-solutions, ms-mdca-discovered-apps]
+  sources: [ms-dspm, ms-audit-solutions, ms-mdca-discovered-apps]
   refs:
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: mcsb, ref: AI-6 }
     - { framework: ms-zero-trust, ref: M365 swim lane 4 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-AI-004
   module: core

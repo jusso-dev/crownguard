@@ -122,3 +122,4 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: google-security-guidance, ref: "Checklist: Vault" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }

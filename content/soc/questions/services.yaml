@@ -1,0 +1,168 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see ../NOTICE.md)
+# Services domain. Each aspect has a maturity question (0 Non-existent to 5 Optimising) and a capability question
+# (0 Incomplete to 3 Defined). Aspects can be left out of scoring when the SOC genuinely doesn't need them.
+- id: SOC-SVC-001
+  aspect: security-monitoring
+  question: How well is security monitoring delivered as a service, with defined hours, procedures, response times and improvement?
+  why: >-
+    This is the heart of most SOC and managed detection and response (MDR) contracts: who watches the alerts, how fast
+    they respond, and which hours nobody is watching.
+  levels:
+    - Nobody is responsible for watching security alerts.
+    - Alerts are looked at when someone has time; there are no response targets.
+    - Monitoring is assigned and partly documented, but hours, triage steps or response times are inconsistent.
+    - A documented service with defined hours (or 24/7), triage procedures, escalation and response-time targets is staffed and followed.
+    - Response times, false-positive rates and triage quality are measured and reported.
+    - The service improves continuously from its metrics, missed detections and incidents.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-03 }, { framework: nist-csf-2, ref: DE.AE-02 }]
+
+- id: SOC-SVC-002
+  aspect: security-monitoring
+  kind: capability
+  question: "How completely does monitoring cover where attackers would go: identities, email, collaboration, endpoints, cloud and your crown jewels?"
+  why: Gaps in coverage are where attackers dwell unnoticed.
+  levels:
+    - Monitoring covers almost none of these.
+    - Some areas are monitored (often only endpoints or email), with obvious blind spots.
+    - Identity, email, collaboration, endpoint and cloud admin activity are monitored across the stages of an attack, including every crown jewel.
+    - Coverage is measured against your asset list and priority techniques, and blind spots are tracked and closed.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-01 }, { framework: nist-csf-2, ref: DE.CM-03 }, { framework: nist-csf-2, ref: DE.CM-09 }]
+
+- id: SOC-SVC-003
+  aspect: incident-management
+  question: How well is security incident management run, from an approved response plan and clear roles to escalation, communication and lessons learned?
+  why: >-
+    Business email compromise or a tenant takeover needs a fast, rehearsed response involving legal, communications and
+    executives, and a decision on whether the breach must be notified under the Privacy Act's Notifiable Data Breaches
+    scheme.
+  levels:
+    - There's no incident response plan or owner.
+    - Incidents are handled ad hoc by whoever is available.
+    - A plan exists but is out of date, untested or unknown to the people who need it.
+    - An approved, current plan with roles, severity levels, escalation (including legal, communications and executives), external contacts and evidence handling is followed for every incident.
+    - Incident handling is measured (time to detect, contain and recover; plan adherence) and exercised regularly.
+    - The plan, playbooks and controls are improved after every significant incident and exercise.
+  refs: [{ framework: nist-csf-2, ref: RS.MA-01 }, { framework: nist-csf-2, ref: RS.CO-02 }, { framework: nist-csf-2, ref: ID.IM-04 }]
+
+- id: SOC-SVC-004
+  aspect: incident-management
+  kind: capability
+  question: How ready are you to contain, remove and recover from a cloud incident such as a compromised admin account?
+  why: The first hour decides how far an attacker gets.
+  levels:
+    - No prepared containment or recovery steps.
+    - Some containment and recovery steps are written down or known, but they're incomplete or untested.
+    - Tested playbooks cover the likely incidents (account compromise, business email compromise, malicious app consent, ransomware), from containment to verified recovery.
+    - Playbooks are exercised and refined regularly, including with your providers.
+  refs: [{ framework: nist-csf-2, ref: RS.MI-01 }, { framework: nist-csf-2, ref: RS.MI-02 }, { framework: nist-csf-2, ref: RC.RP-05 }]
+
+- id: SOC-SVC-005
+  aspect: forensic-analysis
+  question: When an incident needs deep investigation, is there a defined forensic capability (in house or on retainer) that preserves evidence properly?
+  why: >-
+    Cloud evidence such as audit logs, mailbox items and sign-in history ages out quickly, and investigations,
+    insurance claims and legal action depend on preserving it. A retained incident response firm counts.
+  levels:
+    - No forensic capability or retainer.
+    - Investigations are improvised when needed, with no evidence handling rules.
+    - Skilled staff or a retainer exist, but procedures, tooling or evidence handling are incomplete.
+    - A documented forensic service (in house or retained) with evidence collection, chain-of-custody and analysis procedures is ready and known to the incident team.
+    - Forensic work is reviewed against agreed quality and turnaround targets.
+    - Forensic procedures and tooling improve after each investigation and as cloud logging changes.
+  refs: [{ framework: nist-csf-2, ref: RS.AN-03 }]
+
+- id: SOC-SVC-006
+  aspect: forensic-analysis
+  kind: capability
+  question: "Can you collect and analyse the evidence a cloud incident needs: audit and sign-in logs, mailbox and file activity, devices and, where relevant, malware?"
+  why: Evidence that has expired or was never collected can't be recovered later.
+  levels:
+    - None of this evidence can be collected in a usable way.
+    - Some evidence can be pulled ad hoc, often after it has already expired.
+    - Collection and analysis are prepared for cloud logs, mailbox and file activity, and devices, and retention is long enough for investigations.
+    - Forensic readiness is tested, and gaps in retention, licences or access are tracked and closed.
+  refs: [{ framework: nist-csf-2, ref: RS.AN-06 }, { framework: nist-csf-2, ref: RS.AN-07 }]
+
+- id: SOC-SVC-007
+  aspect: threat-intelligence
+  question: Does the SOC turn threat intelligence into action through a defined cycle of working out what it needs, collecting, analysing and sharing?
+  why: >-
+    Intelligence about attacks on your sector, suppliers and platforms (for example alerts and advisories from ASD's
+    ACSC and vendor threat reports) should change what the SOC looks for.
+  levels:
+    - No threat intelligence is used.
+    - Individuals read news or vendor feeds informally.
+    - Feeds are received (some straight into tools), but requirements, analysis and sharing are inconsistent.
+    - Documented intelligence requirements drive collection and analysis, and actionable output reaches detection, hunting, vulnerability and leadership audiences.
+    - The use and value of intelligence are measured (for example detections or hunts it led to, and stakeholder feedback).
+    - Requirements and sources are reviewed regularly, and feedback continuously improves the intelligence service.
+  refs: [{ framework: nist-csf-2, ref: ID.RA-02 }, { framework: nist-csf-2, ref: DE.AE-07 }]
+
+- id: SOC-SVC-008
+  aspect: threat-intelligence
+  kind: capability
+  question: How well is threat intelligence collected, managed and fed into your tools?
+  why: Intelligence only helps when it reaches the tools and people that act on it.
+  levels:
+    - No intelligence sources or tooling.
+    - A few free feeds or newsletters, handled by hand.
+    - Sources relevant to your sector and platforms are managed, fed into the SIEM and EDR, and handled in a structured way (for example STIX/TAXII or a threat intelligence platform).
+    - Source quality is assessed, integrations are monitored, and the tooling is tuned and extended regularly.
+  refs: [{ framework: nist-csf-2, ref: ID.RA-02 }, { framework: nist-csf-2, ref: DE.AE-07 }]
+
+- id: SOC-SVC-009
+  aspect: threat-hunting
+  question: Does the SOC proactively hunt for threats that alerts miss, using a defined method?
+  why: >-
+    Hunting finds quiet attackers, such as a persistent OAuth app grant or a hidden forwarding rule, and turns findings
+    into new detections. Leave it out of scoring only if hunting genuinely isn't needed; if you need it but don't do it,
+    rate 0.
+  levels:
+    - No threat hunting.
+    - Occasional hunts happen when someone has spare time or after news of a big attack.
+    - Hunts are scheduled or assigned, but the method and records of results are inconsistent.
+    - A documented method (for example hypothesis-driven hunts mapped to ATT&CK) is followed on a schedule, and every hunt and its findings are recorded.
+    - "Hunting output is measured: hunts completed, findings, and detections created."
+    - Hunting priorities shift continuously with intelligence and results, and findings routinely become automated detections.
+  refs: [{ framework: nist-csf-2, ref: DE.AE-02 }]
+
+- id: SOC-SVC-010
+  aspect: threat-hunting
+  kind: capability
+  question: What can your hunters look for, and in which data?
+  why: Hunting for attacker behaviour finds more than hunting for indicators that attackers change daily.
+  levels:
+    - No hunting data or tools.
+    - Hunts only search for known indicators of compromise, such as file hashes, domains or IP addresses.
+    - Hunts cover indicators, attacker tools and artefacts, and techniques across identity, email, endpoint and cloud data, and results feed detection engineering.
+    - Hunting data coverage and outcomes are measured, and hunting capability is extended regularly.
+  refs: [{ framework: nist-csf-2, ref: DE.AE-02 }, { framework: nist-csf-2, ref: DE.AE-07 }]
+
+- id: SOC-SVC-011
+  aspect: vulnerability-management
+  question: Is vulnerability management run as a defined service with owners, priorities, deadlines and follow-up?
+  why: >-
+    Unpatched devices and weak cloud settings are among the commonest ways in, and the ASD Essential Eight sets
+    patching timeframes.
+  levels:
+    - No vulnerability management.
+    - Scanning and patching happen when someone remembers or after an alert.
+    - Scanning and patching happen regularly, but priorities, ownership or follow-up of findings are inconsistent.
+    - A documented service defines scope, scan frequency, risk-based priorities, fix deadlines, owners and reporting, and is followed.
+    - Time to fix, overdue findings and coverage are measured against targets and reported.
+    - The service improves continuously from trends, intelligence on exploited vulnerabilities and incidents.
+  refs: [{ framework: nist-csf-2, ref: ID.RA-01 }, { framework: nist-csf-2, ref: ID.RA-06 }]
+
+- id: SOC-SVC-012
+  aspect: vulnerability-management
+  kind: capability
+  question: How completely are vulnerabilities and misconfigurations found and prioritised across devices, cloud services and your crown jewels?
+  why: >-
+    Examples: Microsoft Defender Vulnerability Management, Microsoft Secure Score and Defender for Cloud; Google
+    Security Command Center and the Google Workspace security health page.
+  levels:
+    - No scanning or configuration assessment.
+    - Some assets are scanned occasionally; cloud configuration isn't assessed.
+    - Devices, servers, applications and cloud and SaaS configuration are assessed regularly, with results prioritised and sent to owners.
+    - Coverage is measured against the asset list, trends are tracked, and gaps are closed.
+  refs: [{ framework: nist-csf-2, ref: ID.RA-01 }, { framework: nist-csf-2, ref: ID.RA-05 }]

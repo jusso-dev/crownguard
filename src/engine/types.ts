@@ -1,4 +1,5 @@
 import type { ExposureId } from "../content/schema";
+import type { SocAnswer, SocProvider, SocTargets } from "./soc";
 
 export type Answer = "yes" | "partial" | "no" | "unknown" | "na";
 
@@ -17,6 +18,13 @@ export const classifications = {
   "highly-confidential": "Highly confidential",
 } as const;
 export type Classification = keyof typeof classifications;
+
+/**
+ * Data Security Levels from the Home Affairs Industry Data Classification Framework (IDCF). Optional per crown jewel:
+ * a missing level means "not classified under the IDCF", never DSL-0.
+ */
+export const dsls = { "dsl-0": "DSL-0", "dsl-1": "DSL-1", "dsl-2": "DSL-2", "dsl-3": "DSL-3", "dsl-4": "DSL-4", "dsl-5-plus": "DSL-5+" } as const;
+export type Dsl = keyof typeof dsls;
 
 export const regulations = {
   "privacy-act": "Privacy Act 1988 / Notifiable Data Breaches",
@@ -38,6 +46,8 @@ export interface CrownJewel {
   assetType: string;
   description: string;
   classification: Classification;
+  /** IDCF Data Security Level chosen by the data owner, if the organisation uses the IDCF. */
+  dsl?: Dsl;
   confidentiality: ImpactRating;
   integrity: ImpactRating;
   availability: ImpactRating;
@@ -93,8 +103,10 @@ export interface Assessment {
   /** Scan evidence per question id, from optional automated imports. */
   evidence?: Record<string, Evidence>;
   imports?: ImportRecord[];
-  /** Where the user was, so a reload or an opened file resumes in the same place. */
-  progress?: { step: number; section?: string };
+  /** Optional SOC maturity self-assessment; present when the user includes it. */
+  soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
+  /** Where the user was, so a reload or an opened file resumes in the same place. `layout` is the step list version. */
+  progress?: { step: number; section?: string; socSection?: string; layout?: number };
   createdAt: string;
   updatedAt: string;
 }

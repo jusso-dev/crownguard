@@ -80,6 +80,7 @@
     - { framework: cis-gws, ref: "4.2.2.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: idcf, ref: "Whole system" }
 
 - id: GO-ID-004
   module: core
@@ -134,6 +135,7 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: nist-csf-2, ref: GV.RR-04 }
     - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: GO-ID-006
   module: core
@@ -185,3 +187,4 @@
     - { framework: nist-csf-2, ref: PR.AA-04 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+    - { framework: idcf, ref: "Whole system" }

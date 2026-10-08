@@ -52,11 +52,12 @@
     API. Restrict who can modify the destination dataset or SIEM.
   effort: M
   licence: [bigquery-export]
-  sources: [gws-bigquery-export, gws-checklist-large]
+  sources: [gws-bigquery-export, gws-checklist-large, gws-share-with-gcp]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }

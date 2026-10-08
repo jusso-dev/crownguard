@@ -8,7 +8,7 @@ test("no request leaves the app's origin during a full assessment", async ({ pag
     const url = r.url();
     if (!url.startsWith("data:") && !url.startsWith("blob:") && new URL(url).origin !== origin) external.push(url);
   });
-  await runJourney(page, "Microsoft 365", 2);
+  await runJourney(page, "Microsoft 365", { jewelCount: 2 });
   expect(external).toEqual([]);
 });
 

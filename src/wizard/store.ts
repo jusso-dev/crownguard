@@ -1,9 +1,21 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { SocAnswer, SocProvider } from "../engine/soc";
 import type { Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
 import type { ScanResult } from "../imports/m365Secure";
+import { NOTE_MAX } from "./assessmentSchema";
 
-export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "Review", "Branding", "Report"] as const;
+export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "Review", "Branding", "Report"] as const;
+
+/** Version of the step list. Layout 2 added "SOC maturity" after Controls. */
+export const STEP_LAYOUT = 2;
+
+/** Move a saved position onto the current step list: files saved before layout 2 point one step early from Review on. */
+export function migrateProgress(p: Assessment["progress"]): Assessment["progress"] {
+  if (!p) return p;
+  const step = (p.layout ?? 1) < 2 && p.step >= 4 ? p.step + 1 : p.step;
+  return { ...p, step, layout: STEP_LAYOUT };
+}
 
 export const STORAGE_KEY = "crownguard:v1";
 
@@ -19,7 +31,7 @@ export const emptyAssessment = (): Assessment => {
     answers: {},
     notes: {},
     branding: { primary: "#1f3a5f", accent: "#d97706", marking: "OFFICIAL: Sensitive", preparedBy: "", preparedFor: "" },
-    progress: { step: 0 },
+    progress: { step: 0, layout: STEP_LAYOUT },
     createdAt: now,
     updatedAt: now,
   };
@@ -42,14 +54,27 @@ export const hasProgress = (a: Assessment) => a.org.name.trim() !== "" || a.jewe
 
 export const clampStep = (n: number | undefined) => Math.min(steps.length - 1, Math.max(0, Math.trunc(n ?? 0)));
 
+/** The SOC block, or an empty one to change. */
+const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
+
 interface State {
   assessment: Assessment;
   setStep: (step: number) => void;
   setSection: (section: string) => void;
+  /** The open SOC maturity domain, kept apart from the Controls section so each step resumes where it was left. */
+  setSocSection: (domain: string) => void;
   update: (fn: (a: Assessment) => Partial<Assessment>) => void;
   setOrg: (org: Partial<OrgProfile>) => void;
   setBranding: (b: Partial<Branding>) => void;
   setAnswer: (questionId: string, answer: Answer) => void;
+  /** Turn the optional SOC maturity assessment on or off. Turning it off keeps nothing. */
+  setSocIncluded: (included: boolean) => void;
+  setSocAnswer: (questionId: string, answer: SocAnswer) => void;
+  setSocNote: (questionId: string, note: string) => void;
+  setSocScope: (aspectId: string, inScope: boolean) => void;
+  /** Override a domain's target; undefined goes back to the model's default. */
+  setSocTarget: (domainId: string, kind: "maturity" | "capability", value: number | undefined) => void;
+  setSocProvider: (provider: SocProvider | undefined) => void;
   setNote: (questionId: string, note: string) => void;
   upsertJewel: (jewel: CrownJewel) => void;
   removeJewel: (id: string) => void;
@@ -66,13 +91,31 @@ export const useStore = create<State>()(
         set((s) => ({ assessment: { ...s.assessment, ...fn(s.assessment), updatedAt: new Date().toISOString() } }));
       return {
         assessment: emptyAssessment(),
-        setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step) } })),
-        setSection: (section) => update((a) => ({ progress: { step: a.progress?.step ?? 0, section } })),
+        setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step), layout: STEP_LAYOUT } })),
+        setSection: (section) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, section, layout: STEP_LAYOUT } })),
+        setSocSection: (socSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, socSection, layout: STEP_LAYOUT } })),
         update,
         setOrg: (org) => update((a) => ({ org: { ...a.org, ...org } })),
         setBranding: (b) => update((a) => ({ branding: { ...a.branding, ...b } })),
         setAnswer: (id, answer) => update((a) => ({ answers: { ...a.answers, [id]: answer } })),
-        setNote: (id, note) => update((a) => ({ notes: { ...a.notes, [id]: note } })),
+        setNote: (id, note) => update((a) => ({ notes: { ...a.notes, [id]: note.slice(0, NOTE_MAX) } })),
+        setSocIncluded: (included) => update((a) => ({ soc: included ? (a.soc ?? { answers: {}, outOfScope: [] }) : undefined })),
+        setSocAnswer: (id, answer) => update((a) => ({ soc: { ...soc(a), answers: { ...a.soc?.answers, [id]: answer } } })),
+        setSocNote: (id, note) => update((a) => ({ soc: { ...soc(a), notes: { ...a.soc?.notes, [id]: note.slice(0, NOTE_MAX) } } })),
+        setSocScope: (aspect, inScope) =>
+          update((a) => {
+            const out = new Set(soc(a).outOfScope);
+            if (inScope) out.delete(aspect);
+            else out.add(aspect);
+            return { soc: { ...soc(a), outOfScope: [...out].sort() } };
+          }),
+        setSocTarget: (domain, kind, value) =>
+          update((a) => {
+            const target = { ...a.soc?.targets?.[domain], [kind]: value };
+            if (value === undefined) delete target[kind];
+            return { soc: { ...soc(a), targets: { ...a.soc?.targets, [domain]: target } } };
+          }),
+        setSocProvider: (provider) => update((a) => ({ soc: { ...soc(a), provider } })),
         upsertJewel: (j) =>
           update((a) => ({
             jewels: a.jewels.some((x) => x.id === j.id) ? a.jewels.map((x) => (x.id === j.id ? j : x)) : [...a.jewels, j],
@@ -100,19 +143,23 @@ export const useStore = create<State>()(
           });
           return applied;
         },
-        load: (assessment) => set({ assessment: { ...assessment, progress: { ...assessment.progress, step: clampStep(assessment.progress?.step) } } }),
+        load: (assessment) => {
+          const progress = migrateProgress(assessment.progress ?? { step: 0 })!;
+          set({ assessment: { ...assessment, progress: { ...progress, step: clampStep(progress.step) } } });
+        },
         reset: () => set({ assessment: emptyAssessment() }),
       };
     },
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {
         const p = persisted as { assessment: Assessment; step?: number };
         if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step) };
+        if (version < 2 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress);
         return { assessment: p.assessment } as State;
       },
     },

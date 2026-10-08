@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see ../NOTICE.md)
+# People domain. One maturity question per aspect; levels are 0 (Non-existent) to 5 (Optimising).
+- id: SOC-PPL-001
+  aspect: employees
+  question: Does the SOC (or your provider's team) have enough skilled people to cover its hours and workload?
+  why: >-
+    Understaffed SOCs miss alerts, burn out and lose people. With a provider, ask how many analysts cover your account,
+    including after hours.
+  levels:
+    - No one is assigned to security operations; alerts go to whoever is free.
+    - One or two people handle security on top of other jobs, and cover disappears when they're away.
+    - Staffing is based on rough estimates rather than worked out from workload and hours; cover may be adequate today, but skills, hours and backup aren't planned, so gaps can appear.
+    - Headcount and skills are worked out from workload and hours, and are met, including leave cover.
+    - Workload, overtime and staff turnover are measured and drive staffing decisions.
+    - Staffing and sourcing plans change ahead of new services, growth and turnover trends, and keeping good people is managed deliberately.
+  refs: [{ framework: nist-csf-2, ref: GV.RR-03 }]
+
+- id: SOC-PPL-002
+  aspect: roles-hierarchy
+  question: Does everyone know who does what in the SOC, including who leads an incident and where to escalate?
+  why: Clear roles (analyst, incident lead, engineer, manager) and escalation lines stop incidents stalling.
+  levels:
+    - No defined roles; everyone does everything.
+    - Roles exist informally and depend on who is on shift.
+    - Some role descriptions or tiers exist, but they're incomplete or don't match how work is done.
+    - Roles, tiers, responsibilities and escalation lines are documented, approved and match practice.
+    - Role coverage and escalation performance (for example time to hand over to an incident lead) are measured.
+    - Structure and roles are reviewed regularly and adjusted as services, tools and team size change.
+  refs: [{ framework: nist-csf-2, ref: GV.RR-02 }]
+
+- id: SOC-PPL-003
+  aspect: people-management
+  question: How deliberately are SOC staff managed, from onboarding and goals to feedback, development and wellbeing?
+  why: >-
+    SOC work is stressful and repetitive; good people management keeps skilled analysts and keeps their judgement
+    sharp.
+  levels:
+    - No people management beyond payroll and leave.
+    - Managers step in when problems surface; there's no routine.
+    - Some practices exist (for example onboarding or annual reviews) but they're applied unevenly.
+    - Every team member gets the same cycle of onboarding, goals, regular one-to-ones, reviews and a development plan.
+    - Engagement, satisfaction and retention are measured, and the results lead to action.
+    - People practices are refined continuously from feedback, exit interviews and team performance.
+  refs: [{ framework: nist-csf-2, ref: GV.RR-04 }]
+
+- id: SOC-PPL-004
+  aspect: knowledge-management
+  question: Is SOC knowledge captured so the team doesn't depend on a few individuals?
+  why: >-
+    If the one person who understands your detection rules or audit logs leaves, the knowledge should stay:
+    procedures, environment details, past investigations and who knows what.
+  levels:
+    - Knowledge lives in people's heads.
+    - Some notes exist in personal files, chat threads or email.
+    - A shared knowledge base exists but is patchy, hard to search or out of date.
+    - A maintained knowledge base covers procedures, the environment and past cases, and a skills matrix shows where knowledge sits with one person.
+    - Knowledge base freshness and skills coverage are tracked, and gaps are assigned and closed.
+    - Capturing knowledge is part of every investigation and change, and skills gaps feed training plans.
+  refs: [{ framework: nist-csf-2, ref: PR.AT-02 }]
+
+- id: SOC-PPL-005
+  aspect: training-education
+  question: Do SOC staff get planned, funded training that keeps pace with your platforms and current threats?
+  why: Attackers change tactics quickly, and Microsoft and Google change their security tools every month.
+  levels:
+    - No security training for SOC staff.
+    - Training happens when individuals ask for it and find it themselves.
+    - There's some budget or courses, but no plan tied to roles or skill gaps.
+    - A training plan for each role, with budget and time set aside, covers tools, platforms and incident skills, including exercises.
+    - Training completion, certifications and skill growth are tracked against the plan.
+    - Training is adjusted from skill gaps, incident lessons and new threats, and the team shares knowledge in regular sessions.
+  refs: [{ framework: nist-csf-2, ref: PR.AT-02 }]

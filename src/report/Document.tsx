@@ -1,9 +1,11 @@
-import { Document, Image, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Circle, Document, Image, Line, Link, Page, Polygon, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
 import type { ReactNode } from "react";
 import { exposures } from "../content/schema";
 import { formatAbn, isValidAbn } from "../engine/abn";
 import { bandOf } from "../engine/risk";
-import { answerLabels, classifications, regulations, type Answer } from "../engine/types";
+import { levelFor, socProviders, type SocResult } from "../engine/soc";
+import { answerLabels, classifications, dsls, regulations, type Answer } from "../engine/types";
+import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import type { ReportModel } from "./model";
 import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
 
@@ -122,6 +124,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           {[
             ...model.licenceNames,
             `${model.risks.length} crown jewel${model.risks.length === 1 ? "" : "s"} and ${model.questions.length} control questions relevant to them`,
+            ...(model.soc
+              ? [
+                  `Optional SOC maturity self-assessment: ${model.soc.model.domains.reduce((n, d) => n + d.aspects.length, 0)} aspects in ${model.soc.model.domains.length} domains, aligned to the SOC-CMM® v2.4 model`,
+                ]
+              : []),
             ...(a.imports ?? []).map(
               (imp) =>
                 `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
@@ -169,6 +176,20 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               : " None is currently rated high or extreme risk."}
             {unknownCount > 0 ? ` ${unknownCount} control${unknownCount === 1 ? " is" : "s are"} still unknown and treated as gaps until confirmed.` : ""}
           </Text>
+          {model.soc && (
+            <Text style={s.p}>
+              {(() => {
+                const r = model.soc.result;
+                if (r.answered === 0 || r.overall === null) return "An optional SOC maturity self-assessment was included, but none of its questions has been answered yet.";
+                const below = r.domains.filter((d) => d.maturity !== null && d.maturity < d.target.maturity).length;
+                const assessed = r.domains.filter((d) => d.maturity !== null).length;
+                const unsure = r.total - r.answered + r.unknown;
+                return `An optional self-assessment rated security operations at an indicative ${r.overall.toFixed(1)} of 5 against a target of ${r.overallTarget.toFixed(1)}; ${below} of ${assessed} domains ${below === 1 ? "is" : "are"} below target.${
+                  unsure ? ` ${unsure} of its ${r.total} questions ${unsure === 1 ? "is" : "are"} unanswered or unknown and scored 0.` : ""
+                } It is reported separately and doesn't change the risk ratings.`;
+              })()}
+            </Text>
+          )}
 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 8, marginBottom: 6 }}>
             {[
@@ -236,7 +257,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Crown-jewel register */}
-        <Section s={s} title="Crown-jewel register" lead="The systems and information whose compromise would most seriously harm the organisation, as identified during this assessment. Impact ratings use 1 (minimal) to 5 (severe).">
+        <Section
+          s={s}
+          title="Crown-jewel register"
+          lead={`The systems and information whose compromise would most seriously harm the organisation, as identified during this assessment. Impact ratings use 1 (minimal) to 5 (severe).${a.jewels.some((j) => j.dsl) ? " IDCF DSL is the Data Security Level the organisation assigned; – means not classified." : ""}`}
+        >
           <Table
             {...tableProps}
             rows={model.risks}
@@ -247,11 +272,12 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                   <Text style={s.small}>{model.assetTypeName(r.jewel.assetType)}</Text>
                 </View>
               ) },
-              { header: "Classification", width: "14%", render: (r) => classifications[r.jewel.classification] },
+              { header: "Classification", width: "15%", render: (r) => classifications[r.jewel.classification] },
+              { header: "IDCF DSL", width: "8%", render: (r) => (r.jewel.dsl ? dsls[r.jewel.dsl] : "–") },
               { header: "C / I / A", width: "10%", render: (r) => `${r.jewel.confidentiality} / ${r.jewel.integrity} / ${r.jewel.availability}` },
-              { header: "Obligations", width: "18%", render: (r) => r.jewel.regulations.map((x) => regulations[x].split(" (")[0]).join("; ") || "–" },
-              { header: "Exposure", width: "20%", render: (r) => r.jewel.exposures.map((x) => exposures[x]).join("; ") || "None recorded" },
-              { header: "Supports", width: "14%", render: (r) => r.jewel.businessProcesses || "–" },
+              { header: "Obligations", width: "16%", render: (r) => r.jewel.regulations.map((x) => regulations[x].split(" (")[0]).join("; ") || "–" },
+              { header: "Exposure", width: "15%", render: (r) => r.jewel.exposures.map((x) => exposures[x]).join("; ") || "None recorded" },
+              { header: "Supports", width: "12%", render: (r) => r.jewel.businessProcesses || "–" },
             ]}
           />
           {model.risks.some((r) => r.jewel.description) && (
@@ -317,15 +343,18 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                 {gaps.map((q) => {
                   const lic = model.licenceGap(q);
                   return (
-                    <View key={q.id} wrap={false} style={{ marginBottom: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderColor: line }}>
-                      <View style={{ flexDirection: "row", gap: 6, alignItems: "center", marginBottom: 2 }}>
-                        <Text style={{ fontSize: 7, color: severityColors[q.severity], fontWeight: 700, textTransform: "uppercase" }}>{q.severity}</Text>
-                        <Text style={s.small}>{q.id} · Answer: {answerText(model.answers[q.id])} · Effort {q.effort}</Text>
+                    <View key={q.id} style={{ marginBottom: 8, paddingBottom: 6, borderBottomWidth: 0.5, borderColor: line }}>
+                      <View wrap={false}>
+                        <View style={{ flexDirection: "row", gap: 6, alignItems: "center", marginBottom: 2 }}>
+                          <Text style={{ fontSize: 7, color: severityColors[q.severity], fontWeight: 700, textTransform: "uppercase" }}>{q.severity}</Text>
+                          <Text style={s.small}>{q.id} · Answer: {answerText(model.answers[q.id])} · Effort {q.effort}</Text>
+                        </View>
+                        <Text style={{ fontWeight: 600, marginBottom: 2 }}>{q.question}</Text>
+                        <Text style={{ fontSize: 8.5, color: muted, marginBottom: 2 }}>{q.why}</Text>
+                        <Text style={{ fontSize: 8.5 }}><Text style={{ fontWeight: 600 }}>Recommendation: </Text>{q.remediation}</Text>
+                        {lic.length > 0 && <Text style={{ fontSize: 8, color: "#7a5200", marginTop: 2 }}>Licence: needs {lic.join(", ")}.</Text>}
                       </View>
-                      <Text style={{ fontWeight: 600, marginBottom: 2 }}>{q.question}</Text>
-                      <Text style={{ fontSize: 8.5, color: muted, marginBottom: 2 }}>{q.why}</Text>
-                      <Text style={{ fontSize: 8.5 }}><Text style={{ fontWeight: 600 }}>Recommendation: </Text>{q.remediation}</Text>
-                      {lic.length > 0 && <Text style={{ fontSize: 8, color: "#7a5200", marginTop: 2 }}>Licence: needs {lic.join(", ")}.</Text>}
+                      {/* Notes can be long, so they sit outside the unbreakable block and may run across a page break. */}
                       {a.notes[q.id] && <Text style={{ fontSize: 8, marginTop: 2, fontStyle: "italic" }}>Note: {a.notes[q.id]}</Text>}
                       {a.evidence?.[q.id] && (
                         <Text style={{ fontSize: 8, marginTop: 2, color: muted }}>
@@ -393,7 +422,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Frameworks */}
-        <Section s={s} title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0 and CIS Benchmarks. These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
+        <Section s={s} title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0, CIS Benchmarks and the Department of Home Affairs Industry Data Classification Framework (IDCF). These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
           <Text style={s.h2}>ASD Essential Eight (indicative maturity)</Text>
           <Table
             {...tableProps}
@@ -405,6 +434,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               { header: "Blocking gaps", width: "22%", render: (r) => r.blockers.map((q) => q.id).join(", ") || (r.unasked ? `ML${r.unasked} not covered by this assessment` : "–") },
             ]}
           />
+          {model.idcf && <IdcfSection model={model} s={s} tableProps={tableProps} />}
           <Text style={s.h2} minPresenceAhead={80}>NIST CSF 2.0 functions</Text>
           {model.csf.map((c) => (
             <View key={c.fn} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
@@ -432,21 +462,37 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           )}
         </Section>
 
+        {model.soc && <SocSection model={model} s={s} tableProps={tableProps} />}
+
         {/* Methodology */}
         <Section s={s} title="Method and limitations">
           {[
             "This is a self-assessment. Answers were provided by the organisation and have not been independently verified. Treat it as a structured starting point for a security conversation, not as an audit or certification.",
-            "Questions are drawn from current Microsoft and Google security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model and NIST CSF 2.0. Each question cites its sources in the references section.",
+            "Questions are drawn from current Microsoft and Google security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model, NIST CSF 2.0 and the Department of Home Affairs Industry Data Classification Framework. Each question cites its sources in the references section.",
             "Answers score Yes = 1, Partial = 0.5, No = 0. Unknown and unanswered questions also score 0, so uncertainty is never counted as protection. N/A questions are excluded. Questions are weighted by severity: critical 4, high 3, medium 2, low 1.",
             "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions relevant to a crown jewel, plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
             "Risk bands: 1–4 Low, 5–9 Medium, 10–19 High, 20–25 Extreme.",
             "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). The assessor reviewed and could change every answer; scan evidence is shown against each finding.",
             "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). Strategies outside the scope of a cloud collaboration platform, or levels not asked, are reported as not assessed.",
-            "crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, CIS, ASD or NIST. Product names are trademarks of their owners.",
+            "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
+            ...(model.soc
+              ? [
+                  "The SOC maturity section is an indicative self-assessment structured on the SOC-CMM® v2.4 model (5 domains, 27 aspects). Each aspect has one maturity question rated 0–5 against crownguard's own level descriptions, and each technology and service aspect also has a capability question rated 0–3. Unknown and unanswered questions score 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings; the two are never combined. A domain scores the unweighted mean of its in-scope aspects, and the indicative overall is the mean of the assessed domains (SOC-CMM itself reports no single score). Level names use the whole-number part of the score, so 2.7 is level 2 and 3.0 is level 3. Targets default to SOC-CMM's: maturity 3 and capability 2.",
+                  "SOC results are self-ratings from far fewer questions than SOC-CMM's own tool. They are not SOC-CMM maturity or capability scores, are not comparable with SOC-CMM benchmarks or certification, and don't affect the crown-jewel risk ratings.",
+                ]
+              : []),
+            `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
         </Section>
 
         <Section s={s} title="References" lead="Guidance consulted for the questions in this report. Retrieved dates show when each source was last checked.">
+          {model.idcf && (
+            <Text style={{ ...s.small, marginBottom: 8 }}>
+              Contains material adapted from the Industry Data Classification Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and
+              Industrial Research Organisation (CSIRO) 2026, licensed under CC BY 4.0 (creativecommons.org/licenses/by/4.0), and from “IDCF: A guide to system
+              security”, Australian Government Department of Home Affairs, CC BY 3.0 AU. Summaries are crownguard&apos;s own and do not imply endorsement.
+            </Text>
+          )}
           {model.sources.map((src) => (
             <View key={src.id} wrap={false} style={{ marginBottom: 5 }}>
               <Text style={{ fontSize: 8.5 }}>
@@ -484,5 +530,284 @@ function Heatmap({ model }: { model: ReportModel }) {
       </View>
       <Text style={{ fontSize: 7, color: muted, marginLeft: 15, marginTop: 2 }}>Likelihood → (rows: impact)</Text>
     </View>
+  );
+}
+
+const providerLine: Record<keyof typeof socProviders, string> = {
+  "in-house": "The organisation runs its security operations in house.",
+  outsourced: "The organisation's security operations are run by a managed provider (MSSP or MDR).",
+  hybrid: "The organisation's security operations are run partly in house and partly by a provider.",
+  none: "The organisation reported that it doesn't have a SOC.",
+};
+
+/** Five-axis radar of domain maturity (0-5) against target. Capability is left off: it uses a different scale. */
+function SocRadar({ result, color, accent }: { result: SocResult; color: string; accent: string }) {
+  const size = 210;
+  const c = { x: size / 2, y: 104 };
+  const R = 64;
+  const n = result.domains.length;
+  const point = (i: number, v: number) => {
+    const angle = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    return { x: c.x + R * (v / 5) * Math.cos(angle), y: c.y + R * (v / 5) * Math.sin(angle) };
+  };
+  const shape = (values: (number | null)[]) =>
+    values
+      .flatMap((v, i) => (v === null ? [] : [point(i, v)]))
+      .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+      .join(" ");
+  const assessed = result.domains.filter((d) => d.maturity !== null).length;
+  return (
+    <View style={{ width: size, height: 200, position: "relative" }}>
+      <Svg width={size} height={200}>
+        {[1, 2, 3, 4, 5].map((ring) => (
+          <Polygon key={ring} points={shape(result.domains.map(() => ring))} fill="none" stroke={line} strokeWidth={ring === 5 ? 0.8 : 0.5} />
+        ))}
+        {result.domains.map((d, i) => {
+          const end = point(i, 5);
+          // A domain with every aspect out of scope isn't plotted: its axis is dashed instead of reading as 0.
+          return <Line key={d.id} x1={c.x} y1={c.y} x2={end.x} y2={end.y} stroke={line} strokeWidth={0.5} {...(d.maturity === null ? { strokeDasharray: "2,2" } : {})} />;
+        })}
+        <Polygon points={shape(result.domains.map((d) => d.target.maturity))} fill="none" stroke={accent} strokeWidth={1} strokeDasharray="3,2" />
+        {assessed > 1 && <Polygon points={shape(result.domains.map((d) => d.maturity))} fill={color} fillOpacity={0.18} stroke={color} strokeWidth={1.2} />}
+        {result.domains.map((d, i) => {
+          if (d.maturity === null) return null;
+          const p = point(i, d.maturity);
+          return <Circle key={d.id} cx={p.x} cy={p.y} r={1.8} fill={color} />;
+        })}
+      </Svg>
+      {result.domains.map((d, i) => {
+        const p = point(i, 6.3);
+        return (
+          <View key={d.id} style={{ position: "absolute", left: p.x - 40, top: p.y - 9, width: 80 }}>
+            <Text style={{ fontSize: 7.5, fontWeight: 600, textAlign: "center" }}>{d.name}</Text>
+            <Text style={{ fontSize: 7, color: muted, textAlign: "center" }}>{d.maturity === null ? "not assessed" : d.maturity.toFixed(1)}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Optional SOC maturity results, reported apart from crown-jewel risk, with the CC BY-SA attribution. */
+function SocSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
+  const { model: soc, questions, result, provider, notes, source, licence } = model.soc!;
+  const theme = model.theme;
+  // Notes not already shown beside a priority or capability gap, in question order.
+  const shown = new Set([...result.priorities.slice(0, 8), ...result.capabilityGaps].map((p) => p.question.id));
+  const otherNotes = questions.filter((q) => notes[q.id]?.trim() && !shown.has(q.id)).map((q) => [q.id, notes[q.id].trim()] as const);
+  const aspectName = (id: string) => soc.domains.flatMap((d) => d.aspects).find((a) => a.id === id)?.name ?? id;
+  const one = (n: number | null) => (n === null ? "–" : n.toFixed(1));
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const maturityName = (n: number) => levelFor(soc.scales.maturity, n).name;
+  const assessed = result.domains.filter((d) => d.maturity !== null);
+  const onTarget = assessed.filter((d) => d.maturity! >= d.target.maturity).length;
+  const aspects = soc.domains.reduce((n, d) => n + d.aspects.length, 0);
+  return (
+    <Section
+      s={s}
+      title="SOC maturity (indicative)"
+      lead={`An indicative self-assessment of the organisation's security operations, rated 0–5 for each of the ${aspects} aspects in the ${soc.domains.length} domains of the SOC-CMM® v2.4 model, with a 0–3 capability rating for technology and services. It is separate from the crown-jewel risk ratings and doesn't change them.`}
+    >
+      {provider && <Text style={s.p}>{providerLine[provider]}</Text>}
+      <View style={{ flexDirection: "row", gap: 16, alignItems: "center", marginTop: 4 }}>
+        <SocRadar result={result} color={theme.heading} accent={theme.accent} />
+        <View style={{ flex: 1, gap: 8 }}>
+          {[
+            ["Indicative overall", result.overall === null ? "–" : `${one(result.overall)} / 5`, `Mean of the domains; target ${one(result.overallTarget)}`],
+            ["Domains at or above target", `${onTarget} of ${assessed.length}`, assessed.length < result.domains.length ? `${result.domains.length - assessed.length} left out of scoring` : "maturity, against each domain's target"],
+            ["Questions answered", `${result.answered} of ${result.total}`, result.unknown ? `${result.unknown} unknown, scored 0` : "none unknown"],
+          ].map(([label, value, hint]) => (
+            <View key={label} style={{ backgroundColor: theme.tint, borderRadius: 4, padding: 8 }}>
+              <Text style={{ ...s.small, textTransform: "uppercase", letterSpacing: 0.6 }}>{label}</Text>
+              <Text style={{ fontSize: 17, fontWeight: 700, color: theme.heading, marginTop: 1 }}>{value}</Text>
+              <Text style={s.small}>{hint}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      <Text style={{ ...s.small, marginBottom: 8 }}>Solid shape: maturity by domain. Dashed line: target. Rings mark levels 1 to 5.</Text>
+
+      <Table
+        {...tableProps}
+        rows={result.domains}
+        columns={[
+          { header: "Domain", width: "16%", render: (d) => <Text style={{ fontWeight: 600 }}>{d.name}</Text> },
+          { header: "Maturity", width: "13%", render: (d) => (d.maturity === null ? "Not assessed" : `${one(d.maturity)} / 5`) },
+          { header: "Level", width: "19%", render: (d) => (d.maturity === null ? "–" : maturityName(d.maturity)) },
+          { header: "Target", width: "9%", render: (d) => one(d.target.maturity) },
+          // From the rounded figures beside it, so the row adds up.
+          { header: "Gap", width: "8%", render: (d) => (d.maturity === null ? "–" : one(Math.max(0, round1(d.target.maturity) - round1(d.maturity)))) },
+          { header: "Capability", width: "22%", render: (d) => (d.target.capability === undefined ? "–" : d.capability === null ? "Not assessed" : `${one(d.capability)} / 3 (target ${one(d.target.capability)})`) },
+          { header: "Aspects", width: "13%", render: (d) => `${d.aspects.filter((a) => a.inScope).length} of ${d.aspects.length} scored` },
+        ]}
+      />
+
+      <Text style={s.h2} minPresenceAhead={80}>Aspect profile</Text>
+      <Text style={{ ...s.small, marginBottom: 6 }}>Maturity 0–5 for each aspect; the tick marks the domain target. Capability 0–3 is shown for technology and services.</Text>
+      {result.domains.map((d) => (
+        <View key={d.id} wrap={false} style={{ marginBottom: 8 }}>
+          <Text style={{ ...s.h3, color: theme.heading }}>{d.name}</Text>
+          {d.aspects.map((a) => (
+            <View key={a.id} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <Text style={{ width: 134, fontSize: 8.5 }}>{a.name}</Text>
+              <View style={{ flex: 1 }}>
+                {a.inScope ? <Meter value={(a.maturity ?? 0) / 5} color={theme.heading} marker={d.target.maturity / 5} /> : <Text style={s.small}>Left out of scoring</Text>}
+              </View>
+              <Text style={{ width: 24, textAlign: "right", fontSize: 8.5 }}>{a.inScope ? one(a.maturity) : "–"}</Text>
+              <Text style={{ width: 62, textAlign: "right", fontSize: 7.5, color: muted }}>{a.capability === null ? "" : `capability ${one(a.capability)}`}</Text>
+              {(() => {
+                const below = a.inScope && a.maturity! < d.target.maturity;
+                const capBelow = a.inScope && d.target.capability !== undefined && a.capability !== null && a.capability < d.target.capability;
+                return (
+                  <Text style={{ width: 84, fontSize: 7.5, color: !a.inScope ? muted : below || capBelow ? "#8a3200" : good }}>
+                    {!a.inScope ? "Out of scope" : below ? "Below target" : capBelow ? "Capability below target" : "At or above target"}
+                    {a.unknown ? " · unknown" : ""}
+                  </Text>
+                );
+              })()}
+            </View>
+          ))}
+        </View>
+      ))}
+
+      {result.priorities.length > 0 && (
+        <>
+          <Text style={s.h2} minPresenceAhead={80}>Priorities to reach target</Text>
+          <Text style={{ ...s.small, marginBottom: 6 }}>
+            Aspects furthest below their domain&apos;s maturity target, largest gap first; equal gaps are listed in domain order (business to services).
+          </Text>
+          {result.priorities.slice(0, 8).map((p, i) => (
+            <View key={p.aspect.id} style={{ marginBottom: 6 }}>
+              <View wrap={false} style={{ flexDirection: "row", gap: 6 }}>
+                <Text style={{ width: 12, fontWeight: 700, color: theme.heading }}>{i + 1}.</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: 600 }}>
+                    {p.aspect.name} <Text style={{ fontWeight: 400, color: muted }}>({p.domain}) · now {one(p.score)} {maturityName(p.score)}, target {one(p.target)}{p.rating === "unknown" ? " · answered Unknown" : ""}</Text>
+                  </Text>
+                  {p.next && (
+                    <Text style={{ fontSize: 8.5, marginTop: 1, lineHeight: 1.35 }}>
+                      <Text style={{ fontWeight: 600 }}>Next level ({p.next.level} {p.next.name}): </Text>
+                      {p.next.description}
+                    </Text>
+                  )}
+                </View>
+              </View>
+              {/* Notes can be long, so they sit outside the unbreakable block and may run across a page break. */}
+              {notes[p.question.id]?.trim() && <Text style={{ fontSize: 8, marginTop: 1, marginLeft: 18, fontStyle: "italic", lineHeight: 1.35 }}>Note: {notes[p.question.id].trim()}</Text>}
+            </View>
+          ))}
+          {result.priorities.length > 8 && <Text style={s.small}>+ {result.priorities.length - 8} more aspects below target, shown in the aspect profile.</Text>}
+        </>
+      )}
+      {result.capabilityGaps.length > 0 && (
+        <>
+          <Text style={{ ...s.h3, color: theme.heading, marginTop: 8 }} minPresenceAhead={60}>Capability gaps</Text>
+          {result.capabilityGaps.map((p) => (
+            <View key={p.aspect.id} style={{ marginBottom: 4 }}>
+              <Text wrap={false} style={{ fontSize: 8.5, lineHeight: 1.35 }}>
+                <Text style={{ fontWeight: 600 }}>{p.aspect.name}</Text>
+                <Text style={{ color: muted }}> ({p.domain}) · capability {one(p.score)} of 3, target {one(p.target)}. </Text>
+                {p.next && `Next: ${p.next.description}`}
+              </Text>
+              {notes[p.question.id]?.trim() && <Text style={{ fontSize: 8, fontStyle: "italic", lineHeight: 1.35 }}>Note: {notes[p.question.id].trim()}</Text>}
+            </View>
+          ))}
+        </>
+      )}
+
+      {otherNotes.length > 0 && (
+        <>
+          <Text style={{ ...s.h3, color: theme.heading, marginTop: 8 }} minPresenceAhead={40}>Assessor notes</Text>
+          {otherNotes.map(([id, note]) => {
+            const q = questions.find((x) => x.id === id)!;
+            return (
+              <Text key={id} style={{ fontSize: 8.5, marginBottom: 3, lineHeight: 1.35 }}>
+                <Text style={{ fontWeight: 600 }}>{aspectName(q.aspect)}</Text>
+                <Text style={{ color: muted }}> ({q.kind}): </Text>
+                {note}
+              </Text>
+            );
+          })}
+        </>
+      )}
+
+      <View wrap={false} style={{ marginTop: 12, borderWidth: 0.5, borderColor: line, borderRadius: 3, padding: 8 }}>
+        <Text style={{ ...s.small, lineHeight: 1.4 }}>{soc.attribution}</Text>
+        {source && (
+          <Text style={{ ...s.small, marginTop: 3 }}>
+            Source: <Link src={source.url} style={{ color: theme.heading }}>{source.url}</Link>
+          </Text>
+        )}
+        {licence && (
+          <Text style={s.small}>
+            Licence: <Link src={licence.url} style={{ color: theme.heading }}>{licence.url}</Link>
+          </Text>
+        )}
+        <Text style={{ ...s.small, marginTop: 3 }}>The protective marking applies to this organisation&apos;s answers and results, not to the CC BY-SA question text.</Text>
+      </View>
+    </Section>
+  );
+}
+
+const idcfCellText = (c: IdcfCell) =>
+  c.status === "gaps"
+    ? `Gaps: ${c.gaps.map((q) => q.id).join(", ")}${c.notVerified.length ? `. Not verified: ${notVerifiedText(c.notVerified)}` : ""}`
+    : c.status === "not-verified"
+      ? `Not verified: ${notVerifiedText(c.notVerified)}`
+      : c.status === "clear"
+        ? "No gaps found in the questions asked"
+        : "Not assessed";
+
+/** IDCF Data Security Levels: what the answers say about each level's physical, cyber and authorised-person parts. */
+function IdcfSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
+  const idcf = model.idcf!;
+  return (
+    <>
+      <Text style={s.h2} minPresenceAhead={80}>IDCF Data Security Levels (indicative)</Text>
+      <Text style={s.p}>
+        The Industry Data Classification Framework (IDCF), published by the Department of Home Affairs in 2026, gives each item of data one of six Data
+        Security Levels, from DSL-0 to DSL-5+. Each level states the protection the data needs against physical, cyber and authorised-person events. The
+        IDCF does not prescribe controls. It treats cyber controls equivalent to Essential Eight Maturity Level 1, 2 or 3 as meeting the cyber part of DSL-2,
+        DSL-3 or DSL-4, and names Microsoft&apos;s Essential Eight guidance for Microsoft 365 and the CIS Google Workspace Benchmark for Google Workspace. The
+        tables show, for each platform and level, whether the questions asked found gaps. Premises security, personnel vetting, training and, for
+        DSL-4, data residency and jurisdiction are largely outside a cloud configuration review, so no level is shown as met.
+      </Text>
+      {idcf.platforms.map((p) => (
+        <View key={p.id} style={{ marginBottom: 8 }}>
+          <Text style={{ ...s.h3, marginTop: 4 }}>{p.name}</Text>
+          <Table
+            {...tableProps}
+            rows={p.rows}
+            columns={[
+              { header: "Level", width: "10%", render: (r) => <Text style={{ fontWeight: 600 }}>{`DSL-${r.level}`}</Text> },
+              { header: "Physical (devices)", width: "26%", render: (r) => idcfCellText(r.physical) },
+              { header: "Cyber (Essential Eight)", width: "38%", render: (r) => idcfCellText(r.cyber) },
+              { header: "Authorised person", width: "26%", render: (r) => idcfCellText(r.person) },
+            ]}
+          />
+          <Text style={{ ...s.small, marginTop: 3 }}>
+            <Text style={{ fontWeight: 600 }}>Whole system and data movement (every level from DSL-2): </Text>
+            {idcfCellText(p.system)}.
+          </Text>
+        </View>
+      ))}
+      <Text style={s.small}>
+        Microsoft 365 at Essential Eight Maturity Level 3 &quot;may be&quot; DSL-4 appropriate, by agreement with the data recipient. Devices that cache or sync
+        the data are part of the system. The IDCF has no certification or assurance process: a data owner should seek assurance, for example a Statement of
+        System Security, before relying on a system for a given level.
+      </Text>
+      {idcf.jewels.length > 0 && (
+        <View style={{ marginTop: 8 }}>
+          {idcf.jewels.map((j) => (
+            <Text key={j.jewel.id} style={{ ...s.p, fontSize: 8.5 }}>
+              {j.text}
+            </Text>
+          ))}
+        </View>
+      )}
+      {model.assessment.jewels.some((j) => !j.dsl) && idcf.jewels.length > 0 && (
+        <Text style={s.small}>Crown jewels without a level are not classified under the IDCF; under the IDCF, unlabelled data is unclassified, not DSL-0.</Text>
+      )}
+    </>
   );
 }

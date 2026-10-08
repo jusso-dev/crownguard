@@ -1,0 +1,99 @@
+id: idcf
+name: Industry Data Classification Framework (2026 release)
+shortName: IDCF
+publisher: Department of Home Affairs
+source: idcf
+# Supporting pages: the IDCF guide to system security (per-DSL example controls) and the Microsoft guide the IDCF
+# names for configuring Microsoft 365 to DSL-2, DSL-3 and DSL-4.
+sources: [idcf-system-security, ms-essential-eight]
+closed: true
+note: >-
+  Voluntary framework published by the Department of Home Affairs in August 2026 and developed with CSIRO's
+  Data61 under Shield 2 of the 2023-2030 Australian Cyber Security Strategy. Each item of data gets one of six
+  Data Security Levels (DSL-0 to DSL-5+) stating the protection it needs against physical, cyber (common,
+  moderate, complex) and authorised-person events (Table 9). The IDCF does not prescribe controls: systems at
+  Essential Eight Maturity Level 1, 2 or 3 meet the cyber requirements of DSL-2, DSL-3 or DSL-4, and physical and
+  authorised-person controls are needed as well. For cloud suites it names Microsoft's Essential Eight guidance
+  for Microsoft 365 (Maturity Level 3 "may be" DSL-4 appropriate, by agreement with the recipient) and the CIS
+  Google Workspace Benchmark IG1, IG1-IG2 and IG1-IG3 controls. DSL-3 has strong parallels with PSPF
+  OFFICIAL: Sensitive and DSL-4 with PROTECTED. Control ids are crownguard's own: Rule 1 to Rule 6 are section
+  4.8.1, Sharing agreement is the code of conduct (2.4.1), Movement is 4.9.1-4.9.2, Whole system 4.9.4, Labels
+  2.3 and 4.6, and the DSL rows follow sections 4.7.2-4.7.6 and the IDCF guide to system security. A question
+  references the DSL at which the IDCF first lists what it asks (both levels when it bundles measures from two).
+  DSL-n Cyber is evaluated from the Essential Eight tags, not from refs. Results indicate alignment only: the IDCF
+  has no compliance or assurance process, and premises security, personnel vetting, training and data
+  residency are outside a cloud configuration review. Titles summarise material © Commonwealth of Australia and
+  CSIRO 2026, licensed CC BY 4.0.
+controls:
+  - id: Risk assessment
+    group: Classification
+    title: Data holdings are identified and their consequences, impact and likelihood assessed before a DSL is chosen
+  - id: Labels
+    group: Classification
+    title: Classified data carries one visible DSL label, optionally followed by markers; unlabelled data is unclassified, not DSL-0
+  - id: Sharing agreement
+    group: Code of conduct
+    title: Before sharing, the data owner agrees IDCF use with the recipient, including which DSLs and markers it will handle
+  - id: Rule 1
+    group: Rules
+    title: The data owner seeks assurance that a recipient's systems meet the DSL they claim
+  - id: Rule 2
+    group: Rules
+    title: Data labelled with a DSL is stored only in systems that protect it at or above that level
+  - id: Rule 3
+    group: Rules
+    title: Only the data owner, or people it authorises, may declassify data or lower its DSL
+  - id: Rule 4
+    group: Rules
+    title: A data recipient may raise a DSL
+  - id: Rule 5
+    group: Rules
+    title: A data recipient may classify unclassified data it receives as though it were the data owner
+  - id: Rule 6
+    group: Rules
+    title: Data derived from IDCF-classified data takes the highest DSL of its sources unless agreed otherwise
+  - id: Movement
+    group: Guidance
+    title: Devices, channels and services that move or send the data meet its DSL; an email takes the highest DSL of its contents
+  - id: Whole system
+    group: Guidance
+    title: The whole system is assessed, including synced devices, home computers and identity services; its weakest part sets the level
+  - id: DSL-1 Physical
+    group: DSL-1
+    title: Devices holding the data stay with an authorised person or are locked away, preventing opportunistic theft and loss
+  - id: DSL-1 Authorised person
+    group: DSL-1
+    title: Only approved people who understand basic device security hold devices with the data
+  - id: DSL-2 Physical
+    group: DSL-2
+    title: Data on a lost device that is off or locked is unlikely to be read (encrypted storage, including USB drives, and screen locks)
+  - id: DSL-2 Cyber
+    group: DSL-2
+    title: Cyber controls equivalent to Essential Eight Maturity Level 1, or CIS Controls IG1 within an ISO 27001 or NIST CSF ISMS
+  - id: DSL-2 Authorised person
+    group: DSL-2
+    title: Only authorised users with individual accounts reach the data, on a need-to-know (or may-need-to-know) basis, with basic training
+  - id: DSL-3 Physical
+    group: DSL-3
+    title: Lost or unattended devices resist a skilled attacker (encryption, automatic lock, remote wipe) and premises access is controlled
+  - id: DSL-3 Cyber
+    group: DSL-3
+    title: Cyber controls equivalent to Essential Eight Maturity Level 2, or CIS Controls IG2
+  - id: DSL-3 Authorised person
+    group: DSL-3
+    title: Strict need-to-know at user level, managed as people move and leave; privileged access logged and audited; basic vetting
+  - id: DSL-4 Physical
+    group: DSL-4
+    title: Restricted, logged and vetted physical access; most mobile devices unsuitable, so thin clients or specialist workstations
+  - id: DSL-4 Cyber
+    group: DSL-4
+    title: Cyber controls equivalent to Essential Eight Maturity Level 3, or CIS Controls IG3
+  - id: DSL-4 Authorised person
+    group: DSL-4
+    title: Small vetted user base, MFA at each login, supervised administration, and approval before data leaves the environment
+  - id: DSL-4 Jurisdiction
+    group: DSL-4
+    title: Hosting location, foreign legal reach and the citizenship of users and maintainers are controlled
+  - id: DSL-5+ Agreed
+    group: DSL-5+
+    title: Protection beyond DSL-4, specified by the data owner and agreed between the parties

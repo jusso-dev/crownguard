@@ -3,6 +3,8 @@ name: Microsoft Zero Trust deployment guidance
 shortName: Microsoft Zero Trust
 publisher: Microsoft
 source: ms-zt-m365
+# Supporting pages: the guide for each pillar or section the controls come from.
+sources: [ms-zt-identity, ms-zt-endpoints, ms-zt-data, ms-zt-applications, ms-zt-infrastructure, ms-zt-secops, ms-zt-copilot]
 closed: false
 note: >-
   Microsoft's Zero Trust deployment guides are organised by pillar (identity, endpoints, data,

@@ -27,6 +27,9 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: AM-1 }
     - { framework: ms-zero-trust, ref: Endpoints 1 }
+    - { framework: idcf, ref: "DSL-2 Physical" }
+    - { framework: idcf, ref: "DSL-3 Physical" }
+    - { framework: idcf, ref: "Whole system" }
 
 - id: MS-END-002
   module: core
@@ -47,7 +50,7 @@
     files from the internet, and force runtime antivirus scanning. Scope an exception group for
     documented business needs.
   effort: M
-  licence: [intune]
+  licence: [intune, m365-apps-enterprise]
   sources: [ms-macros-internet, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
@@ -150,16 +153,19 @@
     Office, browsers and PDF readers process untrusted content from email and the web every day,
     which makes them the most targeted applications on a workstation.
   yesLooksLike: >-
-    Microsoft 365 Apps use Current Channel or Monthly Enterprise Channel with updates enforced, Edge
-    and other browsers auto-update, PDF readers are managed, and reports show devices are within two
-    weeks of the latest release; unsupported versions are removed.
+    Microsoft 365 Apps use Current Channel or Monthly Enterprise Channel with updates enforced and no
+    devices held back on Semi-Annual Enterprise Channel version 2508 or older, Edge and other browsers
+    auto-update, PDF readers are managed, and reports show devices are within two weeks of the latest
+    release; unsupported versions are removed.
   remediation: >-
-    Set the Microsoft 365 Apps update channel and deadline through Intune or Cloud Update, enforce
-    browser auto-update policies, deploy PDF software through Intune with automatic updates, and
+    Set the Microsoft 365 Apps update channel and deadline through Intune or Cloud Update, and move
+    devices still on Semi-Annual Enterprise Channel to Monthly Enterprise Channel (Microsoft merged the
+    two from version 2606 in July 2026, and version 2508 was supported only until 8 September 2026).
+    Enforce browser auto-update policies, deploy PDF software through Intune with automatic updates, and
     remove unsupported Office versions and browser extensions.
   effort: M
   licence: [intune]
-  sources: [ms-m365-apps-channels, asd-e8-maturity-model]
+  sources: [ms-m365-apps-channels, ms-m365-apps-channel-unification, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-6 }
@@ -245,3 +251,4 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-1 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }

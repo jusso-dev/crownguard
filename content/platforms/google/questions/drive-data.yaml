@@ -26,6 +26,7 @@
     - { framework: cis-gws, ref: "3.1.2.1.1.5" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: idcf, ref: "Sharing agreement" }
 
 - id: GO-DRV-002
   module: core
@@ -51,6 +52,7 @@
     - { framework: cis-gws, ref: "3.1.2.1.1.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-DRV-003
   module: core
@@ -78,6 +80,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: GO-DRV-004
   module: core
@@ -104,6 +107,8 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: idcf, ref: Movement }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
 
 - id: GO-DRV-005
   module: core
@@ -128,6 +133,7 @@
   refs:
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: idcf, ref: Labels }
 
 - id: GO-DRV-006
   module: core
@@ -152,3 +158,5 @@
     - { framework: cis-gws, ref: "3.1.2.3.1" }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: idcf, ref: "Whole system" }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }

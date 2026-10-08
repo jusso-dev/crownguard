@@ -22,6 +22,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: GO-AI-002
   module: core
@@ -49,6 +50,7 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.DS-10 }
     - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
 
 - id: GO-AI-003
   module: core
@@ -73,3 +75,4 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: idcf, ref: "Rule 1" }

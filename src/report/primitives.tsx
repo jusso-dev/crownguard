@@ -61,10 +61,12 @@ export function Table<T>({ columns, rows, headerBg, zebra }: { columns: Column<T
 
 const wrapText = (n: ReactNode) => (typeof n === "string" || typeof n === "number" ? <Text>{n}</Text> : n);
 
-export function Meter({ value, color }: { value: number | null; color: string }) {
+/** A 0-1 bar; `marker` draws a target tick at that point. */
+export function Meter({ value, color, marker }: { value: number | null; color: string; marker?: number }) {
   return (
     <View style={{ height: 5, backgroundColor: line, borderRadius: 2.5 }}>
       <View style={{ height: 5, width: `${Math.round((value ?? 0) * 100)}%`, backgroundColor: color, borderRadius: 2.5 }} />
+      {marker !== undefined && <View style={{ position: "absolute", top: -2, left: `${Math.round(marker * 1000) / 10}%`, width: 1.2, height: 9, backgroundColor: ink }} />}
     </View>
   );
 }

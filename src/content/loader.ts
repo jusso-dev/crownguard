@@ -1,6 +1,8 @@
 import { parse } from "yaml";
 import { z } from "zod";
 import {
+  socModelSchema,
+  socQuestionSchema,
   assetFileSchema,
   frameworkSchema,
   importMappingSchema,
@@ -9,6 +11,8 @@ import {
   sourceFileSchema,
   type Catalogue,
   type PlatformBundle,
+  type SocModel,
+  type SocQuestion,
 } from "./schema";
 
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
@@ -95,15 +99,100 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     catalogue.imports.set(m.id, m);
   }
 
+  const socModelText = entries.find(([p]) => p === "content/soc/model.yaml")?.[1];
+  if (socModelText) {
+    const model = parseFile("content/soc/model.yaml", socModelText, socModelSchema, errors);
+    const questions = entries
+      .filter(([p]) => p.startsWith("content/soc/questions"))
+      .flatMap(([p, t]) => parseFile(p, t, z.array(socQuestionSchema), errors) ?? []);
+    if (model) {
+      catalogue.soc = { model, questions };
+      errors.push(...checkSoc(model, questions, catalogue));
+    }
+  }
+
   errors.push(...crossCheck(catalogue));
   return { catalogue, errors };
 }
 
-function crossCheck({ sources, frameworks, platforms }: Catalogue): string[] {
+/** Question id prefix for each SOC domain, e.g. SOC-BUS-001 for business. */
+const socPrefix: Record<string, string> = { business: "BUS", people: "PPL", process: "PRC", technology: "TEC", services: "SVC" };
+
+function checkSoc(model: SocModel, questions: SocQuestion[], catalogue: Catalogue): string[] {
   const errors: string[] = [];
+  for (const src of [model.source, model.licenceSource, ...model.sources])
+    if (!catalogue.sources.has(src)) errors.push(`soc: unknown source ${src}`);
+  const domainOf = new Map<string, SocModel["domains"][number]>();
+  for (const d of model.domains) {
+    if (!socPrefix[d.id]) errors.push(`soc: unknown domain ${d.id} (expected ${Object.keys(socPrefix).join(", ")})`);
+    for (const a of d.aspects) {
+      if (domainOf.has(a.id)) errors.push(`soc: duplicate aspect id ${a.id}`);
+      domainOf.set(a.id, d);
+    }
+  }
+  const platformIds = new Set([...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)));
+  const seen = new Set<string>();
+  const covered = { maturity: new Set<string>(), capability: new Set<string>() };
+  for (const q of questions) {
+    const where = `soc: ${q.id}`;
+    if (seen.has(q.id) || platformIds.has(q.id)) errors.push(`${where}: duplicate question id`);
+    seen.add(q.id);
+    const d = domainOf.get(q.aspect);
+    if (!d) {
+      errors.push(`${where}: unknown aspect ${q.aspect}`);
+      continue;
+    }
+    if (!q.id.startsWith(`SOC-${socPrefix[d.id]}-`)) errors.push(`${where}: id should start SOC-${socPrefix[d.id]}- for the ${d.name} domain`);
+    if (q.kind === "capability" && !d.capability) errors.push(`${where}: capability questions belong only in capability domains`);
+    covered[q.kind].add(q.aspect);
+    for (const r of q.refs) {
+      const f = catalogue.frameworks.get(r.framework);
+      if (!f) errors.push(`${where}: unknown framework ${r.framework}`);
+      else if (f.closed && !f.controls.some((c) => c.id === r.ref)) errors.push(`${where}: ${r.framework} has no control ${r.ref}`);
+    }
+  }
+  for (const [a, d] of domainOf) {
+    if (!covered.maturity.has(a)) errors.push(`soc: aspect ${a} has no maturity question`);
+    if (d.capability && !covered.capability.has(a)) errors.push(`soc: aspect ${a} has no capability question`);
+  }
+  return errors;
+}
+
+/** URL identity for duplicate detection: case-insensitive host (and path on Microsoft sites), no trailing slash. */
+function pageKey(url: string): string {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    let path = u.pathname.length > 1 ? u.pathname.replace(/\/$/, "") : u.pathname;
+    if (host === "learn.microsoft.com" || host === "www.microsoft.com") path = path.toLowerCase();
+    return `${host}${path}${u.search}${u.hash}`;
+  } catch {
+    return url;
+  }
+}
+
+function crossCheck({ sources, frameworks, platforms, soc }: Catalogue): string[] {
+  const errors: string[] = [];
+  const cited = new Set<string>();
   for (const f of frameworks.values()) {
     if (!sources.has(f.source)) errors.push(`framework ${f.id}: unknown source ${f.source}`);
+    for (const s of f.sources) if (!sources.has(s)) errors.push(`framework ${f.id}: unknown source ${s}`);
     if (f.closed && f.controls.length === 0) errors.push(`framework ${f.id}: closed framework has no controls`);
+    cited.add(f.source);
+    for (const s of f.sources) cited.add(s);
+  }
+  for (const { platform, questions } of platforms.values()) {
+    for (const s of platform.sources) cited.add(s);
+    for (const q of questions) for (const s of q.sources) cited.add(s);
+  }
+  if (soc) for (const s of [soc.model.source, soc.model.licenceSource, ...soc.model.sources]) cited.add(s);
+  const byPage = new Map<string, string>();
+  for (const s of sources.values()) {
+    if (!cited.has(s.id)) errors.push(`source ${s.id}: not cited by any question, framework or platform`);
+    const key = pageKey(s.url);
+    const twin = byPage.get(key);
+    if (twin) errors.push(`source ${s.id}: same page as ${twin}`);
+    else byPage.set(key, s.id);
   }
   const questionIds = new Set<string>();
   const assetIds = new Set<string>();

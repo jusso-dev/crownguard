@@ -13,3 +13,32 @@
   publisher: NIST
   url: https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf
   retrieved: 2026-10-08
+# SOC-CMM: the optional SOC maturity module (content/soc/) uses the model's structure under CC BY-SA 4.0.
+# Keep "®" out of these titles: the source watch matches version numbers in the title against the page.
+- id: soc-cmm
+  title: SOC-CMM assessment tool v2.4.2 (basic and advanced)
+  publisher: SOC-CMM
+  url: https://www.soc-cmm.com/products/soc-cmm
+  retrieved: 2026-10-09
+- id: soc-cmm-model
+  title: SOC-CMM model v2.4 (5 domains and 27 aspects)
+  publisher: SOC-CMM
+  url: https://www.soc-cmm.com/introduction/model
+  retrieved: 2026-10-09
+- id: cc-by-sa-4
+  title: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+  publisher: Creative Commons
+  url: https://creativecommons.org/licenses/by-sa/4.0/
+  retrieved: 2026-10-09
+# IDCF framework PDF: © Commonwealth of Australia 2026 and © CSIRO 2026, licensed CC BY 4.0 (Coat of Arms excepted).
+# The companion guide carries no notice of its own, so the Home Affairs website terms apply (CC BY 3.0 AU).
+- id: idcf
+  title: Industry Data Classification Framework (IDCF), 2026 release
+  publisher: Department of Home Affairs
+  url: https://www.homeaffairs.gov.au/cyber-security-subsite/idcf/Documents/industry-data-classification-framework.pdf
+  retrieved: 2026-10-09
+- id: idcf-system-security
+  title: "IDCF: A guide to system security (Release July 2026)"
+  publisher: Department of Home Affairs
+  url: https://www.homeaffairs.gov.au/cyber-security-subsite/idcf/Documents/idcf-a-guide-to-system-security.pdf
+  retrieved: 2026-10-09

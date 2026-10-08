@@ -48,6 +48,7 @@
     - { framework: cis-gws, ref: "3.1.3.5.3" }
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: google-security-guidance, ref: "Checklist: Gmail" }
+    - { framework: idcf, ref: Movement }
 
 - id: GO-GML-003
   module: core
@@ -131,3 +132,4 @@
   refs:
     - { framework: cis-gws, ref: "3.1.3.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import type { Band } from "../engine/risk";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -33,6 +33,22 @@ export function Button({
     </button>
   );
 }
+
+/** Arrow, Home and End keys for a role="radiogroup" of role="radio" buttons: move and select, like native radios. */
+export function radioKeys(e: KeyboardEvent<HTMLElement>) {
+  if (!["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Home", "End"].includes(e.key)) return;
+  const radios = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]')];
+  const i = radios.indexOf(document.activeElement as HTMLElement);
+  if (i < 0) return;
+  e.preventDefault();
+  const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+  const next = e.key === "Home" ? 0 : e.key === "End" ? radios.length - 1 : (i + step + radios.length) % radios.length;
+  radios[next].focus();
+  radios[next].click();
+}
+
+/** Roving tab stop for a radio group: only the checked option (or the first, when none is) is in the tab order. */
+export const radioTab = (checked: boolean, index: number, anyChecked: boolean) => (checked || (!anyChecked && index === 0) ? 0 : -1);
 
 export function Spinner() {
   return (
@@ -69,8 +85,12 @@ export function FieldGroup({ label, hint, children }: { label: string; hint?: st
 export const inputClass =
   "w-full rounded-[var(--radius-control)] border border-field bg-surface px-3 py-2 text-sm text-ink outline-2 outline-offset-1 outline-transparent transition-colors duration-150 placeholder:text-muted/70 [@media(hover:hover)]:hover:border-ink-2 focus-visible:border-accent focus-visible:outline-accent/35 disabled:cursor-not-allowed disabled:opacity-50";
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[var(--radius-card)] border border-rule bg-surface p-5 ${className}`}>{children}</div>;
+export function Card({ children, className = "", ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
+  return (
+    <div className={`rounded-[var(--radius-card)] border border-rule bg-surface p-5 ${className}`} {...props}>
+      {children}
+    </div>
+  );
 }
 
 export function StepHeader({ title, step, children }: { title: string; step?: string; children?: ReactNode }) {

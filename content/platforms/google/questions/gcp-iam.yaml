@@ -70,10 +70,11 @@
     external principals with Policy Analyzer and remove or justify them, and grant exceptions only
     on specific projects.
   effort: M
-  sources: [gcp-domain-restricted-sharing, gcp-blueprint-preventative]
+  sources: [gcp-domain-restricted-sharing, gcp-blueprint-preventative, gcp-org-policy-constraints]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+    - { framework: idcf, ref: "Sharing agreement" }
 
 - id: GO-CIAM-004
   module: gcp
@@ -96,7 +97,7 @@
     Inventory, replace them with attached service accounts or workload identity federation, and
     delete keys that are no longer used.
   effort: M
-  sources: [gcp-restrict-service-accounts, gcp-sa-key-best-practices, gcp-workload-identity-federation]
+  sources: [gcp-restrict-service-accounts, gcp-sa-key-best-practices, gcp-workload-identity-federation, gcp-org-policy-constraints]
   refs:
     - { framework: cis-gcp, ref: "1.5" }
     - { framework: cis-gcp, ref: "1.8" }

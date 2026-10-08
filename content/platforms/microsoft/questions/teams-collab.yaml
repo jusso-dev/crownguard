@@ -25,6 +25,7 @@
     - { framework: cis-m365, ref: "8.2.3" }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: ms-zero-trust, ref: M365 swim lane 1 }
+    - { framework: idcf, ref: "Sharing agreement" }
 
 - id: MS-TMS-002
   module: core
@@ -50,6 +51,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-TMS-003
   module: core
@@ -75,3 +77,4 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications II }
+    - { framework: idcf, ref: "Rule 1" }

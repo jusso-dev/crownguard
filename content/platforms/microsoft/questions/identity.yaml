@@ -36,9 +36,10 @@
   severity: critical
   question: Is legacy authentication (POP, IMAP, SMTP AUTH, Exchange ActiveSync basic and older Office clients) blocked for all users?
   why: >-
-    Legacy protocols cannot perform MFA, so attackers use them to test sprayed or stolen passwords
-    and get straight into mailboxes even where MFA is switched on. Microsoft reports that more than
-    99 percent of password spray attacks use legacy authentication.
+    Legacy protocols cannot perform MFA, so attackers use them to test sprayed or stolen passwords and
+    to send mail as the user. Exchange Online has already switched off Basic authentication for POP,
+    IMAP, ActiveSync and Outlook, but SMTP AUTH can still accept a password until it is blocked.
+    Microsoft reports that more than 99 percent of password spray attacks use legacy authentication.
   yesLooksLike: >-
     A Conditional Access policy (or the Microsoft-managed or Baseline security mode policy) blocks
     Exchange ActiveSync clients and other clients for all users, and the sign-in logs show no
@@ -99,14 +100,16 @@
     intercept. An attacker who can register a weak method of their own can also keep access after a
     password reset.
   yesLooksLike: >-
-    Authentication methods are managed only in the Authentication methods policy (legacy MFA and
-    SSPR policies migrated), SMS, voice call and email OTP are disabled for members, and Microsoft
-    Authenticator shows number matching with application and location context.
+    The Authentication methods policy shows Migration Complete, so legacy MFA and SSPR policy settings
+    no longer apply. SMS, voice call and email OTP are disabled for members, and Microsoft Authenticator
+    shows number matching with application and location context.
   remediation: >-
-    In the Entra admin centre under Authentication methods, complete migration from the legacy MFA
-    and SSPR policies, move users to Microsoft Authenticator or passkeys with a registration
-    campaign, then disable SMS, voice call and email OTP (keep email OTP only for B2B guests if you
-    need it).
+    In the Entra admin centre under Authentication methods > Policies, run the migration guide (or use
+    Manage migration) until the status shows Migration Complete. Since 30 September 2025 methods can't
+    be changed in the legacy MFA and SSPR policies, but anything still switched on there keeps working
+    until migration is complete. Then move users to Microsoft Authenticator or passkeys with a
+    registration campaign and disable SMS, voice call and email OTP (keep email OTP only for B2B guests
+    if you need it).
   effort: M
   licence: []
   sources: [ms-auth-methods-manage]
@@ -156,13 +159,18 @@
     time. Without risk policies those detections are only alerts that may not be read until the
     damage is done.
   yesLooksLike: >-
-    Enabled policies require risk remediation or a secure password change for high user risk, and
-    MFA with sign-in frequency "every time" for medium and high sign-in risk, covering all users
-    except emergency access accounts.
+    Enabled Conditional Access policies require risk remediation (or a secure password change) for high
+    user risk, and MFA with sign-in frequency Every time for medium and high sign-in risk, covering all
+    users except emergency access accounts. Nothing depends on the legacy risk policies in ID
+    Protection, which Microsoft retired on 1 October 2026.
   remediation: >-
-    Turn on the Microsoft-managed risk policies, or create policies from the "Require MFA for
-    elevated sign-in risk" and "Require secure password change for elevated user risk" templates.
-    In hybrid tenants enable password hash sync so leaked credential detection works.
+    Create Conditional Access policies for all users, starting from the risk-based templates: require
+    risk remediation for high user risk, and MFA with sign-in frequency Every time for medium and high
+    sign-in risk (the Microsoft-managed risky sign-in policy only covers high risk). Test in report-only
+    mode, then turn them on. Microsoft retired the legacy user risk and sign-in risk policies in ID
+    Protection on 1 October 2026, so set any still shown on the ID Protection dashboard to Disabled. In
+    hybrid tenants enable password hash sync and password writeback so leaked credential detection and
+    self-remediation work.
   effort: S
   licence: [entra-p2]
   sources: [ms-ca-risk-signin, ms-ca-risk-user, ms-id-protection-policies]
@@ -201,6 +209,7 @@
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: mcsb, ref: IM-7 }
     - { framework: ms-zero-trust, ref: Endpoints 2 }
+    - { framework: idcf, ref: "Whole system" }
 
 - id: MS-ID-008
   module: core
@@ -230,6 +239,7 @@
     - { framework: cis-m365, ref: "5.3.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-3 }
+    - { framework: idcf, ref: "Sharing agreement" }
 
 - id: MS-ID-009
   module: core

@@ -25,6 +25,7 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data I }
+    - { framework: idcf, ref: Labels }
 
 - id: MS-DP-002
   module: core
@@ -51,6 +52,7 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data II }
+    - { framework: idcf, ref: Movement }
 
 - id: MS-DP-003
   module: core
@@ -79,3 +81,5 @@
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: mcsb, ref: DP-2 }
     - { framework: ms-zero-trust, ref: Data IV }
+    - { framework: idcf, ref: Movement }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }

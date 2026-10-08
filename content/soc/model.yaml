@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see NOTICE.md)
+# Optional security operations (SOC) maturity module. The domains, aspects, level names and default targets follow
+# the SOC-CMM® model v2.4 (https://www.soc-cmm.com/products/soc-cmm), licensed CC BY-SA 4.0, so everything in
+# content/soc/ is licensed CC BY-SA 4.0, not MIT. The questions and level descriptions are crownguard's own.
+id: soc-maturity
+name: SOC maturity (aligned to the SOC-CMM® v2.4 model)
+shortName: SOC maturity
+source: soc-cmm
+licence: CC BY-SA 4.0
+licenceSource: cc-by-sa-4
+sources: [soc-cmm-model]
+basisVersion: "2.4.2"
+attribution: >-
+  Structure: SOC-CMM® model v2.4 (assessment tool v2.4.2) by Rob van Os, Copyright (C) 2025 - SOC-CMM®, licensed
+  CC BY-SA 4.0. crownguard uses the model's domain and aspect names, level names and default targets. The questions,
+  level descriptions and simplified scoring (one 0–5 rating per aspect, plus a 0–3 capability rating for technology
+  and services) are crownguard's own, also licensed CC BY-SA 4.0. Results are indicative self-ratings, not SOC-CMM
+  maturity or capability scores, and are not comparable with a full SOC-CMM assessment, the SOC-CMM benchmark or
+  certification. Provided without warranty. SOC-CMM® is a registered trademark; crownguard is not affiliated with
+  or endorsed by SOC-CMM.
+scales:
+  maturity:
+    - { level: 0, name: Non-existent, description: Not in place. }
+    - { level: 1, name: Initial, description: "Done ad hoc; depends on individuals; little is written down." }
+    - { level: 2, name: Managed, description: "Partly structured and documented, but practice varies." }
+    - { level: 3, name: Defined, description: "Documented, agreed and followed consistently, even when key people are away." }
+    - { level: 4, name: Quantitatively managed, description: "Measured against agreed targets, and the results are acted on." }
+    - { level: 5, name: Optimising, description: "Improved continuously from measures, lessons learned and changes in threats." }
+  capability:
+    - { level: 0, name: Incomplete, description: "Missing, or missing things it needs to work." }
+    - { level: 1, name: Performed, description: "Works at a basic level, but coverage and set-up are uneven." }
+    - { level: 2, name: Managed, description: "A standard set-up that covers what matters, including your crown jewels." }
+    - { level: 3, name: Defined, description: "Coverage is measured, gaps are tracked, and it is tuned and improved." }
+# SOC-CMM's own default targets: maturity 3 in every domain, capability 2 for technology and services.
+targets: { maturity: 3, capability: 2 }
+domains:
+  - id: business
+    name: Business
+    description: Why the SOC exists, who it serves, and how it is governed and kept within policy and privacy law.
+    aspects:
+      - { id: business-drivers, name: Business drivers }
+      - { id: customers-stakeholders, name: Customers and stakeholders }
+      - { id: charter, name: Charter }
+      - { id: governance, name: Governance }
+      - { id: privacy-policy, name: Privacy and policy }
+  - id: people
+    name: People
+    description: Whether the SOC has enough of the right people, clear roles, and the knowledge and training to do the job.
+    aspects:
+      - { id: employees, name: Employees }
+      - { id: roles-hierarchy, name: Roles and hierarchy }
+      - { id: people-management, name: People management }
+      - { id: knowledge-management, name: Knowledge management }
+      - { id: training-education, name: Training and education }
+  - id: process
+    name: Process
+    description: How the SOC is run day to day, how it reports, and how detections, automation and logs are engineered and maintained.
+    aspects:
+      - { id: soc-management, name: SOC management }
+      - { id: operations-facilities, name: Operations and facilities }
+      - { id: reporting-communication, name: Reporting and communication }
+      - { id: use-case-management, name: Use case management }
+      - { id: detection-engineering, name: Detection engineering and validation }
+      - { id: automation-engineering, name: Automation engineering }
+      - { id: log-management, name: Log management }
+  - id: technology
+    name: Technology
+    description: >-
+      The platforms the SOC depends on: log monitoring (usually a SIEM), network monitoring, endpoint detection and
+      response, and security automation. Each is rated for maturity (0–5) and capability (0–3). Leave out any you
+      genuinely don't need.
+    scopable: true
+    capability: true
+    aspects:
+      - { id: log-monitoring, name: Log monitoring }
+      - { id: network-monitoring, name: Network monitoring }
+      - { id: endpoint-monitoring, name: Endpoint monitoring }
+      - { id: secops-automation, name: SecOps automation }
+  - id: services
+    name: Services
+    description: >-
+      The security services the SOC or your provider delivers. Each is rated for maturity (0–5) and capability (0–3).
+      Leave out any you genuinely don't need.
+    scopable: true
+    capability: true
+    aspects:
+      - { id: security-monitoring, name: Security monitoring }
+      - { id: incident-management, name: Security incident management }
+      - { id: forensic-analysis, name: Forensic analysis }
+      - { id: threat-intelligence, name: Cyber threat intelligence }
+      - { id: threat-hunting, name: Threat hunting }
+      - { id: vulnerability-management, name: Vulnerability management }

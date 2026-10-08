@@ -1,0 +1,113 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0 (see ../NOTICE.md)
+# Technology domain. Each aspect has a maturity question (0 Non-existent to 5 Optimising) and a capability question
+# (0 Incomplete to 3 Defined). Aspects can be left out of scoring when the SOC genuinely doesn't need them.
+- id: SOC-TEC-001
+  aspect: log-monitoring
+  question: How well is your log monitoring platform (a SIEM or equivalent) managed?
+  why: >-
+    Managed means owned, documented, maintained by trained people, resilient and with tightly controlled admin access.
+    Examples: Microsoft Sentinel with Defender XDR, Google Security Operations, or your provider's platform.
+  levels:
+    - There's no log monitoring platform.
+    - A platform exists but nobody owns it; it was set up once and left.
+    - It has an owner, but documentation, maintenance, backups or access control are partial.
+    - Ownership, documentation, trained administrators, change control, availability planning and controlled (including break-glass) access are all in place.
+    - Platform health, data ingestion, cost and availability are monitored against targets.
+    - The platform's configuration, cost and performance are reviewed and improved regularly from those measures.
+  refs: [{ framework: nist-csf-2, ref: DE.AE-03 }]
+
+- id: SOC-TEC-002
+  aspect: log-monitoring
+  kind: capability
+  question: How complete is your log monitoring coverage, especially for your crown jewels?
+  why: Identity, email, collaboration, endpoint and cloud admin logs are where cloud attacks show up.
+  levels:
+    - Key sources (identity, email, collaboration, admin activity) aren't collected or correlated.
+    - Some sources are collected and basic alerting works, but coverage and correlation are uneven.
+    - Identity, email, collaboration, endpoint and cloud admin logs for every crown jewel are collected, correlated, alerted on and tagged with ATT&CK techniques.
+    - Coverage is measured against your crown jewels and priority techniques, gaps are tracked, and rules and dashboards are tuned regularly.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-03 }, { framework: nist-csf-2, ref: DE.CM-09 }, { framework: nist-csf-2, ref: DE.AE-03 }]
+
+- id: SOC-TEC-003
+  aspect: network-monitoring
+  question: How well is your network monitoring managed?
+  why: >-
+    In cloud-first organisations, network visibility usually comes from firewalls, secure web gateways, DNS filtering
+    or cloud network flow logs rather than dedicated appliances. Leave it out of scoring only if there's no network to
+    monitor; if you need it but don't have it, rate 0.
+  levels:
+    - There's no network monitoring.
+    - Network logs exist somewhere, but nobody owns or looks after the monitoring.
+    - It has an owner, but documentation, maintenance or access control are partial.
+    - Ownership, documentation, trained administrators, change control, availability and controlled access are all in place.
+    - Sensor and log health, coverage and availability are monitored against targets.
+    - Network monitoring is reviewed and improved regularly as the network and threats change.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-01 }]
+
+- id: SOC-TEC-004
+  aspect: network-monitoring
+  kind: capability
+  question: How much of your network traffic and internet egress can the SOC see and alert on?
+  why: Remote and cloud-first staff still leave traces in DNS, gateway and cloud network logs.
+  levels:
+    - No visibility of network traffic, DNS or egress.
+    - Some firewall or DNS logs exist but aren't monitored or correlated.
+    - Traffic at key points (internet egress, DNS, VPN or zero-trust access, cloud networks) is collected, analysed for known-bad and unusual patterns, and fed to the SIEM.
+    - Network visibility is measured against your sites and cloud networks, gaps are tracked, and detections are tuned regularly.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-01 }]
+
+- id: SOC-TEC-005
+  aspect: endpoint-monitoring
+  question: How well is your endpoint detection and response (EDR) tool managed?
+  why: >-
+    EDR tools can isolate devices and run commands, so admin access and change control matter. Examples: Microsoft
+    Defender for Endpoint or a third-party EDR.
+  levels:
+    - There's no EDR tool.
+    - EDR is installed, but nobody owns or maintains its configuration.
+    - It has an owner, but policies, documentation, updates or access control are partial.
+    - Ownership, documented policies, trained administrators, change control, sensor health checks and controlled access are all in place.
+    - Sensor health, policy compliance and console availability are monitored against targets.
+    - EDR policies and settings are reviewed and improved regularly from those measures and new threats.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-09 }]
+
+- id: SOC-TEC-006
+  aspect: endpoint-monitoring
+  kind: capability
+  question: How completely does EDR cover your devices, and can the SOC act through it?
+  why: Devices that can reach a crown jewel need detection and a way to isolate them quickly.
+  levels:
+    - No EDR, or only basic antivirus with no central visibility.
+    - EDR is on some devices; alerts are visible, but response actions are rarely used.
+    - EDR covers every managed device that can reach a crown jewel, and the SOC can detect, isolate and remediate through it, integrated with the SIEM.
+    - Coverage and sensor health are measured, unmanaged devices are tracked, and detection and response settings are tuned regularly.
+  refs: [{ framework: nist-csf-2, ref: DE.CM-09 }, { framework: nist-csf-2, ref: RS.MI-01 }]
+
+- id: SOC-TEC-007
+  aspect: secops-automation
+  question: How well is your security automation platform (SOAR or playbook engine) managed?
+  why: >-
+    Automation platforms hold powerful credentials to disable accounts or isolate devices, so they need the care you
+    give admin accounts. Examples: Microsoft Sentinel playbooks, Google Security Operations playbooks, or your
+    provider's platform. Leave it out of scoring only if your security operations genuinely don't need automation
+    tooling; if you need it but don't have it, rate 0.
+  levels:
+    - There's no automation platform.
+    - Playbooks exist, but nobody owns the platform or the credentials it uses.
+    - It has an owner, but documentation, testing, credential management or access control are partial.
+    - Ownership, documentation, trained administrators, change control, managed service credentials and controlled access are all in place.
+    - Playbook runs, failures and platform availability are monitored against targets.
+    - The platform and its playbooks are reviewed and improved regularly from those measures.
+  refs: [{ framework: nist-csf-2, ref: PR.AA-05 }]
+
+- id: SOC-TEC-008
+  aspect: secops-automation
+  kind: capability
+  question: How much of your triage and response is supported by tested playbooks?
+  why: Automating the routine steps frees analysts for the incidents that need judgement.
+  levels:
+    - No playbooks.
+    - A few playbooks exist (for example enrichment), started by hand.
+    - Playbooks cover the common cases (enrichment, phishing triage, account and device containment), integrated with identity, email, endpoint and ticketing tools.
+    - Playbook coverage and outcomes are measured, failures are reviewed, and playbooks are extended and tuned regularly.
+  refs: [{ framework: nist-csf-2, ref: RS.MA-02 }, { framework: nist-csf-2, ref: RS.MI-01 }]

@@ -125,12 +125,12 @@
   url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-block-authentication-flows
   retrieved: 2026-10-08
 - id: ms-ca-risk-signin
-  title: Require MFA for elevated sign-in risk (Conditional Access policy template)
+  title: Require multifactor authentication for elevated sign-in risk
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-risk-based-sign-in
   retrieved: 2026-10-08
 - id: ms-ca-risk-user
-  title: Require secure password change or remediation for elevated user risk
+  title: Require remediation for risky users
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-risk-based-user
   retrieved: 2026-10-08
@@ -155,7 +155,7 @@
   url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-methods-manage
   retrieved: 2026-10-08
 - id: ms-mandatory-mfa
-  title: Planning for mandatory multifactor authentication for Azure and other admin portals
+  title: Mandatory multifactor authentication for Azure and admin portals
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mandatory-multifactor-authentication
   retrieved: 2026-10-08
@@ -229,6 +229,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-install-prerequisites
   retrieved: 2026-10-08
+- id: ms-entra-connect-app-auth
+  title: Authenticate to Microsoft Entra ID by using application identity
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/authenticate-application-id
+  retrieved: 2026-10-09
 - id: ms-migrate-federation
   title: Migrate from federation to cloud authentication
   publisher: Microsoft
@@ -284,11 +289,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/purview/dlp-microsoft365-copilot-location-learn-about
   retrieved: 2026-10-08
-- id: ms-dspm-ai
-  title: Data Security Posture Management for AI
+- id: ms-dspm
+  title: Learn about Data Security Posture Management
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/purview/dspm-for-ai
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/purview/data-security-posture-management-learn-about
+  retrieved: 2026-10-09
 - id: ms-purview-licensing
   title: Microsoft Purview service description (licensing)
   publisher: Microsoft
@@ -384,6 +389,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online
   retrieved: 2026-10-08
+- id: ms-exo-smtp-basic-timeline
+  title: Updated Exchange Online SMTP AUTH Basic Authentication Deprecation Timeline
+  publisher: Microsoft
+  url: https://techcommunity.microsoft.com/blog/exchange/updated-exchange-online-smtp-auth-basic-authentication-deprecation-timeline/4489835
+  retrieved: 2026-10-09
 - id: ms-exo-app-rbac
   title: Role Based Access Control for Applications in Exchange Online
   publisher: Microsoft
@@ -449,6 +459,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/microsoft-365-apps/updates/overview-update-channels
   retrieved: 2026-10-08
+- id: ms-m365-apps-channel-unification
+  title: "Upcoming channel unification: Semi-Annual Enterprise Channel to Monthly Enterprise Channel"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365-apps/updates/unified-update-channels
+  retrieved: 2026-10-09
 - id: ms-edr-block-mode
   title: Endpoint detection and response in block mode
   publisher: Microsoft
@@ -493,11 +508,6 @@
   title: Configure automatic attack disruption in Microsoft Defender XDR
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/defender-xdr/configure-attack-disruption
-  retrieved: 2026-10-08
-- id: ms-secure-score
-  title: Microsoft Secure Score
-  publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score
   retrieved: 2026-10-08
 - id: ms-sentinel
   title: "What is Microsoft Sentinel?"
@@ -594,3 +604,9 @@
   publisher: Microsoft
   url: https://www.microsoft.com/en-us/licensing/news/2026-m365-packaging-pricing-updates
   retrieved: 2026-10-08
+# The guide the IDCF names for configuring Microsoft 365 to Essential Eight Maturity Levels 1, 2 and 3 (DSL-2, 3, 4).
+- id: ms-essential-eight
+  title: Essential Eight guidance for Microsoft 365 (ACSC Essential Eight overview)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-overview
+  retrieved: 2026-10-09

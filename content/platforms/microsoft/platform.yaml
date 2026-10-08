@@ -69,18 +69,21 @@ licenceTiers:
   - id: office-365-e3
     name: Office 365 E3
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - purview-labels
       - purview-dlp
   - id: office-365-e3-nonprofit
     name: Office 365 E3 (Nonprofit)
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - purview-labels
       - purview-dlp
   - id: microsoft-365-e3
     name: Microsoft 365 E3
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - entra-p1
       - intune
@@ -90,6 +93,7 @@ licenceTiers:
   - id: microsoft-365-e3-nonprofit
     name: Microsoft 365 E3 (Nonprofit)
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - defender-office-p1  # included from 1 Aug 2026 (ms-m365-pricing-packaging-2026)
       - entra-p1
       - intune
@@ -99,6 +103,7 @@ licenceTiers:
   - id: microsoft-365-e3-e5-security
     name: Microsoft 365 E3 + E5 Security add-on
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - entra-p1
       - entra-p2
       - intune
@@ -113,6 +118,7 @@ licenceTiers:
   - id: microsoft-365-e5
     name: Microsoft 365 E5
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - entra-p1
       - entra-p2
       - intune
@@ -130,6 +136,7 @@ licenceTiers:
   - id: microsoft-365-e5-nonprofit
     name: Microsoft 365 E5 (Nonprofit)
     features:
+      - m365-apps-enterprise  # desktop Office managed by policy (Apps for business ignores policies)
       - entra-p1
       - entra-p2
       - intune
@@ -154,6 +161,8 @@ licenceFeatures:
     name: Microsoft Entra Workload ID (add-on)
   - id: intune
     name: Microsoft Intune Plan 1
+  - id: m365-apps-enterprise
+    name: Microsoft 365 Apps for enterprise (Office settings enforceable by policy)
   - id: defender-office-p1
     name: Defender for Office 365 Plan 1 (Safe Links, Safe Attachments)
   - id: defender-office-p2

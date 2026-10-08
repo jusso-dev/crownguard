@@ -160,11 +160,6 @@
   publisher: Google
   url: https://knowledge.workspace.google.com/admin/gmail/advanced/set-up-rules-to-detect-harmful-attachments
   retrieved: 2026-10-08
-- id: gws-pop-imap
-  title: "Turn POP & IMAP on or off for users"
-  publisher: Google
-  url: https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users
-  retrieved: 2026-10-08
 - id: gws-mail-delegation
   title: "Let users delegate access to a Gmail account"
   publisher: Google
@@ -404,11 +399,6 @@
   title: "Overview of VPC Service Controls"
   publisher: Google
   url: https://docs.cloud.google.com/vpc-service-controls/docs/overview
-  retrieved: 2026-10-08
-- id: gcp-cmek
-  title: "Customer-managed encryption keys (CMEK)"
-  publisher: Google
-  url: https://docs.cloud.google.com/kms/docs/cmek
   retrieved: 2026-10-08
 - id: gcp-sensitive-data-discovery
   title: "Overview of sensitive data discovery"

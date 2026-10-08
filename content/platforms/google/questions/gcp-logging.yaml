@@ -23,6 +23,7 @@
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: GO-CLOG-002
   module: gcp
@@ -48,6 +49,7 @@
     - { framework: cis-gcp, ref: "2.4" }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -67,8 +69,9 @@
     system or SIEM with an owner, and muted findings are justified.
   remediation: >-
     Activate Security Command Center at the organisation level, choose Premium if you need threat
-    detection and attack path analysis, send high and critical findings to Pub/Sub or your SIEM, and
-    review open findings weekly.
+    detection and attack path simulation, send high and critical findings to Pub/Sub or your SIEM, and
+    review open findings weekly. If you use the Enterprise tier, plan for its shutdown on 21 May 2027:
+    you move to Premium, which has no AWS or Azure coverage and no bundled Google SecOps.
   effort: M
   licence: [gcp-scc-premium]
   sources: [gcp-scc-overview, gcp-scc-tiers, gcp-blueprint-detective]

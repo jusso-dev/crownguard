@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import { exposures, tiers, type AssetType, type Tier } from "../../content/schema";
+import { suggestDsl } from "../../engine/idcf";
 import { impactOf } from "../../engine/risk";
 import {
   classifications,
+  dsls,
   regulations,
   type Classification,
   type CrownJewel,
+  type Dsl,
   type ImpactRating,
   type Regulation,
 } from "../../engine/types";
@@ -24,6 +27,17 @@ export const tierLabels: Record<Tier, string> = {
 };
 
 const impactLabels = ["Minimal", "Minor", "Moderate", "Major", "Severe"];
+
+/** IDCF guidance per level, paraphrased from the framework's examples at a moderate risk appetite. */
+const dslHelp: Record<Dsl | "none", string> = {
+  none: "DSL-2 suits everyday business data such as email and internal policy. DSL-3 suits Privacy Act personal and sensitive information, confidential IP and personnel files. DSL-4 suits nationally important or highly confidential core data. A lower risk appetite means a higher level.",
+  "dsl-0": "DSL-0 isn't permission to publish, and crown jewels are rarely DSL-0: their integrity and availability usually need DSL-2 or higher.",
+  "dsl-1": "DSL-1 covers physical protection only and is generally not suitable for day-to-day business.",
+  "dsl-2": "DSL-2: protection against opportunistic attacks, with cyber controls equivalent to Essential Eight Maturity Level 1. Everyday business data such as email and internal policy.",
+  "dsl-3": "DSL-3: the standard for sensitive information, with cyber controls equivalent to Essential Eight Maturity Level 2. Privacy Act personal and sensitive information, confidential IP, personnel files. Strong parallels with OFFICIAL: Sensitive.",
+  "dsl-4": "DSL-4: highly desirable to adversaries, with cyber controls equivalent to Essential Eight Maturity Level 3, usually in a separate specialised environment. Strong parallels with PROTECTED.",
+  "dsl-5-plus": "DSL-5+: protection is agreed between the parties. The IDCF gives no guidance, and it is beyond this self-assessment.",
+};
 
 export function JewelsStep() {
   const { assessment } = useStore();
@@ -110,6 +124,7 @@ function AssetCard({ platform, asset }: { platform: string; asset: AssetType }) 
               <span className="font-medium text-ink">{j.name}</span>
               <span className="text-muted">
                 Impact {impactOf(j)}/5 · {classifications[j.classification]}
+                {j.dsl ? ` · ${dsls[j.dsl]}` : ""}
               </span>
               <span className="ml-auto flex gap-1">
                 <Button variant="ghost" onClick={() => setEditing(j)}>Edit</Button>
@@ -202,6 +217,8 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
         </div>
       </FieldGroup>
 
+      <DslField jewel={j} onChange={(dsl) => set({ dsl })} />
+
       <Field label="Business processes that depend on it" hint="Optional. Appears in the crown-jewel register.">
         <input className={inputClass} value={j.businessProcesses} onChange={(e) => set({ businessProcesses: e.target.value })} placeholder="e.g. Payroll, client billing" />
       </Field>
@@ -211,5 +228,49 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
         <Button variant="ghost" onClick={onDone}>Cancel</Button>
       </div>
     </form>
+  );
+}
+
+/** Optional IDCF Data Security Level. Never filled in automatically: the data owner chooses it. */
+function DslField({ jewel, onChange }: { jewel: CrownJewel; onChange: (dsl: Dsl | undefined) => void }) {
+  const suggested = suggestDsl(jewel);
+  const select = useRef<HTMLSelectElement>(null);
+  return (
+    <FieldGroup
+      label="IDCF Data Security Level (optional)"
+      hint="Only if your organisation uses the Home Affairs Industry Data Classification Framework. The report then lists the gaps the questions found against that level; it can't confirm the level is met."
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          ref={select}
+          aria-label="IDCF Data Security Level"
+          className={`${inputClass} sm:max-w-48`}
+          value={jewel.dsl ?? ""}
+          onChange={(e) => onChange((e.target.value || undefined) as Dsl | undefined)}
+        >
+          <option value="">Not classified</option>
+          {(Object.keys(dsls) as Dsl[]).map((d) => (
+            <option key={d} value={d}>
+              {dsls[d]}
+            </option>
+          ))}
+        </select>
+        {jewel.dsl !== suggested && (
+          <Button
+            variant="secondary"
+            onClick={() => {
+              onChange(suggested);
+              // The button goes away once the suggestion is applied: keep focus on the field it changed.
+              select.current?.focus();
+            }}
+          >
+            Use crownguard&apos;s suggestion: {dsls[suggested]}
+          </Button>
+        )}
+      </div>
+      <p className="mt-1.5 max-w-[72ch] text-xs text-muted" aria-live="polite">
+        {dslHelp[jewel.dsl ?? "none"]}
+      </p>
+    </FieldGroup>
   );
 }

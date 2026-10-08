@@ -1,4 +1,4 @@
-import type { Catalogue, Question, Source } from "../content/schema";
+import type { Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,
@@ -8,10 +8,13 @@ import {
   domainPosture,
   gapStats,
   overallPosture,
+  questionsForJewel,
   type DomainPosture,
   type JewelRisk,
 } from "../engine/risk";
 import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
+import { socMaturity, type SocProvider, type SocResult } from "../engine/soc";
+import { idcfRows, jewelDsl, systemCell, type IdcfCell, type IdcfRow, type JewelDsl } from "../engine/idcf";
 import type { Answer, Assessment } from "../engine/types";
 import { readableOn, textOn, tint } from "../theme/color";
 
@@ -55,6 +58,22 @@ export interface ReportModel {
   theme: ReportTheme;
   platformNames: string[];
   posture: { score: number | null; confidence: number };
+  /**
+   * IDCF Data Security Level view: a matrix per platform plus its whole-system and data-movement questions, and the
+   * Rule 2 check for each jewel with a DSL, built from the questions that apply to that jewel.
+   */
+  idcf?: { platforms: { id: string; name: string; rows: IdcfRow[]; system: IdcfCell }[]; jewels: JewelDsl[] };
+  /** The optional SOC maturity self-assessment, when included and the module's content is present. */
+  soc?: {
+    model: SocModel;
+    questions: SocQuestion[];
+    result: SocResult;
+    provider?: SocProvider;
+    notes: Record<string, string>;
+    /** The SOC-CMM page the structure comes from, and the licence deed, for attribution links. */
+    source?: Source;
+    licence?: Source;
+  };
   risks: JewelRisk[];
   domains: DomainPosture[];
   e8: (E8Result & { title: string })[];
@@ -115,19 +134,72 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
 
   const e8Titles = catalogue.frameworks.get("essential-eight")?.controls ?? [];
   const sourceIds = new Set(questions.flatMap((q) => q.sources));
-  for (const f of catalogue.frameworks.values()) if (questions.some((q) => q.refs.some((r) => r.framework === f.id))) sourceIds.add(f.source);
+  for (const f of catalogue.frameworks.values())
+    if (questions.some((q) => q.refs.some((r) => r.framework === f.id))) for (const id of [f.source, ...f.sources]) sourceIds.add(id);
   const e8Source = catalogue.frameworks.get("essential-eight")?.source;
   if (e8Source) sourceIds.add(e8Source);
+
+  const socModule = assessment.soc && catalogue.soc;
+  const soc = socModule
+    ? (() => {
+        const { model } = socModule;
+        for (const id of [model.source, model.licenceSource, ...model.sources]) sourceIds.add(id);
+        return {
+          model,
+          questions: socModule.questions,
+          result: socMaturity(model, socModule.questions, assessment.soc!),
+          provider: assessment.soc!.provider,
+          notes: assessment.soc!.notes ?? {},
+          source: catalogue.sources.get(model.source),
+          licence: catalogue.sources.get(model.licenceSource),
+        };
+      })()
+    : undefined;
 
   const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));
   if (questions.some((q) => q.e8.length)) used.add("essential-eight");
   const roleOf = (id: string) =>
-    id.startsWith("cis-") ? "Recommendation mapping" : id === "essential-eight" ? "Indicative maturity" : id === "nist-csf-2" ? "Function coverage" : "Vendor guidance the questions are drawn from";
+    id.startsWith("cis-")
+      ? "Recommendation mapping"
+      : id === "essential-eight"
+        ? "Indicative maturity"
+        : id === "nist-csf-2"
+          ? "Function coverage"
+          : id === "idcf"
+            ? "Data Security Level protection requirements"
+            : "Vendor guidance the questions are drawn from";
+
+  const titled = (rs: E8Result[]) => rs.map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy }));
+  const idcf = catalogue.frameworks.has("idcf")
+    ? (() => {
+        const platforms = bundles.map((bundle) => {
+          const qs = questions.filter((q) => bundle.questions.includes(q));
+          const e8 = titled(essentialEight(qs, answers));
+          return { id: bundle.platform.id, name: bundle.platform.name, qs, e8, rows: idcfRows(qs, answers, e8), system: systemCell(qs, answers) };
+        });
+        const jewelsDsl = jewels
+          .map((j) => {
+            const p = platforms.find((x) => x.id === j.platform);
+            if (!p) return undefined;
+            // Physical, authorised-person and whole-system parts from this jewel's questions; cyber stays tenant-wide.
+            const mine = questionsForJewel(j, p.qs);
+            return jewelDsl(j, idcfRows(mine, answers, p.e8, p.qs), systemCell(mine, answers));
+          })
+          .filter((x): x is JewelDsl => !!x);
+        return { platforms: platforms.map(({ id, name, rows, system }) => ({ id, name, rows, system })), jewels: jewelsDsl };
+      })()
+    : undefined;
   const frameworksUsed = [...used]
     .map((id) => catalogue.frameworks.get(id))
     .filter((f) => !!f)
     .map((f) => ({ name: f.name, publisher: f.publisher, role: roleOf(f.id) }))
     .sort((x, y) => Number(y.role.startsWith("Vendor")) - Number(x.role.startsWith("Vendor")) || x.name.localeCompare(y.name));
+  if (soc)
+    frameworksUsed.push({
+      name: `SOC-CMM® model v${soc.model.basisVersion.split(".").slice(0, 2).join(".")} (domain and aspect structure)`,
+      publisher: soc.source?.publisher ?? "SOC-CMM",
+      role: "Structure for the optional SOC maturity self-assessment (indicative)",
+    });
 
   const domains = domainPosture(catalogue, assessment);
   const severityRank = { critical: 0, high: 1, medium: 2, low: 3 } as const;
@@ -159,6 +231,8 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     },
     platformNames: bundles.map((x) => x.platform.name),
     posture: overallPosture(catalogue, assessment),
+    idcf,
+    soc,
     risks: assessAll(catalogue, assessment),
     domains,
     e8: essentialEight(questions, answers).map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy })),

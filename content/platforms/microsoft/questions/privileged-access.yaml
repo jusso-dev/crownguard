@@ -116,6 +116,7 @@
     - { framework: cis-m365, ref: "5.3.3" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-4 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -201,6 +202,8 @@
   refs:
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: mcsb, ref: PA-7 }
+    - { framework: idcf, ref: "Rule 1" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-PA-008
   module: core
@@ -214,22 +217,27 @@
     in as any user, including administrators.
   yesLooksLike: >-
     These servers are administered only by dedicated Tier 0 accounts from privileged access
-    workstations, are not reachable from user networks or the internet beyond what they need, run
-    EDR and Defender for Identity sensors, receive critical patches within 48 hours, and their
-    service accounts are monitored.
+    workstations, are not reachable from user networks or the internet beyond what they need, run EDR
+    and Defender for Identity sensors, receive critical patches within 48 hours, and their service
+    accounts are monitored. Entra Connect Sync uses application-based (certificate) authentication, not
+    a sync account password.
   remediation: >-
-    Apply Microsoft's Entra Connect hardening guidance (treat as a control plane asset, restrict
-    local administrators, enforce TLS 1.2 and LSA protection), place these servers in a Tier 0
-    management boundary with dedicated admin accounts, restrict network access, and deploy Defender
-    for Endpoint and Defender for Identity.
+    Apply Microsoft's Entra Connect hardening guidance (treat it as a control plane asset, restrict
+    local administrators, deny NTLM, enforce TLS 1.2, and disable soft matching and hard match
+    takeover), place these servers in a Tier 0 management boundary with dedicated admin accounts,
+    restrict network access, and deploy Defender for Endpoint and Defender for Identity. Before 7 April
+    2027, upgrade Entra Connect Sync to version 2.6.84.0 or later, switch it to application-based
+    authentication and remove the old sync account; servers still using that account stop synchronising
+    after that date.
   effort: L
   licence: []
-  sources: [ms-entra-connect-prereqs, ms-protect-m365-on-prem, ms-enterprise-access-model]
+  sources: [ms-entra-connect-prereqs, ms-entra-connect-app-auth, ms-protect-m365-on-prem, ms-enterprise-access-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: IM-2 }
     - { framework: ms-zero-trust, ref: Identity I }
+    - { framework: idcf, ref: "Whole system" }
 
 - id: MS-PA-009
   module: core
@@ -257,3 +265,4 @@
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: mcsb, ref: IM-1 }
     - { framework: ms-zero-trust, ref: Identity I }
+    - { framework: idcf, ref: "Whole system" }

@@ -23,6 +23,7 @@
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: mcsb, ref: DP-2 }
     - { framework: ms-zero-trust, ref: Data IV }
+    - { framework: idcf, ref: Movement }
 
 - id: MS-EXO-002
   module: core
@@ -31,9 +32,10 @@
   severity: high
   question: Is SMTP AUTH client submission turned off for the organisation and enabled only on named mailboxes that still need it?
   why: >-
-    SMTP AUTH accepts a username and password and cannot do MFA, so attackers use it to validate
-    stolen passwords and to send convincing phishing from real mailboxes. Microsoft has announced
-    the retirement of Basic authentication for SMTP AUTH.
+    SMTP AUTH accepts a username and password and cannot do MFA, so attackers use it to validate stolen
+    passwords and to send convincing phishing from real mailboxes. Microsoft plans to turn Basic
+    authentication for SMTP AUTH off by default at the end of December 2026, though admins can turn it
+    back on.
   yesLooksLike: >-
     SMTP AUTH is disabled at organisation level, remaining printers and applications use OAuth,
     Microsoft Graph or a connector-based relay, and any per-mailbox exceptions are documented and
@@ -45,7 +47,7 @@
     Conditional Access.
   effort: M
   licence: []
-  sources: [ms-exo-smtp-auth, ms-exo-basic-auth]
+  sources: [ms-exo-smtp-auth, ms-exo-basic-auth, ms-exo-smtp-basic-timeline]
   refs:
     - { framework: cis-m365, ref: "6.5.4" }
     - { framework: nist-csf-2, ref: PR.AA-03 }

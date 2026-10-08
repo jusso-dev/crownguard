@@ -27,6 +27,8 @@
     - { framework: cis-m365, ref: "7.2.11" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "Sharing agreement" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: MS-SPO-002
   module: core
@@ -55,6 +57,7 @@
     - { framework: mcsb, ref: PA-7 }
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: ms-zero-trust, ref: Copilot step 7 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-SPO-003
   module: core
@@ -81,3 +84,4 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-4 }
     - { framework: ms-zero-trust, ref: Copilot step 7 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
