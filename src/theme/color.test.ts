@@ -39,3 +39,17 @@ describe("color", () => {
     expect(extractPalette(px([0, 0, 0, 255], 10))).toBeNull();
   });
 });
+
+describe("parseHex", () => {
+  it("normalises full, shorthand and hash-less hex codes", async () => {
+    const { parseHex } = await import("./color");
+    expect(parseHex("#0B5D4B")).toBe("#0b5d4b");
+    expect(parseHex("0b5d4b")).toBe("#0b5d4b");
+    expect(parseHex(" #0b5 ")).toBe("#00bb55");
+  });
+
+  it("rejects anything else", async () => {
+    const { parseHex } = await import("./color");
+    for (const bad of ["", "#12", "#12345", "#gggggg", "rgb(0,0,0)", "#1234567"]) expect(parseHex(bad)).toBeNull();
+  });
+});

@@ -1,4 +1,5 @@
 import { contrast, readableOn, textOn } from "../../theme/color";
+import { ColorField } from "../ColorField";
 import { LogoField } from "../LogoField";
 import { useStore } from "../store";
 import { Card, Field, inputClass, StepHeader } from "../ui";
@@ -20,17 +21,13 @@ export function BrandingStep() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="max-w-xl space-y-5">
           <LogoField testId="logo-input" />
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Primary colour">
-              <input type="color" className="h-10 w-full cursor-pointer rounded-[var(--radius-control)] border border-field bg-surface p-1" value={b.primary} onChange={(e) => setBranding({ primary: e.target.value })} />
-            </Field>
-            <Field label="Accent colour">
-              <input type="color" className="h-10 w-full cursor-pointer rounded-[var(--radius-control)] border border-field bg-surface p-1" value={b.accent} onChange={(e) => setBranding({ accent: e.target.value })} />
-            </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ColorField label="Primary colour" value={b.primary} onChange={(primary) => setBranding({ primary })} />
+            <ColorField label="Accent colour" value={b.accent} onChange={(accent) => setBranding({ accent })} />
           </div>
           {primaryContrast < 4.5 && (
             <p className="text-sm text-warn">
-              The primary colour is light, so headings will use a darker shade ({readableOn(b.primary)}) to stay readable.
+              The primary colour is light, so headings will use a darker shade ({readableOn(b.primary).toUpperCase()}) to stay readable.
             </p>
           )}
           <Field label="Protective marking" hint="Printed in the header and footer of every page.">

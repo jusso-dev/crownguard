@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "org": { "name": "Branded Co", "abn": "51824753556", "sector": "", "size": "", "jurisdiction": "Australia", "regulations": [] },
+  "platforms": ["microsoft"],
+  "modules": {},
+  "licence": { "microsoft": "business-premium" },
+  "jewels": [
+    { "id": "j1", "name": "Staff identities", "platform": "microsoft", "assetType": "ms-entra-tenant", "description": "", "classification": "confidential",
+      "confidentiality": 4, "integrity": 4, "availability": 3, "regulations": [], "exposures": [], "businessProcesses": "" }
+  ],
+  "answers": {},
+  "notes": {},
+  "branding": { "primary": "#7a1f5c", "accent": "#e0a100", "marking": "PROTECTED", "preparedBy": "Sam Lee", "preparedFor": "Board" },
+  "progress": { "step": 5 },
+  "createdAt": "2026-09-01T01:00:00.000Z",
+  "updatedAt": "2026-09-01T02:30:00.000Z"
+}

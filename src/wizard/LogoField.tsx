@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { extractPalette, readableOn } from "../theme/color";
-import { useStore } from "./store";
+import { emptyAssessment, useStore } from "./store";
 import { Button } from "./ui";
 
 const MAX_SIDE = 600;
@@ -29,9 +29,10 @@ async function processLogo(file: File): Promise<{ dataUrl: string; palette: Retu
 
 /** Organisation logo, shared by the Organisation and Branding steps. Uploading also suggests report colours. */
 export function LogoField({ testId }: { testId: string }) {
-  const logo = useStore((s) => s.assessment.branding.logoDataUrl);
+  const { logoDataUrl: logo, primary, accent } = useStore((s) => s.assessment.branding);
   const setBranding = useStore((s) => s.setBranding);
   const [error, setError] = useState<string>();
+  const [suggested, setSuggested] = useState<{ primary: string; accent: string }>();
   const id = useId();
 
   async function onFile(file: File) {
@@ -39,7 +40,12 @@ export function LogoField({ testId }: { testId: string }) {
     if (file.size > 5_000_000) return setError("Logo must be under 5 MB.");
     try {
       const { dataUrl, palette } = await processLogo(file);
-      setBranding({ logoDataUrl: dataUrl, ...(palette && { primary: readableOn(palette.primary), accent: palette.accent }) });
+      const fromLogo = palette && { primary: readableOn(palette.primary), accent: palette.accent };
+      // Only take colours from the logo while the report still has the default ones; never overwrite chosen colours.
+      const defaults = emptyAssessment().branding;
+      const untouched = primary === defaults.primary && accent === defaults.accent;
+      setBranding({ logoDataUrl: dataUrl, ...(untouched && fromLogo) });
+      setSuggested(!untouched && fromLogo && (fromLogo.primary !== primary || fromLogo.accent !== accent) ? fromLogo : undefined);
     } catch {
       setError("Couldn't read that image. Try a PNG, JPEG or SVG.");
     }
@@ -76,6 +82,27 @@ export function LogoField({ testId }: { testId: string }) {
           </Button>
         )}
       </div>
+      {suggested && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted" role="status">
+          <span>Kept your report colours. Colours from this logo:</span>
+          {[suggested.primary, suggested.accent].map((c) => (
+            <span key={c} className="inline-flex items-center gap-1 font-mono uppercase">
+              <span aria-hidden className="h-3 w-3 rounded-[3px] border border-rule-2" style={{ background: c }} />
+              {c}
+            </span>
+          ))}
+          <Button
+            variant="ghost"
+            className="min-h-7 px-2 py-0.5 text-xs"
+            onClick={() => {
+              setBranding(suggested);
+              setSuggested(undefined);
+            }}
+          >
+            Use logo colours
+          </Button>
+        </div>
+      )}
       {error && (
         <p role="alert" className="mt-1.5 text-sm text-danger">
           {error}

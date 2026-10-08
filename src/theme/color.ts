@@ -79,3 +79,11 @@ export function extractPalette(pixels: Uint8ClampedArray | number[]): { primary:
   const accent = ranked.find((c) => hueGap(c) > 30) ?? ranked.find((c) => c !== primary) ?? primary;
   return { primary: toHex(primary), accent: toHex(accent) };
 }
+
+/** Accepts "#0b5d4b", "0B5D4B" or shorthand "#0b5"; returns lowercase "#rrggbb", or null if it isn't a hex colour. */
+export function parseHex(input: string): string | null {
+  const h = input.trim().replace(/^#/, "");
+  if (/^[0-9a-f]{3}$/i.test(h)) return `#${[...h].map((c) => c + c).join("")}`.toLowerCase();
+  if (/^[0-9a-f]{6}$/i.test(h)) return `#${h}`.toLowerCase();
+  return null;
+}
