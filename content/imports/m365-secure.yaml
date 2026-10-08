@@ -3,36 +3,222 @@ name: M365-Secure
 platform: microsoft
 url: https://github.com/jusso-dev/M365-Secure
 mappings:
+  # ── Identity ────────────────────────────────────────────────────────────────
   - question: MS-ID-001
     checks: [CA-MFA-ALL-001]
-    rationale: Passes only when an enabled Conditional Access policy targeting All users requires the MFA grant control.
-    # The check only recognises the plain MFA grant, so tenants using an authentication strength or Security Defaults fail wrongly.
-    failIsInconclusive: true
+    rationale: Passes when an enabled Conditional Access policy requires MFA or an authentication strength for All users and All resources with only a break-glass group excluded, or Security Defaults are on in a tenant without Entra ID P1.
   - question: MS-ID-002
-    checks: [CA-LEGACYAUTH-001]
-    rationale: Passes only when an enabled Conditional Access policy blocks the Exchange ActiveSync or other (legacy) client app types.
+    checks: [CA-LEGACYAUTH-001, EXO-AUTH-001]
+    rationale: Checks for an enabled Conditional Access policy blocking Exchange ActiveSync and Other clients for All users and All resources, and that Exchange Online has OAuth2ClientProfileEnabled with legacy auth blocked by that policy or Security Defaults.
+  - question: MS-ID-003
+    checks: [CA-PHISHRES-002]
+    rationale: Passes only when an enabled Conditional Access policy requires a phishing-resistant authentication strength for All users and All resources.
+  - question: MS-ID-004
+    checks: [ENTRA-AUTHMETHOD-001, ENTRA-AUTHMETHOD-002, ENTRA-AUTHMETHOD-003, ENTRA-AUTHMETHOD-005]
+    rationale: Read the Authentication methods policy for SMS and Voice disabled, Email OTP disabled, Authenticator showing application and location context, and policyMigrationState migrationComplete.
+  - question: MS-ID-005
+    checks: [CA-DEVICECODE-001]
+    rationale: Passes when an enabled Conditional Access policy for All users blocks both the deviceCodeFlow and authenticationTransfer authentication flows.
   - question: MS-ID-006
     checks: [CA-SIGNINRISK-001, CA-USERRISK-001]
-    rationale: Each checks for an enabled Conditional Access policy conditioned on medium or high sign-in risk and user risk respectively.
-    # Confirms the risk policies exist, not what they enforce.
+    rationale: Each requires an enabled All-users policy that applies MFA with sign-in frequency every time (or Block) to medium and high sign-in risk, and a password change (or Block) to high user risk.
+  - question: MS-ID-007
+    checks: [CA-DEVICE-001, CA-DEVICE-003]
+    rationale: Check that All users need a compliant or hybrid-joined device for Office 365 on Windows and macOS, and an app protection policy on iOS and Android.
+    # Web-only access for unmanaged browsers (app enforced restrictions) is not checked.
     cap: partial
   - question: MS-ID-008
-    checks: [ENTRA-GUEST-001, ENTRA-GUEST-002]
-    rationale: Read the authorization policy for a restricted guest user role and for invitations limited to admins and Guest Inviters.
+    checks: [ENTRA-GUEST-001, ENTRA-GUEST-002, ENTRA-XTAP-001, ENTRA-PIM-002]
+    rationale: Read the authorization policy for the restricted guest role and admin/Guest Inviter-only invitations, the default inbound cross-tenant access settings, and a recurring guest access review.
+    # The invitation domain allow/block list is not readable via Graph, so only part of the question is evidenced.
+    cap: partial
+  - question: MS-ID-009
+    checks: [CA-EXCLUSION-001]
+    rationale: Passes when enabled policies exclude no individual users, at most two groups, and no MFA policy is skipped from trusted locations.
+    # Ownership, documentation and the quarterly review are process evidence.
+    cap: partial
+
+  # ── Privileged access ───────────────────────────────────────────────────────
+  - question: MS-PA-001
+    checks: [ENTRA-CLOUDADMIN-001, ENTRA-CLOUDADMIN-002, ENTRA-ADMIN-001]
+    rationale: Check that no Tier-0/1 role holder has onPremisesSyncEnabled or an Exchange or Microsoft 365 Apps service plan, and that two to four accounts hold Global Administrator.
+  - question: MS-PA-002
+    checks: [CA-PHISHRES-001, CA-MFA-ADMIN-001]
+    rationale: Both pass when every Tier-0/1 directory role is covered by an enabled policy requiring a phishing-resistant authentication strength for All resources; plain MFA coverage gives a warning.
+  - question: MS-PA-003
+    checks: [ENTRA-PIM-001, ENTRA-PIM-004, ENTRA-PIM-005, ENTRA-PIM-006, ENTRA-PIM-007, ENTRA-PIM-008]
+    rationale: Check that privileged roles are PIM-eligible with permanent active assignments limited to break-glass accounts, Global Administrator and Privileged Role Administrator need approval, and Tier-0 activation is capped at 8 hours with justification and MFA.
+  - question: MS-PA-004
+    checks: [ENTRA-PIM-003, ENTRA-ADMIN-004]
+    rationale: Check for a recurring access review of privileged roles at most every 12 months with auto-apply, and no enabled privileged account without a sign-in in 45 days.
+  - question: MS-PA-005
+    checks: [ENTRA-BREAKGLASS-001]
+    rationale: Passes when at least two cloud-only onmicrosoft.com permanent Global Administrators use only FIDO2 or certificate methods, share a Conditional Access exclusion group, and signed in within 90 days.
+    # Alerting on every break-glass sign-in is not checked.
+    cap: partial
+  - question: MS-PA-006
+    checks: [CA-PAW-001, CA-SIGNIN-FREQ-001]
+    rationale: Check that every Tier-0 role is restricted to filtered or compliant devices and covered by a sign-in frequency with persistent browser sessions set to never.
+  - question: MS-PA-007
+    checks: [ENTRA-DAP-001]
+    rationale: Passes when no directory role contains a partner reference from legacy delegated admin privileges.
+    # GDAP relationships are not listable from the customer tenant, so expiry and least privilege are attestation.
+    cap: partial
+  - question: MS-PA-009
+    checks: [ENTRA-HYBRID-003]
+    rationale: Passes when every verified domain has authenticationType Managed and, with directory sync on, passwordSyncEnabled is true.
+
+  # ── Applications ────────────────────────────────────────────────────────────
+  - question: MS-APP-001
+    checks: [ENTRA-CONSENT-001, ENTRA-APPS-001, ENTRA-CONSENT-002]
+    rationale: Read the default user role for no consent (or verified-publisher low-impact only) and allowedToCreateApps false, and the adminConsentRequestPolicy for enabled with reviewers.
+  - question: MS-APP-002
+    checks: [ENTRA-ENTAPP-022]
+    rationale: Passes when every third-party service principal with high-impact permissions has an owner and a sign-in within 90 days.
+    # Business justification, the quarterly review and alerting on new grants are process evidence.
+    cap: partial
+  - question: MS-APP-003
+    checks: [ENTRA-APPREG-005, ENTRA-APPREG-006]
+    rationale: Check that no app registration requesting high-impact application permissions has a client secret and the default app management policy blocks or caps password credentials.
+  - question: MS-APP-004
+    checks: [EXO-APPRBAC-001]
+    rationale: Passes when every service principal holding mailbox application permissions is limited by an application access policy or an RBAC for Applications assignment with a custom scope.
+
+  # ── Exchange ────────────────────────────────────────────────────────────────
+  - question: MS-EXO-001
+    checks: [EXO-FORWARD-001]
+    rationale: Passes when the default outbound spam policy has AutoForwardingMode Off or Automatic, any exception policy is scoped to named users or groups, and no mail flow rule redirects or copies to external addresses.
+  - question: MS-EXO-002
+    checks: [EXO-AUTH-002]
+    rationale: Passes when SmtpClientAuthenticationDisabled is true in the transport config and no mailbox re-enables it; mailbox exceptions give a warning.
   - question: MS-EXO-003
     checks: [DNS-SPF-001, DNS-DKIM-001, DNS-DMARC-001]
-    rationale: Per-domain DNS lookups for an SPF record, both Microsoft DKIM selectors, and a DMARC record at p=quarantine or p=reject.
-  - question: MS-LOG-001
-    checks: [EXO-AUDIT-001]
-    rationale: Confirms organisation-wide mailbox auditing is on (AuditDisabled is false), one part of the audit logging requirement.
-    # Doesn't cover unified audit logging or audit bypass.
-    cap: partial
+    rationale: Per-domain checks for an SPF record ending in -all, DKIM signing enabled with both selector CNAMEs resolving, and a DMARC record at p=quarantine or p=reject.
+  - question: MS-EXO-004
+    checks: [DEFENDER-PRESET-001, DEFENDER-PRESET-002, DEFENDER-PRIORITY-003, EXO-ANTISPAM-ALLOW-001, EXO-TRANSPORT-001]
+    rationale: Check the Standard preset covers all recipients, Strict or impersonation protection covers named users, high-value users carry the priority tag, and no anti-spam policy or SCL -1 transport rule allow-lists sender domains.
+
+  # ── SharePoint and Teams ────────────────────────────────────────────────────
   - question: MS-SPO-001
-    checks: [SPO-SHARING-001, SPO-SHARING-004]
-    rationale: Fails on Anyone-level sharingCapability and passes on New and existing guests or stricter, and checks guests cannot reshare.
+    checks: [SPO-SHARING-001, SPO-SHARING-002, SPO-SHARING-004, SPO-SHARING-007]
+    rationale: Read the tenant SharingCapability for New and existing guests or stricter, PreventExternalUsersFromResharing, DefaultSharingLinkType Specific people, and a default link permission of View.
   - question: MS-TMS-001
-    checks: [TEAMS-EXTACCESS-001, TEAMS-EXTACCESS-004]
-    rationale: Check that Teams external access is not open to all domains and that chat with unmanaged Teams accounts is blocked.
+    checks: [TEAMS-EXTACCESS-003, TEAMS-EXTACCESS-002]
+    rationale: Check that Teams external access is off or limited to an allow list of domains, and that unmanaged Teams accounts are blocked or cannot initiate conversations.
+  - question: MS-TMS-003
+    checks: [TEAMS-APPS-002, TEAMS-APPS-003]
+    rationale: Check that the Global app permission policy sets third-party and custom apps to an allowed list and the Global setup policy blocks custom app upload.
+
+  # ── Endpoints ───────────────────────────────────────────────────────────────
+  - question: MS-END-001
+    checks: [INTUNE-COMPLIANCE-001, INTUNE-COMPLIANCE-002]
+    rationale: Check that every platform with enrolled devices has an assigned compliance policy and devices with no policy are marked not compliant (secureByDefault).
+    # Enrolment of every corporate device and the policy contents are not checked.
+    cap: partial
+  - question: MS-END-002
+    checks: [INTUNE-MACRO-001]
+    rationale: Passes when assigned settings-catalog Office policies block macros from the internet and disable VBA macros without notification for Word, Excel and PowerPoint.
+    # Macros managed through Cloud Policy or Group Policy are invisible to Intune and fail wrongly.
+    failIsInconclusive: true
+  - question: MS-END-003
+    checks: [INTUNE-ASR-001]
+    rationale: Passes when the Office child process, Win32 API from macros, executable email content and LSASS credential theft ASR rules are in block mode across assigned policies.
+    # The Adobe Reader child process rule and exclusion review are not checked.
+    cap: partial
+  - question: MS-END-004
+    checks: [INTUNE-WDAC-001]
+    rationale: Passes when at least one assigned App Control for Business or AppLocker policy is in enforce mode.
+    # Coverage of all workstations, user profile folders and the recommended block rules is not checked.
+    cap: partial
+  - question: MS-END-005
+    checks: [INTUNE-UPDATE-001]
+    rationale: Passes when an assigned Windows update ring defers quality updates 7 days or less with a deadline, or Windows Autopatch rings are assigned.
+    # macOS, iOS and Android update enforcement is not checked.
+    cap: partial
+  - question: MS-END-007
+    checks: [MDE-ONBOARD-001, MDE-TAMPER-001]
+    rationale: Check that at least 95% of Intune-managed Windows, macOS and Linux devices are onboarded and active in Defender for Endpoint with tamper protection on.
+    # Servers, EDR in block mode and automated investigation are not checked.
+    cap: partial
+  - question: MS-END-008
+    checks: [ENTRA-DEVICE-003, ENTRA-DEVICE-004, ENTRA-DEVICE-005]
+    rationale: Read the device registration policy for Global Administrators not added as local admins, registering users not made local admins, and Windows LAPS enabled.
+    # Deployment of the Intune LAPS policy and local admin rights on existing devices are not checked.
+    cap: partial
   - question: MS-END-009
-    checks: [INTUNE-MULTIAPPROVAL-001]
-    rationale: Passes when at least one Intune multi-admin approval (operation approval) policy exists.
+    checks: [INTUNE-MULTIAPPROVAL-001, INTUNE-RBAC-001]
+    rationale: Check that multi-admin approval policies with an approver group cover device wipe, retire, delete, scripts and apps, and Intune role assignments carry custom scope tags.
+
+  # ── Copilot and data protection ─────────────────────────────────────────────
+  - question: MS-AI-001
+    checks: [SPO-RCD-001]
+    rationale: Passes when SharePoint restricted access control is enabled for the tenant.
+    # Which sites have Restricted Content Discovery or restricted access applied is not checked.
+    cap: partial
+  - question: MS-AI-004
+    checks: [PP-GOVERNANCE-001]
+    rationale: Passes when at least one Power Platform rule-based data policy exists.
+    # Connector classification, agent sharing limits and the agent registry review are not checked.
+    cap: partial
+  - question: MS-DP-001
+    checks: [COMPLIANCE-LABELS-001, COMPLIANCE-LABELS-002]
+    rationale: Check that at least one sensitivity label is published through a label policy and the policy sets a default label.
+    # Labelling of crown-jewel content is not checked.
+    cap: partial
+  - question: MS-DP-003
+    checks: [COMPLIANCE-DLP-001, COMPLIANCE-DLP-003]
+    rationale: Check for DLP policies enabled in Enforce mode whose locations together cover Exchange, SharePoint and OneDrive.
+    # The sensitive information types and block actions are not checked.
+    cap: partial
+
+  # ── Logging and backup ──────────────────────────────────────────────────────
+  - question: MS-LOG-001
+    checks: [PURVIEW-AUDIT-001, EXO-AUDIT-001, EXO-AUDIT-002, EXO-AUDIT-003]
+    rationale: Check UnifiedAuditLogIngestionEnabled, organisation AuditDisabled false, no AuditBypassEnabled recipients, and the default mailbox audit set on every mailbox.
+  - question: MS-LOG-002
+    checks: [LOG-DIAG-001, LOG-RETENTION-001]
+    rationale: Check that Entra diagnostic settings export interactive, non-interactive and service principal sign-in logs and audit logs, and the target Log Analytics workspaces retain for at least 365 days.
+    # Retention is unverifiable when logs leave via Event Hub to a third-party SIEM.
+    cap: partial
+  - question: MS-LOG-003
+    checks: [LOG-DETECT-001]
+    rationale: Passes when enough enabled Sentinel analytics rules and Defender XDR custom detections exist.
+    # The specific privileged-change scenarios and on-call routing are not checked.
+    cap: partial
+  - question: MS-LOG-005
+    checks: [MDI-SENSOR-001]
+    rationale: Passes when Defender for Identity sensors are registered, healthy and have no open high-severity health issues.
+    # Coverage of every domain controller, AD FS, AD CS and Entra Connect server is not checked.
+    cap: partial
+  - question: MS-BCK-001
+    checks: [BCK-M365-001]
+    rationale: Passes when Microsoft 365 Backup has an active protection policy for each of Exchange, SharePoint and OneDrive.
+    # Third-party backups are invisible, so a fail says nothing; coverage of crown-jewel sites and retention are not checked.
+    cap: partial
+    failIsInconclusive: true
+
+  # ── Azure ───────────────────────────────────────────────────────────────────
+  - question: MS-AZ-001
+    checks: [AZ-RBAC-001, AZ-RBAC-002]
+    rationale: Check that at most two users hold standing Owner or User Access Administrator at subscription or management-group scope and nothing holds User Access Administrator at root scope.
+    # Group and service principal assignments and PIM activation settings are not evaluated.
+    cap: partial
+  - question: MS-AZ-002
+    checks: [AZ-DEFENDER-001, AZ-DEFENDER-002]
+    rationale: Check that every relevant Defender for Cloud plan is Standard where matching resources exist and no high-severity recommendation is unhealthy.
+  - question: MS-AZ-003
+    checks: [AZ-KV-001, AZ-KV-002]
+    rationale: Check every key vault for enableRbacAuthorization, enablePurgeProtection, public network access disabled or firewall default Deny, and a diagnostic setting with a destination.
+  - question: MS-AZ-004
+    checks: [AZ-MI-001]
+    rationale: Passes when every storage account has allowSharedKeyAccess false and every App Service or Functions app has a managed identity.
+    # VMs, pipelines, Key Vault rotation and secret scanning are not checked.
+    cap: partial
+  - question: MS-AZ-005
+    checks: [AZ-BACKUP-001]
+    rationale: Passes when every Recovery Services and Backup vault has always-on soft delete and locked immutability.
+    # Resource Guard in a separate subscription and alert monitoring are reported but not required to pass.
+    cap: partial
+  - question: MS-AZ-006
+    checks: [AZ-PUBLIC-001]
+    rationale: Passes when storage accounts disallow anonymous blob access and restrict public network access, and SQL, Cosmos DB, PostgreSQL, MySQL, Synapse and Redis have public network access disabled.

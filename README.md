@@ -28,8 +28,8 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
   copy, including older ones: open it, add a logo or ABN, and regenerate the report.
 - **Optional scan import (Microsoft).** Already run [M365-Secure](https://github.com/jusso-dev/M365-Secure) against
-  your tenant? Import its `_Assessment-Results_<domain>.json` on the Controls step to pre-fill answers where its
-  checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Every pre-filled answer shows the scan
+  your tenant? Import its `_Assessment-Results_<domain>.json` on the Controls step to pre-fill answers (51 of the 63
+  Microsoft questions have mapped checks) where its checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Every pre-filled answer shows the scan
   evidence, you can change any of them, and the report says which answers came from the scan. The file is read in
   your browser only.
 - **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
