@@ -27,6 +27,9 @@ Rules that keep the content trustworthy:
   Admin Help, Google Cloud docs). Government and standards sources are welcome in addition.
 - CIS Benchmarks are licensed CC BY-NC-SA 4.0. Record recommendation numbers and short titles only.
   Never paste audit or remediation text from a benchmark.
+- The SOC maturity module in `content/soc/` is licensed CC BY-SA 4.0, not MIT, so contributions there are made under
+  CC BY-SA 4.0. Write original questions: never copy SOC-CMM question or guidance text
+  ([rules](docs/content-guide.md#soc-maturity-module)).
 - Use Australian/British spelling (organisation, licence) for consistency.
 - Keep questions answerable by an IT lead without running scripts.
 
