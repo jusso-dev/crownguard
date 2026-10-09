@@ -43,7 +43,7 @@ caveats:
   - sources: [dta-ai-accountability]
     text: >-
       The register's AI technology types don't include agentic AI. Record an agent under the technology it uses
-      (usually Generative AI) and its oversight model under "What it can do".
+      (usually Generative AI) and its oversight model under "What it can do and reach".
   - sources: [dta-ai-impact-assessment, dta-aiia-inherent-risk]
     text: >-
       Inherent and residual risk ratings come from the AI impact assessment. crownguard records the ratings you give

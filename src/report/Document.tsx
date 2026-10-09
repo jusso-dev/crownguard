@@ -779,6 +779,12 @@ function SocSection({ model, s, tableProps }: { model: ReportModel; s: Styles; t
 
 const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 const exampleColors = { fg: "#7a5200", bg: "#fdf3dc" };
+const themeColors: Record<string, { color: string; backgroundColor: string }> = {
+  Met: { color: good, backgroundColor: "#e5f4ea" },
+  "Partly met": { color: "#7a5200", backgroundColor: "#fdf3dc" },
+  "Not met": { color: "#8a3200", backgroundColor: "#fbe9e2" },
+  "Not applicable": { color: muted, backgroundColor: "#f1f3f5" },
+};
 
 /** Optional AI use-case register: the register table, then each use case's readiness, with the key dates and caveats. */
 function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
@@ -859,7 +865,7 @@ function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: St
             {x.entry.description && <Text style={{ fontSize: 8.5, marginTop: 4, lineHeight: 1.35 }}>{x.entry.description}</Text>}
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 5 }}>
               {x.themes.filter((t) => t.status !== "Not asked").map((t) => (
-                <Text key={t.id} style={{ fontSize: 7, paddingVertical: 1.5, paddingHorizontal: 4, borderRadius: 2, backgroundColor: t.status === "Met" ? "#e5f4ea" : t.status === "Not applicable" ? "#f1f3f5" : "#fbe9e2", color: t.status === "Met" ? good : t.status === "Not applicable" ? muted : "#8a3200" }}>
+                <Text key={t.id} style={{ fontSize: 7, paddingVertical: 1.5, paddingHorizontal: 4, borderRadius: 2, ...themeColors[t.status] }}>
                   {t.name}: {t.status}
                 </Text>
               ))}
