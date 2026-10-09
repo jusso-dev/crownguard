@@ -1,0 +1,334 @@
+# Readiness questions for each AI use case. `when` limits a question to the use cases it applies to; `basis` records
+# where the expectation comes from and how firm it is (see aiBases in src/engine/aiOptions.ts).
+- id: AIR-ACC-001
+  theme: accountability
+  basis: policy-must
+  severity: critical
+  question: Has a named accountable use case owner accepted responsibility for this use case?
+  why: >-
+    The policy requires an accountable use case owner for each in-scope use case, registered with the accountable
+    officials. The owner makes sure it's registered, its impact assessment is done and it's monitored.
+  yesLooksLike: A named owner, recorded in the register with their email address, who has agreed to the role and knows what it involves.
+  remediation: >-
+    Agree an owner with the business area that relies on the use case, record their name and email in the register,
+    and have your accountable official note them on the register of owners.
+  sources: [dta-ai-policy-strategy, dta-ai-accountability]
+  refs: [{ framework: nist-csf-2, ref: GV.RR-02 }]
+- id: AIR-ACC-002
+  theme: accountability
+  basis: policy-must
+  severity: medium
+  question: Is the owner familiar with the AI Ethics Principles, the AI impact assessment tool and the policy?
+  why: >-
+    The Standard for accountability expects owners to understand the principles, the impact assessment tool and the
+    policy before they take responsibility, so they can judge whether the use case stays within them.
+  yesLooksLike: The owner has completed your AI training and has read the policy and the impact assessment guidance.
+  remediation: Give the owner your agency's AI training and walk them through the impact assessment tool before the next review.
+  sources: [dta-ai-accountability, dta-aiia-tool]
+  refs: [{ framework: nist-csf-2, ref: PR.AT-01 }]
+- id: AIR-ACC-003
+  theme: accountability
+  when: agentic
+  basis: addendum-must
+  severity: critical
+  question: Is a person accountable for what the agent decides and does, including steps it takes on its own, with records that let its actions be traced?
+  why: >-
+    Agents carry out tasks, but a human stays accountable for their behaviour, decisions and outcomes, even when they
+    act across several steps without asking. Accountability has to be traceable to the agent's actions.
+  yesLooksLike: >-
+    Each action the agent can take is documented, a named person is accountable for its outcomes, and logs tie each
+    action back to the agent and the task it was given.
+  remediation: >-
+    List what the agent is allowed to do, name who answers for each outcome, and keep reviewable records of its
+    actions. Include who is accountable for data coming from third-party or external systems.
+  sources: [dta-agentic-lifecycle]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.1.1 }, { framework: nist-csf-2, ref: GV.RR-02 }]
+- id: AIR-OVR-001
+  theme: oversight
+  basis: standard-must
+  severity: high
+  question: Does a person check the AI's output before it's relied on, with the oversight and control mechanisms written down?
+  why: >-
+    The AI technical standard requires human oversight and control mechanisms to be defined, and the impact
+    assessment guidance expects the human decision-maker to stay accountable and able to override the AI.
+  yesLooksLike: >-
+    It's written down which outputs a person must check, who can override or stop the AI, and when something must be
+    escalated. Staff using it know they're responsible for what they do with the output.
+  remediation: >-
+    Document where people review and approve outputs, who can override them, and which situations go to a supervisor.
+    Tell users through training and the tool's own guidance.
+  sources: [dta-ai-technical-standard-s10, dta-aiia-accountability]
+  refs: [{ framework: dta-ai-technical-standard, ref: Criterion 36 }, { framework: nist-csf-2, ref: GV.RR-02 }]
+- id: AIR-OVR-002
+  theme: oversight
+  when: agentic
+  basis: addendum-must
+  severity: critical
+  question: Is the agent run with a human in the loop or on the loop, with a person approving irreversible or high-risk actions and a documented escalation path?
+  why: >-
+    The addendum says oversight must be kept through a human-in-the-loop or human-on-the-loop model, with human
+    intervention for irreversible or high-risk actions. An agent with no routine supervision doesn't meet this.
+  yesLooksLike: >-
+    Payments, entitlement changes, mass messages, deletions and other high-impact actions wait for a person's approval;
+    other actions are watched by someone who can pause or override them; escalation paths are written down.
+  remediation: >-
+    Decide which actions need approval first and which a supervisor watches, build those checkpoints into the
+    workflow, and document who is escalated to and when.
+  sources: [dta-agentic-lifecycle, dta-agentic-key-terms, asd-agentic-ai]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.1.2 }, { framework: dta-agentic-ai, ref: AGT.3.6 }]
+- id: AIR-OVR-003
+  theme: oversight
+  when: agentic
+  basis: addendum-must
+  severity: medium
+  question: Can the agent explain how it reached a decision, with a record of its reasoning that doesn't expose personal or sensitive data?
+  why: >-
+    The addendum requires agentic systems to explain their decision-making. Explanations help reviewers catch errors,
+    but they mustn't leak the personal or sensitive data the agent worked with.
+  yesLooksLike: Decisions come with a reviewable explanation or reasoning record, and those records are checked for personal and sensitive data.
+  remediation: Capture the agent's reasoning and run-time metadata in an auditable log, and redact or restrict records that could reveal personal information.
+  sources: [dta-agentic-lifecycle]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.1.3 }]
+- id: AIR-ACS-001
+  theme: access
+  when: agentic
+  basis: addendum-must
+  severity: critical
+  question: Does the agent have its own unique identity, with only the access it needs and no way to grant itself more?
+  why: >-
+    The addendum requires a unique identity for each agent, with authorisation to only the information and tools it
+    needs and no self-assigned access. ASD advises treating each agent as a distinct principal with least privilege.
+  yesLooksLike: >-
+    Each agent runs under its own identity or app registration, not a shared or personal account, with permissions
+    limited to named resources and changes to them approved by a person.
+  remediation: >-
+    Give each agent its own identity, remove broad or inherited permissions, and make sure the agent can't change its
+    own roles, consent to new scopes or create credentials.
+  sources: [dta-agentic-design, asd-agentic-ai]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.3 }, { framework: nist-csf-2, ref: PR.AA-05 }, { framework: nist-csf-2, ref: PR.AA-01 }]
+- id: AIR-ACS-002
+  theme: access
+  basis: addendum-should
+  severity: high
+  question: Have the AI's permissions, connectors, plug-ins and OAuth scopes been reviewed and cut back to what this use case needs?
+  why: >-
+    AI tools often get broad delegated or tenant-wide access when they're set up. The addendum recommends listing each
+    tool an agent uses, limiting access to those, and approving high-impact tools; ASD advises the same for agentic services.
+  yesLooksLike: >-
+    There's a current list of what the AI can reach and why. Unused connectors and scopes have been removed, and
+    high-impact ones need approval.
+  remediation: >-
+    Review the app's consented permissions and connectors in your admin centre, remove what isn't needed, and record
+    who approved what remains.
+  sources: [dta-agentic-design, dta-agentic-integrate, asd-agentic-ai]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.5 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: PR.AA-05 }]
+- id: AIR-ACS-003
+  theme: access
+  when: public-tool
+  basis: guidance
+  severity: high
+  question: Is staff use of this public tool limited to information classified up to OFFICIAL, with technical controls such as upload blockers, splash screens or data loss prevention?
+  why: >-
+    The DTA recommends enabling public generative AI for information up to OFFICIAL, managed under the Protective
+    Security Policy Framework, while using security-assessed enterprise AI for classified information.
+  yesLooksLike: >-
+    Staff know what they can and can't enter, a splash screen or banner reminds them, and DLP or upload controls stop
+    sensitive and classified information reaching the tool.
+  remediation: >-
+    Set the rules for the tool in your AI use policy, add a splash screen or banner, and use DLP or upload blocking for
+    sensitive and classified content.
+  sources: [dta-public-genai-agency]
+  refs: [{ framework: nist-csf-2, ref: PR.DS-01 }, { framework: nist-csf-2, ref: GV.PO-01 }]
+- id: AIR-DAT-001
+  theme: data
+  when: personal-data
+  basis: guidance
+  severity: high
+  question: Has a privacy threshold assessment, and a privacy impact assessment where it's needed, covered this use case?
+  why: >-
+    Agencies subject to the Privacy Act must do a privacy impact assessment for high privacy risk projects. The impact
+    assessment guidance says to do a threshold assessment early to find out whether one is needed.
+  yesLooksLike: A privacy threshold assessment is on file, and a privacy impact assessment where it found high privacy risk, done before deployment.
+  remediation: Complete a privacy threshold assessment now and, if it points to high privacy risk, a privacy impact assessment before wider use.
+  sources: [dta-aiia-privacy]
+  refs: [{ framework: nist-csf-2, ref: GV.OC-03 }]
+- id: AIR-DAT-002
+  theme: data
+  when: agentic
+  basis: addendum-must
+  severity: high
+  question: Were data quality, governance and security confirmed fit for the agent's level of autonomy before it moved past early design or experiments, with data it exchanges with other agents and systems protected?
+  why: >-
+    The addendum treats data readiness as a prerequisite: an agentic system shouldn't move beyond early design or
+    experiments until its data is confirmed fit for its level of autonomy. Data passed between agents must be exchanged securely.
+  yesLooksLike: A recorded data readiness check before the pilot went further, and protected, logged data flows between the agent and other systems.
+  remediation: Run and record a data readiness check, and secure the data the agent sends to and receives from other agents, tools and systems.
+  sources: [dta-agentic-data]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.4.1 }, { framework: nist-csf-2, ref: PR.DS-02 }]
+- id: AIR-DAT-003
+  theme: data
+  when: agentic
+  basis: addendum-should
+  severity: medium
+  question: Is the agent's memory governed, with rules for what it keeps, how long, and how it's purged?
+  why: >-
+    Agents that remember earlier conversations or tasks can hold personal or sensitive data long after it's needed.
+    The addendum recommends robust memory management.
+  yesLooksLike: The agent's memory has a set retention period and purge process, and access to it is restricted and monitored.
+  remediation: Set retention and purge rules for the agent's memory, restrict who and what can read it, and check it for stale or leaked data.
+  sources: [dta-agentic-lifecycle]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.2.1 }, { framework: nist-csf-2, ref: PR.DS-10 }]
+- id: AIR-DAT-004
+  theme: data
+  when: indigenous-data
+  basis: guidance
+  severity: high
+  question: Has the Framework for Governance of Indigenous Data been applied to this use case?
+  why: >-
+    The impact assessment guidance notes that all APS agencies are required to implement the Framework for Governance
+    of Indigenous Data. AI that uses Indigenous data needs that governance from the start.
+  yesLooksLike: The use case's handling of Indigenous data has been assessed against the Framework, and the outcome is recorded with the impact assessment.
+  remediation: Assess the use case against the Framework for Governance of Indigenous Data, and record what was decided and who was involved.
+  sources: [dta-aiia-reliability]
+  refs: [{ framework: nist-csf-2, ref: GV.OC-02 }]
+- id: AIR-DAT-005
+  theme: data
+  basis: guidance
+  severity: medium
+  question: Are prompts, inputs and outputs that are Commonwealth records kept under your records management arrangements?
+  why: >-
+    The impact assessment guidance notes that prompts, inputs and outputs of an AI system may be Commonwealth records
+    under the Archives Act, so they need to be kept and disposed of like other records.
+  yesLooksLike: Your records team has decided which AI prompts and outputs are records, and they're captured and retained accordingly.
+  remediation: Work with your records manager to decide which prompts and outputs are records, and turn on retention for them.
+  sources: [dta-aiia-transparency]
+  refs: [{ framework: nist-csf-2, ref: GV.OC-03 }]
+- id: AIR-MON-001
+  theme: monitoring
+  basis: policy-must
+  severity: high
+  question: Is the use case monitored and evaluated, and its impact assessment updated after a material change, including vendor changes?
+  why: >-
+    The policy expects owners to monitor and evaluate in-scope use cases and re-validate the impact assessment when
+    the scope, usage or operation changes. It also says to watch for changes the agency didn't start, such as vendor updates.
+  yesLooksLike: Regular checks that the AI works as intended, and an updated impact assessment after model, product or scope changes.
+  remediation: Schedule monitoring and evaluation, subscribe to the vendor's change notices, and update the impact assessment after each material change.
+  sources: [dta-ai-impact-assessment]
+  refs: [{ framework: nist-csf-2, ref: GV.SC-07 }, { framework: nist-csf-2, ref: ID.IM-02 }]
+- id: AIR-MON-002
+  theme: monitoring
+  when: agentic
+  basis: addendum-must
+  severity: critical
+  question: Are the agent's actions and tool calls logged and monitored, including whether it stays within its permitted scope and signs of misuse or prompt injection?
+  why: >-
+    The addendum requires continuous monitoring of each agent, including whether it acts only within its permitted
+    scope and whether its tools are misused, injected or poisoned. It also recommends audit logging across agents and tools.
+  yesLooksLike: Agent actions, tool calls and human oversight events are logged centrally, and alerts fire when the agent steps outside its scope.
+  remediation: Send the agent's action and tool logs to your SIEM, and alert on out-of-scope actions, unusual volumes and injection patterns.
+  sources: [dta-agentic-monitor, dta-agentic-integrate]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.8.1 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: DE.CM-09 }, { framework: nist-csf-2, ref: DE.CM-03 }]
+- id: AIR-OFF-001
+  theme: switch-off
+  when: agentic
+  basis: addendum-must
+  severity: critical
+  question: Can you stop the agent quickly with a kill switch you've tested, and roll back what it did?
+  why: >-
+    The addendum requires fail-safes such as automatic rollbacks, auditable self-correction, and minimum technical
+    requirements for kill switches mapped to operational controls. It doesn't define those requirements, so set your own.
+  yesLooksLike: >-
+    A documented way to disable the agent, its identity and its connectors in minutes, who may use it, and a test of
+    it in the last year. Actions can be reversed or are logged well enough to undo.
+  remediation: >-
+    Write down how to stop the agent (disable its identity, revoke its tokens, turn off its connectors), who can do it,
+    and test it. Add rollback for actions that change data.
+  sources: [dta-agentic-design, asd-agentic-ai]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.4 }, { framework: nist-csf-2, ref: RS.MA-01 }]
+- id: AIR-OFF-002
+  theme: switch-off
+  basis: policy-must
+  severity: high
+  question: Can staff report AI safety concerns and incidents about this use case, and are they handled through your ICT incident process?
+  why: >-
+    The policy requires a way for staff to report AI safety concerns, including incidents, and AI incident processes
+    aligned to ICT incident management and overseen by a governance body or senior executive.
+  yesLooksLike: Staff know how to report a concern about the AI, and AI incidents are logged, triaged and escalated like other ICT incidents.
+  remediation: Add AI incidents to your incident categories and playbooks, and tell staff how to raise a concern.
+  sources: [dta-ai-policy-operations]
+  refs: [{ framework: nist-csf-2, ref: RS.MA-01 }, { framework: nist-csf-2, ref: RS.CO-02 }]
+- id: AIR-OFF-003
+  theme: switch-off
+  basis: standard-must
+  severity: medium
+  question: Is there a plan to retire this use case securely, removing its data, memory, tools, logs and access?
+  why: >-
+    The AI technical standard requires secure decommissioning of an AI system's resources. For agents the addendum adds
+    shutting down their processes and removing agent-specific data, memory, tools and logs.
+  yesLooksLike: A decommissioning checklist for the use case that covers its identities, connectors, stored data, memory and logs.
+  remediation: Write a short decommissioning checklist and include revoking the AI's identities, tokens and connectors.
+  sources: [dta-agentic-decommission]
+  refs: [{ framework: dta-ai-technical-standard, ref: Criterion 147 }]
+- id: AIR-TRN-001
+  theme: transparency
+  basis: standard-must
+  severity: high
+  question: Are people told when they're dealing with AI, or with output the AI produced?
+  why: >-
+    The AI technical standard requires a mechanism to inform users of AI interactions and output, and the impact
+    assessment guidance expects AI interactions and outputs to be disclosed.
+  yesLooksLike: Chat interfaces say they're AI, and AI-generated content is labelled or noted where it reaches staff or the public.
+  remediation: Add a clear notice to AI interfaces and a label or note on AI-generated content that leaves the team that made it.
+  sources: [dta-ai-technical-standard-s10, dta-aiia-transparency]
+  refs: [{ framework: dta-ai-technical-standard, ref: Criterion 33 }]
+- id: AIR-TRN-002
+  theme: transparency
+  basis: policy-must
+  severity: medium
+  question: Is the use case reflected in your AI transparency statement, under the right usage pattern and domain?
+  why: >-
+    Agencies must publish an AI transparency statement that classifies their AI use by usage pattern and domain. It
+    doesn't list each use case, but each one should fall under a pattern and domain the statement covers.
+  yesLooksLike: The usage pattern and domain recorded here appear in your published transparency statement.
+  remediation: Check the statement against the register, and update it when a use case adds a new pattern or domain.
+  sources: [dta-ai-transparency, dta-ai-classification]
+  refs: [{ framework: nist-csf-2, ref: GV.OC-02 }]
+- id: AIR-ASR-001
+  theme: assurance
+  when: in-scope
+  basis: policy-must
+  severity: critical
+  question: Was an AI impact assessment completed, with the DTA's tool or an equivalent process, before the use case was deployed?
+  why: >-
+    In-scope use cases need an impact assessment, using the DTA's tool or an equivalent internal process, finalised
+    before deployment. It produces the inherent and residual risk ratings the register records.
+  yesLooksLike: A finalised impact assessment dated before deployment, with its risk ratings copied into the register.
+  remediation: Complete the AI impact assessment now and record its date and risk ratings in the register.
+  sources: [dta-ai-impact-assessment, dta-aiia-tool]
+  refs: [{ framework: nist-csf-2, ref: ID.RA-07 }]
+- id: AIR-ASR-002
+  theme: assurance
+  when: high-risk
+  basis: policy-must
+  severity: critical
+  question: Is this high-risk use case governed by a designated board or senior executive, reported to the DTA, and reviewed at least every 12 months?
+  why: >-
+    For use cases with a high inherent risk, the policy requires reporting to the accountable official, governance by a
+    designated board or senior executive, notifying the DTA, and a review at least every 12 months.
+  yesLooksLike: A named governing board or senior executive, the DTA notified, and review dates recorded in the register.
+  remediation: Assign the governing board or executive, notify the DTA at ai@dta.gov.au, and set the review dates.
+  sources: [dta-ai-impact-assessment, dta-ai-accountability]
+  refs: [{ framework: nist-csf-2, ref: GV.OV-01 }]
+- id: AIR-ASR-003
+  theme: assurance
+  when: agentic
+  basis: addendum-must
+  severity: high
+  question: Has the agent been tested against unexpected inputs, and for how it interacts with its tools, environment and memory?
+  why: >-
+    The addendum requires continuous evaluation of agents: robustness against unexpected inputs or scenarios, and how
+    they interact with their tools, environment and memory.
+  yesLooksLike: A test plan that includes adversarial and unusual inputs, run before release and after changes, with results kept.
+  remediation: Add robustness and interaction tests to the agent's release process, including prompt injection attempts.
+  sources: [dta-agentic-evaluate]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.6.1 }, { framework: dta-agentic-ai, ref: AGT.6.2 }]

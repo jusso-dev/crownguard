@@ -1,6 +1,10 @@
 import { parse } from "yaml";
 import { z } from "zod";
 import {
+  aiQuestionSchema,
+  aiRegisterModelSchema,
+  type AiQuestion,
+  type AiRegisterModel,
   socModelSchema,
   socQuestionSchema,
   assetFileSchema,
@@ -111,8 +115,58 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     }
   }
 
+  const aiModelText = entries.find(([p]) => p === "content/ai-register/model.yaml")?.[1];
+  if (aiModelText) {
+    const model = parseFile("content/ai-register/model.yaml", aiModelText, aiRegisterModelSchema, errors);
+    const questions = entries
+      .filter(([p]) => p.startsWith("content/ai-register/questions"))
+      .flatMap(([p, t]) => parseFile(p, t, z.array(aiQuestionSchema), errors) ?? []);
+    if (model) {
+      catalogue.aiRegister = { model, questions };
+      errors.push(...checkAiRegister(model, questions, catalogue));
+    }
+  }
+
   errors.push(...crossCheck(catalogue));
   return { catalogue, errors };
+}
+
+/** Every source the AI register's model and questions cite. */
+export const aiRegisterSources = ({ model, questions }: NonNullable<Catalogue["aiRegister"]>) => [
+  ...model.sources,
+  ...model.dates.map((d) => d.source),
+  ...model.caveats.flatMap((c) => c.sources),
+  ...model.kinds.flatMap((k) => k.sources),
+  ...questions.flatMap((q) => q.sources),
+];
+
+function checkAiRegister(model: AiRegisterModel, questions: AiQuestion[], catalogue: Catalogue): string[] {
+  const errors: string[] = [];
+  for (const s of new Set(aiRegisterSources({ model, questions }))) if (!catalogue.sources.has(s)) errors.push(`ai-register: unknown source ${s}`);
+  const themes = new Set(model.themes.map((t) => t.id));
+  const platformIds = new Set([...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)));
+  const kinds = new Set<string>();
+  for (const k of model.kinds) {
+    if (kinds.has(k.id)) errors.push(`ai-register: duplicate kind ${k.id}`);
+    kinds.add(k.id);
+    for (const q of k.relatedQuestions) if (!platformIds.has(q)) errors.push(`ai-register: kind ${k.id} has unknown related question ${q}`);
+  }
+  const seen = new Set<string>();
+  const covered = new Set<string>();
+  for (const q of questions) {
+    const where = `ai-register: ${q.id}`;
+    if (seen.has(q.id)) errors.push(`${where}: duplicate question id`);
+    seen.add(q.id);
+    if (!themes.has(q.theme)) errors.push(`${where}: unknown theme ${q.theme}`);
+    covered.add(q.theme);
+    for (const r of q.refs) {
+      const f = catalogue.frameworks.get(r.framework);
+      if (!f) errors.push(`${where}: unknown framework ${r.framework}`);
+      else if (f.closed && !f.controls.some((c) => c.id === r.ref)) errors.push(`${where}: ${r.framework} has no control ${r.ref}`);
+    }
+  }
+  for (const t of themes) if (!covered.has(t)) errors.push(`ai-register: theme ${t} has no questions`);
+  return errors;
 }
 
 /** Question id prefix for each SOC domain, e.g. SOC-BUS-001 for business. */
@@ -171,7 +225,7 @@ function pageKey(url: string): string {
   }
 }
 
-function crossCheck({ sources, frameworks, platforms, soc }: Catalogue): string[] {
+function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalogue): string[] {
   const errors: string[] = [];
   const cited = new Set<string>();
   for (const f of frameworks.values()) {
@@ -186,6 +240,7 @@ function crossCheck({ sources, frameworks, platforms, soc }: Catalogue): string[
     for (const q of questions) for (const s of q.sources) cited.add(s);
   }
   if (soc) for (const s of [soc.model.source, soc.model.licenceSource, ...soc.model.sources]) cited.add(s);
+  if (aiRegister) for (const s of aiRegisterSources(aiRegister)) cited.add(s);
   const byPage = new Map<string, string>();
   for (const s of sources.values()) {
     if (!cited.has(s.id)) errors.push(`source ${s.id}: not cited by any question, framework or platform`);

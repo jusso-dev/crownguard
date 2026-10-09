@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aiAccess, aiAutonomy, aiBases, aiConditions, aiDomains, aiTechnologies, aiUsagePatterns } from "../engine/aiOptions";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
@@ -183,6 +184,67 @@ export const socQuestionSchema = z
 export type SocModel = z.infer<typeof socModelSchema>;
 export type SocQuestion = z.infer<typeof socQuestionSchema>;
 
+/** Optional AI use-case register: themes, presets and dates (content/ai-register/model.yaml). */
+const enumOf = <K extends string>(o: Record<K, unknown>) => z.enum(Object.keys(o) as [K, ...K[]]);
+
+export const aiRegisterModelSchema = z.object({
+  id,
+  name: z.string(),
+  sources: z.array(id).min(1),
+  attribution: z.string().min(40),
+  /** Who the policy applies to, shown before anything else. */
+  appliesTo: z.string().min(40),
+  /** Dated or recurring requirements. `derived` marks a date worked out from the source's wording, not printed in it. */
+  dates: z.array(z.object({ date: date.optional(), derived: z.boolean().default(false), source: id, text: z.string().min(10) })).min(1),
+  /** Points the sources leave unclear, shown in the app and the report instead of being guessed. */
+  caveats: z.array(z.object({ sources: z.array(id).default([]), text: z.string().min(40) })).default([]),
+  themes: z.array(z.object({ id, name: z.string(), description: z.string().min(10) })).min(1),
+  kinds: z
+    .array(
+      z.object({
+        id,
+        name: z.string(),
+        description: z.string().min(10),
+        product: z.string().default(""),
+        /** A public generative AI service used outside the organisation's tenant. */
+        publicTool: z.boolean().default(false),
+        defaults: z
+          .object({
+            technology: z.array(enumOf(aiTechnologies)).default([]),
+            usagePatterns: z.array(enumOf(aiUsagePatterns)).default([]),
+            domains: z.array(enumOf(aiDomains)).default([]),
+            autonomy: enumOf(aiAutonomy).optional(),
+            access: enumOf(aiAccess).optional(),
+          })
+          .default({ technology: [], usagePatterns: [], domains: [] }),
+        /** Crown-jewel exposures this kind of AI usually creates, offered (never ticked) on linked crown jewels. */
+        exposures: z.array(exposureId).default([]),
+        /** Platform questions on the same tool, shown with their Controls answers when they're in scope. */
+        relatedQuestions: z.array(z.string()).default([]),
+        sources: z.array(id).default([]),
+      }),
+    )
+    .min(1),
+});
+
+export const aiQuestionSchema = z.object({
+  id: z.string().regex(/^AIR-[A-Z]{3}-\d{3}$/, "e.g. AIR-ACC-001"),
+  theme: id,
+  when: enumOf(aiConditions).default("all"),
+  basis: enumOf(aiBases),
+  severity: z.enum(Object.keys(severities) as [Severity, ...Severity[]]),
+  question: z.string().min(10).refine((s) => s.trim().endsWith("?"), "question must end with ?"),
+  why: z.string().min(20),
+  yesLooksLike: z.string().min(10),
+  remediation: z.string().min(20),
+  sources: z.array(id).min(1),
+  refs: z.array(z.object({ framework: id, ref: z.string().min(1) })).default([]),
+});
+
+export type AiRegisterModel = z.infer<typeof aiRegisterModelSchema>;
+export type AiKind = AiRegisterModel["kinds"][number];
+export type AiQuestion = z.infer<typeof aiQuestionSchema>;
+
 export const questionFileSchema = z.array(questionSchema);
 export const assetFileSchema = z.array(assetTypeSchema);
 export const sourceFileSchema = z.array(sourceSchema);
@@ -207,4 +269,6 @@ export interface Catalogue {
   imports: Map<string, ImportMapping>;
   /** The optional SOC maturity module, when its content is present. */
   soc?: { model: SocModel; questions: SocQuestion[] };
+  /** The optional AI use-case register, when its content is present. */
+  aiRegister?: { model: AiRegisterModel; questions: AiQuestion[] };
 }
