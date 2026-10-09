@@ -4,7 +4,8 @@
   "description": "Crown-jewel risk assessment wizard for Microsoft 365, Google and AWS environments, with a branded PDF report. Runs entirely in your browser.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && tsx scripts/gen-schema.ts && vite build",
+    "gen:schema": "tsx scripts/gen-schema.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -37,6 +38,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "ajv": "^8.20.0",
     "diff": "^9.0.0",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",

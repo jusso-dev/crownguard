@@ -244,6 +244,17 @@ because GitHub Pages can't send custom headers; on a host that can, also send th
 Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account,
 so for sensitive assessments prefer **Save file**, a private window, or self-hosting on your own domain.
 
+## The saved file
+
+**Save file** writes one JSON object with the whole assessment. Nothing is sent anywhere: the file is your data, and you
+choose where it lives. The format is versioned, documented and published as a JSON Schema, so other tools can write and
+validate it — see [docs/file-format.md](docs/file-format.md).
+
+A file saved by an older crownguard opens unchanged and is re-saved in the current format. A file saved by a *newer*
+crownguard is offered read-only rather than quietly rewritten. Fields this version doesn't understand are carried
+through a re-save untouched, and answers to questions that have since been retired are kept under `orphans` instead of
+being dropped.
+
 ## How risk is scored
 
 | | |

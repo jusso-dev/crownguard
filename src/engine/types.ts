@@ -88,8 +88,29 @@ export interface ImportRecord {
   applied: number;
 }
 
+/** Who wrote the file and when, for support and debugging. */
+export interface SavedBy {
+  app: string;
+  appVersion: string;
+  /** Digest of the question and framework catalogue the file was saved against. */
+  contentHash?: string;
+  savedAt: string;
+}
+
+/** An answer whose question is no longer in the catalogue. Kept, never deleted. */
+export interface OrphanAnswer {
+  answer?: Answer;
+  note?: string;
+}
+
 export interface Assessment {
-  version: 1;
+  /** JSON Schema this file follows, so editors and other tools can validate it. Written on save. */
+  $schema?: string;
+  /** File format version, from 2. Files written before that only carried `version: 1`. */
+  schemaVersion: number;
+  /** Present in files written before schema 2, where it was the only version marker. */
+  version?: 1;
+  savedBy?: SavedBy;
   org: OrgProfile;
   /** Selected platform ids, e.g. ["microsoft"]. */
   platforms: string[];
@@ -104,6 +125,8 @@ export interface Assessment {
   /** Scan evidence per question id, from optional automated imports. */
   evidence?: Record<string, Evidence>;
   imports?: ImportRecord[];
+  /** Answers and notes whose question is no longer in this build's catalogue. Kept so nothing is lost. */
+  orphans?: Record<string, OrphanAnswer>;
   /** Optional SOC maturity self-assessment; present when the user includes it. */
   soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
   /** Optional AI use-case register; present when the user starts one. */

@@ -303,3 +303,37 @@ function checkPlatform(
   for (const a of localAssets) if (!covered.has(a)) errors.push(`${at}: asset type ${a} has no questions`);
   return errors;
 }
+
+/** FNV-1a over UTF-16 code units. A change detector, not a security hash. */
+function fnv1a64(text: string): string {
+  let hash = 0xcbf29ce484222325n;
+  const prime = 0x100000001b3n;
+  const mask = 0xffffffffffffffffn;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= BigInt(text.charCodeAt(i));
+    hash = (hash * prime) & mask;
+  }
+  return hash.toString(16).padStart(16, "0");
+}
+
+/**
+ * A digest of what the catalogue asks about: question, asset type, framework and source ids in a stable order.
+ * It goes into every saved file so a later build can tell whether the questions have moved on since the assessor
+ * last saved. It says "the content changed", not what changed.
+ */
+export function contentDigest(catalogue: Catalogue): string {
+  const parts: string[] = [];
+  for (const id of [...catalogue.sources.keys()].sort()) parts.push(`source:${id}`);
+  for (const [id, f] of [...catalogue.frameworks].sort(([a], [b]) => a.localeCompare(b))) {
+    parts.push(`framework:${id}:${f.controls.map((c) => c.id).join(",")}`);
+  }
+  for (const [id, b] of [...catalogue.platforms].sort(([a], [b]) => a.localeCompare(b))) {
+    parts.push(`platform:${id}`);
+    for (const a of b.assetTypes) parts.push(`asset:${a.id}`);
+    for (const q of b.questions.sort((x, y) => x.id.localeCompare(y.id))) {
+      parts.push(`question:${q.id}:${q.licence.join(",")}:${q.sources.join(",")}`);
+    }
+  }
+  for (const q of (catalogue.soc?.questions ?? []).slice().sort((x, y) => x.id.localeCompare(y.id))) parts.push(`soc:${q.id}`);
+  return fnv1a64(parts.join("\n"));
+}

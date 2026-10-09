@@ -18,6 +18,25 @@ const shot = (page: Page, name: string, fullPage = false) => page.screenshot({ p
 
 test.use({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
 
+/**
+ * The report stamps itself with the generation time and the time answers last changed. Freezing the clock keeps
+ * regenerating the screenshots from churning those lines on every run.
+ */
+const FREEZE_AT = "2026-10-09T10:00:00.000Z";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((at) => {
+    const fixed = new Date(at as string).getTime();
+    const Real = Date;
+    const Frozen = function (this: unknown, ...args: unknown[]) {
+      const d = args.length ? new (Real as unknown as new (...a: unknown[]) => Date)(...args) : new Real(fixed);
+      return new.target ? d : d.toString();
+    };
+    Object.assign(Frozen, { now: () => fixed, parse: Real.parse, UTC: Real.UTC, prototype: Real.prototype });
+    (window as unknown as { Date: unknown }).Date = Frozen;
+  }, FREEZE_AT);
+});
+
 test("README screenshots", async ({ page }) => {
   mkdirSync(OUT, { recursive: true });
   await page.goto("./");

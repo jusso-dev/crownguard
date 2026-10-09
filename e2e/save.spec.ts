@@ -1,4 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import Ajv2020 from "ajv/dist/2020.js";
 
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
@@ -115,4 +118,28 @@ test("an older saved file can be reopened to add a logo and ABN, then regenerate
   expect(pages[0]).toContain("ABN 53 004 085 616");
   expect(pages[0]).toMatch(/Answers as at: \d{1,2} \w+ 2026/);
   expect(pages.join("\n")).toContain("About this report");
+});
+
+test("the file it writes matches the published JSON Schema", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __writes: string[]; showSaveFilePicker: unknown };
+    w.__writes = [];
+    w.showSaveFilePicker = async () => ({
+      name: "save-health.crownguard.json",
+      createWritable: async () => ({ write: async (d: string) => void w.__writes.push(d), close: async () => {} }),
+    });
+  });
+  await toSecondControlsSection(page);
+  await page.getByRole("button", { name: "Save file" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __writes: string[] }).__writes.length)).toBe(1);
+
+  const saved = JSON.parse(await page.evaluate(() => (window as unknown as { __writes: string[] }).__writes[0]));
+  const schema = JSON.parse(await readFile(join("public", "schema", "crownguard-assessment.v2.json"), "utf8"));
+  const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
+  expect(validate(saved), JSON.stringify(validate.errors, null, 2)).toBe(true);
+
+  expect(saved.$schema).toContain("crownguard-assessment.v2.json");
+  expect(saved.schemaVersion).toBe(2);
+  expect(saved.savedBy.app).toBe("crownguard");
+  expect(saved.savedBy.contentHash).toMatch(/^[0-9a-f]{16}$/);
 });

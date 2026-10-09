@@ -23,7 +23,15 @@ import {
   type AiTechnology,
   type AiUsagePattern,
 } from "../engine/aiOptions";
-import { classifications, dsls, regulations, type Assessment, type Classification, type Dsl, type Regulation } from "../engine/types";
+import {
+  classifications,
+  dsls,
+  regulations,
+  type Assessment,
+  type Classification,
+  type Dsl,
+  type Regulation,
+} from "../engine/types";
 
 const keys = <K extends string>(o: Record<K, unknown>) => Object.keys(o) as [K, ...K[]];
 /** Notes are capped at NOTE_MAX when typed; longer ones in older files are shortened rather than refused. */
@@ -31,14 +39,46 @@ export const NOTE_MAX = 4000;
 const note = z
   .string()
   .max(100_000)
-  .transform((t) => t.slice(0, NOTE_MAX));
+  .transform((t) => t.slice(0, NOTE_MAX))
+  // The pipe keeps the published JSON Schema honest: a saved note is at most NOTE_MAX, even though a longer one in
+  // an older file is shortened on open rather than refused.
+  .pipe(z.string().max(NOTE_MAX));
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const rating = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
 const regulation = z.enum(keys<Regulation>(regulations));
+const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
 
-/** Validates imported `.crownguard.json` files before they touch app state. */
-export const assessmentSchema = z.object({
-  version: z.literal(1),
+/**
+ * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
+ * are migrated up on open (see `migrations.ts`). A file with a higher number than this build knows is opened read-only.
+ */
+export const SCHEMA_VERSION = 2;
+
+/** Version of the app that wrote the file. Kept in sync with package.json. */
+export const APP_VERSION = "1.0.0";
+
+/** Answers and notes kept for questions this build no longer asks. */
+const orphans = z.record(z.string().max(80), z.looseObject({ answer: answer.optional(), note: note.optional() }));
+
+/**
+ * Validates imported `.crownguard.json` files before they touch app state.
+ *
+ * The top level and the `soc` and `aiRegister` blocks are loose objects: a file carrying fields this build has never
+ * heard of keeps them (and says so) instead of dropping them on the next save. Every nested record is strict.
+ */
+export const assessmentSchema = z.looseObject({
+  $schema: z.string().max(300).optional(),
+  // Legacy marker only. `schemaVersion` replaced it; the migration drops it.
+  version: z.literal(1).optional(),
+  schemaVersion: z.number().int().min(1).max(100_000).default(SCHEMA_VERSION),
+  savedBy: z
+    .looseObject({
+      app: z.string().max(40),
+      appVersion: z.string().max(40),
+      contentHash: z.string().max(64).optional(),
+      savedAt: z.string().max(40),
+    })
+    .optional(),
   org: z.object({
     name: z.string().max(200),
     abn: z.string().regex(/^\d{0,11}$/).optional(),
@@ -69,8 +109,9 @@ export const assessmentSchema = z.object({
       }),
     )
     .max(200),
-  answers: z.record(z.string(), z.enum(["yes", "partial", "no", "unknown", "na"])),
+  answers: z.record(z.string(), answer),
   notes: z.record(z.string(), note),
+  orphans: orphans.optional(),
   branding: z.object({
     logoDataUrl: z
       .string()
@@ -91,7 +132,7 @@ export const assessmentSchema = z.object({
         source: z.string().max(80),
         tenant: z.string().max(300),
         scannedAt: z.string().max(60),
-        suggested: z.enum(["yes", "partial", "no", "unknown", "na"]).optional(),
+        suggested: answer.optional(),
         checks: z
           .array(
             z.object({
@@ -111,7 +152,7 @@ export const assessmentSchema = z.object({
     .max(50)
     .optional(),
   soc: z
-    .object({
+    .looseObject({
       answers: z.record(z.string().max(20), z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal("unknown")])),
       notes: z.record(z.string().max(20), note).optional(),
       outOfScope: z.array(z.string().max(60)).max(60),
@@ -125,7 +166,7 @@ export const assessmentSchema = z.object({
     })
     .optional(),
   aiRegister: z
-    .object({
+    .looseObject({
       entries: z
         .array(
           z.object({
@@ -171,4 +212,12 @@ export const assessmentSchema = z.object({
     .optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
-}) satisfies z.ZodType<Assessment>;
+}) satisfies z.ZodType<Assessment, unknown>;
+
+/** Every key the schema declares, so unknown ones can be reported rather than ignored. */
+export const knownKeys = new Set(Object.keys(assessmentSchema.shape));
+
+/** `path: message`, one per line, for the notices shown when a file won't open. */
+export const formatIssues = (issues: { path: PropertyKey[]; message: string }[], max = 5) =>
+  issues.slice(0, max).map((i) => `${i.path.length ? i.path.join(".") : "file"}: ${i.message}`);
+
