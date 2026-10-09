@@ -72,8 +72,8 @@
   yesLooksLike: >-
     Users are registered for passkeys (FIDO2 security keys or device-bound passkeys in Microsoft
     Authenticator) or Windows Hello for Business, and Conditional Access requires the built-in
-    "Phishing-resistant MFA" authentication strength for all users, or at minimum for everyone who
-    can reach crown-jewel apps and data.
+    "Phishing-resistant MFA" authentication strength for all users and all resources, excluding only
+    emergency access accounts.
   remediation: >-
     Follow Microsoft's phishing-resistant passwordless deployment guide. Enable passkeys (FIDO2) in
     the Authentication methods policy, deploy Windows Hello for Business, use Temporary Access Pass
@@ -265,3 +265,148 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: IM-7 }
     - { framework: ms-zero-trust, ref: Identity II }
+
+- id: MS-ID-010
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do users sign in to Windows devices, and admins to servers, with phishing-resistant MFA such as Windows Hello for Business, security keys or smart cards?
+  why: >-
+    A password typed at a Windows sign-in screen or into a Remote Desktop session can be phished,
+    sprayed or captured by malware, and it opens the device and every session cached on it.
+    Phishing-resistant sign-in means a stolen password alone can't unlock a computer or a server.
+  yesLooksLike: >-
+    Windows devices use Windows Hello for Business backed by a hardware TPM (or FIDO2 security keys or
+    smart cards) for everyday sign-in, and administrators sign in to servers with a phishing-resistant
+    method, including Microsoft Entra sign-in protected by the phishing-resistant authentication
+    strength for Azure virtual machines.
+  remediation: >-
+    Deploy Windows Hello for Business through an Intune account protection or settings catalog policy
+    that requires a hardware TPM, and issue FIDO2 security keys or smart cards where Hello isn't
+    suitable. Enable Microsoft Entra sign-in for Azure Windows and Linux virtual machines with a
+    Conditional Access policy that requires the phishing-resistant authentication strength, and use
+    smart cards or another phishing-resistant method for on-premises servers.
+  effort: L
+  licence: [intune]
+  sources: [ms-e8-mfa-systems, ms-whfb]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: MS-ID-011
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do people need phishing-resistant MFA to access data repositories, such as databases, storage accounts, data platforms and file shares?
+  why: >-
+    Databases and file stores hold data in bulk, and many still accept a password, a SQL login or a
+    storage key on its own. An attacker who phishes or guesses one of those skips every Microsoft 365
+    sign-in protection and can copy the lot.
+  yesLooksLike: >-
+    Every data repository authenticates people through Microsoft Entra ID, and Conditional Access
+    requires the phishing-resistant MFA authentication strength for all of them: Azure SQL uses
+    Microsoft Entra-only authentication, storage accounts disallow Shared Key access, Fabric and
+    Databricks sit behind Conditional Access, and on-premises file shares and databases, and Azure Files
+    shares reached over SMB, are published through Microsoft Entra Private Access. SharePoint and
+    OneDrive count when your phishing-resistant policy for all users covers them. Answer N/A only if you
+    have no data repositories other than SharePoint and OneDrive.
+  remediation: >-
+    List your data repositories, move each one to Microsoft Entra authentication (Microsoft Entra-only
+    authentication for Azure SQL, Shared Key disallowed on storage accounts), publish on-premises
+    repositories and Azure Files SMB shares through Microsoft Entra Private Access (licensed
+    separately), and target them all with a Conditional Access policy that requires the built-in
+    phishing-resistant MFA authentication strength.
+  effort: L
+  licence: [entra-p1]
+  sources: [ms-e8-mfa-systems, ms-auth-strengths, ms-azure-sql-entra-only, ms-storage-shared-key]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 3 }
+
+- id: MS-ID-012
+  module: core
+  domain: identity
+  appliesTo: [ms-entra-tenant, ms-exchange-mailboxes, ms-sharepoint-sites, ms-teams, ms-sensitive-data, ms-copilot-agents]
+  severity: medium
+  question: Do customers have to use MFA to sign in to your online services that hold their sensitive data?
+  why: >-
+    Customer accounts protected only by a password are taken over with reused and phished passwords,
+    exposing customers' personal information and leaving you with a notifiable data breach.
+  yesLooksLike: >-
+    Every customer-facing online service that holds sensitive customer data, such as a portal built on
+    Microsoft Entra External ID, requires customers to complete MFA (something they have plus something
+    they know or are) at sign-in. If you run no such services, answer N/A and say so.
+  remediation: >-
+    In Microsoft Entra External ID, enable a second authentication method such as email one-time
+    passcode, SMS or passkeys and create a Conditional Access policy that requires MFA for the
+    application's customers; for services on other platforms, turn on their MFA enforcement.
+  effort: M
+  licence: []
+  sources: [ms-external-id-mfa, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: MS-ID-013
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: low
+  question: Can customers choose a phishing-resistant sign-in method, such as a passkey, for your online services that hold their sensitive data?
+  why: >-
+    SMS and email codes can be phished along with the password. Offering customers a passkey lets those
+    who want stronger protection have it, and starts the move towards requiring it.
+  yesLooksLike: >-
+    Every customer-facing online service that holds sensitive customer data lets customers register and
+    sign in with a passkey or another phishing-resistant method. If you run no such services, answer N/A
+    and say so.
+  remediation: >-
+    In Microsoft Entra External ID, enable the passkey (FIDO2) authentication method and build passkey
+    registration into your application's sign-up and profile pages; for services on other platforms,
+    turn on their passkey or security key support.
+  effort: M
+  licence: []
+  sources: [ms-external-id-passkeys, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: MS-ID-014
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Do customers have to sign in with phishing-resistant MFA, such as passkeys, to your online services that hold their sensitive data?
+  why: >-
+    Customer accounts protected only by passwords, SMS or email codes are routinely taken over with
+    phishing kits and reused passwords, exposing customers' personal information and leaving you with a
+    notifiable data breach.
+  yesLooksLike: >-
+    Every customer-facing online service that holds sensitive customer data requires customers to sign
+    in with a passkey or another phishing-resistant method, and weaker methods are used only to set one
+    up or recover access. If you run no such services, answer N/A and say so.
+  remediation: >-
+    In Microsoft Entra External ID, enable the passkey (FIDO2) method, build passkey registration into
+    your application and require MFA with Conditional Access. External ID can't yet require passkeys
+    through authentication strengths, so until it can, enforce passkey sign-in in the application or use
+    a customer identity platform that can, and offer passkeys to every customer in the meantime.
+  effort: L
+  licence: []
+  sources: [ms-external-id-passkeys, ms-external-id-mfa, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+  e8:
+    - { strategy: mfa, level: 3 }

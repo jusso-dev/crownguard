@@ -208,3 +208,142 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-ADM-009
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gcp-org-iam]
+  severity: medium
+  question: Is every request for an admin role checked and approved by someone accountable, other than the requester, before the role is assigned?
+  why: >-
+    Admin roles handed out on a casual request, or assigned by the person asking for them, are how
+    privileges creep beyond what anyone intended. Validating each request when it's first made ties
+    every admin role to a real, approved need.
+  yesLooksLike: >-
+    Requests for Workspace admin roles and organisation-level Google Cloud roles go through a ticket or
+    approval workflow, a named approver other than the requester confirms the business need before the
+    role is assigned, and approvals are recorded so each role assignment can be traced to an approved
+    request.
+  remediation: >-
+    Name an approver for each admin role and route requests through your ticketing system. On editions
+    with multi-party approval, also require it for role assignment and role privilege changes under
+    Security > Authentication > Multi-party approval settings, use Privileged Access Manager approvals
+    for Google Cloud roles, and compare new role assignments in the Admin log events against approved
+    requests.
+  effort: S
+  licence: []
+  sources: [gws-multi-party-approval, gws-assign-admin-roles, gcp-pam]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: GO-ADM-010
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-endpoints]
+  severity: high
+  question: Do administrators use their admin accounts only on a separate admin device or environment that their everyday accounts can't sign in to?
+  why: >-
+    An admin account signed in on the computer used for everyday email and browsing meets every
+    malicious link and download that computer does. A separate admin environment stops a compromised
+    everyday device from capturing admin sessions.
+  yesLooksLike: >-
+    Admins sign in to their admin accounts only in designated admin environments, such as a ChromeOS
+    device whose sign-in restriction allows only admin accounts; everyday accounts can't sign in to
+    those devices; and admin accounts can't be used on everyday devices, for example because a
+    Context-Aware Access policy limits the Google Admin console to the designated devices.
+  remediation: >-
+    Give each administrator a separate admin environment, use the ChromeOS Sign-in restriction device
+    setting to allow only admin accounts on admin devices, apply a Context-Aware Access policy to the
+    Google Admin console for the admin organisational unit that requires those devices, and make clear
+    that admin accounts are never used on everyday devices.
+  effort: M
+  licence: [context-aware-access, chromeos-device-management]
+  sources: [chromeos-device-policies, gws-context-aware-access]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: GO-ADM-011
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-endpoints]
+  severity: medium
+  question: Is each administrator's admin environment kept off their everyday device, rather than running as a virtual machine inside it?
+  why: >-
+    An admin virtual machine running on an everyday laptop is only as safe as that laptop. Malware on
+    the host can read the screen and capture keystrokes, so the admin session inherits every risk of the
+    device used for email and browsing.
+  yesLooksLike: >-
+    No administrator's admin environment is a virtual machine hosted on the device they use for email
+    and browsing; admin work happens on dedicated devices, such as ChromeOS devices restricted to admin
+    accounts, or on a separately managed host that everyday accounts can't reach.
+  remediation: >-
+    Move admin virtual machines off everyday devices onto dedicated admin devices, for example ChromeOS
+    devices limited to admin accounts with the Sign-in restriction setting, and record the approved
+    admin environment for each administrator.
+  effort: M
+  licence: [chromeos-device-management]
+  sources: [chromeos-device-policies, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-ADM-012
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins, gw-endpoints]
+  severity: high
+  question: Do administrators carry out admin work only from dedicated, hardened admin devices that are used for nothing else?
+  why: >-
+    Admins are the people attackers most want to phish or infect. A device used only for administration,
+    with everything else locked down, leaves an attacker far fewer ways to steal an admin session or
+    plant malware on the machine that holds it.
+  yesLooksLike: >-
+    Each administrator has a dedicated admin device, such as an enrolled ChromeOS device restricted to
+    admin accounts with apps, extensions and browsing limited to what admin work needs; a Context-Aware
+    Access policy requires those devices for the Google Admin console; and admin accounts aren't used on
+    any other device.
+  remediation: >-
+    Issue dedicated admin devices, enrol them in a separate organisational unit, restrict sign-in to
+    admin accounts, block unneeded apps and extensions and limit browsing to admin sites, then require
+    those devices for the Google Admin console with a Context-Aware Access policy for the admin
+    organisational unit.
+  effort: L
+  licence: [context-aware-access, chromeos-device-management]
+  sources: [chromeos-device-policies, gws-context-aware-access, chrome-extensions]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: GO-ADM-013
+  module: core
+  domain: admin-access
+  appliesTo: [gw-super-admins]
+  severity: medium
+  question: Are high-privilege Workspace admin roles assigned only for a limited time when they're needed, rather than held permanently?
+  why: >-
+    A permanently assigned admin role gives an attacker full power the moment they compromise the
+    account, at any hour. Roles granted for a set period and removed automatically shrink that window
+    and leave a record of who had access when.
+  yesLooksLike: >-
+    Apart from the primary admin and the break-glass account, super admin and other high-privilege roles
+    are assigned with an expiration after an approved request, they're removed automatically when the
+    period ends, and standing assignments are limited to roles needed every day.
+  remediation: >-
+    On the Admin roles page, assign high-privilege roles for a specific duration (Change expiration)
+    instead of permanently, tie each assignment to an approved request, and convert existing standing
+    assignments to time-limited ones as they're reviewed. Use Privileged Access Manager for the matching
+    Google Cloud roles.
+  effort: M
+  licence: []
+  sources: [gws-assign-admin-roles, gcp-pam]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }

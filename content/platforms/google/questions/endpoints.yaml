@@ -33,22 +33,29 @@
   domain: endpoints
   appliesTo: [gw-endpoints]
   severity: high
-  question: Is Chrome on company computers centrally managed with security settings that users cannot change?
+  question: Are Chrome and any other browsers on company computers centrally managed with security settings that users cannot change?
   why: >-
     The browser is where staff use Workspace. Unmanaged Chrome lets users switch off Safe Browsing,
     sync work data into personal profiles and run outdated versions, and gives you no view of risky
     settings.
   yesLooksLike: >-
-    Chrome on company computers is enrolled in Chrome Enterprise Core (or managed through Workspace
-    user policy), and Safe Browsing, browser sign-in restrictions and other security settings are
-    enforced as mandatory policies that users cannot override.
+    Chrome on every Windows and Mac computer is enrolled in Chrome Enterprise Core, so its policies
+    apply whichever profile is used, and Chromebooks are enrolled in the Admin console with sign-in
+    restricted to managed accounts, so user policy always applies. Safe Browsing, browser sign-in
+    restrictions and other security settings are enforced as mandatory policies that users cannot
+    override, and any other browser, such as Microsoft Edge on Windows or Safari on Macs, is managed
+    with its security settings locked, or blocked from use.
   remediation: >-
-    Enrol Chrome browsers in Chrome Enterprise Core from the Admin console, then under Devices >
-    Chrome > Settings > Users & browsers enforce Safe Browsing protection, restrict browser sign-in
-    to managed accounts where appropriate and apply the other security settings in Google's Chrome
-    guidance. Check the browser reports to confirm policies apply.
+    Enrol Chrome browsers in Chrome Enterprise Core from the Admin console, enrol Chromebooks (this
+    needs a ChromeOS Enterprise or Education Upgrade) and set the Sign-in restriction device setting to
+    your managed accounts, then under Devices > Chrome > Settings > Users & browsers enforce Safe
+    Browsing protection, restrict browser sign-in to managed accounts where appropriate and apply the
+    other security settings in Google's Chrome guidance. Manage Microsoft Edge, which is built into
+    Windows, with its policy templates through Group Policy or Intune, manage Safari through an Apple
+    device management service, and remove any other browser you don't manage. Check the browser reports
+    to confirm policies apply.
   effort: M
-  sources: [chrome-policy-management, gws-checklist-large]
+  sources: [chrome-policy-management, chromeos-device-policies, gws-checklist-large, asd-e8-assessment-guide]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
@@ -89,12 +96,14 @@
     never restart Chrome keep running vulnerable versions for weeks.
   yesLooksLike: >-
     Automatic updates are on and not pinned to old versions, relaunch notifications force a restart
-    within a few days, ChromeOS devices auto-update and are retired before their Auto Update
-    Expiration date, and version reports show few out-of-date browsers.
+    within a few days, ChromeOS devices auto-update and are retired before their Auto Update Expiration
+    date, and the version reports show no Chrome browser more than two weeks behind and no ChromeOS
+    device more than a month behind.
   remediation: >-
     Keep Chrome automatic updates on, set relaunch notification to required with a short period,
     configure ChromeOS device update settings to auto-update, track Auto Update Expiration dates for
-    ChromeOS devices, and review version reports monthly.
+    ChromeOS devices, and review the Chrome browser and ChromeOS version reports at least weekly so
+    out-of-date browsers and devices are found and fixed.
   effort: S
   sources: [chrome-update-strategies, chromeos-updates, gws-checklist-large]
   refs:
@@ -104,3 +113,784 @@
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
+
+- id: GO-END-005
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are company computers discovered automatically at least fortnightly and scanned for missing updates, weekly for browsers, office, email, PDF and security software and fortnightly for the operating system?
+  why: >-
+    You can't patch what you don't know is missing. Without automated discovery and scanning, forgotten
+    laptops and out-of-date browsers, extensions, PDF readers and security agents go unnoticed until an
+    attacker finds them. Google's Admin console lists computers and some versions, but it doesn't check
+    third-party Windows or Mac software against vulnerability data.
+  yesLooksLike: >-
+    An automated discovery source (the scanner's own discovery, reconciled with the Admin console's
+    endpoint and Chrome device lists) finds every company computer at least fortnightly. A vulnerability
+    scanner whose vulnerability database is updated at least daily reports missing updates for browsers
+    and their extensions, office, email and PDF software and security products at least weekly, and for
+    the operating system at least fortnightly. Where the scanner can't assess Chromebooks or managed
+    Chrome browsers, the Chrome browser and ChromeOS version reports are checked against Google's
+    current releases at least weekly instead.
+  remediation: >-
+    Deploy a vulnerability scanner or endpoint vulnerability management tool that covers Windows and Mac
+    computers (Google endpoint management doesn't scan third-party software for vulnerabilities),
+    schedule weekly application scans and at least fortnightly operating system scans, and keep its
+    vulnerability database updating daily. At least fortnightly, compare its asset list with the
+    computers under Devices > Overview > Endpoints and the Chrome devices list and investigate any the
+    scanner hasn't seen. Use Devices > Chrome > Reports > Versions for Chrome browsers and ChromeOS. On
+    editions with advanced endpoint management, the installed apps list in each Windows computer's
+    device details also helps spot software the scanner misses.
+  effort: M
+  licence: []
+  sources: [gws-computer-details, chrome-version-report, asd-patching, asd-e8-assessment-guide, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.AM-01 }
+    - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: GO-END-006
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are office, email and PDF software, security products, browser extensions and any browsers other than Chrome updated on company computers within two weeks of release, with unsupported versions removed?
+  why: >-
+    Office suites, email clients and PDF readers open files from strangers every day, so attackers move
+    quickly on their flaws. Chrome updates itself, but Microsoft Office, PDF readers, other browsers and
+    security agents each need their own update settings, and versions the vendor no longer supports
+    never get fixed.
+  yesLooksLike: >-
+    Microsoft 365 Apps, where installed, update automatically from an update channel such as Current
+    Channel or Monthly Enterprise Channel; PDF readers, email clients (including Google Workspace Sync
+    for Microsoft Outlook, with Google Update's auto-updates left on), other browsers, browser
+    extensions and security agents update automatically or IT deploys their updates within two weeks;
+    the scanner shows none more than two weeks behind; and nothing past its end of support remains, such
+    as Office 2016, Office 2019, Adobe Flash Player or an abandoned extension. Answer N/A if every
+    company computer is a Chromebook.
+  remediation: >-
+    For Windows computers in Google's Windows device management, go to Devices > Mobile & endpoints >
+    Settings > Windows > Windows Update settings, turn on Accept updates for Microsoft applications and
+    choose an automatic install behaviour. Keep Microsoft 365 Apps on an automatically updating channel,
+    turn on the built-in updaters (or deploy updates with your software tool) for PDF readers, other
+    browsers and security agents, and use the installed apps list in each Windows computer's device
+    details to find old versions and uninstall unsupported ones. Google endpoint management doesn't
+    manage software on Macs, so update Mac apps through an Apple device management service or each app's
+    own updater.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-updates, gws-computer-details, gws-computers-overview, gws-gwsmo-updates, ms-m365-apps-channels, ms-eos-2025, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: GO-END-007
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are Windows and macOS updates installed on company computers within one month of release, and are computers on operating systems their vendor no longer supports replaced?
+  why: >-
+    Operating system flaws give malware full control of a computer and of the Google session signed in
+    on it. Chromebooks update themselves, but Windows and Mac computers need enforced update settings,
+    and an operating system past its end of support gets no security fixes at all.
+  yesLooksLike: >-
+    Windows computers are in Google's Windows device management with Windows Update set to install
+    automatically and a Receive quality updates restart deadline short enough that updates finish well
+    within a month, Macs install macOS updates within a month through an Apple device management
+    service, the scanner shows no computer more than a month behind, and no computer runs an unsupported
+    release, such as Windows 10 outside the Extended Security Updates program. Where Context-Aware
+    Access is available, an access level also blocks Windows and macOS versions below your minimum.
+    Answer N/A if every company computer is a Chromebook.
+  remediation: >-
+    Turn on Windows device management and, under Devices > Mobile & endpoints > Settings > Windows >
+    Windows Update settings, enable Windows Update with Auto install and restart (or Auto install and
+    notify before restart) and set the Receive quality updates restart deadline to a few days. Google
+    endpoint management only inventories Macs, so enforce macOS updates through an Apple device
+    management service. On editions with Context-Aware Access, create an access level with a minimum
+    Windows and macOS version and assign it to Workspace apps. Replace Windows 10 computers, or enrol
+    them in Extended Security Updates until they're replaced.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-updates, gws-computers-overview, gws-caa-access-levels, ms-win10-esu, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: GO-END-008
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are all other applications on company computers scanned at least fortnightly for missing updates and updated within one month of release?
+  why: >-
+    Attackers don't only target browsers and Office. Meeting clients, compression tools, runtimes and
+    line-of-business software have exploited flaws too, and they often sit unpatched for months because
+    nobody owns their updates.
+  yesLooksLike: >-
+    A vulnerability scanner checks every other installed application, such as meeting clients,
+    compression tools, runtimes and line-of-business software, for missing updates at least fortnightly,
+    and each one updates itself or IT deploys its updates within one month of release, so the scanner
+    shows nothing more than a month behind. Answer N/A if every company computer is a Chromebook with no
+    Android apps.
+  remediation: >-
+    Extend the vulnerability scanner to all installed software with at least fortnightly scans, turn on
+    each application's own updater or redeploy current installers (Windows custom settings can install
+    MSI packages on computers in Windows device management), and review the installed apps list in each
+    Windows computer's device details for software nobody manages. Removing software nobody needs leaves
+    less to patch.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-computer-details, gws-windows-install-apps, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+  e8:
+    - { strategy: patch-applications, level: 2 }
+
+- id: GO-END-009
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are updates that fix critical or actively exploited vulnerabilities in browsers and their extensions, office, email, PDF and security software installed on company computers within 48 hours of release?
+  why: >-
+    Once a fix for an exploited flaw is public, attackers study it and go after computers that haven't
+    installed it, often within a day. Waiting for a monthly cycle or a week-long relaunch prompt leaves
+    that window open, and skilled attackers rely on it.
+  yesLooksLike: >-
+    Chrome's relaunch notification forces a relaunch within 24 hours of an update, so Chrome runs a
+    critical fix within 48 hours (on Chromebooks this also needs the Stable channel, because the
+    long-term support channels can wait months for some security fixes); Microsoft 365 Apps, PDF
+    readers, other browsers and security agents get urgent updates through update deadlines or forced
+    deployments that land within 48 hours; and someone watches vendor advisories and CISA's Known
+    Exploited Vulnerabilities catalogue so critical fixes are pushed the day they're released. Other
+    fixes for this software still arrive within two weeks.
+  remediation: >-
+    Under Devices > Chrome > Settings > Users & browsers > Chrome updates, set Relaunch notification to
+    Force relaunch after a period of 24 hours or less (relaunches are aimed at 2am to 4am local time,
+    which can lengthen the countdown). Use update deadlines for Microsoft 365 Apps (for example Cloud
+    Update's deadlines, Intune or Group Policy), turn on automatic updates with short deadlines for PDF
+    readers, other browsers and security agents, and subscribe to Chrome Releases, Microsoft, Adobe and
+    ASD security alerts so you can push an urgent update the day it ships.
+  effort: M
+  licence: []
+  sources: [chrome-relaunch-notification, chromeos-lts, ms-m365-apps-cloud-update-deadlines, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: patch-applications, level: 3 }
+
+- id: GO-END-010
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are operating system updates that fix critical or actively exploited vulnerabilities installed on company computers within 48 hours of release?
+  why: >-
+    Operating system flaws that are already being exploited give an attacker full control of a computer
+    and the Google session on it. A monthly patch cycle, a pinned ChromeOS version or a slow restart
+    leaves those computers open for weeks after the fix exists.
+  yesLooksLike: >-
+    Chromebooks follow the Stable channel with no pinned target version or long staged rollout, and the
+    relaunch notification restarts them to apply updates within 48 hours (devices on the LTS or LTC
+    channels don't meet this, because Google says some security fixes can take up to 9 months to reach
+    LTS); Windows computers have a Receive quality updates restart deadline of one day or less, with
+    urgent updates pushed outside the normal cycle; Macs get urgent macOS updates with a deadline of 48
+    hours or less through an Apple device management service; and someone watches vendor advisories so
+    urgent fixes are pushed the day they're released. Other operating system fixes still install within
+    one month.
+  remediation: >-
+    Under Devices > Chrome > Settings > Device settings > Device update settings, keep auto-updates on
+    the Stable channel with no target version and no long rollout plan, and set Relaunch notification so
+    devices restart within 24 hours of an update. Under Devices > Mobile & endpoints > Settings >
+    Windows > Windows Update settings, set the Receive quality updates restart deadline to one day or
+    less. Set short update deadlines for Macs in your Apple device management service, and subscribe to
+    Chrome Releases, Microsoft, Apple and ASD security alerts.
+  effort: M
+  licence: [advanced-endpoint-management, chromeos-device-management]
+  sources: [chromeos-updates, chromeos-lts, chrome-relaunch-notification, gws-windows-updates, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: GO-END-011
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Do company computers run the latest or previous release of their operating system?
+  why: >-
+    Older operating system releases lack newer security features and are the first to lose fixes.
+    Determined attackers look for computers left behind on them.
+  yesLooksLike: >-
+    Windows computers run the current or previous Windows 11 feature update (Windows 10 computers have
+    been upgraded or replaced), Macs run the current or previous major macOS release, and Chromebooks
+    run the current or previous ChromeOS version on the Stable channel, or the current or previous
+    milestone of the long-term support channel (LTS or LTC) they're assigned to, with no target version
+    holding them further back. Version reports and your device management tools show no exceptions.
+  remediation: >-
+    Schedule Windows feature updates so no computer falls more than one release behind and replace
+    hardware that can't run a supported release, require macOS upgrades through your Apple device
+    management service, remove ChromeOS target version pins under Devices > Chrome > Settings > Device
+    settings > Device update settings, and raise the minimum operating system versions in any
+    Context-Aware Access levels as new releases ship.
+  effort: L
+  licence: []
+  sources: [chromeos-lts, chromeos-updates, gws-caa-access-levels, gws-computers-overview, ms-windows11-release-info, asd-e8-faq, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: GO-END-012
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Have all applications their vendors no longer support been removed from company computers, including utilities, runtimes and line-of-business software?
+  why: >-
+    Software past its end of support never gets another security fix, so every flaw found in it stays
+    open for good. Old runtimes, compression tools and retired business clients are easy to forget and
+    easy for an attacker to exploit.
+  yesLooksLike: >-
+    The vulnerability scanner's end-of-life report and the installed apps lists show no application past
+    its vendor's end of support, such as an old Java runtime, compression tool or retired
+    line-of-business client; anything that can't be removed yet has a dated replacement plan, and the
+    answer is Partial until it's gone. Answer N/A if every company computer is a Chromebook with no
+    Android apps.
+  remediation: >-
+    Turn on your scanner's end-of-life or unsupported software reporting, review the installed apps list
+    in each Windows computer's device details for old software, uninstall what isn't needed with your
+    software deployment tool, and plan replacements for business software that has lost support. Remove
+    Android apps and extensions on Chromebooks that are no longer published or updated.
+  effort: M
+  licence: []
+  sources: [gws-computer-details, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-applications, level: 3 }
+
+- id: GO-END-013
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are driver and firmware updates for company computers checked at least fortnightly and installed within one month of release, or within 48 hours when critical or actively exploited?
+  why: >-
+    Vulnerable drivers and firmware give attackers control below the operating system, where it survives
+    a reinstall and hides from security tools. Vendors fix them regularly, but they're often left out of
+    normal patching.
+  yesLooksLike: >-
+    Chromebooks get hardware updates automatically as part of ChromeOS updates; Windows computers get
+    driver updates from Windows Update (drivers aren't excluded) and BIOS or UEFI firmware updates
+    through the manufacturer's management tool or Windows Update; the scanner or manufacturer's tool
+    reports missing driver and firmware updates for Windows and Mac computers at least fortnightly; and
+    critical fixes are installed within 48 hours.
+  remediation: >-
+    Keep ChromeOS auto-updates on. For Windows, check that no policy excludes drivers from Windows
+    Update, deploy the computer manufacturer's update tool with central reporting for BIOS, UEFI and
+    driver updates, add driver and firmware checks to the scanner's fortnightly schedule, and push
+    critical firmware fixes within 48 hours. Keep Macs on current macOS updates through your Apple
+    device management service, since Apple delivers Mac firmware in macOS updates.
+  effort: M
+  licence: []
+  sources: [chromeos-auto-update-policy, gws-windows-updates, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: PR.PS-03 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: GO-END-014
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Is application control enforced on Windows and Mac computers, at least in user profile and temporary folders, so only an approved set of programs, libraries, scripts and installers can run from them?
+  why: >-
+    Ransomware, remote access tools and infostealers that steal Google session cookies usually arrive as
+    a file someone downloads or opens into their own folders. Application control stops anything that
+    isn't on the approved list from running there, even when a user is tricked into launching it.
+  yesLooksLike: >-
+    Windows computers enforce AppLocker or App Control for Business (or a third-party allowlisting
+    product), not just audit, so that in the user profile and temporary folders used by Windows,
+    browsers and email clients (including Downloads and the user and Windows temporary folders) only
+    executables, libraries, scripts, installers, compiled HTML, HTML applications and control panel
+    applets on an approved list, identified by publisher, hash or a protected path, can run. Macs run an
+    application allowlisting tool in enforcement mode covering the same locations. Answer N/A if every
+    company computer is a Chromebook.
+  remediation: >-
+    For Windows computers in Google's Windows device management, build AppLocker rule collections for
+    EXE, MSI, Script and DLL files and add each one as a custom setting under Devices > Mobile &
+    endpoints > Settings > Windows > Custom settings, using the AppLocker ApplicationLaunchRestrictions
+    OMA-URIs. Google's allow-all-signed-apps example isn't an approved set, so write publisher rules for
+    the vendors you approve, run in audit mode first, then enforce, and block mshta.exe and hh.exe
+    unless they're needed. Microsoft prefers App Control for Business, which also controls drivers,
+    where your tools can deploy it. Google endpoint management doesn't control Mac apps, so deploy an
+    allowlisting tool through an Apple device management service. Extending the rules to every location
+    is the next step.
+  effort: L
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-block-apps, gws-computers-overview, ms-appcontrol-applocker-overview, asd-implementing-application-control, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+  e8:
+    - { strategy: application-control, level: 1 }
+
+- id: GO-END-015
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are Chromebooks limited to approved apps and extensions, with developer mode, the Linux development environment and Android app sideloading kept off?
+  why: >-
+    ChromeOS checks its own system software at every start-up, but users can still add risk. An unvetted
+    Android app or extension can read their data, and developer mode or the Linux development
+    environment lets them run programs outside ChromeOS's protections.
+  yesLooksLike: >-
+    For every organisational unit with Chromebook users, Chrome Web Store and Google Play installs are
+    blocked except for an approved list (force-installed where needed), Chromebooks are enrolled with
+    forced re-enrolment on so developer mode stays disabled, Linux virtual machines are blocked, and ADB
+    sideloading of Android apps is prevented. If approved developers have Linux turned on, the answer is
+    Partial unless the Linux environment has its own application control. Answer N/A if no one uses a
+    Chromebook.
+  remediation: >-
+    Enrol Chromebooks (enrolment needs a ChromeOS Enterprise or Education Upgrade licence). Under
+    Devices > Chrome > Apps & extensions, set the Chrome Web Store and Google Play to allow only the
+    apps and extensions you approve, the same allowlist you use for Chrome browsers. Under Devices >
+    Chrome > Settings > Device settings, keep forced re-enrolment on (it disables developer mode) and
+    keep Prevent users of this device from using ADB sideloading. Leave Linux virtual machines set to
+    block under Users & browsers, and review installed apps and extensions in the Chrome reports.
+  effort: S
+  licence: [chromeos-device-management]
+  sources: [chrome-allow-block-apps, chromeos-device-policies, chrome-user-browser-policies, chromeos-android-apps, chromeos-enroll-devices, chromeos-auto-update-policy, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+  e8:
+    - { strategy: application-control, level: 1 }
+
+- id: GO-END-016
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Do application control rules on Windows and Mac computers cover every location on disk, include Microsoft's recommended block rules on Windows, and get revalidated at least once a year?
+  why: >-
+    Rules that only watch user folders can be bypassed from other writable locations, and built-in
+    Windows tools such as mshta and msbuild can run attacker code unless they're blocked. Rule sets also
+    drift as exceptions pile up and approved software or signing certificates go bad.
+  yesLooksLike: >-
+    Rules are publisher or hash based, or path rules allow only folders standard users can't write to,
+    so no location is left uncovered; Microsoft's recommended block rules are in the Windows policy
+    (natively in App Control for Business, or as equivalent AppLocker deny rules); the Mac tool has
+    equivalent coverage; and a documented review at least yearly removes stale exceptions and rechecks
+    approved applications and signing certificates. Answer N/A if every company computer is a
+    Chromebook.
+  remediation: >-
+    Replace broad path rules with publisher or hash rules, check that no allowed path is writable by
+    standard users, add Microsoft's recommended block rules, and update the AppLocker custom settings
+    under Devices > Mobile & endpoints > Settings > Windows > Custom settings (or move to App Control
+    for Business with a tool that can deploy it). Book a yearly ruleset review signed off by the system
+    owner.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-block-apps, ms-app-control-block-rules, asd-implementing-application-control, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: GO-END-017
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are allowed and blocked application control events from Windows and Mac computers collected centrally, in a SIEM or EDR console?
+  why: >-
+    Blocked attempts are an early sign that someone is trying to run malware, and allowed events show
+    what actually ran during an incident. Events left on each laptop are lost when it's wiped or
+    tampered with.
+  yesLooksLike: >-
+    Events from the AppLocker logs (EXE and DLL, MSI and Script, packaged apps) or App Control for
+    Business, and the Mac allowlisting tool's allow and block events, reach a SIEM such as Google
+    Security Operations or an EDR console from every computer, including allowed events, not just
+    blocks. Answer N/A if every company computer is a Chromebook.
+  remediation: >-
+    Forward the AppLocker event logs (Application and Services Logs > Microsoft > Windows > AppLocker),
+    or your App Control for Business events, with your SIEM agent, for example the Bindplane agent for
+    Google Security Operations, or through your EDR product. Add the Mac tool's logs, size storage for
+    the verbose EXE and DLL log, and confirm both allowed and blocked events arrive.
+  effort: M
+  licence: []
+  sources: [gcp-secops-windows-events, ms-applocker-events, ms-app-control-events, asd-implementing-application-control, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: GO-END-018
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Do Windows and Mac computers load only approved kernel drivers and system extensions, with Microsoft's vulnerable driver blocklist turned on for Windows?
+  why: >-
+    Attackers bring signed but vulnerable drivers to switch off security tools from inside the operating
+    system kernel. Restricting drivers to an approved set and blocking known-vulnerable ones closes that
+    route.
+  yesLooksLike: >-
+    Windows computers have the Microsoft Vulnerable Driver Blocklist turned on and an App Control for
+    Business policy that allows kernel drivers only from approved hardware and software vendors; Macs
+    allow system and kernel extensions only from approved developers through device management;
+    Chromebooks need nothing more because ChromeOS checks its system software at every start-up. Answer
+    N/A if every company computer is a Chromebook.
+  remediation: >-
+    Check that Windows Security > Device security > Core isolation shows Microsoft Vulnerable Driver
+    Blocklist turned on (or set it by policy), and deploy an App Control for Business policy with driver
+    rules for your approved vendors through Group Policy, Intune or another tool that supports it.
+    AppLocker, which Google's Windows custom settings examples use, can't restrict drivers. Turning on
+    memory integrity as well is recommended, and ASD asks for it under restricting administrative
+    privileges. On Macs, pre-approve only the system extensions you need through your Apple device
+    management service.
+  effort: L
+  licence: []
+  sources: [ms-app-control-driver-block-rules, ms-appcontrol-applocker-overview, gws-windows-block-apps, chromeos-auto-update-policy, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+  e8:
+    - { strategy: application-control, level: 3 }
+
+- id: GO-END-019
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are Microsoft Office macros disabled for users without an approved business need, blocked in files from the internet, scanned by antivirus, and locked so users can't change these settings?
+  why: >-
+    Malicious macros in emailed or downloaded documents are still a common way to get code running on a
+    computer, leading to ransomware or theft of the Google session signed in on it.
+  yesLooksLike: >-
+    Office policies set VBA Macro Notification Settings to Disable all without notification for everyone
+    except a documented group with a business need, Block macros from running in Office files from the
+    Internet is on, Macro Runtime Scan Scope is enabled with an antivirus product that scans macros, and
+    the macro settings appear greyed out in the Trust Center. Answer N/A if Microsoft Office isn't
+    installed on any company computer.
+  remediation: >-
+    Google's Admin console has no Office macro settings, so apply them with Group Policy, Intune or, for
+    Microsoft 365 Apps for enterprise, the Cloud Policy service (it applies only privacy settings to
+    Microsoft 365 Apps for business and doesn't apply to volume-licensed Office), and on Macs through
+    your Apple device management service. Keep a record of approvals for the exception group, turn on
+    Gmail's Security Sandbox (Business Standard and above) to scan Office attachments before delivery,
+    and point staff who don't need desktop Office to Docs, Sheets and Slides, which don't run Office
+    (VBA) macros.
+  effort: M
+  licence: []
+  sources: [gws-office-files, gws-security-sandbox, ms-macros-internet, ms-cloud-policy, asd-restricting-office-macros, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: office-macros, level: 1 }
+
+- id: GO-END-020
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are Microsoft Office macros blocked from making Win32 API calls on Windows computers?
+  why: >-
+    Malicious macros call Windows programming interfaces directly to download malware, run it in memory
+    or inject it into other programs. Blocking those calls stops a macro that slips past other controls
+    from reaching beyond Office.
+  yesLooksLike: >-
+    The attack surface reduction rule Block Win32 API calls from Office macros is set to Block on every
+    Windows computer with Office installed, with Microsoft Defender Antivirus active to enforce it (or
+    another product blocks the same behaviour), and any exclusions are few and documented. Answer N/A if
+    Microsoft Office isn't installed on any Windows computer.
+  remediation: >-
+    Add a Windows custom setting under Devices > Mobile & endpoints > Settings > Windows > Custom
+    settings with the OMA-URI ./Vendor/MSFT/Policy/Config/Defender/AttackSurfaceReductionRules and the
+    rule's GUID (92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b) with the value 2 (audit) at first and 1 (block)
+    once you've reviewed the events, or deploy the same rule with Group Policy or Intune.
+  effort: S
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-common-custom-settings, ms-asr-rules, asd-restricting-office-macros, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: office-macros, level: 2 }
+
+- id: GO-END-021
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: For users allowed to run Office macros, can only reviewed macros run, from a sandbox, a trusted location only reviewers can change, or signed by a trusted publisher with a V3 signature, with users unable to enable any other macro?
+  why: >-
+    Attackers sign malicious macros with home-made or stolen certificates and talk users into clicking
+    Enable Content. Allowing only vetted macros from your own trusted publisher or a locked-down
+    location takes that decision away from the user.
+  yesLooksLike: >-
+    For the macro-enabled group, only macros running in a sandboxed environment, from a trusted
+    location, or digitally signed by a trusted publisher can run: VBA Macro Notification Settings is
+    Disable all except digitally signed macros (or trusted locations or a sandbox are used instead),
+    Only trust VBA macros that use V3 signatures is on, Trust Bar notifications for security issues are
+    disabled so users can't enable other macros from the Message Bar or Backstage view, users can't add
+    trusted publishers, and trusted documents are off. Someone independent of the author checks each
+    macro for malicious code before it's signed or placed in a trusted location, only those privileged
+    reviewers can write to trusted locations, and the trusted publisher list is revalidated at least
+    yearly. Answer N/A if Microsoft Office isn't installed on any company computer, or macros are
+    disabled for every user.
+  remediation: >-
+    Apply ASD's settings for the trusted publisher or trusted location approach with Group Policy,
+    Intune or the Cloud Policy service, including Only trust VBA macros that use V3 signatures, turning
+    off Trust Bar notifications and trusted documents, and blocking the Certificates snap-in and the
+    Internet Options Content page so users can't add publishers. Use your own code-signing certificate
+    as the trusted publisher where you can, write a macro review procedure with trained reviewers who
+    don't write the macros, restrict write access on trusted locations to their privileged accounts, and
+    diarise a yearly trusted publisher review.
+  effort: M
+  licence: []
+  sources: [gws-office-files, ms-macros-internet, asd-restricting-office-macros, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+  e8:
+    - { strategy: office-macros, level: 3 }
+
+- id: GO-END-022
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are web advertisements blocked in Chrome and any other browser on company computers, through a force-installed ad-blocking extension or a web content filter?
+  why: >-
+    Malicious advertising runs on legitimate, popular websites and in search results, sending users to
+    fake downloads and exploit pages without them visiting anywhere suspicious.
+  yesLooksLike: >-
+    A vetted ad-blocking extension is force-installed in Chrome and any other browser so users can't
+    remove or disable it, or a DNS or web content filter blocks advertising domains for company
+    computers on every network, and a test page shows ads are blocked. Chrome's Sites with intrusive ads
+    setting and built-in pop-up blocking help, but on their own they don't block ads on most sites.
+  remediation: >-
+    Choose a content-blocking extension your organisation trusts, review its permissions like any other
+    extension, and force-install it under Devices > Chrome > Apps & extensions > Users & browsers (it
+    then applies on Chromebooks too), or use a DNS or secure web gateway service that blocks advertising
+    wherever computers connect. Also set Sites with intrusive ads to block ads under Devices > Chrome >
+    Settings > Users & browsers. Google describes Chrome's URL blocklist as basic URL management and
+    recommends a content-filtering proxy or extension for stronger filtering.
+  effort: S
+  licence: []
+  sources: [chrome-url-blocking, chrome-app-extension-policies, chrome-user-browser-policies, asd-e8-assessment-guide, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: GO-END-023
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Is Internet Explorer 11 disabled or removed on Windows computers, and can no browser on company computers run Java from the internet?
+  why: >-
+    Internet Explorer 11 lost support in June 2022 yet can still be launched on some Windows versions,
+    and old Java browser plug-ins were a favourite target of exploit kits. Either one gives attackers an
+    easy way to run code from a web page.
+  yesLooksLike: >-
+    The Disable Internet Explorer 11 as a standalone browser policy is on for every Windows 10 computer
+    (or the Internet Explorer feature is removed), a check confirms Internet Explorer can't be launched,
+    and legacy intranet sites open in Edge's IE mode instead. Staff use current browsers such as Chrome,
+    Edge and Safari, which can't run Java applets, and no old Java runtime or other browser that adds a
+    Java plug-in remains. Windows 11, Macs and Chromebooks don't include the Internet Explorer 11
+    desktop app, so only the Java part applies to them.
+  remediation: >-
+    Turn on Disable Internet Explorer 11 as a standalone browser with Group Policy, Intune or a Windows
+    custom setting from Microsoft's InternetExplorer policy (DisableInternetExplorerApp) under Devices >
+    Mobile & endpoints > Settings > Windows > Custom settings, optionally add an application control
+    rule that blocks iexplore.exe, move legacy sites to Edge's IE mode, and uninstall old Java runtimes
+    that add browser plug-ins.
+  effort: S
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-custom-settings, chrome-npapi-removal, ms-edge-disable-ie11, asd-e8-assessment-guide, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: GO-END-024
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: high
+  question: Are Microsoft Defender attack surface reduction rules in block mode on Windows computers to stop Office starting other programs, creating executable content or injecting code, and to stop Adobe Reader starting other programs?
+  why: >-
+    Even an innocent-looking document can be weaponised. These rules stop what attackers do once a user
+    opens a malicious file, such as Word launching PowerShell, Office writing an executable to disk or a
+    PDF reader starting a command shell.
+  yesLooksLike: >-
+    Block all Office applications from creating child processes, Block Office communication application
+    from creating child processes, Block Office applications from creating executable content, Block
+    Office applications from injecting code into other processes and Block Adobe Reader from creating
+    child processes are set to Block on every Windows computer, with few documented exclusions, and
+    Microsoft Defender Antivirus, which enforces the rules, is active (or another product blocks the
+    same behaviour, including for any other PDF reader). Rules for software that isn't installed can be
+    left out. Answer N/A if no company computer runs Windows, or neither Microsoft Office nor a PDF
+    reader other than the browser's built-in viewer is installed on Windows computers.
+  remediation: >-
+    Add a Windows custom setting under Devices > Mobile & endpoints > Settings > Windows > Custom
+    settings with the OMA-URI ./Vendor/MSFT/Policy/Config/Defender/AttackSurfaceReductionRules, listing
+    each rule's GUID with the value 2 (audit) at first and 1 (block) once you've reviewed the events, or
+    deploy the same rules with Group Policy or Intune. Block executable content from email client and
+    webmail is worth adding at the same time.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-common-custom-settings, ms-asr-rules, asd-e8-assessment-guide, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-END-025
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are Chrome and any other browsers hardened using Google's Chrome security configuration guide, vendor baselines and ASD guidance, taking the stricter setting where they differ?
+  why: >-
+    Default browser settings trade security for convenience. Hardening turns off features attackers
+    abuse, such as risky downloads and site permissions, and enforces protections such as site isolation
+    and stronger Safe Browsing for every user.
+  yesLooksLike: >-
+    The settings recommended in Google's Chrome Browser Enterprise Security Configuration Guide are
+    applied as mandatory Chrome policies, for example Safe Browsing on with bypassing its warnings
+    disabled, download restrictions for dangerous files and site isolation required for all websites;
+    Microsoft Edge follows Microsoft's Edge security baseline and any other browser its vendor's
+    hardening guidance; where ASD's guidance is stricter, its setting wins; and exceptions are
+    documented.
+  remediation: >-
+    Work through Google's guide (the Workspace security checklist links to it) and set each
+    recommendation under Devices > Chrome > Settings > Users & browsers, such as Safe Browsing
+    Protection, Disable bypassing Safe Browsing warnings, Download restrictions and Site isolation.
+    Compare it with the browser settings in ASD's Windows 11 workstation hardening guidance and keep the
+    stricter option, apply the Microsoft Edge security baseline to Edge (for example through Intune
+    security baselines or Group Policy), and record any exceptions.
+  effort: M
+  licence: []
+  sources: [chrome-security-config-guide, chrome-user-browser-policies, gws-checklist-large, ms-intune-security-baselines, asd-windows-11-hardening, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-END-026
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are Microsoft Office and every PDF reader hardened using ASD and vendor guidance, with Object Linking and Embedding package activation blocked and security settings users can't change?
+  why: >-
+    Office suites and PDF readers open files from strangers, and their defaults favour compatibility.
+    Hardening switches off risky features such as embedded OLE packages, and locking the settings stops
+    users, or an attacker coaching them, from turning protections back off.
+  yesLooksLike: >-
+    Office policies apply ASD's Office hardening guidance and Microsoft's security baseline, taking the
+    stricter setting where they differ, including the PackagerPrompt setting that stops OLE packages
+    from running, and Trust Center settings are greyed out. Every PDF reader installed, such as Adobe
+    Acrobat Reader, is configured from ASD and its vendor's security guidance with its settings locked;
+    Chrome's built-in viewer, with the PDF files policy locked, is enough on its own only where no other
+    PDF software is installed. Parts for software you don't have don't apply. Answer N/A if neither
+    Microsoft Office nor a separate PDF reader is installed on any company computer.
+  remediation: >-
+    Google's Admin console has no Office settings, so apply the settings in ASD's Hardening Microsoft
+    365, Office 2021, Office 2019 and Office 2016 and Microsoft's security baseline with Group Policy,
+    Intune or the Cloud Policy service, including PackagerPrompt set to 2 so OLE packages don't run.
+    Standardise on Chrome's built-in PDF viewer (Devices > Chrome > Settings > Users & browsers > PDF
+    files, without letting users override it) and remove other PDF readers, or harden each reader you
+    keep from its vendor's security configuration guide and lock its settings. Staff who don't need
+    desktop Office can open Office files in Docs, Sheets and Slides.
+  effort: M
+  licence: []
+  sources: [chrome-user-browser-policies, gws-office-files, ms-intune-security-baselines, asd-office-hardening, asd-e8-assessment-guide, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-END-027
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are PowerShell module, script block and transcription logs and command line process creation events from Windows computers and servers collected centrally?
+  why: >-
+    Attackers lean on PowerShell and built-in command-line tools to move around without dropping obvious
+    malware. Without these logs in a central place you can't see what they ran or show what they
+    touched.
+  yesLooksLike: >-
+    Turn on Module Logging (all modules), Turn on PowerShell Script Block Logging and Turn on PowerShell
+    Transcription are enabled, Audit Process Creation records successes with Include command line in
+    process creation events on, and the PowerShell Operational log, transcripts and Security event 4688
+    reach a SIEM such as Google Security Operations, or an EDR console, from every Windows computer and
+    server. Answer N/A if no company computer or server runs Windows.
+  remediation: >-
+    Set the PowerShell logging and process creation audit policies with Group Policy, Intune or
+    Microsoft's policy CSP settings through Windows custom settings, then forward the
+    Microsoft-Windows-PowerShell/Operational log, transcript files and Security event 4688 to your SIEM,
+    for example with the Bindplane agent for Google Security Operations, and check the events arrive. On
+    Windows Server VMs in Google Cloud, the Ops Agent's built-in ingestion carries only
+    Security-Auditing events such as 4688, so PowerShell logs and transcripts still need the Bindplane
+    agent or another forwarder.
+  effort: M
+  licence: []
+  sources: [gcp-secops-powershell, gcp-secops-windows-events, gws-windows-custom-settings, ms-powershell-logging-policies, ms-command-line-auditing, asd-windows-11-hardening, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-END-028
+  module: core
+  domain: endpoints
+  appliesTo: [gw-endpoints]
+  severity: medium
+  question: Are .NET Framework 3.5 and Windows PowerShell 2.0 removed from Windows computers and servers, with PowerShell running in Constrained Language Mode?
+  why: >-
+    Old .NET and PowerShell versions lack modern security controls and logging, so attackers use them to
+    slip past detection. Constrained Language Mode stops PowerShell reaching the .NET and Windows
+    interfaces that attack tools depend on.
+  yesLooksLike: >-
+    The .NET Framework 3.5 (includes .NET 2.0 and 3.0) and Windows PowerShell 2.0 features aren't
+    installed on any Windows computer or server (current Windows 11 and Windows Server 2025 releases no
+    longer include PowerShell 2.0), and enforced AppLocker or App Control for Business script rules make
+    PowerShell run in Constrained Language Mode for users, confirmed on a sample computer. Answer N/A if
+    no company computer or server runs Windows.
+  remediation: >-
+    Remove both features with Turn Windows features on or off, DISM or your deployment tool, keep
+    Windows 11 and Windows Server up to date, and enforce application control script rules (for example
+    the AppLocker Script rule collection as a Windows custom setting, or App Control for Business) so
+    PowerShell automatically runs in Constrained Language Mode, while scripts your policy allows, such
+    as signed administration scripts, still run.
+  effort: M
+  licence: [advanced-endpoint-management]
+  sources: [gws-windows-block-apps, ms-powershell-language-modes, ms-ps2-removal, ms-dotnet35, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: user-application-hardening, level: 3 }

@@ -87,6 +87,8 @@
     - { framework: mcsb, ref: IM-3 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
 
 - id: MS-APP-004
   module: core

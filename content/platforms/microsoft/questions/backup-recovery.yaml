@@ -9,16 +9,17 @@
     mass deletion is your responsibility. Recycle bins and retention can be emptied or worked around
     by anyone with enough admin rights.
   yesLooksLike: >-
-    Microsoft 365 Backup or a third-party backup covers all crown-jewel sites, OneDrives and
-    mailboxes, retention meets business continuity requirements, and new sites and mailboxes are
-    added automatically or through a regular process.
+    Microsoft 365 Backup or a third-party backup covers all crown-jewel sites, OneDrives and mailboxes,
+    retention meets business continuity requirements, new sites and mailboxes are added automatically or
+    through a regular process, and ordinary users can't see other people's backups or change or delete
+    any backup.
   remediation: >-
     Enable Microsoft 365 Backup (pay-as-you-go) or a backup product built on Microsoft 365 Backup
     Storage, create policies for crown-jewel sites, mailboxes and OneDrives with rules that pick up
     new ones, and record recovery point and recovery time objectives.
   effort: M
   licence: [m365-backup]
-  sources: [ms-m365-backup, ms-m365-resiliency]
+  sources: [ms-m365-backup, ms-m365-resiliency, ms-m365-backup-setup]
   refs:
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: BR-1 }
@@ -55,23 +56,94 @@
   domain: backup-recovery
   appliesTo: [ms-backups, ms-privileged-roles]
   severity: high
-  question: Are backups protected so that no one other than a dedicated backup administrator can modify or delete them?
+  question: Are backups protected so that only dedicated backup administrators can browse, restore, change or delete them?
   why: >-
     Ransomware operators go after backups first. If the same compromised Global Administrator can
     delete backups or offboard the backup tool, there is nothing left to restore.
   yesLooksLike: >-
-    Backup administration uses separate PIM-protected accounts that are not used for day-to-day
-    tenant administration, backups are immutable or append-only, deletion or policy changes notify
-    multiple admins, and third-party backup consoles require phishing-resistant MFA.
+    Only a small group of separate, dedicated backup administrator accounts, not used for day-to-day
+    administration, can browse, restore, change or delete backups. Global, SharePoint and Exchange
+    Administrators can also manage Microsoft 365 Backup, so every holder of those roles is one of that
+    group; Owner, Contributor and backup roles on Azure vault subscriptions are limited the same way;
+    and third-party backup consoles admit only those accounts.
   remediation: >-
-    Assign the Microsoft 365 Backup Administrator role (or third-party console access) to a small
-    dedicated group through PIM, enable multi-admin notifications, enable immutability where the
-    product supports it, and alert on backup policy changes.
+    Assign the Microsoft 365 Backup Administrator role, Azure Backup roles and third-party console
+    access to a small dedicated group, ideally as eligible assignments through PIM. Keep Global,
+    SharePoint and Exchange Administrator within that group, limit Owner and Contributor on vault
+    subscriptions, turn on Resource Guard multi-user authorisation for Azure vaults (including its
+    optional Restore protection), turn on multi-admin notifications and alert on backup policy changes.
+    Turning on immutability is the next step towards stopping backup administrators deleting backups
+    early.
   effort: S
   licence: []
-  sources: [ms-m365-backup, ms-azure-backup-mua]
+  sources: [ms-m365-backup, ms-m365-backup-setup, ms-azure-backup-mua, ms-e8-backups]
   refs:
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: BR-2 }
   e8:
     - { strategy: regular-backups, level: 2 }
+
+- id: MS-BCK-004
+  module: core
+  domain: backup-recovery
+  appliesTo: [ms-backups, ms-privileged-roles]
+  severity: high
+  question: Are backups protected so that not even backup administrators can modify or delete them before their retention period ends?
+  why: >-
+    An attacker who takes over a backup administrator account, or pressures the person who holds it, can
+    wipe every recovery point before launching ransomware or a wiper. Backups that can't be deleted
+    until they expire survive even that.
+  yesLooksLike: >-
+    Every backup you rely on for recovery can't be changed, deleted or have its retention shortened by
+    any account, including backup administrators, until it expires: Azure Backup vaults have
+    immutability enabled and locked with always-on soft delete, and third-party backups use immutable
+    storage with a retention lock. Microsoft 365 Backup can't be the only copy you rely on, because an
+    administrator can still offboard it, which deletes its backups after a 90-day grace period.
+  remediation: >-
+    Enable and lock immutability on Recovery Services and Backup vaults and set soft delete to
+    always-on, turn on immutable storage in third-party backup products, and keep an immutable copy
+    wherever a product still lets an administrator delete backups. For Microsoft 365 Backup, set up
+    multi-admin email notifications and a critical action approval roster of independent approvers, so
+    offboarding is noticed and the grace period can't be shortened by one person.
+  effort: M
+  licence: []
+  sources: [ms-azure-backup-immutable, ms-m365-backup, ms-m365-backup-offboarding, ms-e8-backups]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-2 }
+  e8:
+    - { strategy: regular-backups, level: 3 }
+
+- id: MS-BCK-005
+  module: core
+  domain: backup-recovery
+  appliesTo: [ms-backups, ms-privileged-roles]
+  severity: low
+  question: Is access to backups limited to backup administrators, so other users and administrators can't browse or restore even their own data from them?
+  why: >-
+    Backups hold older copies of everything, including files that were deliberately deleted. If every
+    account can open its own backups, any compromised account can pull that data back, and each extra
+    person with backup access is another way into the backup system.
+  yesLooksLike: >-
+    Only dedicated backup administrator accounts can browse or restore from Microsoft 365 Backup, Azure
+    Backup or third-party backups. The Global, SharePoint and Exchange Administrator roles (which can
+    also manage Microsoft 365 Backup) and Owner and Contributor on Azure vault subscriptions are held
+    only by those backup administrators, or Resource Guard protects restores; end-user self-service
+    restore portals are turned off; and no other account holds a backup role. Recycle bins and version
+    history aren't backups and don't count here.
+  remediation: >-
+    Turn off end-user self-service restore in third-party backup products and route restore requests
+    through the backup administrators. Assign the Microsoft 365 Backup Administrator role and Azure
+    Backup roles only to dedicated accounts, ideally through PIM, keep the Global, SharePoint and
+    Exchange Administrator roles and Owner and Contributor on vault subscriptions to that group, turn on
+    Resource Guard protection for restores, and review backup console and vault role assignments
+    regularly.
+  effort: S
+  licence: []
+  sources: [ms-e8-backups, ms-m365-backup-setup, ms-azure-backup-mua, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-2 }
+  e8:
+    - { strategy: regular-backups, level: 3 }

@@ -114,3 +114,137 @@
     - { framework: nist-csf-2, ref: RS.MA-01 }
     - { framework: nist-csf-2, ref: RS.MI-01 }
     - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+
+- id: GO-LOG-005
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are security alerts from the alert center, activity rules and any SIEM or Google Security Operations triaged by a named person or service within a defined time, including outside business hours?
+  why: >-
+    Google raises alerts for suspicious sign-ins, leaked passwords, government-backed attacks, admin
+    privilege grants and compromised devices, but they only help if someone acts on them quickly.
+    Account takeovers are often visible in the alert center long before anyone looks.
+  yesLooksLike: >-
+    Alerts reach a monitored queue or ticketing system, and a named person, team or managed detection
+    and response provider triages each one against a response-time target, around the clock or under an
+    agreed after-hours arrangement, recording whether it's a cyber security incident.
+  remediation: >-
+    Send alert center and activity rule notifications to a monitored security mailbox or ticketing
+    system, or pull alerts into your SIEM or Google Security Operations through the Alert Center API.
+    Assign an owner or managed provider with a response-time target and after-hours cover, and track
+    each alert's owner and status until it's closed.
+  effort: M
+  licence: [alert-center]
+  sources: [gws-alert-center, gws-activity-rules, gcp-secops-overview]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: nist-csf-2, ref: RS.MA-02 }
+    - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-LOG-006
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are the security logs you keep, including copies exported to BigQuery, Cloud Logging or a SIEM, protected so that administrators outside the security team can't change or delete them?
+  why: >-
+    An attacker with admin rights tries to cover their tracks by deleting an exported log dataset,
+    shortening retention or switching off exports. The longer-lived copies you rely on for
+    investigations are only as trustworthy as the controls on where they're kept.
+  yesLooksLike: >-
+    Exported Workspace audit logs, Google Cloud audit logs and any Chrome or device event logs are kept
+    in a dedicated logging project or SIEM that only the security team administers; Cloud Logging
+    buckets holding them have a locked retention period (or Cloud Storage copies use Bucket Lock); and
+    changes to exports, sinks, buckets or retention raise an alert.
+  remediation: >-
+    Share Workspace audit logs with Google Cloud, route them and your Google Cloud audit logs through an
+    organisation-level sink to log buckets in a dedicated logging project, and lock the bucket retention
+    so logs can't be deleted early. Keep BigQuery exports in that project with IAM limited to the
+    security team, alert on changes to sinks, buckets, datasets and Workspace export settings, and keep
+    super admins to a minimum because they can grant themselves Google Cloud roles.
+  effort: M
+  licence: []
+  sources: [gws-share-with-gcp, gcp-log-buckets, gcp-super-admin, asd-event-logging]
+  refs:
+    - { framework: cis-gcp, ref: "2.2" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-LOG-007
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: When a cyber security incident is identified, is your incident response plan put into action, with the incident reported to your CISO (or their delegate) and to ASD as soon as possible?
+  why: >-
+    In the first hours of an incident, confusion over who decides, who to call and what evidence to keep
+    costs time and data. Reporting to ASD early brings threat intelligence and technical help, and some
+    organisations have legal deadlines for reporting cyber incidents.
+  yesLooksLike: >-
+    A written incident response plan, approved by leadership and exercised at least yearly, names who
+    leads the response, how incidents are escalated to the CISO or their delegate, and when and how
+    they're reported to ASD through cyber.gov.au; records of recent incidents or exercises show the plan
+    was followed.
+  remediation: >-
+    Write or update your incident response plan using ASD's practitioner guidance and Google's incident
+    response plan template. Define incident categories and severity, roles and decision makers,
+    escalation to the CISO or their delegate, evidence preservation with the security investigation tool
+    and exported logs, and reporting to ASD (and any regulator) as soon as possible. Link playbooks such
+    as compromised account containment, and exercise the plan at least annually.
+  effort: M
+  licence: []
+  sources: [gcp-ir-plan-template, gws-investigation-tool, asd-ir-planning, asd-report-incident]
+  refs:
+    - { framework: nist-csf-2, ref: RS.MA-01 }
+    - { framework: nist-csf-2, ref: RS.CO-02 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-LOG-008
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are security events from the computers and browsers you manage through Google, and from any Google Cloud servers that aren't internet-facing, collected centrally and analysed in a timely manner?
+  why: >-
+    Most intrusions start on a user's computer, through a malicious download, extension or stolen
+    session, and spread from there. Event logs from every computer and internal server let you spot that
+    activity early instead of only at the edge.
+  yesLooksLike: >-
+    Chrome event reporting is on for managed browsers and ChromeOS devices, with events reviewed in the
+    audit and investigation tool or sent to Google Security Operations or another SIEM; Windows
+    computers enrolled in Google endpoint management send their event logs or EDR telemetry to the same
+    SIEM; internal Compute Engine VMs send logs through the Ops Agent; and alerts from all of them are
+    triaged with other security alerts.
+  remediation: >-
+    Turn on event reporting under Devices > Chrome > Settings > Browser reporting and add a reporting
+    connector for Google Security Operations or your SIEM, collect event logs or EDR telemetry from
+    Windows computers you manage through Google into the same SIEM, install the Ops Agent on internal
+    Compute Engine VMs, and build detection or activity rules that alert on suspicious device and
+    browser events.
+  effort: M
+  licence: []
+  sources: [chrome-reporting-connectors, gws-chrome-log-events, gcp-ops-agent, gcp-secops-overview, asd-event-logging]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: DE.AE-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+  e8:
+    - { strategy: mfa, level: 3 }
+    - { strategy: restrict-admin-privileges, level: 3 }
+    - { strategy: application-control, level: 3 }
+    - { strategy: user-application-hardening, level: 3 }

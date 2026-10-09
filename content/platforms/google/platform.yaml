@@ -10,7 +10,7 @@ description: >-
 
 
 # Licence tiers below are based on these vendor pages.
-sources: [gws-compare-business, gws-compare-enterprise, gws-compare-nonprofits, gws-nonprofits-offering, gcp-identity-editions]
+sources: [gws-compare-business, gws-compare-enterprise, gws-compare-nonprofits, gws-nonprofits-offering, gcp-identity-editions, chromeos-enroll-devices]
 
 modules:
   - id: core
@@ -110,6 +110,10 @@ licenceFeatures:
     name: Client-side encryption
   - id: gcp-scc-premium
     name: Security Command Center Premium (Google Cloud subscription)
+  # ChromeOS device management is bought per device (ChromeOS Enterprise or Education Upgrade), separately from
+  # Workspace editions, so like gcp-scc-premium it is not part of any tier (see chromeos-enroll-devices).
+  - id: chromeos-device-management
+    name: ChromeOS device management (ChromeOS Enterprise or Education Upgrade)
 
 domains:
   - id: identity

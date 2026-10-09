@@ -108,6 +108,16 @@ describe("essential eight", () => {
     expect(results.find((r) => r.strategy === "mfa")).toMatchObject({ level: 1, ceiling: 3, unasked: 2 });
     expect(results.find((r) => r.strategy === "regular-backups")?.level).toBeNull();
   });
+
+  it("passes through a level ASD defines with no new requirements (patching operating systems at ML2)", () => {
+    const os = (qs: ReturnType<typeof q>[], answers: Record<string, "yes" | "no">) => essentialEight(qs, answers).find((r) => r.strategy === "patch-operating-systems")!;
+    const ml1 = q("MS-END-005", { e8: [{ strategy: "patch-operating-systems", level: 1 }] });
+    const ml3 = q("MS-END-010", { e8: [{ strategy: "patch-operating-systems", level: 3 }] });
+    expect(os([ml1], { "MS-END-005": "yes" })).toMatchObject({ level: 2, ceiling: 2, unasked: null });
+    expect(os([ml1, ml3], { "MS-END-005": "yes", "MS-END-010": "yes" })).toMatchObject({ level: 3, ceiling: 3 });
+    expect(os([ml1, ml3], { "MS-END-005": "yes", "MS-END-010": "no" })).toMatchObject({ level: 2, blockers: [ml3] });
+    expect(os([ml1, ml3], { "MS-END-005": "no", "MS-END-010": "yes" }).level).toBe(0);
+  });
 });
 
 describe("roadmap", () => {

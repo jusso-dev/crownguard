@@ -9,9 +9,10 @@
     days after an account is deleted. Google says Vault is not a backup tool. Ransomware, a rogue
     admin or a sync mistake can destroy data permanently.
   yesLooksLike: >-
-    A backup service covers every user's Gmail and Drive and every shared drive, runs at least
-    daily, keeps backups as long as the business needs, and a point-in-time restore of a mailbox and
-    a shared drive has been tested in the last year.
+    A backup service covers every user's Gmail and Drive and every shared drive, runs at least daily,
+    keeps backups as long as the business needs, and a point-in-time restore of a mailbox and a shared
+    drive has been tested in the last year; ordinary users can't see other people's backups or change or
+    delete any backup.
   remediation: >-
     Choose a Workspace backup service (the Vault FAQ lists partner options), cover every licensed
     user and shared drive, set retention to match business continuity needs, and test restoring a
@@ -34,9 +35,9 @@
     An attacker with super admin can delete users, shared drives and Vault holds. If the backup
     service is controlled by the same accounts, it can be wiped in the same attack.
   yesLooksLike: >-
-    Backups are stored outside your Google tenant, the backup console uses separate admin accounts
-    with phishing-resistant MFA that a Google super admin cannot take over, only named backup
-    administrators can change or delete backups, and backup deletions raise an alert.
+    Backups are stored outside your Google tenant, the backup console uses separate admin accounts with
+    phishing-resistant MFA that a Google super admin cannot take over, only named backup administrators
+    can browse, restore, change or delete other users' backups, and backup deletions raise an alert.
   remediation: >-
     Configure the backup service with its own dedicated admin accounts, restrict deletion and policy
     changes to backup administrators, require phishing-resistant MFA, and alert on backup deletion
@@ -54,17 +55,20 @@
   domain: backup-retention
   appliesTo: [gw-vault-retention]
   severity: medium
-  question: Are Workspace backups immutable for their retention period, so even backup administrators cannot delete them early?
+  question: Can only backup administrators reach Workspace backups, and are the backups immutable so even those administrators can't delete them early?
   why: >-
     Ransomware crews and malicious insiders go after backup consoles first. With immutability, a
     stolen backup admin account still cannot erase your recovery points.
   yesLooksLike: >-
-    The backup service applies a retention lock or write-once storage to Workspace backups, and
-    deleting a backup before it expires is technically blocked or needs multi-person approval.
+    The backup service applies a retention lock or write-once storage to Workspace backups, so deleting
+    a backup before it expires is technically blocked or needs multi-person approval, and self-service
+    restore is turned off so users and other admins can't browse or restore backups, even of their own
+    data.
   remediation: >-
-    Turn on the backup service's immutability or retention lock feature, or keep a copy in
-    write-once storage such as a Cloud Storage bucket with a locked retention policy, and confirm with
-    the vendor how early deletion is prevented.
+    Turn on the backup service's immutability or retention lock feature, or keep a copy in write-once
+    storage such as a Cloud Storage bucket with a locked retention policy, and confirm with the vendor
+    how early deletion is prevented. Turn off end-user self-service restore so only backup
+    administrators carry out restores.
   effort: M
   sources: [gws-vault-faq, gcp-bucket-lock]
   refs:

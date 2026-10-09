@@ -104,3 +104,220 @@
     - { framework: cis-gcp, ref: "2.6" }
     - { framework: cis-gcp, ref: "2.7" }
     - { framework: nist-csf-2, ref: DE.CM-03 }
+
+- id: GO-CLOG-005
+  module: gcp
+  domain: gcp-logging
+  appliesTo: ["*"]
+  severity: high
+  question: If you run internet-facing servers in Google Cloud, are their system and security logs collected centrally and analysed for signs of compromise in a timely manner?
+  why: >-
+    Compute Engine VMs with public addresses are scanned and attacked within minutes of going online,
+    and a compromised server exposes the data and service account credentials it holds. Its logs only
+    help if someone reviews them while there's still time to act.
+  yesLooksLike: >-
+    Every internet-facing Compute Engine VM runs the Ops Agent (or a SIEM agent) that sends system,
+    authentication and security logs to the central logging project or Google Security Operations;
+    Security Command Center Event Threat Detection or SIEM rules raise alerts from those logs; and the
+    alerts are triaged with your other security alerts.
+  remediation: >-
+    Install the Ops Agent on internet-facing Compute Engine VMs to collect syslog, authentication logs
+    and Windows event logs into Cloud Logging, route them with your organisation-level sink to the
+    central logging project or Google Security Operations, turn on Security Command Center threat
+    detection or equivalent SIEM rules, and send the findings to your triage queue.
+  effort: M
+  licence: []
+  sources: [gcp-ops-agent, gcp-scc-etd, gcp-secops-overview, asd-event-logging]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: GO-CLOG-006
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Are the operating systems of Compute Engine VMs scanned for missing patches and patched on time, with critical fixes on internet-facing VMs applied within 48 hours?
+  why: >-
+    Attackers scan the internet for unpatched servers all the time. A published exploit for one you
+    missed can mean compromise within hours, along with the data and service account permissions that VM
+    holds.
+  yesLooksLike: >-
+    Cloud Asset Inventory or another automated source lists every VM at least fortnightly; VM Manager's
+    OS inventory and patch reports, or another vulnerability scanner with a current vulnerability
+    database, show missing operating system updates at least daily for internet-facing VMs and at least
+    fortnightly for the rest; critical or exploited fixes reach internet-facing VMs within 48 hours and
+    other fixes within two weeks; internal VMs are patched within one month; and no VM runs an operating
+    system version past its end of support. Answer N/A if you run no Compute Engine VMs.
+  remediation: >-
+    Enforce the Require OS Config organisation policy so VM Manager is on in new projects, set it up in
+    existing ones, and create patch deployments with deadlines: frequent ones for internet-facing VMs
+    plus on-demand jobs for critical fixes, and at least monthly ones for internal VMs. Security Command
+    Center's Vulnerability Assessment adds vulnerability findings for VMs (about every 12 hours on
+    Premium, weekly on Standard), and images whose operating system has reached end of support should be
+    replaced.
+  effort: M
+  licence: []
+  sources: [gcp-vm-patch, gcp-asset-inventory, gcp-scc-vulnerability-assessment, gcp-os-details, gcp-org-policy-constraints, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-gcp, ref: "4.12" }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: GO-CLOG-007
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Are the internet-facing applications and services you run on Google Cloud scanned daily for missing patches, with critical fixes applied within 48 hours and unsupported versions removed?
+  why: >-
+    Attackers scan the internet for unpatched web applications, frameworks and services all the time. A
+    published exploit for one you missed can mean compromise within hours, along with the data and
+    service account permissions behind it.
+  yesLooksLike: >-
+    Every internet-facing web application, API and service you run on Compute Engine, GKE, Cloud Run or
+    App Engine is scanned at least daily for missing patches by a scanner with a current vulnerability
+    database (for example Security Command Center Premium's Vulnerability Assessment for VM software and
+    container images, plus a web application scanner); critical or exploited fixes are applied within 48
+    hours of release and other fixes within two weeks; and any framework, runtime or service version
+    past its vendor's end of support has been replaced. Answer N/A if you run no internet-facing
+    services on Google Cloud.
+  remediation: >-
+    Keep an inventory of internet-facing services with Cloud Asset Inventory, schedule a daily
+    vulnerability scan of each one, and track fixes against the 48-hour and two-week deadlines. Security
+    Command Center Premium's Vulnerability Assessment scans VMs, GKE and Cloud Run about every 12 hours
+    (the Standard tier scans weekly). Web Security Scanner finds outdated libraries, but its managed
+    scans run weekly, so pair it with a scanner you can run daily. Rebuild containers on supported
+    runtimes and base images.
+  effort: M
+  licence: []
+  sources: [gcp-scc-vulnerability-assessment, gcp-web-security-scanner, gcp-asset-inventory, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: GO-CLOG-008
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: medium
+  question: Are applications installed on Compute Engine VMs, such as database engines, web servers, runtimes and agents, scanned at least fortnightly for missing updates and updated within one month of release?
+  why: >-
+    Server software outside the operating system carries its own vulnerabilities and is easily missed
+    when only the operating system is patched, leaving an internal server open to an attacker who is
+    already inside.
+  yesLooksLike: >-
+    A scanner checks the software installed on every VM for missing updates at least fortnightly,
+    including updates Vulnerability Assessment doesn't report (it raises only Critical findings on the
+    Standard tier, and Critical and High on Premium); software from distribution package repositories is
+    kept current by VM Manager patch jobs; software installed any other way has an owner who applies
+    vendor updates within one month of release; and container images are rebuilt with current packages.
+    Answer N/A if you run no Compute Engine VMs or containers.
+  remediation: >-
+    Install server software from distribution or vendor package repositories where you can, so VM
+    Manager reports and applies its updates, run a vulnerability scanner that reports all missing
+    updates rather than only critical ones, keep an inventory with an update owner for anything
+    installed another way, and rebuild and redeploy container images regularly.
+  effort: M
+  licence: []
+  sources: [gcp-vm-patch, gcp-scc-vulnerability-assessment, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+  e8:
+    - { strategy: patch-applications, level: 2 }
+
+- id: GO-CLOG-009
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: medium
+  question: Do all Compute Engine VMs, including internal ones, get operating system fixes for critical or actively exploited vulnerabilities within 48 hours of release?
+  why: >-
+    Capable attackers who get a foothold move to internal servers that are patched less urgently.
+    Closing the gap for exploited operating system flaws limits how far they get.
+  yesLooksLike: >-
+    Critical or exploited operating system fixes, including guest drivers delivered as operating system
+    packages, reach every VM within 48 hours of release through on-demand VM Manager patch jobs or your
+    own patching tool, and other operating system fixes within one month; the scanner checks drivers
+    with the rest of the operating system at least fortnightly; and VMs use the virtual firmware Google
+    maintains, for example as Shielded VMs with Google's signed UEFI firmware. Answer N/A if you run no
+    Compute Engine VMs.
+  remediation: >-
+    Use VM Manager's patch dashboard and OS inventory to find VMs missing critical updates and run
+    on-demand patch jobs within 48 hours of release, watch vendor advisories so urgent fixes are started
+    the day they ship, and enforce the Shielded VMs organisation policy for new VMs.
+  effort: M
+  licence: []
+  sources: [gcp-vm-patch, gcp-shielded-vm, gcp-org-policy-constraints, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-gcp, ref: "4.12" }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: GO-CLOG-010
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: medium
+  question: Do Compute Engine VMs run the latest or previous release of their operating system?
+  why: >-
+    Older operating system releases lack newer security features and are the first to lose fixes.
+    Servers left on them are easy targets once an attacker is inside.
+  yesLooksLike: >-
+    Each VM runs the newest or previous release in the servicing channel it uses, for example one of the
+    two most recent Windows Server Long-Term Servicing Channel releases or Ubuntu LTS releases, and VMs
+    on older releases have a rebuild date (the answer is Partial until they move). Answer N/A if you run
+    no Compute Engine VMs.
+  remediation: >-
+    Check each VM's operating system against Google's operating system details and the vendor's release
+    list, plan rebuilds onto the newest release before the previous one is superseded, and stop creating
+    VMs from older images.
+  effort: M
+  licence: []
+  sources: [gcp-os-details, ms-windows-server-release-info, asd-e8-faq, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: GO-CLOG-011
+  module: gcp
+  domain: gcp-logging
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: medium
+  question: On Compute Engine VMs, are critical fixes for security agents and any browser, office, email or PDF software applied within 48 hours, and is software its vendor no longer supports removed?
+  why: >-
+    Security agents run with high privileges on every server, so an exploited flaw in one hands over the
+    machine. And software past its end of support, such as an old database engine or runtime, is never
+    fixed again.
+  yesLooksLike: >-
+    Security agents such as EDR and antivirus, and any browser, office, email or PDF software installed
+    on VMs, get fixes for critical or exploited vulnerabilities within 48 hours of release; the scanner
+    or Vulnerability Assessment shows no software on any VM past its vendor's end of support, such as an
+    unsupported database engine, web server or runtime; and container images don't use end-of-life base
+    images. Answer N/A if you run no Compute Engine VMs or containers.
+  remediation: >-
+    Turn on automatic updates for security agents, push urgent fixes the day they're released, and
+    remove or replace end-of-life software and base images that your scanner or Vulnerability Assessment
+    reports.
+  effort: M
+  licence: []
+  sources: [gcp-vm-patch, gcp-scc-vulnerability-assessment, gcp-os-details, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-applications, level: 3 }

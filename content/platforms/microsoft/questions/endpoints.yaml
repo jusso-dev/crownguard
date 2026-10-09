@@ -63,28 +63,32 @@
   domain: endpoints
   appliesTo: [ms-managed-endpoints]
   severity: high
-  question: Are attack surface reduction rules in block mode on Windows devices, including the rules that stop Office and PDF apps creating child processes and stop macros calling Win32 APIs?
+  question: Are attack surface reduction rules in block mode on Windows devices to stop Office apps, including Outlook, creating child processes, creating executable content or injecting code into other processes, and to stop PDF software creating child processes?
   why: >-
-    Even approved documents can be weaponised. ASR rules stop the behaviours attackers rely on after
-    a user opens a malicious file, such as Word launching PowerShell or malware reading credentials
-    from LSASS.
+    Even approved documents can be weaponised. ASR rules stop the behaviours attackers rely on after a
+    user opens a malicious file, such as Word launching PowerShell, Office writing an executable to disk
+    or a PDF starting another program.
   yesLooksLike: >-
-    An Intune endpoint security policy sets the Office, Adobe Reader, Win32 API from macros, LSASS
-    credential theft and email content rules to Block on all Windows devices, exclusions are minimal
-    and reviewed, and ASR events are visible in the Defender portal.
+    An Intune endpoint security policy sets "Block all Office applications from creating child
+    processes", "Block Office communication application from creating child processes", "Block Office
+    applications from creating executable content", "Block Office applications from injecting code into
+    other processes" and, where Adobe Reader is used, "Block Adobe Reader from creating child processes"
+    to Block on all Windows devices. Any other PDF application is stopped from launching child processes
+    by equivalent controls, or Edge is the only PDF viewer. Exclusions are minimal and reviewed, and ASR
+    events are visible in the Defender portal.
   remediation: >-
-    Deploy ASR rules in audit mode through Intune endpoint security, review the events in the
-    Defender portal for a few weeks, add narrow exclusions, then switch to block. Include "Block
-    Win32 API calls from Office macros" and "Block all Office applications from creating child
-    processes".
+    Deploy the rules in audit mode through Intune endpoint security, review the events in the Defender
+    portal for a few weeks, add narrow exclusions, then switch them to Block. Make Edge the default PDF
+    viewer, or use application control to stop other PDF software launching programs. Also turn on
+    Microsoft's other standard protection rules, such as "Block credential stealing from the Windows
+    local security authority subsystem" and "Block executable content from email client and webmail".
   effort: M
   licence: [intune, defender-endpoint-p1]
-  sources: [ms-asr-rules, ms-intune-asr, asd-e8-maturity-model]
+  sources: [ms-asr-rules, ms-intune-asr, ms-e8-app-hardening, asd-office-hardening, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: ES-2 }
   e8:
-    - { strategy: office-macros, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
 
 - id: MS-END-004
@@ -92,22 +96,27 @@
   domain: endpoints
   appliesTo: [ms-managed-endpoints]
   severity: high
-  question: Is application control enforced on workstations so only approved executables, scripts and installers can run, including from user profile and temporary folders?
+  question: Is application control enforced on all workstations, at least in user profile and temporary folders, so only approved executables, software libraries, scripts, installers, compiled HTML, HTML applications and control panel applets can run there?
   why: >-
     Ransomware, remote access tools and infostealers usually run from a user's Downloads or Temp
     folder. Application control stops unapproved programs running even when a user is tricked into
     launching them.
   yesLooksLike: >-
-    App Control for Business (or AppLocker) policies deployed through Intune enforce an allow list on
-    all workstations, cover user profile and temporary folders, include Microsoft's recommended block
-    rules, and blocked events are collected centrally.
+    App Control for Business or AppLocker policies, deployed by Intune, Group Policy or Configuration
+    Manager, are enforced on every workstation and cover at least user profile and temporary folders.
+    Rules allow files only by publisher, hash, administrator-protected path or the Intune managed
+    installer, never by reputation (Intune's "Trust apps with a good reputation" option is off), and
+    cover executables, DLLs, scripts, installers, .chm and .hta files and control panel applets.
+    AppLocker has no rule collection for .chm and .hta files, so with AppLocker mshta.exe and hh.exe are
+    blocked for standard users.
   remediation: >-
-    Start with an App Control for Business policy in audit mode, using Intune as a managed installer
-    so IT-deployed apps are trusted. Review the audit events, then enforce, and add Microsoft's
-    recommended block rules and vulnerable driver blocklist.
+    Start with an App Control for Business policy in audit mode (Microsoft notes AppLocker can meet this
+    level), using Intune as a managed installer so IT-deployed apps are trusted and leaving "Trust apps
+    with a good reputation" off. Review the audit events in Defender for Endpoint, then enforce.
+    Microsoft's recommended block rules and vulnerable driver blocklist are the next steps.
   effort: L
   licence: [intune]
-  sources: [ms-app-control, asd-e8-maturity-model]
+  sources: [ms-app-control, ms-e8-app-control, ms-intune-app-control, asd-implementing-application-control, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
@@ -124,10 +133,9 @@
     Attackers weaponise published vulnerabilities within days. Devices that miss monthly updates
     remain open to exploits that are already in commodity attack kits.
   yesLooksLike: >-
-    Windows Autopatch or Intune update rings with deadlines install quality updates within one month
-    (and expedited updates for actively exploited vulnerabilities), macOS, iOS and Android updates
-    are enforced through Intune, unsupported operating systems are replaced, and update compliance is
-    reported.
+    Windows Autopatch or Intune update rings with deadlines install quality updates within one month,
+    macOS, iOS and Android updates are enforced through Intune, unsupported operating systems are
+    replaced, and update status is reported.
   remediation: >-
     Enrol devices in Windows Autopatch or configure Intune update rings with deferral and deadline
     settings that complete within one month, use expedited quality updates for critical exploited
@@ -148,15 +156,16 @@
   domain: endpoints
   appliesTo: [ms-managed-endpoints]
   severity: high
-  question: Are Microsoft 365 Apps, web browsers and PDF software updated within two weeks of release?
+  question: Are updates for office productivity suites (such as Microsoft 365 Apps), web browsers and their extensions, email clients, PDF software and security products applied within two weeks of release?
   why: >-
     Office, browsers and PDF readers process untrusted content from email and the web every day,
     which makes them the most targeted applications on a workstation.
   yesLooksLike: >-
     Microsoft 365 Apps use Current Channel or Monthly Enterprise Channel with updates enforced and no
-    devices held back on Semi-Annual Enterprise Channel version 2508 or older, Edge and other browsers
-    auto-update, PDF readers are managed, and reports show devices are within two weeks of the latest
-    release; unsupported versions are removed.
+    devices held back on Semi-Annual Enterprise Channel version 2508 or older; Edge and other browsers
+    and their extensions, email clients, PDF readers and security products update automatically or
+    through Intune; reports show devices are within two weeks of the latest release; and versions their
+    vendors no longer support are removed.
   remediation: >-
     Set the Microsoft 365 Apps update channel and deadline through Intune or Cloud Update, and move
     devices still on Semi-Annual Enterprise Channel to Monthly Enterprise Channel (Microsoft merged the
@@ -203,25 +212,25 @@
   domain: endpoints
   appliesTo: [ms-managed-endpoints]
   severity: high
-  question: Do staff work without local administrator rights, with each device's built-in administrator password managed by Windows LAPS?
+  question: Do staff work without local administrator rights on their everyday accounts?
   why: >-
     Local admin rights let malware switch off protections and dump credentials, and a shared local
     administrator password lets an attacker move from one compromised laptop to every other.
   yesLooksLike: >-
-    Users are not local administrators (elevation is handled by IT or Endpoint Privilege
-    Management), Global Administrators are not added as local admins on Entra join, and Windows LAPS
-    rotates a unique local administrator password per device, backed up to Entra ID.
+    Users are not local administrators (elevation is handled by IT or Endpoint Privilege Management),
+    Global Administrators are not added as local admins on Entra join, and users who join devices to
+    Entra aren't made local administrators.
   remediation: >-
-    In Entra device settings stop registering users becoming local administrators, enable Windows
-    LAPS in Entra ID and deploy an Intune account protection LAPS policy, and use Intune account
-    protection to control membership of the local Administrators group.
+    In Entra device settings stop registering users becoming local administrators and remove Global
+    Administrator from the local Administrators group on Entra join, use Intune account protection to
+    control membership of the local Administrators group, and handle tasks that need admin rights
+    through Endpoint Privilege Management or IT-run elevation.
   effort: M
   licence: [intune]
-  sources: [ms-laps]
+  sources: [ms-entra-device-local-admin, ms-e8-restrict-admin]
   refs:
     - { framework: cis-m365, ref: "5.1.4.3" }
     - { framework: cis-m365, ref: "5.1.4.4" }
-    - { framework: cis-m365, ref: "5.1.4.5" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-7 }
   e8:
@@ -252,3 +261,828 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-1 }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+
+- id: MS-END-010
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are unmanaged devices discovered automatically, and are all workstations and servers scanned for missing updates by a vulnerability scanner at least weekly, and internet-facing servers daily?
+  why: >-
+    You can only patch what you know about. Without automated discovery and vulnerability scanning,
+    unmanaged devices and forgotten servers stay exposed long after fixes ship, and nobody notices when
+    an update fails to install.
+  yesLooksLike: >-
+    Device discovery runs continuously (or at least fortnightly) and finds unmanaged devices on your
+    networks so they can be onboarded, and Microsoft Defender Vulnerability Management (or another
+    scanner with a current vulnerability database) assesses every onboarded workstation and server for
+    missing operating system, browser and extension, Office, email client, PDF reader and security
+    product updates, with internet-facing servers assessed at least daily and results reviewed at least
+    weekly.
+  remediation: >-
+    Onboard all devices and servers to Defender for Endpoint and keep standard device discovery on,
+    onboard the unmanaged devices it finds, and review the Defender Vulnerability Management weaknesses,
+    software inventory and security recommendations pages (or your scanner's reports) at least weekly to
+    drive patching and the removal of unsupported software.
+  effort: M
+  licence: [defender-endpoint-p2]
+  sources: [ms-mdvm, ms-device-discovery, ms-e8-patch-applications, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.AM-01 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: mcsb, ref: AM-1 }
+    - { framework: mcsb, ref: PV-5 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: MS-END-011
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are operating system patches for internet-facing servers applied within two weeks of release (48 hours when critical or a working exploit exists), and for other servers within one month?
+  why: >-
+    Internet-facing servers such as AD FS, Web Application Proxy and Exchange hybrid servers are
+    attacked within days of a patch being published, and internal servers such as domain controllers and
+    Entra Connect are the next stop. Slow server patching turns published flaws into an easy way in.
+  yesLooksLike: >-
+    Azure Update Manager, Configuration Manager, Windows Server Update Services or another patching tool
+    applies operating system updates, or the vendor's mitigation, to internet-facing servers within two
+    weeks of release, or within 48 hours when the vendor rates a vulnerability critical or a working
+    exploit exists, and to all other servers within one month; patch status is reported, and servers on
+    unsupported operating systems are replaced. If you run no servers, answer N/A and say so.
+  remediation: >-
+    Connect on-premises servers to Azure Arc and schedule updates for them and Azure virtual machines
+    with Azure Update Manager maintenance configurations (or use WSUS or Configuration Manager), give
+    internet-facing servers a fast-track schedule for critical and exploited vulnerabilities, and plan
+    upgrades for servers running unsupported versions of Windows Server or Linux.
+  effort: M
+  licence: []
+  sources: [ms-azure-update-manager, ms-e8-patch-os, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: MS-END-012
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are applications other than office suites, web browsers and their extensions, email clients, PDF software and security products scanned for missing updates by a vulnerability scanner at least fortnightly, with updates or vendor mitigations applied within one month of release?
+  why: >-
+    Attackers also exploit everyday software such as archive tools, remote access clients, Java and .NET
+    runtimes and line-of-business apps. Without a scanner nobody notices the outdated copies, and any
+    one of them can be the foothold that leads to stolen sessions and data.
+  yesLooksLike: >-
+    Defender Vulnerability Management continuously assesses every workstation and server (or another
+    vulnerability scanner checks them at least fortnightly), and updates or vendor mitigations for all
+    other applications are applied within one month of release, with reports showing which devices are
+    behind.
+  remediation: >-
+    Onboard all devices and servers to Defender for Endpoint so Defender Vulnerability Management tracks
+    their software inventory and missing updates, and turn on the Microsoft Intune connection under
+    Settings > Endpoints > General > Advanced features in the Defender portal so remediation requests
+    become Intune security tasks. Keep apps current with Microsoft Store apps in Intune, Win32 app
+    supersedence or Intune Enterprise App Management (included in Microsoft 365 E5 from August 2026,
+    otherwise an Intune add-on), and set a one-month deadline for everything that doesn't update itself.
+  effort: M
+  licence: [intune, defender-endpoint-p2]
+  sources: [ms-e8-patch-applications, ms-dvm-capabilities, ms-m365-pricing-packaging-2026, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: mcsb, ref: PV-5 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-applications, level: 2 }
+
+- id: MS-END-013
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are updates for office productivity suites (such as Microsoft 365 Apps), web browsers and their extensions, email clients, PDF software and security products applied within 48 hours when the vendor rates a vulnerability critical or a working exploit exists, and within two weeks otherwise?
+  why: >-
+    Browser and Office flaws are often exploited within hours of a fix being published, through a link
+    or an attachment. Every day a device keeps the vulnerable version is a day an attacker can take it
+    over with a single click.
+  yesLooksLike: >-
+    An emergency patch process starts whenever a vendor rates an update critical or a working exploit is
+    known (a vendor advisory, CISA's Known Exploited Vulnerabilities catalogue or a public proof of
+    concept), and reports show every device updated, or the vendor's mitigation applied, within 48
+    hours: Microsoft 365 Apps get the fix through the cloud update Current profile with a short deadline
+    or an immediate update pushed to devices, Edge and other browsers update automatically with a
+    required relaunch, and PDF software and security products update automatically. Other updates land
+    within two weeks.
+  remediation: >-
+    For Microsoft 365 Apps, use the cloud update Current profile (it reaches devices within one to two
+    days) with a deadline of 0 days, or trigger an immediate update on devices with a script or
+    Configuration Manager, for critical or exploited fixes. The Monthly Enterprise profile rolls updates
+    out over four to five days and Windows Autopatch gives users a seven-day deadline, so they only suit
+    the two-week case. Keep Edge automatic updates on and set RelaunchNotification to Required with a
+    RelaunchNotificationPeriod well under the seven-day default, deploy PDF software with automatic
+    updates, and check Defender Vulnerability Management to confirm the fixed version is everywhere.
+    Record who declares an emergency update and how fast each update ring must finish.
+  effort: M
+  licence: [intune]
+  sources: [ms-e8-patch-applications, ms-m365-apps-cloud-update-deadlines, ms-autopatch-m365-apps, ms-edge-relaunch-notification, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-06 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-applications, level: 3 }
+
+- id: MS-END-014
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are applications that their vendor no longer supports removed from workstations and servers?
+  why: >-
+    Software past its end of support never gets another security fix, so every new flaw in it stays open
+    for good. Old runtimes, plug-ins and utilities left behind on a few devices are an easy way in.
+  yesLooksLike: >-
+    The end-of-support tags in Defender Vulnerability Management (or another software inventory) are
+    reviewed regularly, and no workstation or server still runs an application or application version
+    that its vendor no longer supports. Defender's end-of-support tags cover Windows software only, so
+    macOS and Linux devices are checked with another inventory.
+  remediation: >-
+    Filter Defender Vulnerability Management recommendations and the software inventory by the
+    end-of-support tags, uninstall what they find with Intune (change the app assignment to Uninstall or
+    replace it through supersedence), block reinstallation with application control, and add
+    end-of-support dates to your software approval process so replacements are planned before support
+    ends.
+  effort: M
+  licence: [intune, defender-endpoint-p2]
+  sources: [ms-e8-patch-applications, ms-dvm-end-of-support, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: mcsb, ref: AM-3 }
+  e8:
+    - { strategy: patch-applications, level: 3 }
+
+- id: MS-END-015
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are operating system updates for workstations and servers that aren't internet-facing applied within 48 hours when the vendor rates a vulnerability critical or a working exploit exists, and within one month otherwise?
+  why: >-
+    Once a Windows or server flaw is under active attack, waiting for the normal monthly cycle leaves
+    every device exposed. Internal servers such as domain controllers and Entra Connect are prime
+    targets, because one compromised server can hand an attacker the identity plane.
+  yesLooksLike: >-
+    An emergency process applies critical and exploited operating system fixes, or the vendor's
+    mitigation, within 48 hours on every workstation and internal server, for example with Intune
+    expedite policies or Windows Autopatch for Windows devices and Azure Update Manager, Configuration
+    Manager or WSUS deadlines (or hotpatching) for servers; reports confirm completion, and all other
+    operating system updates install within one month.
+  remediation: >-
+    Create an expedite policy for the update in the Intune admin centre (Windows updates > Quality
+    updates) with a short restart deadline, which overrides update ring deferrals, patch servers on
+    demand with Azure Update Manager (connect on-premises servers through Azure Arc), Configuration
+    Manager or hotpatch, and confirm completion in Autopatch, Intune and Defender Vulnerability
+    Management reports. Record who declares an emergency update.
+  effort: M
+  licence: [intune]
+  sources: [ms-e8-patch-os, ms-intune-quality-updates, ms-azure-update-manager, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-06 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: MS-END-016
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are missing driver and firmware updates on workstations and servers found by a scanner at least fortnightly and installed within one month of release, or within 48 hours when a vulnerability is critical or a working exploit exists?
+  why: >-
+    Attackers abuse vulnerable drivers and outdated firmware to switch off security tools and to hide
+    below the operating system, where reinstalling Windows doesn't remove them. These fixes are easy to
+    miss because they don't arrive with the monthly Windows update.
+  yesLooksLike: >-
+    Defender Vulnerability Management with hardware and firmware assessment, Intune driver update
+    reports or the hardware vendor's tooling show missing driver and firmware updates at least
+    fortnightly, driver update policies in Intune or Windows Autopatch approve recommended driver and
+    firmware updates within one month, and fixes for critical or exploited vulnerabilities are approved
+    and installed within 48 hours.
+  remediation: >-
+    Create Windows driver update policies in Intune, or manage drivers through Windows Autopatch, with
+    automatic approval of recommended updates and a short delay, approve critical fixes as soon as they
+    appear, and use the Defender Vulnerability Management hardware and firmware inventory to find
+    devices with vulnerable BIOS and firmware. That inventory needs the Defender Vulnerability
+    Management add-on (or Defender for Servers Plan 2 for servers). Use the hardware vendor's update
+    tools for firmware that Windows Update doesn't deliver.
+  effort: M
+  licence: [intune, defender-endpoint-p2]
+  sources: [ms-e8-patch-os, ms-intune-driver-updates, ms-dvm-firmware, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: PR.PS-03 }
+    - { framework: mcsb, ref: PV-5 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: MS-END-017
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Do all workstations and servers run the latest or the previous release of their operating system?
+  why: >-
+    Each new Windows release adds protections that older ones lack and resets the support clock. Devices
+    that fall more than one release behind miss those defences and drift towards running an unsupported
+    system.
+  yesLooksLike: >-
+    Windows 11 devices run the newest or previous feature update offered to them (for example 26H2 or
+    25H2 as of October 2026; 26H1 ships only on new hardware), Windows LTSC devices run the latest or
+    previous LTSC release, servers run the latest or previous Windows Server release or Linux
+    distribution release, macOS, iOS and Android devices run one of their two newest major versions, and
+    the minimum OS version in Intune compliance policies stops anything older from reaching company
+    data.
+  remediation: >-
+    Use Intune feature update policies or Windows Autopatch to move devices to each new Windows 11
+    feature update, raise the minimum OS version in compliance policies as releases arrive and enforce
+    it with Conditional Access, retire remaining Windows 10 devices, and plan in-place upgrades or
+    rebuilds for servers older than Windows Server 2022.
+  effort: L
+  licence: [intune]
+  sources: [ms-e8-patch-os, ms-intune-feature-updates, ms-windows11-release-info, ms-windows-server-release-info]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: MS-END-018
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Is application control enforced in every location on workstations, not only user profile and temporary folders, and on internet-facing servers?
+  why: >-
+    Rules that only cover a user's profile and temporary folders can be sidestepped by running malware
+    from any other folder the user can write to. Internet-facing servers are attacked directly and need
+    the same protection.
+  yesLooksLike: >-
+    App Control for Business policies (or an equivalent product) in enforce mode cover the whole of
+    every workstation, allowing files by publisher, hash or administrator-protected path rules (a
+    managed installer such as Intune is optional), and internet-facing servers such as AD FS, web and
+    remote access servers run enforced App Control policies too, or fapolicyd on Linux. If you have no
+    internet-facing servers, answer for workstations.
+  remediation: >-
+    Move from AppLocker path rules to App Control for Business. Build a base policy with the App Control
+    Wizard (for example from the Allow Microsoft template) or Intune's built-in controls, add
+    supplemental policies for line-of-business apps, run it in audit mode, then enforce it with Intune
+    endpoint security App Control for Business policies. On Windows Server 2025 apply the OSConfig App
+    Control policies; on older servers deploy policies with Group Policy or Configuration Manager, and
+    use fapolicyd on Linux servers.
+  effort: L
+  licence: [intune]
+  sources: [ms-e8-app-control, ms-intune-app-control, ms-app-control-windows-server, asd-implementing-application-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-5 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: MS-END-019
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are Microsoft's recommended application block rules enforced wherever application control runs?
+  why: >-
+    Attackers run their own code through trusted, Microsoft-signed tools such as mshta, msbuild and
+    installutil, which most allow lists approve by default. Microsoft's recommended block rules close
+    those bypasses so application control can't simply be walked around.
+  yesLooksLike: >-
+    The current version of Microsoft's recommended block rules is merged into, or deployed alongside,
+    the enforced App Control for Business policies on workstations and servers (on Windows Server 2025,
+    the OSConfig AppBlockList scenario, checked against the current recommended block rules), and the
+    rules are refreshed when Microsoft updates the list.
+  remediation: >-
+    Take the block rules policy from Microsoft's "Applications that can bypass App Control" page, test
+    it in audit mode, then deploy it as its own enforced policy or merge it into your base policy with
+    Merge-CIPolicy and deliver it through an Intune App Control for Business policy (custom XML). On
+    Windows Server 2025 apply the OSConfig AppBlockList scenario.
+  effort: S
+  licence: [intune]
+  sources: [ms-app-control-block-rules, ms-e8-app-control, ms-app-control-windows-server, asd-implementing-application-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-5 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: MS-END-020
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: low
+  question: Are application control rules reviewed and revalidated at least once a year?
+  why: >-
+    Allow lists drift as apps are retired, vendors change certificates and temporary exceptions are
+    forgotten. Rules nobody reviews slowly become a list of ways for malware to run.
+  yesLooksLike: >-
+    A named owner reviews every application control rule, supplemental policy, managed installer and
+    exception at least once a year, removes what is no longer needed, and records the review.
+  remediation: >-
+    Schedule an annual review in your change process, and another after major changes. Keep policy XML
+    under version control. App Control doesn't log the files it allows, so compare the signers and
+    hashes in your rules with process creation events (DeviceProcessEvents in advanced hunting) or the
+    software inventory to find rules nothing uses, test a trimmed policy in audit mode before removing
+    rules, and retire stale supplemental policies.
+  effort: S
+  licence: []
+  sources: [ms-e8-app-control, ms-app-control-events, asd-implementing-application-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: nist-csf-2, ref: ID.IM-03 }
+    - { framework: mcsb, ref: AM-5 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: MS-END-021
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Is application control also enforced on servers that aren't internet-facing, such as domain controllers, file servers and Entra Connect servers?
+  why: >-
+    Once inside the network, attackers move to internal servers and run their tools there. Domain
+    controllers and Entra Connect servers matter most, because controlling them means controlling
+    identity for both the on-premises network and Microsoft 365.
+  yesLooksLike: >-
+    Every internal server runs enforced application control: App Control for Business policies on
+    Windows servers (the OSConfig default policy on Windows Server 2025, or policies deployed by Group
+    Policy or Configuration Manager on older versions) and an equivalent such as fapolicyd on Linux
+    servers. If you run no servers, answer N/A and say so.
+  remediation: >-
+    Start with Tier 0 servers (domain controllers, AD FS, AD CS and Entra Connect). Build server
+    policies from Microsoft's default Windows Server policy or the App Control Wizard, run them in audit
+    mode, review the events with the Azure Monitor App Control workbook or advanced hunting, then
+    enforce, and extend to the remaining internal servers.
+  effort: L
+  licence: []
+  sources: [ms-app-control-windows-server, ms-e8-app-control, asd-implementing-application-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-5 }
+  e8:
+    - { strategy: application-control, level: 3 }
+
+- id: MS-END-022
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Does application control limit drivers to an approved set, with Microsoft's vulnerable driver blocklist enforced on workstations and servers?
+  why: >-
+    Ransomware gangs load signed but vulnerable drivers to switch off antivirus and EDR from the kernel.
+    Allowing only approved drivers and blocking known-bad ones removes that shortcut.
+  yesLooksLike: >-
+    Enforced App Control for Business policies on workstations and servers allow only drivers from
+    approved signers (for example Windows Hardware Quality Labs signed drivers from your hardware
+    vendors), and Microsoft's vulnerable driver blocklist is enforced everywhere, through memory
+    integrity or by deploying the latest blocklist as an App Control policy.
+  remediation: >-
+    Add kernel-mode signer rules for your approved driver publishers to the App Control base policy,
+    turn on memory integrity (hypervisor-protected code integrity) through Intune, and deploy
+    Microsoft's recommended driver block rules as an App Control policy after testing in audit mode. The
+    attack surface reduction rule "Block abuse of exploited vulnerable signed drivers" adds a further
+    layer where Defender is licensed.
+  effort: M
+  licence: [intune]
+  sources: [ms-app-control-driver-block-rules, ms-e8-app-control, asd-implementing-application-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: AM-5 }
+    - { framework: mcsb, ref: ES-2 }
+  e8:
+    - { strategy: application-control, level: 3 }
+
+- id: MS-END-023
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are Office macros blocked from making Win32 API calls on every Windows device?
+  why: >-
+    Malicious macros call Windows APIs directly to download malware and inject it into memory, without
+    writing a file that antivirus could scan. Blocking those calls breaks the usual next step after
+    someone enables a macro.
+  yesLooksLike: >-
+    An Intune endpoint security policy sets the attack surface reduction rule "Block Win32 API calls
+    from Office macros" to Block on all Windows devices, exclusions are minimal and reviewed, and its
+    events are visible in the Defender portal. If VBA macros are disabled for every user (Disable VBA
+    for Office applications), answer N/A and say so.
+  remediation: >-
+    In the Intune admin centre go to Endpoint security > Attack surface reduction, add "Block Win32 API
+    calls from Office macros" in audit mode, review the events in the Defender portal for a few weeks,
+    then set it to Block for all Windows devices.
+  effort: S
+  licence: [intune, defender-endpoint-p1]
+  sources: [ms-asr-rules, ms-intune-asr, ms-e8-macros, asd-restricting-office-macros]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: ES-2 }
+  e8:
+    - { strategy: office-macros, level: 2 }
+
+- id: MS-END-024
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: For users who need macros, can only macros signed by a trusted publisher with a V3 signature, kept in a secured Trusted Location or run in a sandboxed environment execute, with no way to enable others from the Message Bar or Backstage View?
+  why: >-
+    Staff who are allowed to run macros are prime phishing targets: if they can enable content in any
+    document, one malicious attachment runs. Limiting them to vetted, signed macros means an attacker
+    would need your signing key or write access to a trusted location.
+  yesLooksLike: >-
+    Intune or Cloud Policy settings for the macro users group allow only the approved route. For trusted
+    publishers: VBA Macro Notification Settings is "Disable all except digitally signed macros", "Only
+    trust VBA macros that use V3 signatures" and "Disable all Trust Bar notifications for security
+    issues" are enabled, trusted documents are off, the Backstage View enable command (command bar ID
+    19092) is disabled, and the Internet Options Content page and Certificates snap-in are blocked so
+    users can't trust new publishers. For Trusted Locations: only secured, policy-defined locations are
+    allowed and macros elsewhere are disabled without notification. Macros that run in a sandbox instead
+    are confined to it. If macros are disabled for all users (Disable VBA for Office applications),
+    answer N/A.
+  remediation: >-
+    Create an "Allow macro execution - Trusted Publisher" group, assign it Microsoft's "Macros Enabled
+    for Trusted Publishers" policy (or ASD's settings for trusted publishers or Trusted Locations)
+    through Intune or Cloud Policy, including the custom disable command 19092 and the Content page and
+    Certificates snap-in restrictions, deploy each publisher certificate to the Trusted Publishers store
+    with its own Intune policy, re-sign existing macros with V3 signatures, and keep everyone else on
+    the policy that disables VBA.
+  effort: M
+  licence: [intune, m365-apps-enterprise]
+  sources: [ms-e8-macros, ms-vba-v3-signature, asd-restricting-office-macros]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: office-macros, level: 3 }
+
+- id: MS-END-025
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Is every macro checked for malicious code before it's signed or placed in a Trusted Location, with only the privileged staff who do those checks able to write to Trusted Locations?
+  why: >-
+    Signing or trusting a macro tells every computer to run it without question. If macros are signed
+    without review, or anyone can drop files into a Trusted Location, an attacker can launder malicious
+    code through your own approval process.
+  yesLooksLike: >-
+    A documented process has an assessor who is independent of the macro's author test each new or
+    changed macro on an isolated, hardened device before it is signed or placed in a Trusted Location,
+    the signing certificate is restricted to those assessors, and file permissions let only their
+    dedicated privileged accounts add or change files in Trusted Locations. Office's default Trusted
+    Locations in user profiles (such as the Templates, XLSTART and Startup folders) are removed or
+    disabled. If Trusted Locations are turned off, the vetting process alone gives a Yes; if no macros
+    are signed or placed in Trusted Locations, answer N/A.
+  remediation: >-
+    Define the macro approval workflow, test macros on a disconnected device with the ASD Office
+    hardening policies applied (or with a macro scanning tool), sign approved macros with a V3
+    signature, keep the code-signing certificate in a protected store, and give standard users and
+    everyday admin accounts read-only access to Trusted Location shares. If you only use trusted
+    publishers, disable Trusted Locations instead.
+  effort: M
+  licence: []
+  sources: [ms-e8-macros, asd-restricting-office-macros, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: office-macros, level: 3 }
+
+- id: MS-END-026
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: low
+  question: Is the list of trusted publishers for Office macros revalidated at least once a year?
+  why: >-
+    Every certificate in the Trusted Publishers store can sign macros that run without a warning.
+    Unused, expired or compromised publishers left in place are a quiet way back in.
+  yesLooksLike: >-
+    At least once a year an administrator confirms that every certificate in the Trusted Publishers
+    store on macro users' devices, and the Intune policy that deploys it, is still needed, within its
+    validity period and chains to a trusted root, removes any that aren't, and records the review. If no
+    trusted publishers are used for macros, answer N/A.
+  remediation: >-
+    Deploy each trusted publisher through its own Intune policy so it's easy to see and remove, schedule
+    an annual review, and delete certificates and policies that are no longer required.
+  effort: S
+  licence: []
+  sources: [ms-e8-macros, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: office-macros, level: 3 }
+
+- id: MS-END-027
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Is Internet Explorer 11 disabled or removed on every Windows device?
+  why: >-
+    Microsoft retired the Internet Explorer 11 app in June 2022. Its legacy engine lacks modern browser
+    protections and, on most Windows versions, no longer gets fixes, so any page it opens has an easier
+    way onto the device.
+  yesLooksLike: >-
+    Windows 11 devices don't include the Internet Explorer 11 app, any remaining Windows 10 or Windows
+    Server devices have "Disable Internet Explorer 11 as a standalone browser" enabled or the feature
+    removed, and legacy sites that still need it open in Edge's IE mode from a managed Enterprise Mode
+    Site List.
+  remediation: >-
+    Deploy "Disable Internet Explorer 11 as a standalone browser" through the Intune settings catalog
+    (Administrative Templates > Windows Components > Internet Explorer), or remove the feature with a
+    script, and set up IE mode with an Enterprise Mode Site List for the few legacy sites that need it.
+  effort: S
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-edge-disable-ie11, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: MS-END-028
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Do web browsers block advertisements and Java content from the internet?
+  why: >-
+    Malicious adverts on legitimate websites and fake download ads deliver malware and infostealers to
+    people who never clicked anything suspicious. Java in the browser has a long history of exploits.
+  yesLooksLike: >-
+    Internet ads are blocked for all users by an ad-blocking extension force-installed through browser
+    policy, by web filtering or by a protective DNS service, not only by Edge's "Ads setting for sites
+    with intrusive ads", and Java isn't installed or can't run content from the internet.
+  remediation: >-
+    Force-install an approved ad-blocking extension with the ExtensionInstallForcelist policy, or block
+    advertising networks with your web filter or protective DNS, keep "Ads setting for sites with
+    intrusive ads" on Block, and remove Java from workstations that don't need it.
+  effort: S
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-edge-intrusive-ads, ms-edge-extensions, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: MS-END-029
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are web browser security settings enforced by policy so users can't change them?
+  why: >-
+    If people can turn off SmartScreen, allow downloads and pop-ups from any site or install any
+    extension, one convincing web page can undo every browser protection you set up.
+  yesLooksLike: >-
+    Edge security settings, and those of any other approved browser, are delivered through Intune as
+    mandatory policies, such as the Microsoft Edge security baseline, that standard users can't
+    override, and users can't install or run unmanaged browsers.
+  remediation: >-
+    Assign the Microsoft Edge security baseline or Edge settings catalog policies in Intune as mandatory
+    rather than recommended settings, manage any other allowed browser with its own policies, keep users
+    out of the local Administrators group, and block unapproved browsers with application control.
+  effort: S
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-intune-security-baselines, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 1 }
+
+- id: MS-END-030
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are Microsoft Edge and any other browser you allow hardened with the vendor's security baseline and ASD's hardening guidance, with the stricter setting applied where they conflict?
+  why: >-
+    Browsers are the main way untrusted content reaches a workstation. Their default settings favour
+    convenience; the vendor baseline and ASD guidance switch on protections that stop drive-by
+    downloads, malicious extensions and phishing pages.
+  yesLooksLike: >-
+    The current Microsoft Edge security baseline and ASD's Microsoft Edge hardening settings (the ACSC
+    Microsoft Edge hardening policy) are both assigned through Intune to every device, wherever they
+    conflict the more restrictive value applies, any other approved browser has equivalent policies from
+    its vendor's and ASD's guidance, and exceptions are documented.
+  remediation: >-
+    In the Intune admin centre go to Endpoint security > Security baselines > Microsoft Edge Baseline
+    and assign the latest version, import the ACSC Microsoft Edge Hardening Guidelines policy published
+    with Microsoft's Essential Eight guidance, resolve conflicts in favour of the stricter setting, and
+    apply equivalent policies to any other browser you allow.
+  effort: M
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-intune-security-baselines, asd-windows-11-hardening]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-END-031
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Are Microsoft 365 Apps hardened with Microsoft's security baseline and ASD's guidance, including blocking activation of OLE packages, with settings enforced by policy so users can't change them?
+  why: >-
+    Office documents remain a leading way to deliver malware, through embedded OLE objects, old file
+    formats, external content and add-ins as well as macros. Locked settings stop a user, or a malicious
+    document, from switching those protections back off.
+  yesLooksLike: >-
+    The Microsoft 365 Apps for enterprise security baseline and ASD's Office hardening settings (such as
+    the ACSC Office Hardening policy) are assigned through Intune or Cloud Policy to every Office user
+    as policies rather than preferences, OLE package activation is blocked in Word, Excel and
+    PowerPoint, Protected View and file block settings are on, and wherever the two conflict the
+    stricter value applies.
+  remediation: >-
+    Assign the Microsoft 365 Apps for Enterprise baseline from Endpoint security > Security baselines in
+    the Intune admin centre, import the ACSC Office Hardening policy and the script that prevents OLE
+    package activation from Microsoft's Essential Eight guidance (or set the PackagerPrompt values from
+    ASD's guide), and bundle them with the Microsoft 365 Apps deployment in an Intune policy set so
+    every Office user gets them.
+  effort: M
+  licence: [intune, m365-apps-enterprise]
+  sources: [ms-e8-app-hardening, ms-intune-security-baselines, asd-office-hardening]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-END-032
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Is your PDF software hardened using ASD and vendor guidance, with its security settings enforced so users can't change them?
+  why: >-
+    PDF files arrive by email every day, and PDF readers have a long record of exploitable flaws and
+    risky features such as embedded JavaScript and attachments. Hardened, locked settings limit what a
+    malicious PDF can do.
+  yesLooksLike: >-
+    PDFs open in Microsoft Edge's built-in viewer under your hardened, enforced Edge policies, or Adobe
+    Acrobat Reader or another PDF application runs with its vendor's recommended security settings (such
+    as Protected Mode, Enhanced Security and JavaScript turned off) and any ASD recommendations,
+    delivered by Intune through imported administrative templates or locked registry settings, and users
+    can't change them.
+  remediation: >-
+    Make Microsoft Edge the default PDF viewer where it meets business needs and harden it with your
+    Edge policies. Otherwise import the PDF application's administrative templates into Intune, enforce
+    Protected Mode, Enhanced Security and the other recommended settings, lock them so users can't
+    change them, turn off risky features such as JavaScript where you can, and remove unmanaged PDF
+    tools.
+  effort: M
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-intune-admx-import, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-END-033
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are .NET Framework 3.5 (including .NET 2.0 and 3.0) and Windows PowerShell 2.0 disabled or removed on all Windows devices?
+  why: >-
+    These legacy components predate modern protections. Attackers deliberately fall back to PowerShell
+    2.0 to avoid script logging and antimalware scanning, and old .NET versions lack the security
+    features of current ones.
+  yesLooksLike: >-
+    The .NET Framework 3.5 and Windows PowerShell 2.0 optional features are off or absent on every
+    Windows device (Windows 11 24H2 and Windows Server 2025 no longer include PowerShell 2.0), and
+    software that needed .NET Framework 3.5 has been upgraded or moved off these devices.
+  remediation: >-
+    Deploy Microsoft's UserApplicationHardening-RemoveFeatures.ps1 script, or your own script that
+    disables the optional features, through Intune, check periodically that the features stay off,
+    update or replace software that depends on .NET Framework 3.5, and keep devices on current Windows
+    releases.
+  effort: S
+  licence: [intune]
+  sources: [ms-e8-app-hardening, ms-windows-removed-features, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 3 }
+
+- id: MS-END-034
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Does PowerShell run in Constrained Language Mode on workstations and servers, apart from scripts your application control policy explicitly trusts?
+  why: >-
+    PowerShell's full language lets an attacker call any .NET, COM or Windows API straight from memory.
+    Constrained Language Mode removes those abilities from interactive sessions and untrusted scripts
+    while your approved, signed scripts keep working.
+  yesLooksLike: >-
+    Enforced App Control for Business policies with script enforcement (or AppLocker script rules) put
+    interactive PowerShell and any script the policy doesn't allow into Constrained Language Mode on
+    every workstation and server, and $ExecutionContext.SessionState.LanguageMode returns
+    ConstrainedLanguage in a standard user's session.
+  remediation: >-
+    Keep script enforcement on in your enforced App Control for Business policies (don't set the
+    "Disabled:Script Enforcement" option), sign the PowerShell scripts and modules you rely on and allow
+    their signer in the policy, and test administrative tooling in audit mode before enforcing. Apply
+    the same policies to servers through Group Policy, Configuration Manager or OSConfig on Windows
+    Server 2025.
+  effort: M
+  licence: [intune]
+  sources: [ms-app-control-script-enforcement, ms-powershell-language-modes, ms-e8-app-hardening]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: mcsb, ref: PV-3 }
+  e8:
+    - { strategy: user-application-hardening, level: 3 }
+
+- id: MS-END-035
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles]
+  severity: high
+  question: Does every Windows device and server have its own local administrator password that Windows LAPS rotates and backs up?
+  why: >-
+    When the built-in administrator account shares a password across machines, an attacker who extracts
+    it from one compromised laptop can sign in to every other device and server that uses the same
+    password.
+  yesLooksLike: >-
+    Windows LAPS is enabled in Entra ID, and an Intune account protection policy (or Windows LAPS Group
+    Policy for domain-joined servers) manages the local administrator account on every Windows device
+    and server, rotating a long random password that's backed up to Entra ID or Active Directory and
+    readable only by a small group.
+  remediation: >-
+    Enable Windows LAPS in Entra device settings, deploy an Intune account protection LAPS policy to
+    Windows devices and Windows LAPS Group Policy to domain-joined servers, set password length and
+    rotation, limit who can read stored passwords, and remove other local administrator accounts that
+    share a password.
+  effort: S
+  licence: [intune]
+  sources: [ms-laps, ms-e8-restrict-admin]
+  refs:
+    - { framework: cis-m365, ref: "5.1.4.5" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-8 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-END-036
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles]
+  severity: high
+  question: Are memory integrity, LSA protection, Credential Guard and Remote Credential Guard turned on for Windows devices and servers?
+  why: >-
+    Credential theft tools read passwords, hashes and Kerberos tickets from memory to move from one
+    machine to the next. These Windows features isolate or protect those secrets, so one compromised
+    device doesn't give up the credentials of every admin who has signed in to it.
+  yesLooksLike: >-
+    Intune settings catalog or Group Policy settings turn on memory integrity, run LSA as a protected
+    process with UEFI lock, enable Credential Guard and require Remote Credential Guard for Remote
+    Desktop connections on every Windows device and server whose hardware supports them, and reports
+    show the features running.
+  remediation: >-
+    Check hardware and driver readiness, then deploy settings catalog policies for memory integrity, LSA
+    protection and Credential Guard (Credential Guard is on by default from Windows 11 22H2 on supported
+    hardware), configure Remote Credential Guard on both the connecting devices and the remote hosts,
+    and use ASD's Windows hardening guidance for the matching Group Policy settings on servers.
+  effort: M
+  licence: [intune]
+  sources: [ms-e8-restrict-admin, ms-lsa-protection, ms-memory-integrity, asd-windows-11-hardening]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+    - { framework: mcsb, ref: IM-8 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }

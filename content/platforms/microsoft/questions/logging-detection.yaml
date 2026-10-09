@@ -94,15 +94,15 @@
   domain: logging-detection
   appliesTo: ["*"]
   severity: high
-  question: Are Microsoft Defender XDR incidents triaged by a named person or service within a defined time, including outside business hours?
+  question: Are Microsoft Defender XDR incidents, and alerts from Microsoft Sentinel or any other SIEM you use, triaged by a named person or service within a defined time, including outside business hours?
   why: >-
     Microsoft's tools raise high-quality alerts for account takeover, malicious inbox rules and
     ransomware, but they only help if someone acts. Many breaches are visible in the portal days
     before anyone looks.
   yesLooksLike: >-
-    Incident notifications go to a monitored queue, a person, team or managed detection and response
-    provider owns triage with a response-time target, automatic attack disruption is enabled, and
-    response playbooks for identity compromise are documented.
+    Incident notifications go to a monitored queue, and a named person, team or managed detection and
+    response provider triages every new incident against a response-time target, around the clock or
+    under an agreed after-hours arrangement.
   remediation: >-
     Configure incident email notification rules in the Defender portal, assign an owner or MDR
     provider with a response target, confirm the prerequisites for automatic attack disruption, and
@@ -117,6 +117,11 @@
     - { framework: mcsb, ref: IR-2 }
     - { framework: mcsb, ref: IR-3 }
     - { framework: ms-zero-trust, ref: SecOps II }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
 
 - id: MS-LOG-005
   module: core
@@ -141,3 +146,213 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: LT-2 }
     - { framework: ms-zero-trust, ref: Identity VI }
+
+- id: MS-LOG-006
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are allowed and blocked application control events from workstations and servers collected in a central log?
+  why: >-
+    A blocked program is often the first visible sign of an intrusion, and a record of what was allowed
+    to run shows how far an attacker got. Events left on each device are lost when the device is wiped
+    or tampered with.
+  yesLooksLike: >-
+    App Control and AppLocker block and audit events from every workstation and server reach Defender
+    for Endpoint advanced hunting or a SIEM such as Microsoft Sentinel, together with a central record
+    of what was allowed to run (for example Defender for Endpoint process creation events or forwarded
+    AppLocker allow events), and the security team can query them.
+  remediation: >-
+    Onboard devices to Defender for Endpoint Plan 2 and query the AppControl action types in advanced
+    hunting, or forward the Code Integrity and AppLocker event logs to Microsoft Sentinel or your SIEM
+    with the Azure Monitor Agent. Defender for Business doesn't include advanced hunting, so Business
+    Premium tenants need log forwarding. App Control doesn't log files it allows, so keep process
+    creation events as the record of allowed executions.
+  effort: M
+  licence: [defender-endpoint-p2]
+  sources: [ms-app-control-advanced-hunting, ms-app-control-events, ms-e8-app-control, ms-defender-business]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: mcsb, ref: LT-5 }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: MS-LOG-007
+  module: core
+  domain: logging-detection
+  appliesTo: [ms-managed-endpoints]
+  severity: medium
+  question: Are PowerShell module, script block and transcription logs, and process creation events that include the command line, collected in a central log from Windows workstations and servers?
+  why: >-
+    Attackers lean on PowerShell and other built-in tools because they leave little trace by default.
+    Without script and command-line logs held off the device, responders can't see what was run or which
+    accounts and data were touched.
+  yesLooksLike: >-
+    Intune or Group Policy turns on PowerShell module logging, script block logging and transcription,
+    and includes command lines in process creation events, on all Windows devices and servers; the
+    PowerShell events reach Microsoft Sentinel or another SIEM, transcripts are written to a central
+    location users can't modify, and process creation events with full command lines are collected
+    centrally, by Defender for Endpoint or by forwarding Windows event 4688.
+  remediation: >-
+    In the Intune settings catalog (or Group Policy for servers) enable Turn on Module Logging, Turn on
+    PowerShell Script Block Logging and Turn on PowerShell Transcription (Administrative Templates >
+    Windows Components > Windows PowerShell) with a central transcript folder, enable Audit Process
+    Creation and Include command line in process creation events, and collect the PowerShell and
+    Security event logs with the Azure Monitor Agent or your SIEM's agent.
+  effort: M
+  licence: [intune]
+  sources: [ms-powershell-logging-policies, ms-command-line-auditing, ms-ama-windows-client, ms-e8-app-hardening, asd-windows-11-hardening]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: mcsb, ref: LT-5 }
+  e8:
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-LOG-008
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are your central security logs protected so that administrators outside the security team can't change or delete them?
+  why: >-
+    An attacker who gains admin rights tries to cover their tracks by purging log data, deleting a Log
+    Analytics workspace or switching off log exports. If anyone with broad admin rights can alter or
+    delete the central copy, you lose the evidence you need to scope an incident and show what wasn't
+    touched.
+  yesLooksLike: >-
+    Event logs are collected into Defender XDR, Microsoft Sentinel, a Log Analytics workspace or another
+    SIEM that only the security team administers; any workspace or SIEM you run has a delete lock or an
+    export to immutable storage, so nobody can purge data, delete tables or shorten retention; and
+    audit, diagnostic and data connector settings can be changed only by a small group.
+  remediation: >-
+    Keep security logs in a dedicated Log Analytics workspace in a subscription only the security team
+    administers, give everyone else read-only roles and don't assign Data Purger. Add a delete lock to
+    the workspace (it blocks purges, table deletion and retention changes), export key tables to a
+    storage account with a locked time-based immutability policy, alert on changes to Entra diagnostic
+    settings, Sentinel data connectors and audit configuration, and keep Global Administrators to a
+    minimum because they can elevate themselves to manage every Azure subscription.
+  effort: M
+  licence: []
+  sources: [ms-azure-monitor-security, ms-e8-restrict-admin, ms-elevate-access, asd-event-logging]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: mcsb, ref: LT-5 }
+    - { framework: mcsb, ref: LT-6 }
+    - { framework: ms-zero-trust, ref: SecOps I }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-LOG-009
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: If you run internet-facing servers, are their event logs collected centrally and analysed for signs of compromise in a timely manner?
+  why: >-
+    Internet-facing servers such as AD FS and Web Application Proxy, Exchange hybrid servers, web
+    servers and Azure VMs with public endpoints are probed constantly, and a compromised one can lead
+    straight to Microsoft 365 or on-premises identity. Their logs only help if someone looks at them
+    while there's still time to act.
+  yesLooksLike: >-
+    Every internet-facing server is onboarded to Microsoft Defender for Endpoint or Defender for
+    Servers, or sends its Windows security events and syslog to Microsoft Sentinel or another SIEM;
+    detections from those logs reach the same triage queue as other incidents; and the list of
+    internet-facing servers is kept current so new ones are onboarded. If you run no internet-facing
+    servers, answer N/A and say so.
+  remediation: >-
+    List your internet-facing servers and onboard them to Defender for Endpoint, directly or through
+    Defender for Servers for Azure and Azure Arc-enabled servers. Where you need longer retention or
+    custom detections, also collect their security event logs and syslog into Microsoft Sentinel with
+    the Azure Monitor Agent. Route the alerts to your incident triage queue, and make onboarding part of
+    building any new internet-facing server.
+  effort: M
+  licence: []
+  sources: [ms-mde-onboard-server, ms-defender-servers, ms-sentinel, asd-event-logging]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: mcsb, ref: LT-1 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: ms-zero-trust, ref: Infrastructure I }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-LOG-010
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: When a cyber security incident is identified, is your incident response plan put into action, with the incident reported to your CISO (or their delegate) and to ASD as soon as possible?
+  why: >-
+    In the first hours of an incident, confusion over who decides, who to call and what evidence to keep
+    costs time and data. Reporting to ASD early brings threat intelligence and technical help, and some
+    organisations have legal deadlines for reporting cyber incidents.
+  yesLooksLike: >-
+    A written incident response plan names who leads the response, how incidents are escalated to the
+    CISO or their delegate, and when and how they're reported to ASD through cyber.gov.au, and records
+    of recent incidents or exercises show the plan was followed and the reports were made.
+  remediation: >-
+    Write or update your incident response plan using ASD's practitioner guidance and Microsoft's
+    incident response planning guidance. Define incident categories, roles and decision makers,
+    escalation to the CISO or their delegate, evidence preservation in Defender XDR and the Purview
+    audit log, and reporting to ASD (and any regulator) as soon as possible. Link Microsoft's incident
+    response playbooks for phishing, password spray and app consent grants, and exercise the plan at
+    least annually.
+  effort: M
+  licence: []
+  sources: [ms-ir-planning, ms-ir-playbooks, asd-ir-planning, asd-report-incident]
+  refs:
+    - { framework: nist-csf-2, ref: RS.MA-01 }
+    - { framework: nist-csf-2, ref: RS.CO-02 }
+    - { framework: mcsb, ref: IR-1 }
+    - { framework: mcsb, ref: IR-2 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+    - { strategy: application-control, level: 2 }
+    - { strategy: user-application-hardening, level: 2 }
+
+- id: MS-LOG-011
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are event logs from every workstation, and from servers that aren't internet-facing, collected centrally and analysed for signs of compromise in a timely manner?
+  why: >-
+    Most intrusions start on a user's computer and move through internal servers before they reach the
+    crown jewels. Telemetry from every workstation and internal server lets you catch credential theft
+    and lateral movement early, instead of only at the internet edge.
+  yesLooksLike: >-
+    Every Windows, macOS and Linux workstation and every internal server is onboarded to Microsoft
+    Defender for Endpoint (or another EDR) or sends its security event logs to Microsoft Sentinel or
+    another SIEM; alerts from them are triaged with other incidents; and the device inventory shows no
+    workstations or servers missing.
+  remediation: >-
+    Onboard workstations to Defender for Endpoint through Intune and internal servers through Defender
+    for Servers or the Defender for Endpoint onboarding package, or collect their security event logs
+    into Microsoft Sentinel with the Azure Monitor Agent. Connect Defender XDR to Sentinel if you use
+    both, route the alerts to the same triage queue, and check the device inventory regularly for
+    machines that aren't onboarded.
+  effort: M
+  licence: [defender-endpoint-p2]
+  sources: [ms-mde-onboarding, ms-mde-onboard-server, ms-sentinel, asd-event-logging]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: ES-1 }
+    - { framework: mcsb, ref: LT-1 }
+    - { framework: ms-zero-trust, ref: Endpoints 4 }
+  e8:
+    - { strategy: mfa, level: 3 }
+    - { strategy: restrict-admin-privileges, level: 3 }
+    - { strategy: application-control, level: 3 }
+    - { strategy: user-application-hardening, level: 3 }

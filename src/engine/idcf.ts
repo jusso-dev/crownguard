@@ -1,5 +1,5 @@
 import type { Question } from "../content/schema";
-import type { E8Result } from "./maturity";
+import { addsNothing, type E8Result } from "./maturity";
 import type { Answer, CrownJewel, Dsl } from "./types";
 
 /** The IDCF levels a cloud configuration review can say something about. */
@@ -66,7 +66,7 @@ function cyberCell(questions: Question[], answers: Record<string, Answer>, e8: (
     if (r.level >= required) continue;
     const tagged = (l: number) => questions.filter((q) => q.e8.some((t) => t.strategy === r.strategy && t.level === l));
     for (let l = 1; l <= required; l++) for (const q of tagged(l)) if (!satisfied(answers[q.id])) gaps.set(q.id, q);
-    const missing = [1, 2, 3].find((l) => l <= required && tagged(l).length === 0);
+    const missing = [1, 2, 3].find((l) => l <= required && tagged(l).length === 0 && !addsNothing(r.strategy, l));
     if (missing) notVerified.push(`${r.title} (Maturity Level ${missing} not asked)`);
   }
   const g = [...gaps.values()].sort((a, b) => a.id.localeCompare(b.id));

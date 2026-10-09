@@ -480,3 +480,223 @@
   publisher: Google
   url: https://knowledge.workspace.google.com/admin/billing/compare-google-workspace-features-for-nonprofits
   retrieved: 2026-10-08
+- id: gws-windows-updates
+  title: Manage automatic updates for Windows 10 or 11 devices
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/manage-automatic-updates-for-windows-10-or-11-devices
+  retrieved: 2026-10-09
+- id: gws-windows-custom-settings
+  title: Understand custom settings for Windows 10 or 11 devices
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/understand-custom-settings-for-windows-10-or-11-devices
+  retrieved: 2026-10-09
+- id: gws-windows-common-custom-settings
+  title: Common custom settings for Windows 10 or 11 devices
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/common-custom-settings-for-windows-10-or-11-devices
+  retrieved: 2026-10-09
+- id: gws-windows-block-apps
+  title: Block apps on Windows 10 or 11 devices with custom settings
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/block-apps-on-windows-10-or-11-devices-with-custom-settings
+  retrieved: 2026-10-09
+- id: gws-windows-install-apps
+  title: Install apps on Windows 10 or 11 devices with custom settings
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/install-apps-on-windows-10-or-11-devices-with-custom-settings
+  retrieved: 2026-10-09
+- id: gws-computer-details
+  title: "View computer & smart home device details"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/view-computer-and-smart-home-device-details
+  retrieved: 2026-10-09
+- id: gws-computers-overview
+  title: "Overview: Manage users' computers & smart home devices"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/devices/overview-manage-users-computers-and-smart-home-devices
+  retrieved: 2026-10-09
+- id: gws-caa-access-levels
+  title: Create Context-Aware access levels
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/create-context-aware-access-levels
+  retrieved: 2026-10-09
+- id: gws-custom-saml-app
+  title: Set up your own custom SAML app
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/apps/set-up-your-own-custom-saml-app
+  retrieved: 2026-10-09
+- id: gws-office-files
+  title: Work with Office files
+  publisher: Google
+  url: https://support.google.com/docs/answer/6055139
+  retrieved: 2026-10-09
+- id: gws-gwsmo-updates
+  title: "Manage GWMMO & GWSMO updates"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/migrate/manage-gwmmo-and-gwsmo-updates
+  retrieved: 2026-10-09
+- id: chrome-relaunch-notification
+  title: Notify users to restart to apply pending updates
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/7679871
+  retrieved: 2026-10-09
+- id: chromeos-lts
+  title: Long-term Support (LTS) on ChromeOS
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/11333726
+  retrieved: 2026-10-09
+- id: chromeos-auto-update-policy
+  title: Auto Update policy
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/6220366
+  retrieved: 2026-10-09
+- id: chromeos-device-policies
+  title: Set ChromeOS device policies
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/1375678
+  retrieved: 2026-10-09
+- id: chromeos-android-apps
+  title: Deploy Android apps to managed users on ChromeOS devices
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/7131624
+  retrieved: 2026-10-09
+- id: chrome-allow-block-apps
+  title: Allow or block apps and extensions
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/6177431
+  retrieved: 2026-10-09
+- id: chrome-app-extension-policies
+  title: App and extension policies
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/7666985
+  retrieved: 2026-10-09
+- id: chrome-version-report
+  title: View Chrome version details
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/10025748
+  retrieved: 2026-10-09
+- id: chrome-security-config-guide
+  title: Chrome Browser Enterprise Security Configuration Guide (Windows)
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/9710898
+  retrieved: 2026-10-09
+- id: chrome-user-browser-policies
+  title: Set Chrome policies for users or browsers
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/2657289
+  retrieved: 2026-10-09
+- id: chrome-url-blocking
+  title: Allow or block access to websites
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/7532419
+  retrieved: 2026-10-09
+- id: chrome-npapi-removal
+  title: The Final Countdown for NPAPI
+  publisher: Google
+  url: https://blog.chromium.org/2014/11/the-final-countdown-for-npapi.html
+  retrieved: 2026-10-09
+- id: gcp-vm-patch
+  title: About Patch
+  publisher: Google
+  url: https://docs.cloud.google.com/compute/vm-manager/docs/patch
+  retrieved: 2026-10-09
+- id: gcp-scc-vulnerability-assessment
+  title: Enable and use Vulnerability Assessment for Google Cloud
+  publisher: Google
+  url: https://docs.cloud.google.com/security-command-center/docs/vulnerability-assessment-google-cloud
+  retrieved: 2026-10-09
+- id: gcp-web-security-scanner
+  title: Overview of Web Security Scanner
+  publisher: Google
+  url: https://docs.cloud.google.com/security-command-center/docs/concepts-web-security-scanner-overview
+  retrieved: 2026-10-09
+- id: gcp-asset-inventory
+  title: Cloud Asset Inventory overview
+  publisher: Google
+  url: https://docs.cloud.google.com/asset-inventory/docs/asset-inventory-overview
+  retrieved: 2026-10-09
+- id: gcp-os-details
+  title: Operating system details
+  publisher: Google
+  url: https://docs.cloud.google.com/compute/docs/images/os-details
+  retrieved: 2026-10-09
+- id: gcp-shielded-vm
+  title: Shielded VM overview
+  publisher: Google
+  url: https://docs.cloud.google.com/compute/shielded-vm/docs/shielded-vm
+  retrieved: 2026-10-09
+- id: gcp-trusted-images
+  title: Setting up trusted image policies
+  publisher: Google
+  url: https://docs.cloud.google.com/compute/docs/images/restricting-image-access
+  retrieved: 2026-10-09
+- id: gcp-binary-authorization
+  title: Binary Authorization overview
+  publisher: Google
+  url: https://docs.cloud.google.com/binary-authorization/docs/overview
+  retrieved: 2026-10-09
+- id: gcp-cloudsql-iam-auth
+  title: IAM authentication
+  publisher: Google
+  url: https://docs.cloud.google.com/sql/docs/mysql/iam-authentication
+  retrieved: 2026-10-09
+- id: gcp-secops-windows-events
+  title: Collect Microsoft Windows Event logs
+  publisher: Google
+  url: https://docs.cloud.google.com/chronicle/docs/ingestion/default-parsers/winevtlog
+  retrieved: 2026-10-09
+- id: gcp-secops-powershell
+  title: Collect Microsoft PowerShell logs
+  publisher: Google
+  url: https://docs.cloud.google.com/chronicle/docs/ingestion/default-parsers/powershell
+  retrieved: 2026-10-09
+- id: chrome-reporting-connectors
+  title: Manage Chrome Enterprise reporting connectors
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/11375053
+  retrieved: 2026-10-09
+- id: gws-chrome-log-events
+  title: Chrome log events
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/reports/chrome-log-events
+  retrieved: 2026-10-09
+- id: gcp-secops-overview
+  title: Google SecOps overview
+  publisher: Google
+  url: https://docs.cloud.google.com/chronicle/docs/secops/secops-overview
+  retrieved: 2026-10-09
+- id: gcp-ops-agent
+  title: Ops Agent overview
+  publisher: Google
+  url: https://docs.cloud.google.com/logging/docs/agent/ops-agent
+  retrieved: 2026-10-09
+- id: gcp-scc-etd
+  title: Overview of Event Threat Detection
+  publisher: Google
+  url: https://docs.cloud.google.com/security-command-center/docs/concepts-event-threat-detection-overview
+  retrieved: 2026-10-09
+- id: gcp-ir-plan-template
+  title: Incident Response Plan Template
+  publisher: Google
+  url: https://cloud.google.com/discover/incident-response-plan-template
+  retrieved: 2026-10-09
+- id: gws-assign-admin-roles
+  title: Assign specific admin roles
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/users/assign-specific-admin-roles
+  retrieved: 2026-10-09
+- id: gws-gcpw-security-keys
+  title: Google Credential Provider for Windows (GCPW) now supports FIDO2-compliant physical security keys as a second factor for authentication
+  publisher: Google
+  url: https://workspaceupdates.googleblog.com/2026/07/google-credential-provider-for-windows-now-supports-FIDO2-compliant-physical-security-keys-as-a-second-factor-for-authentication.html
+  retrieved: 2026-10-09
+- id: gcp-iap-tcp
+  title: Use IAP for TCP forwarding
+  publisher: Google
+  url: https://docs.cloud.google.com/iap/docs/using-tcp-forwarding
+  retrieved: 2026-10-09
+- id: chromeos-enroll-devices
+  title: Enroll ChromeOS devices
+  publisher: Google
+  url: https://support.google.com/chrome/a/answer/1360534
+  retrieved: 2026-10-09

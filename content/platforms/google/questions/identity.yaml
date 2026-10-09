@@ -38,9 +38,8 @@
     adversary-in-the-middle phishing kits. Security keys and passkeys are bound to Google's real
     sign-in page, so a fake page cannot use them.
   yesLooksLike: >-
-    The 2-Step Verification method is set to "Only security key" (which accepts both security keys
-    and passkeys) for all organisational units, or at least for admins, executives and finance with
-    a dated plan for everyone else, and passkeys are allowed for sign-in.
+    The 2-Step Verification method is set to "Only security key" (which accepts both security keys and
+    passkeys) for all organisational units, and passkeys are allowed for sign-in.
   remediation: >-
     Issue FIDO2 security keys or have users register passkeys on their phone or computer, allow
     users to skip passwords with passkeys, then change the 2-Step Verification method to "Only
@@ -188,3 +187,67 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
     - { framework: idcf, ref: "Whole system" }
+
+- id: GO-ID-008
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-endpoints]
+  severity: high
+  question: Do users sign in to computers you manage through Google, such as ChromeOS devices or Windows computers with Google Credential Provider for Windows, with phishing-resistant 2-Step Verification?
+  why: >-
+    A computer that opens with a password alone can be unlocked with a phished, guessed or
+    shoulder-surfed password, handing over the user's signed-in sessions and files. A phishing-resistant
+    second step at sign-in stops a stolen password from opening the device.
+  yesLooksLike: >-
+    ChromeOS devices, and Windows computers through Google Credential Provider for Windows, sign users
+    in with their Google account; 2-Step Verification is enforced with security keys or passkeys; Allow
+    user to trust the device is off, so the second step isn't skipped; ChromeOS Google online login
+    frequency and Google online unlock frequency are set to 0 so every sign-in and unlock goes through
+    Google; and you've confirmed Windows sign-in and unlock also ask for the second step. Computers that
+    don't sign in with Google accounts, such as Macs, use their own phishing-resistant MFA.
+  remediation: >-
+    Enforce 2-Step Verification with security keys or passkeys for these users and turn off Allow user
+    to trust the device. Under Devices > Chrome > Settings > Users & browsers, set Google online login
+    frequency and Google online unlock frequency to 0. Deploy Google Credential Provider for Windows,
+    which accepts FIDO2 security keys at the Windows sign-in screen, to Windows computers.
+  effort: L
+  licence: []
+  sources: [gws-deploy-2sv, chrome-user-browser-policies, gws-gcpw-security-keys, asd-e8-faq]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: GO-ID-009
+  module: core
+  domain: identity
+  appliesTo: [gw-tenant, gw-drive, gw-vault-retention]
+  severity: high
+  question: Do staff need phishing-resistant MFA, such as a security key or passkey, to reach data repositories outside Google Workspace that hold your organisation's data, such as document and records systems, file shares and databases?
+  why: >-
+    Shared drives protected by security keys don't help if the same records also sit in a file share,
+    document system or database that accepts a password alone. Attackers who phish or buy a password go
+    straight for the weakest copy.
+  yesLooksLike: >-
+    Every data repository outside Google Workspace that holds your organisation's data either signs
+    users in through Google as a SAML app, so the same security-key-only 2-Step Verification policy
+    applies, or enforces its own phishing-resistant MFA, and local password-only accounts are removed
+    apart from documented break-glass accounts. Where some repositories still accept a password alone,
+    the answer is Partial. Answer N/A if all of your organisation's data is held in Google Workspace and
+    Google Cloud.
+  remediation: >-
+    List your data repositories and how each one authenticates. Connect each one that supports SAML to
+    Google under Apps > Web and mobile apps > Add app > Add custom SAML app (or choose it from the
+    pre-integrated catalogue) and turn off its local password sign-in. Put everyone with access in an
+    organisational unit where the 2-Step Verification method is Only security key, which also accepts
+    passkeys. For repositories that can't federate, turn on their own phishing-resistant MFA or plan to
+    replace them.
+  effort: L
+  licence: []
+  sources: [gws-custom-saml-app, gws-deploy-2sv, asd-e8-faq, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+  e8:
+    - { strategy: mfa, level: 3 }

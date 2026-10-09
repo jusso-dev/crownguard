@@ -42,3 +42,53 @@
   publisher: Department of Home Affairs
   url: https://www.homeaffairs.gov.au/cyber-security-subsite/idcf/Documents/idcf-a-guide-to-system-security.pdf
   retrieved: 2026-10-09
+- id: asd-event-logging
+  title: Best practices for event logging and threat detection
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/best-practices-for-event-logging-and-threat-detection
+  retrieved: 2026-10-09
+- id: asd-implementing-application-control
+  title: Implementing application control
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/implementing-application-control
+  retrieved: 2026-10-09
+- id: asd-ir-planning
+  title: "Cyber security incident response planning: Practitioner guidance"
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/cyber-security-incident-response-planning-practitioner-guidance
+  retrieved: 2026-10-09
+- id: asd-office-hardening
+  title: "Hardening Microsoft 365, Office 2021, Office 2019 and Office 2016"
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/hardening-microsoft-365-office-2021-office-2019-and-office-2016
+  retrieved: 2026-10-09
+- id: asd-report-incident
+  title: Report a cyber security incident
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/report-a-cyber-security-incident
+  retrieved: 2026-10-09
+- id: asd-restricting-office-macros
+  title: Restricting Microsoft Office macros
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/restricting-microsoft-office-macros
+  retrieved: 2026-10-09
+- id: asd-windows-11-hardening
+  title: Hardening Microsoft Windows 11 workstations
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/hardening-microsoft-windows-11-workstations
+  retrieved: 2026-10-09
+- id: asd-e8-assessment-guide
+  title: Essential Eight assessment process guide
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essential-eight-assessment-process-guide
+  retrieved: 2026-10-09
+- id: asd-e8-faq
+  title: Essential Eight maturity model FAQ
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essential-eight-maturity-model-faq
+  retrieved: 2026-10-09
+- id: asd-patching
+  title: Patching applications and operating systems
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/patching-applications-and-operating-systems
+  retrieved: 2026-10-09

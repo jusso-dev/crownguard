@@ -138,8 +138,9 @@
     outside that blast radius.
   yesLooksLike: >-
     Cloud SQL automated backups and deletion protection are on, Cloud Storage soft delete is on,
-    critical workloads are also backed up to a Backup and DR backup vault (or another project with
-    separate admins) with enforced retention, and restores are tested.
+    critical workloads are also backed up to a Backup and DR backup vault or another project whose
+    administrators are separate from the workload's, so the workload's project owners can't delete those
+    copies, and restores are tested.
   remediation: >-
     Turn on automated backups, point-in-time recovery and deletion protection for Cloud SQL, keep
     Cloud Storage soft delete on, protect critical workloads with Backup and DR backup vaults with an
@@ -153,3 +154,37 @@
     - { framework: nist-csf-2, ref: RC.RP-03 }
   e8:
     - { strategy: regular-backups, level: 2 }
+
+- id: GO-CDAT-007
+  module: gcp
+  domain: gcp-data
+  appliesTo: [gcp-data-stores]
+  severity: high
+  question: Do people reach Cloud SQL, BigQuery and Cloud Storage data only with their Google identity protected by phishing-resistant MFA, rather than database passwords or HMAC keys?
+  why: >-
+    A database password or storage access key works from anywhere without MFA, so one leaked credential
+    exposes the data directly and sidesteps the security keys that protect Google sign-in.
+  yesLooksLike: >-
+    People connect to Cloud SQL through IAM database authentication, as individuals or groups, and hold
+    no built-in password users; BigQuery and Cloud Storage access is granted through IAM to Google
+    identities whose 2-Step Verification is limited to security keys or passkeys; requests signed with
+    user account HMAC keys are blocked by the Cloud Storage - restrict authentication types organisation
+    policy; any remaining built-in database users belong to applications, not people; and any other
+    Google Cloud data store people sign in to directly, such as AlloyDB, Spanner or a database on a VM,
+    works the same way.
+  remediation: >-
+    Turn on IAM database authentication for each Cloud SQL instance (for MySQL, the
+    cloudsql_iam_authentication flag), add people as IAM users or groups, then remove their built-in
+    password users, because the flag alone doesn't stop password logins. Grant BigQuery and Cloud
+    Storage access by IAM role to groups, delete user account HMAC keys, enforce the
+    constraints/storage.restrictAuthTypes policy for USER_ACCOUNT_HMAC_SIGNED_REQUESTS, and put everyone
+    with data access in an organisational unit where the 2-Step Verification method is Only security
+    key.
+  effort: M
+  licence: []
+  sources: [gcp-cloudsql-iam-auth, gcp-org-policy-constraints, gws-deploy-2sv, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-gcp, ref: "6.6" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 3 }

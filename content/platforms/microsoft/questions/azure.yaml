@@ -109,25 +109,27 @@
     - { framework: mcsb, ref: IM-3 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
 
 - id: MS-AZ-005
   module: azure
   domain: azure
-  appliesTo: [ms-backups, ms-azure-subscriptions]
+  appliesTo: [ms-backups, ms-azure-subscriptions, ms-privileged-roles]
   severity: high
-  question: Are Azure Backup vaults protecting crown-jewel workloads immutable, with always-on soft delete and multi-user authorisation through Resource Guard?
+  question: Are Azure Backup vaults protecting crown-jewel workloads set to locked immutability with always-on soft delete, so not even backup administrators can delete recovery points early?
   why: >-
-    Attackers with subscription access disable backups and delete recovery points before encrypting
-    VMs and databases. Immutability and a separate approver stop one compromised account from
-    destroying your recovery path.
+    Attackers with subscription access disable backups and delete recovery points before encrypting VMs
+    and databases. Locked immutability stops any one compromised account, even a backup administrator,
+    from destroying your recovery path.
   yesLooksLike: >-
-    Production vaults have always-on enhanced soft delete, immutability enabled and locked, Resource
-    Guard in a separate subscription controlled by a different team protecting critical operations,
-    and backup alerts monitored.
+    Production Recovery Services and Backup vaults have immutability enabled and locked and enhanced
+    soft delete set to always-on, so no account can delete recovery points or shorten their retention
+    before they expire.
   remediation: >-
-    Enable and lock vault immutability, turn on always-on soft delete, deploy Resource Guard in a
-    separate subscription or tenant with its own administrators and link it to vaults for
-    multi-user authorisation, and configure backup alerts.
+    Enable and lock vault immutability and turn on always-on soft delete. Also deploy Resource Guard in
+    a separate subscription or tenant with its own administrators, link it to vaults for multi-user
+    authorisation, and configure backup alerts.
   effort: M
   licence: []
   sources: [ms-azure-backup-immutable, ms-azure-backup-mua]
@@ -136,7 +138,7 @@
     - { framework: mcsb, ref: BR-2 }
     - { framework: mcsb, ref: BR-3 }
   e8:
-    - { strategy: regular-backups, level: 2 }
+    - { strategy: regular-backups, level: 3 }
 
 - id: MS-AZ-006
   module: azure

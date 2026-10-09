@@ -610,3 +610,318 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/compliance/anz/e8-overview
   retrieved: 2026-10-09
+- id: ms-ama-windows-client
+  title: Set up the Azure Monitor Agent on Windows client devices
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-monitor/agents/azure-monitor-agent-windows-client
+  retrieved: 2026-10-09
+- id: ms-app-control-advanced-hunting
+  title: Querying App Control events centrally using advanced hunting
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/operations/querying-application-control-events-centrally-using-advanced-hunting
+  retrieved: 2026-10-09
+- id: ms-app-control-block-rules
+  title: Applications that can bypass App Control and how to block them
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/design/applications-that-can-bypass-appcontrol
+  retrieved: 2026-10-09
+- id: ms-app-control-driver-block-rules
+  title: Microsoft recommended driver block rules
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/design/microsoft-recommended-driver-block-rules
+  retrieved: 2026-10-09
+- id: ms-app-control-events
+  title: Understanding App Control event IDs
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/operations/event-id-explanations
+  retrieved: 2026-10-09
+- id: ms-app-control-script-enforcement
+  title: Script enforcement with App Control for Business
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/design/script-enforcement
+  retrieved: 2026-10-09
+- id: ms-app-control-windows-server
+  title: Configure App Control policies in Windows Server
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows-server/security/osconfig/osconfig-how-to-configure-app-control-for-business
+  retrieved: 2026-10-09
+- id: ms-autopatch-m365-apps
+  title: Microsoft 365 Apps for enterprise
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/deployment/windows-autopatch/manage/windows-autopatch-microsoft-365-apps-enterprise
+  retrieved: 2026-10-09
+- id: ms-azure-bastion
+  title: "What is Azure Bastion?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/bastion/bastion-overview
+  retrieved: 2026-10-09
+- id: ms-azure-monitor-security
+  title: Secure your Azure Monitor deployment
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/best-practices-security
+  retrieved: 2026-10-09
+- id: ms-azure-sql-entra-only
+  title: Microsoft Entra-only authentication with Azure SQL
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-sql/database/authentication-azure-ad-only-authentication?view=azuresql
+  retrieved: 2026-10-09
+- id: ms-azure-update-manager
+  title: "What is Azure Update Manager?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/update-manager/overview
+  retrieved: 2026-10-09
+- id: ms-command-line-auditing
+  title: Command line process auditing
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/component-updates/command-line-process-auditing
+  retrieved: 2026-10-09
+- id: ms-defender-servers
+  title: Defender for Servers
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-servers-overview
+  retrieved: 2026-10-09
+- id: ms-device-discovery
+  title: Microsoft Defender for Endpoint device discovery overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/device-discovery
+  retrieved: 2026-10-09
+- id: ms-dvm-capabilities
+  title: Compare Microsoft Defender Vulnerability Management plans and capabilities
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-vulnerability-management/defender-vulnerability-management-capabilities
+  retrieved: 2026-10-09
+- id: ms-dvm-end-of-support
+  title: Plan for end-of-support software and software versions
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-vulnerability-management/tvm-end-of-support-software
+  retrieved: 2026-10-09
+- id: ms-dvm-firmware
+  title: Hardware and firmware assessment
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-vulnerability-management/tvm-hardware-and-firmware
+  retrieved: 2026-10-09
+- id: ms-e8-app-control
+  title: Essential Eight application control
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-app-control
+  retrieved: 2026-10-09
+- id: ms-e8-app-hardening
+  title: Essential Eight user application hardening
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-app-harden
+  retrieved: 2026-10-09
+- id: ms-e8-backups
+  title: "Why Pursue ACSC Essential Eight User Backup Guidelines?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-backups
+  retrieved: 2026-10-09
+- id: ms-e8-macros
+  title: Essential Eight configure Microsoft Office macro settings
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-macro
+  retrieved: 2026-10-09
+- id: ms-e8-mfa-systems
+  title: "Phishing resistant multifactor authentication for access to desktops, servers, and data repositories"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-mfa-windows-linux-servers-legacy-apps
+  retrieved: 2026-10-09
+- id: ms-e8-patch-applications
+  title: Essential Eight patch applications
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-patch-app
+  retrieved: 2026-10-09
+- id: ms-e8-patch-os
+  title: Essential Eight patch operating systems
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-patch-os
+  retrieved: 2026-10-09
+- id: ms-e8-restrict-admin
+  title: Essential Eight restrict administrative privileges
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/compliance/anz/e8-admin
+  retrieved: 2026-10-09
+- id: ms-edge-disable-ie11
+  title: Disable Internet Explorer 11
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/deployedge/edge-ie-disable-ie11
+  retrieved: 2026-10-09
+- id: ms-edge-extensions
+  title: Manage Microsoft Edge extensions in the enterprise
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/deployedge/microsoft-edge-manage-extensions
+  retrieved: 2026-10-09
+- id: ms-edge-intrusive-ads
+  title: Microsoft Edge Browser Policy Documentation AdsSettingForIntrusiveAdsSites
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/AdsSettingForIntrusiveAdsSites
+  retrieved: 2026-10-09
+- id: ms-edge-relaunch-notification
+  title: Microsoft Edge Browser Policy Documentation RelaunchNotification
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/RelaunchNotification
+  retrieved: 2026-10-09
+- id: ms-entra-device-local-admin
+  title: How to manage the local administrators group on Microsoft Entra joined devices
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/devices/assign-local-admin
+  retrieved: 2026-10-09
+- id: ms-external-id-mfa
+  title: Multifactor authentication in external tenants
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/external-id/customers/concept-multifactor-authentication-customers
+  retrieved: 2026-10-09
+- id: ms-external-id-passkeys
+  title: Sign in with passkeys in Microsoft Entra External ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/external-id/customers/how-to-sign-in-with-passkey
+  retrieved: 2026-10-09
+- id: ms-intune-admx-import
+  title: Import custom ADMX and ADML administrative templates into Microsoft Intune (public preview)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-configuration/settings-catalog/import-custom-admx-templates
+  retrieved: 2026-10-09
+- id: ms-intune-app-control
+  title: Manage approved apps for Windows devices with App Control for Business policy and Managed Installers in Microsoft Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/manage-app-control
+  retrieved: 2026-10-09
+- id: ms-intune-driver-updates
+  title: Manage Windows driver updates
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-updates/windows/manage-driver-updates
+  retrieved: 2026-10-09
+- id: ms-intune-feature-updates
+  title: Manage Windows feature updates
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-updates/windows/manage-feature-updates
+  retrieved: 2026-10-09
+- id: ms-intune-quality-updates
+  title: Manage Windows quality updates
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-updates/windows/manage-quality-updates
+  retrieved: 2026-10-09
+- id: ms-intune-security-baselines
+  title: Use security baselines to help secure Windows devices you manage with Microsoft Intune
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/intune/device-security/security-baselines/overview
+  retrieved: 2026-10-09
+- id: ms-ir-planning
+  title: Incident response planning
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/operations/incident-response-planning
+  retrieved: 2026-10-09
+- id: ms-lsa-protection
+  title: Configure added LSA protection
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/configuring-additional-lsa-protection
+  retrieved: 2026-10-09
+- id: ms-m365-apps-cloud-update-deadlines
+  title: Configure rollout waves and update deadlines
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365-apps/admin-center/cloud-update-waves-deadline
+  retrieved: 2026-10-09
+- id: ms-m365-backup-offboarding
+  title: Offboarding in Microsoft 365 Backup
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/backup/backup-offboarding?view=o365-worldwide
+  retrieved: 2026-10-09
+- id: ms-m365-backup-setup
+  title: Set up Microsoft 365 Backup
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/backup/backup-setup?view=o365-worldwide
+  retrieved: 2026-10-09
+- id: ms-mde-onboard-server
+  title: Onboard servers through Microsoft Defender for Endpoint's onboarding experience
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/onboard-server
+  retrieved: 2026-10-09
+- id: ms-mde-onboarding
+  title: Onboard devices to Microsoft Defender for Endpoint
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/onboarding
+  retrieved: 2026-10-09
+- id: ms-mdvm
+  title: What is Microsoft Defender Vulnerability Management
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-vulnerability-management/defender-vulnerability-management
+  retrieved: 2026-10-09
+- id: ms-memory-integrity
+  title: Enable virtualization-based protection of code integrity
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity
+  retrieved: 2026-10-09
+- id: ms-powershell-language-modes
+  title: about_Language_Modes
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_language_modes?view=powershell-5.1
+  retrieved: 2026-10-09
+- id: ms-powershell-logging-policies
+  title: about_Group_Policy_Settings
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_group_policy_settings?view=powershell-5.1
+  retrieved: 2026-10-09
+- id: ms-privileged-access-intermediaries
+  title: "Privileged access: Intermediaries"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-intermediaries
+  retrieved: 2026-10-09
+- id: ms-vba-v3-signature
+  title: Upgrade signed Office VBA macro projects to V3 signature (KB5000676)
+  publisher: Microsoft
+  url: https://support.microsoft.com/en-us/servicing/office/hotfix/upgrade-signed-office-vba-macro-projects-to-v3-signature-kb5000676
+  retrieved: 2026-10-09
+- id: ms-whfb
+  title: Windows Hello for Business
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/identity-protection/hello-for-business/
+  retrieved: 2026-10-09
+- id: ms-windows-removed-features
+  title: Features and functionality removed in Windows client
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/whats-new/removed-features
+  retrieved: 2026-10-09
+- id: ms-windows-server-release-info
+  title: Windows Server release information
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/release-health/windows-server-release-info
+  retrieved: 2026-10-09
+- id: ms-windows11-release-info
+  title: Windows 11 release information
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information
+  retrieved: 2026-10-09
+- id: ms-appcontrol-applocker-overview
+  title: App Control for Business and AppLocker Overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/appcontrol-and-applocker-overview
+  retrieved: 2026-10-09
+- id: ms-applocker-events
+  title: Using Event Viewer with AppLocker
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/applocker/using-event-viewer-with-applocker
+  retrieved: 2026-10-09
+- id: ms-ps2-removal
+  title: PowerShell 2.0 removal from Windows
+  publisher: Microsoft
+  url: https://support.microsoft.com/en-us/servicing/os/windows/docs/2025/08/powershell-2-0-removal-from-windows
+  retrieved: 2026-10-09
+- id: ms-dotnet35
+  title: Install .NET Framework 3.5 on Windows 10 and Windows Server
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows
+  retrieved: 2026-10-09
+- id: ms-cloud-policy
+  title: Overview of Cloud Policy service for Microsoft 365
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365-apps/admin-center/overview-cloud-policy
+  retrieved: 2026-10-09
+- id: ms-win10-esu
+  title: Extended Security Updates (ESU) program for Windows 10
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/windows/whats-new/extended-security-updates
+  retrieved: 2026-10-09
+- id: ms-eos-2025
+  title: Ending Support in 2025
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/lifecycle/end-of-support/end-of-support-2025
+  retrieved: 2026-10-09

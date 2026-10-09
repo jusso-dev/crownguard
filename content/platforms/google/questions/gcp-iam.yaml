@@ -103,6 +103,8 @@
     - { framework: cis-gcp, ref: "1.8" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: google-security-guidance, ref: "Service account key best practices" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
 
 - id: GO-CIAM-005
   module: gcp
@@ -156,3 +158,95 @@
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: GO-CIAM-007
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores]
+  severity: high
+  question: Are Google Cloud VMs administered only through Identity-Aware Proxy or a hardened bastion host, with direct SSH and RDP from the internet blocked?
+  why: >-
+    VMs that accept SSH or RDP from anywhere are brute-forced and exploited constantly, and every admin
+    who connects directly is another path in. A single controlled entry point, protected by Google
+    sign-in and IAM, narrows administration to one monitored route.
+  yesLooksLike: >-
+    Firewall rules don't allow SSH or RDP from 0.0.0.0/0, administrators reach VMs through IAP TCP
+    forwarding (or a hardened bastion host) with the IAP-secured Tunnel User role granted only to admin
+    groups, and VMs that don't need public addresses have none.
+  remediation: >-
+    Remove firewall rules that open ports 22 and 3389 to the internet, allow those ports only from the
+    IAP range 35.235.240.0/20 (or a hardened bastion host), grant the IAP-secured Tunnel User role to
+    admin groups only, and remove external IP addresses from VMs that don't need them.
+  effort: M
+  licence: []
+  sources: [gcp-iap-tcp]
+  refs:
+    - { framework: cis-gcp, ref: "3.6" }
+    - { framework: cis-gcp, ref: "3.7" }
+    - { framework: cis-gcp, ref: "3.12" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: GO-CIAM-008
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Is application control enforced on internet-facing Compute Engine VMs so only an approved set of programs, libraries, scripts and installers can run anywhere on them?
+  why: >-
+    Internet-facing servers are the first thing attackers probe. A web shell or dropped tool on one
+    gives them a foothold in your Google Cloud environment with the permissions of the VM's service
+    account.
+  yesLooksLike: >-
+    Every internet-facing Windows Server VM enforces AppLocker or App Control for Business with
+    Microsoft's recommended block rules, and every internet-facing Linux VM runs an allowlisting tool in
+    enforcement mode, so only approved executables, libraries, scripts, installers, compiled HTML, HTML
+    applications and control panel applets can run in any location; the rules are revalidated at least
+    yearly; and allowed and blocked events reach your SIEM. Answer N/A if you run no internet-facing VMs
+    on Google Cloud.
+  remediation: >-
+    Google Cloud doesn't provide application control inside VMs, so deploy App Control for Business or
+    AppLocker to Windows Server VMs (for example with Group Policy or OSConfig) and an allowlisting tool
+    to Linux VMs, starting in audit mode, then forward allowed and blocked events to your SIEM and book
+    a yearly ruleset review. Enforcing the Define trusted image projects (compute.trustedImageProjects)
+    organisation policy and Binary Authorization for GKE and Cloud Run also helps by limiting which
+    images can run.
+  effort: L
+  licence: []
+  sources: [gcp-trusted-images, gcp-binary-authorization, gcp-org-policy-constraints, ms-appcontrol-applocker-overview, ms-app-control-windows-server, ms-app-control-block-rules, asd-implementing-application-control, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+  e8:
+    - { strategy: application-control, level: 2 }
+
+- id: GO-CIAM-009
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: medium
+  question: Is application control also enforced on Compute Engine VMs that aren't internet-facing, including limiting drivers to an approved set?
+  why: >-
+    Once inside, attackers move to the internal servers that hold the data and run tools or vulnerable
+    drivers there to switch off defences. Application control on every server, with driver rules,
+    removes those footholds.
+  yesLooksLike: >-
+    Every internal Windows Server VM enforces App Control for Business with rules for kernel drivers and
+    Microsoft's vulnerable driver blocklist on, internal Linux VMs run an allowlisting tool in
+    enforcement mode and load only approved kernel modules, and events reach your SIEM. Answer N/A if
+    you run no Compute Engine VMs.
+  remediation: >-
+    Extend server application control to internal VMs, using App Control for Business on Windows Server
+    because AppLocker can't control drivers, and turn on the vulnerable driver blocklist. On Linux,
+    Shielded VM Secure Boot, which lets only signed boot components and kernels load, is one way to
+    support driver control; enforce the Shielded VMs organisation policy for new VMs and keep Linux
+    allowlisting tools in enforcement mode.
+  effort: L
+  licence: []
+  sources: [gcp-shielded-vm, gcp-org-policy-constraints, ms-appcontrol-applocker-overview, ms-app-control-driver-block-rules, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: cis-gcp, ref: "4.8" }
+  e8:
+    - { strategy: application-control, level: 3 }

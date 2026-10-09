@@ -40,8 +40,8 @@ mappings:
 
   # ── Privileged access ───────────────────────────────────────────────────────
   - question: MS-PA-001
-    checks: [ENTRA-CLOUDADMIN-001, ENTRA-CLOUDADMIN-002, ENTRA-ADMIN-001]
-    rationale: Check that no Tier-0/1 role holder has onPremisesSyncEnabled or an Exchange or Microsoft 365 Apps service plan, and that two to four accounts hold Global Administrator.
+    checks: [ENTRA-CLOUDADMIN-001, ENTRA-CLOUDADMIN-002]
+    rationale: Check that no Tier-0/1 role holder has onPremisesSyncEnabled or an Exchange or Microsoft 365 Apps service plan.
   - question: MS-PA-002
     checks: [CA-PHISHRES-001, CA-MFA-ADMIN-001]
     rationale: Both pass when every Tier-0/1 directory role is covered by an enabled policy requiring a phishing-resistant authentication strength for All resources; plain MFA coverage gives a warning.
@@ -67,6 +67,11 @@ mappings:
   - question: MS-PA-009
     checks: [ENTRA-HYBRID-003]
     rationale: Passes when every verified domain has authenticationType Managed and, with directory sync on, passwordSyncEnabled is true.
+  - question: MS-PA-014
+    checks: [ENTRA-ADMIN-001]
+    rationale: Passes when two to four accounts hold Global Administrator.
+    # Least-privileged role assignment for other admins isn't checked.
+    cap: partial
 
   # ── Applications ────────────────────────────────────────────────────────────
   - question: MS-APP-001
@@ -123,12 +128,13 @@ mappings:
   - question: MS-END-003
     checks: [INTUNE-ASR-001]
     rationale: Passes when the Office child process, Win32 API from macros, executable email content and LSASS credential theft ASR rules are in block mode across assigned policies.
-    # The Adobe Reader child process rule and exclusion review are not checked.
+    # Only the Office child process rule overlaps this question; the Outlook, executable content, code injection and Adobe Reader rules aren't checked. A fail can come from the Win32 API, email content or LSASS rules, which this question no longer asks.
     cap: partial
+    failIsInconclusive: true
   - question: MS-END-004
     checks: [INTUNE-WDAC-001]
     rationale: Passes when at least one assigned App Control for Business or AppLocker policy is in enforce mode.
-    # Coverage of all workstations, user profile folders and the recommended block rules is not checked.
+    # Coverage of every workstation, user profile and temporary folders, the seven file types and the reputation option is not checked.
     cap: partial
   - question: MS-END-005
     checks: [INTUNE-UPDATE-001]
@@ -141,13 +147,24 @@ mappings:
     # Servers, EDR in block mode and automated investigation are not checked.
     cap: partial
   - question: MS-END-008
-    checks: [ENTRA-DEVICE-003, ENTRA-DEVICE-004, ENTRA-DEVICE-005]
-    rationale: Read the device registration policy for Global Administrators not added as local admins, registering users not made local admins, and Windows LAPS enabled.
-    # Deployment of the Intune LAPS policy and local admin rights on existing devices are not checked.
+    checks: [ENTRA-DEVICE-003, ENTRA-DEVICE-004]
+    rationale: Read the device registration policy for Global Administrators not added as local admins and registering users not made local admins.
+    # Local admin rights on existing devices are not checked.
     cap: partial
   - question: MS-END-009
     checks: [INTUNE-MULTIAPPROVAL-001, INTUNE-RBAC-001]
     rationale: Check that multi-admin approval policies with an approver group cover device wipe, retire, delete, scripts and apps, and Intune role assignments carry custom scope tags.
+  - question: MS-END-023
+    checks: [INTUNE-ASR-001]
+    rationale: Passes when the Office child process, Win32 API from macros, executable email content and LSASS credential theft ASR rules are in block mode across assigned policies.
+    # A pass shows the Win32 API rule is in block mode; coverage of every device isn't proven. A fail can come from the other three rules, which this question doesn't ask.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-END-035
+    checks: [ENTRA-DEVICE-005]
+    rationale: Reads the device registration policy for Windows LAPS enabled in Entra ID.
+    # Deployment of the Intune LAPS policy to every device and server is not checked.
+    cap: partial
 
   # ── Copilot and data protection ─────────────────────────────────────────────
   - question: MS-AI-001
@@ -196,6 +213,11 @@ mappings:
     # Third-party backups are invisible, so a fail says nothing; coverage of crown-jewel sites and retention are not checked.
     cap: partial
     failIsInconclusive: true
+  - question: MS-BCK-004
+    checks: [AZ-BACKUP-001]
+    rationale: Passes only when every Recovery Services and Backup vault has always-on soft delete and locked immutability.
+    # Microsoft 365 Backup and third-party backups aren't checked. A tenant with no vaults gets Info, which leaves the question to the assessor.
+    cap: partial
 
   # ── Azure ───────────────────────────────────────────────────────────────────
   - question: MS-AZ-001

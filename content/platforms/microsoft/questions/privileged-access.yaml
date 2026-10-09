@@ -10,19 +10,17 @@
     compromise climb straight into the cloud.
   yesLooksLike: >-
     Every directory role holder uses a dedicated admin account (for example on the onmicrosoft.com
-    domain) that is cloud-only, has no Exchange or Office app licence, and is never used for email
-    or browsing. There are between two and four Global Administrators.
+    domain) that is cloud-only, has no Exchange or Office app licence, and is never used for email or
+    browsing.
   remediation: >-
-    Create cloud-only admin accounts for each administrator, move role assignments off daily
-    accounts, remove mail-enabled licences from admin accounts, stop on-premises synchronised
-    accounts holding privileged roles, and reduce Global Administrators to between two and four by
-    delegating to least-privileged roles.
+    Create cloud-only admin accounts for each administrator, move role assignments off daily accounts,
+    remove mail-enabled licences from admin accounts, and stop on-premises synchronised accounts holding
+    privileged roles.
   effort: M
   licence: []
   sources: [ms-protect-m365-on-prem, ms-entra-role-best-practices, ms-enterprise-access-model]
   refs:
     - { framework: cis-m365, ref: "1.1.1" }
-    - { framework: cis-m365, ref: "1.1.3" }
     - { framework: cis-m365, ref: "1.1.4" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-1 }
@@ -176,7 +174,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-6 }
   e8:
-    - { strategy: restrict-admin-privileges, level: 1 }
+    - { strategy: restrict-admin-privileges, level: 3 }
 
 - id: MS-PA-007
   module: core
@@ -266,3 +264,151 @@
     - { framework: mcsb, ref: IM-1 }
     - { framework: ms-zero-trust, ref: Identity I }
     - { framework: idcf, ref: "Whole system" }
+
+- id: MS-PA-010
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
+  severity: medium
+  question: Is every request for an administrator role checked and approved by someone accountable, other than the requester, before the role is granted?
+  why: >-
+    Admin rights handed out on a casual request, or granted by the person asking for them, are how
+    privileges creep beyond what anyone intended. Validating each request when it's first made ties
+    every privileged role to a real, approved need.
+  yesLooksLike: >-
+    New Entra and Azure role assignments are requested through a ticket, Privileged Identity Management
+    or an entitlement management access package; a named approver other than the requester confirms the
+    business need before the role is granted; and the approval is recorded.
+  remediation: >-
+    Name an approver for each privileged role and route requests through an entitlement management
+    access package with approval, PIM eligible assignment requests or your ticketing system, recording
+    each approval. Compare new role assignments in PIM and the Entra audit log against approved requests
+    and remove any that bypassed the process.
+  effort: S
+  licence: []
+  sources: [ms-e8-restrict-admin, ms-pim-configure]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-3 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: MS-PA-011
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-hybrid-identity, ms-managed-endpoints]
+  severity: high
+  question: Do administrators use their admin accounts only in a separate privileged environment that their everyday accounts can't sign in to?
+  why: >-
+    When an admin account is used on the same computer as everyday email and browsing, one malicious
+    attachment or link can capture the admin's credentials or session. Keeping admin work in a separate
+    environment means a compromised everyday device doesn't hand over the keys to the tenant.
+  yesLooksLike: >-
+    Admin work happens only in a separate environment, such as a dedicated admin device, an admin
+    virtual machine or a Windows 365 Cloud PC used solely for administration; a Conditional Access
+    device filter lets admin accounts sign in only from those environments; everyday accounts can't sign
+    in to them; and, where you run Active Directory, logon restrictions stop domain admin accounts
+    signing in to user workstations.
+  remediation: >-
+    Give each administrator a privileged environment, then create a Conditional Access policy for
+    directory roles that allows sign-in only from those devices through a device filter. Limit who can
+    sign in to the privileged devices with the Allow log on locally user right in the Intune settings
+    catalog, and use Deny log on user rights so domain and enterprise admins can't sign in to
+    workstations and member servers.
+  effort: M
+  licence: [entra-p1, intune]
+  sources: [ms-e8-restrict-admin, ms-enterprise-access-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-6 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: MS-PA-012
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-managed-endpoints]
+  severity: medium
+  question: Is each administrator's privileged environment kept off their everyday device, rather than running as a virtual machine inside it?
+  why: >-
+    A privileged virtual machine running on an everyday laptop is only as safe as that laptop. Malware
+    on the host can read the screen and capture keystrokes, so the admin session inherits every risk of
+    the device used for email and browsing.
+  yesLooksLike: >-
+    No administrator's privileged environment is a virtual machine hosted on the device they use for
+    email and browsing; privileged environments run on dedicated hardware or on a separately managed
+    host that everyday accounts can't reach.
+  remediation: >-
+    Move admin virtual machines off everyday devices onto dedicated admin hardware or a separately
+    managed host, retire any admin virtual machines that still run on user laptops, and record the
+    approved privileged environment for each administrator.
+  effort: M
+  licence: []
+  sources: [ms-e8-restrict-admin, ms-privileged-access-devices]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-6 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-PA-013
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-hybrid-identity, ms-azure-subscriptions]
+  severity: high
+  question: Are servers administered only through jump servers or Azure Bastion, rather than directly from administrators' devices?
+  why: >-
+    Direct Remote Desktop and SSH from wherever an admin happens to be gives attackers many paths to
+    domain controllers, Entra Connect and production servers. A small number of hardened, monitored jump
+    points narrows that to one controlled route.
+  yesLooksLike: >-
+    Domain controllers, Entra Connect, AD FS and other servers accept Remote Desktop and SSH only from
+    hardened jump servers or Azure Bastion, administrators reach those jump points from their privileged
+    environment, and direct connections from workstations are blocked by host firewalls or network
+    security groups. If you run no servers or virtual machines, answer N/A and say so.
+  remediation: >-
+    Deploy hardened jump servers for on-premises administration and Azure Bastion for Azure virtual
+    machines, restrict Remote Desktop and SSH on servers to those sources with host firewalls or network
+    security groups, remove public IP addresses from management interfaces, and require
+    phishing-resistant MFA to reach the jump points.
+  effort: L
+  licence: []
+  sources: [ms-e8-restrict-admin, ms-privileged-access-intermediaries, ms-azure-bastion]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: PA-6 }
+    - { framework: mcsb, ref: NS-1 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-PA-014
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
+  severity: high
+  question: Does each administrator hold only the least-privileged roles their duties need, with between two and four Global Administrators?
+  why: >-
+    Global Administrator and other broad roles are often handed out because they're convenient. Every
+    extra holder of a broad role is another account that, if compromised, can take over the whole
+    tenant.
+  yesLooksLike: >-
+    Between two and four accounts, including emergency access accounts, hold Global Administrator; other
+    admins hold the narrowest built-in or custom roles their job needs, scoped with administrative units
+    or resource scopes where possible; and privileged role assignments are reviewed against duties at
+    least annually.
+  remediation: >-
+    Map each admin's tasks to the least-privileged built-in roles, create custom roles or administrative
+    units where built-in roles are too broad, remove Global Administrator from everyone except two to
+    four named or emergency access accounts, and use PIM access reviews to keep assignments matched to
+    current duties.
+  effort: M
+  licence: []
+  sources: [ms-entra-role-best-practices, ms-e8-restrict-admin]
+  refs:
+    - { framework: cis-m365, ref: "1.1.3" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-7 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }

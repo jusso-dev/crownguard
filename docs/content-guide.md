@@ -110,7 +110,11 @@ Writing rules:
 - `why` explains the business risk in plain language; `remediation` names the actual feature or setting.
 - Every Yes must be a defensible security outcome; don't ask questions where Yes is the risky answer.
 - `e8` levels follow the ASD Essential Eight Maturity Model: tag the lowest maturity level the requirement first appears at.
-  A strategy reaches a level only when every question tagged at or below that level is answered Yes.
+  A strategy reaches a level only when every question tagged at or below that level is answered Yes. A level with no
+  questions stops the strategy there (the report shows it as not verified, which also leaves the matching IDCF level
+  not verified), except a level ASD defines with no new requirements (patching operating systems at Maturity Level 2;
+  see `NO_NEW_REQUIREMENTS` in `src/engine/maturity.ts`). The questions tagged at a level must together cover
+  everything that level adds over the one below.
 - Severity reflects how directly the gap enables compromise of a crown jewel, not how hard the fix is.
 
 ## SOC maturity module
