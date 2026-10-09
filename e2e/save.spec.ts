@@ -134,12 +134,12 @@ test("the file it writes matches the published JSON Schema", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => (window as unknown as { __writes: string[] }).__writes.length)).toBe(1);
 
   const saved = JSON.parse(await page.evaluate(() => (window as unknown as { __writes: string[] }).__writes[0]));
-  const schema = JSON.parse(await readFile(join("public", "schema", "crownguard-assessment.v2.json"), "utf8"));
+  const schema = JSON.parse(await readFile(join("public", "schema", "crownguard-assessment.v3.json"), "utf8"));
   const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
   expect(validate(saved), JSON.stringify(validate.errors, null, 2)).toBe(true);
 
-  expect(saved.$schema).toContain("crownguard-assessment.v2.json");
-  expect(saved.schemaVersion).toBe(2);
+  expect(saved.$schema).toContain("crownguard-assessment.v3.json");
+  expect(saved.schemaVersion).toBe(3);
   expect(saved.savedBy.app).toBe("crownguard");
   expect(saved.savedBy.contentHash).toMatch(/^[0-9a-f]{16}$/);
 });

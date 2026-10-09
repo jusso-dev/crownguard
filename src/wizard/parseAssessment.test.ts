@@ -26,7 +26,8 @@ describe("schema versions", () => {
     const { raw, from, migrated } = migrate({ version: 1, org: { name: "Old Co" } }, 1);
     expect(from).toBe(1);
     expect(migrated).toBe(true);
-    expect(raw).toEqual({ org: { name: "Old Co" }, schemaVersion: 2 });
+    expect(raw).toHaveProperty("schemaVersion", SCHEMA_VERSION);
+    expect(raw).toEqual({ org: { name: "Old Co" }, schemaVersion: SCHEMA_VERSION });
   });
 
   it("does not touch a file that is already current", () => {
@@ -154,7 +155,7 @@ describe("the saved file format", () => {
   it("always writes the current schema version, a link to the JSON Schema and who saved it", () => {
     const text = toSaveFile(emptyAssessment(), { contentHash: "feedface", now: new Date("2026-10-09T00:00:00.000Z") });
     const saved = JSON.parse(text) as Record<string, unknown>;
-    expect(saved.$schema).toMatch(/crownguard-assessment\.v2\.json$/);
+    expect(saved.$schema).toMatch(/crownguard-assessment\.v\d+\.json$/);
     expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
     expect(saved.savedBy).toMatchObject({ app: "crownguard", contentHash: "feedface", savedAt: "2026-10-09T00:00:00.000Z" });
   });

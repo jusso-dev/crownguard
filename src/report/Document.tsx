@@ -4,7 +4,7 @@ import { exposures } from "../content/schema";
 import { formatAbn, isValidAbn } from "../engine/abn";
 import { bandOf } from "../engine/risk";
 import { levelFor, socProviders, type SocResult } from "../engine/soc";
-import { answerLabels, classifications, dsls, regulations, type Answer } from "../engine/types";
+import { answerLabels, classifications, dsls, regulations, type Answer, type Evidence } from "../engine/types";
 import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../engine/aiOptions";
 import { aiFieldLabels } from "../engine/aiRegister";
@@ -28,6 +28,14 @@ const stampText = (d: Date) =>
   d.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
 
 type Styles = ReturnType<typeof makeStyles>;
+
+/** Who scanned what and when: "Prowler (AWS) 5.44.0, account 123456789012, 9 Oct 2026 at 3:04 pm". */
+const evidenceHeader = (ev: Evidence) =>
+  [`${ev.source}${ev.toolVersion ? ` ${ev.toolVersion}` : ""}`, ev.account ? `account ${ev.account}` : "", stampText(new Date(ev.scannedAt))].join(", ");
+
+/** One line per check, with the resource counts and examples a per-resource scanner produced. */
+const evidenceLine = (c: Evidence["checks"][number]) =>
+  `${c.count ? `${c.count}: ` : ""}${c.setting || c.id} – ${c.status}${c.examples?.length ? ` (${c.examples.slice(0, 3).join(", ")})` : ""}`;
 
 const makeStyles = (theme: ReportModel["theme"]) =>
   StyleSheet.create({
@@ -151,7 +159,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               : []),
             ...(a.imports ?? []).map(
               (imp) =>
-                `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
+                `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source}${imp.toolVersion ? ` ${imp.toolVersion}` : ""} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
             ),
           ].map((line) => (
             <View key={line} style={{ flexDirection: "row", gap: 6, marginBottom: 3 }}>
@@ -389,8 +397,8 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                       {a.notes[q.id] && <Text style={{ fontSize: 8, marginTop: 2, fontStyle: "italic" }}>Note: {a.notes[q.id]}</Text>}
                       {a.evidence?.[q.id] && (
                         <Text style={{ fontSize: 8, marginTop: 2, color: muted }}>
-                          Scan evidence ({a.evidence[q.id].source}, {stampText(new Date(a.evidence[q.id].scannedAt))}):{" "}
-                          {a.evidence[q.id].checks.slice(0, 6).map((c) => `${c.setting || c.id} – ${c.status}`).join("; ")}
+                          Scan evidence ({evidenceHeader(a.evidence[q.id])}):{" "}
+                          {a.evidence[q.id].checks.slice(0, 6).map(evidenceLine).join("; ")}
                           {a.evidence[q.id].checks.length > 6 ? `; +${a.evidence[q.id].checks.length - 6} more` : ""}
                         </Text>
                       )}
@@ -505,7 +513,10 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             "Answers score Yes = 1, Partial = 0.5, No = 0. Unknown and unanswered questions also score 0, so uncertainty is never counted as protection. N/A questions are excluded. Questions are weighted by severity: critical 4, high 3, medium 2, low 1.",
             "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions relevant to a crown jewel, plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
             "Risk bands: 1–4 Low, 5–9 Medium, 10–19 High, 20–25 Extreme.",
-            "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). The assessor reviewed and could change every answer; scan evidence is shown against each finding.",
+            "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). A check reported once per resource passes only when every resource passes it, and a suppressed (muted) finding is never treated as a pass. The assessor reviewed and could change every answer; scan evidence is shown against each finding, naming the scanner, its version and the account or tenant it covered.",
+            ...(a.imports?.length
+              ? [`Scan evidence in this report came from ${andList([...new Set(a.imports.map((i) => `${i.source}${i.toolVersion ? ` ${i.toolVersion}` : ""}`))])}.`]
+              : []),
             "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
             "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
             ...(model.soc

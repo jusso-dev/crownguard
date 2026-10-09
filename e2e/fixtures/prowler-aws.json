@@ -1,0 +1,1090 @@
+[
+  {
+    "message": "Ensure AWS Backup plans exist: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "backup_plans_exist",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Ensure AWS Backup plans exist",
+      "product_uid": "prowler",
+      "title": "Ensure AWS Backup plans exist",
+      "uid": "prowler-aws-backup_plans_exist-123456789012-ap-southeast-2-0"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "backup"
+        },
+        "labels": [],
+        "name": "daily",
+        "type": "Other",
+        "uid": "arn:aws:backup:ap-southeast-2:123456789012:backup-plan/daily"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 account level public access blocks are enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "s3_account_level_public_access_blocks",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 account level public access blocks are enabled",
+      "product_uid": "prowler",
+      "title": "Check if S3 account level public access blocks are enabled",
+      "uid": "prowler-aws-s3_account_level_public_access_blocks-123456789012-ap-southeast-2-1"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::123456789012",
+        "type": "Other",
+        "uid": "arn:aws:s3:::123456789012"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have public access: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have public access",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have public access",
+      "uid": "prowler-aws-s3_bucket_public_access-123456789012-ap-southeast-2-2"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-records",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-records"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have public access: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have public access",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have public access",
+      "uid": "prowler-aws-s3_bucket_public_access-123456789012-ap-southeast-2-3"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-images",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-images"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have public access: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have public access",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have public access",
+      "uid": "prowler-aws-s3_bucket_public_access-123456789012-ap-southeast-2-4"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-open-data",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-open-data"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if Amazon Macie is enabled: This check must be reviewed by hand; Prowler cannot settle it.",
+    "metadata": {
+      "event_code": "macie_is_enabled",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "MANUAL",
+    "status_detail": "This check must be reviewed by hand; Prowler cannot settle it.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if Amazon Macie is enabled",
+      "product_uid": "prowler",
+      "title": "Check if Amazon Macie is enabled",
+      "uid": "prowler-aws-macie_is_enabled-123456789012-ap-southeast-2-5"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "macie"
+        },
+        "labels": [],
+        "name": "arn:aws:macie2:ap-southeast-2:123456789012",
+        "type": "Other",
+        "uid": "arn:aws:macie2:ap-southeast-2:123456789012"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if EBS default encryption is enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "ec2_ebs_default_encryption",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if EBS default encryption is enabled",
+      "product_uid": "prowler",
+      "title": "Check if EBS default encryption is enabled",
+      "uid": "prowler-aws-ec2_ebs_default_encryption-123456789012-ap-southeast-2-6"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "ec2"
+        },
+        "labels": [],
+        "name": "vol-0a1b2c3d",
+        "type": "Other",
+        "uid": "vol-0a1b2c3d"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if EBS default encryption is enabled: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "ec2_ebs_default_encryption",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": true,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if EBS default encryption is enabled",
+      "product_uid": "prowler",
+      "title": "Check if EBS default encryption is enabled",
+      "uid": "prowler-aws-ec2_ebs_default_encryption-123456789012-ap-southeast-2-7"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "ec2"
+        },
+        "labels": [],
+        "name": "vol-legacy01",
+        "type": "Other",
+        "uid": "vol-legacy01"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have default encryption enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_default_encryption",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have default encryption enabled",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have default encryption enabled",
+      "uid": "prowler-aws-s3_bucket_default_encryption-123456789012-ap-southeast-2-8"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-records",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-records"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have default encryption enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_default_encryption",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have default encryption enabled",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have default encryption enabled",
+      "uid": "prowler-aws-s3_bucket_default_encryption-123456789012-ap-southeast-2-9"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-images",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-images"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if RDS instances are publicly accessible: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "rds_instance_no_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if RDS instances are publicly accessible",
+      "product_uid": "prowler",
+      "title": "Check if RDS instances are publicly accessible",
+      "uid": "prowler-aws-rds_instance_no_public_access-123456789012-ap-southeast-2-10"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "rds"
+        },
+        "labels": [],
+        "name": "arn:aws:rds:ap-southeast-2:123456789012:db:public-db",
+        "type": "Other",
+        "uid": "arn:aws:rds:ap-southeast-2:123456789012:db:public-db"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if RDS instances are publicly accessible: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "rds_instance_no_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if RDS instances are publicly accessible",
+      "product_uid": "prowler",
+      "title": "Check if RDS instances are publicly accessible",
+      "uid": "prowler-aws-rds_instance_no_public_access-123456789012-ap-southeast-2-11"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "rds"
+        },
+        "labels": [],
+        "name": "arn:aws:rds:ap-southeast-2:123456789012:db:public-db-2",
+        "type": "Other",
+        "uid": "arn:aws:rds:ap-southeast-2:123456789012:db:public-db-2"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if EBS snapshot account block public access is enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "ec2_ebs_snapshot_account_block_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if EBS snapshot account block public access is enabled",
+      "product_uid": "prowler",
+      "title": "Check if EBS snapshot account block public access is enabled",
+      "uid": "prowler-aws-ec2_ebs_snapshot_account_block_public_access-123456789012-ap-southeast-2-12"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "ec2"
+        },
+        "labels": [],
+        "name": "arn:aws:ec2:ap-southeast-2:123456789012",
+        "type": "Other",
+        "uid": "arn:aws:ec2:ap-southeast-2:123456789012"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if AMI account block public access is enabled: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "ec2_ami_account_block_public_access",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if AMI account block public access is enabled",
+      "product_uid": "prowler",
+      "title": "Check if AMI account block public access is enabled",
+      "uid": "prowler-aws-ec2_ami_account_block_public_access-123456789012-ap-southeast-2-13"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "ec2"
+        },
+        "labels": [],
+        "name": "arn:aws:ec2:ap-southeast-2:123456789012",
+        "type": "Other",
+        "uid": "arn:aws:ec2:ap-southeast-2:123456789012"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check if S3 buckets have a policy to only allow secure transport: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "s3_bucket_secure_transport_policy",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check if S3 buckets have a policy to only allow secure transport",
+      "product_uid": "prowler",
+      "title": "Check if S3 buckets have a policy to only allow secure transport",
+      "uid": "prowler-aws-s3_bucket_secure_transport_policy-123456789012-ap-southeast-2-14"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "s3"
+        },
+        "labels": [],
+        "name": "arn:aws:s3:::riverbend-open-data",
+        "type": "Other",
+        "uid": "arn:aws:s3:::riverbend-open-data"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  },
+  {
+    "message": "Check retired in Prowler 5 (example of an unmapped check): The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "unmapped_legacy_check",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "profiles": [
+        "cloud",
+        "datetime"
+      ],
+      "tenant_uid": "",
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "muted": false,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Check retired in Prowler 5 (example of an unmapped check)",
+      "product_uid": "prowler",
+      "title": "Check retired in Prowler 5 (example of an unmapped check)",
+      "uid": "prowler-aws-unmapped_legacy_check-123456789012-ap-southeast-2-15"
+    },
+    "resources": [
+      {
+        "cloud_partition": "aws",
+        "region": "ap-southeast-2",
+        "group": {
+          "name": "unmapped"
+        },
+        "labels": [],
+        "name": "i-0ff1ce",
+        "type": "Other",
+        "uid": "arn:aws:ec2:ap-southeast-2:123456789012:instance/i-0ff1ce"
+      }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+      "account": {
+        "name": "Example Co",
+        "type": "AWS Account",
+        "type_id": 10,
+        "uid": "123456789012",
+        "labels": []
+      },
+      "org": {
+        "name": "",
+        "uid": ""
+      },
+      "provider": "aws",
+      "region": "ap-southeast-2"
+    },
+    "risk_details": "",
+    "time_dt": "2026-10-08T22:00:00.000000",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+  }
+]

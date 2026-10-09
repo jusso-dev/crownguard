@@ -229,10 +229,31 @@ a question (review, info, unknown, not licensed) leave it for the assessor. `cap
 Partial when the checks cover only part of the question; `failIsInconclusive: true` sends a fail to review instead of
 No when a check also fails for reasons the question doesn't ask about.
 
-The wizard imports M365-Secure results today. `prowler-aws.yaml` and `prowler-azure.yaml` map
-[Prowler](https://github.com/prowler-cloud/prowler) check ids to the AWS and Azure questions under the same rules; they
-are validated with the content but no importer reads them yet. Pin new check ids to a Prowler release in the file's
-header comment, because Prowler renames checks between versions.
+Each mapping goes with an importer in `src/imports/`: `m365-secure`, `prowler-aws` and `prowler-azure`. Adding a
+scanner is a new importer plus a mapping file, not a new panel: the Controls step lists whatever has both.
+
+### Importing a Prowler scan
+
+[prowler-aws.yaml](../content/imports/prowler-aws.yaml) and [prowler-azure.yaml](../content/imports/prowler-azure.yaml)
+map [Prowler](https://github.com/prowler-cloud/prowler) check ids to the AWS and Azure questions under the same rules.
+Prowler reports one finding per resource per region, so the importer collapses them per check: a check **fails** when
+any resource fails it, **passes** only when every resource passes, and a suppressed (muted) finding is review, never a
+pass. The panel shows the counts ("3 of 41 resources failing") and a few example resources behind them.
+
+Run Prowler read-only and import either output — they give the same answers:
+
+```console
+prowler aws -M csv json-ocsf
+prowler azure -M csv json-ocsf
+```
+
+The files land in `output/` as `prowler-output-<account>-<date>.csv` and `.json`. A file covering several accounts is
+combined, and the panel lists the accounts it found.
+
+`checkedAgainst` records the Prowler release the check ids were checked against; an import from another major version
+is flagged, because Prowler renames checks between versions. `e2e/fixtures/prowler-checks-<provider>.txt` pins the ids
+of that release, so a mapping that drifts away from Prowler fails `pnpm test`. Regenerate both together when
+`checkedAgainst` moves.
 
 ## Source watch
 

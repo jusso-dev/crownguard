@@ -39,11 +39,14 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   on the same step and section. **Save file** (or Ctrl/⌘ S) writes a `.crownguard.json` copy without moving you off
   the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
   copy, including older ones: open it, add a logo or ABN, and regenerate the report.
-- **Optional scan import (Microsoft).** Already run [M365-Secure](https://github.com/jusso-dev/M365-Secure) against
-  your tenant? Import its `_Assessment-Results_<domain>.json` on the Controls step to pre-fill answers (59 of the 147
-  Microsoft questions have mapped checks) where its checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Every pre-filled answer shows the scan
-  evidence, you can change any of them, and the report says which answers came from the scan. The file is read in
-  your browser only.
+- **Optional scan import.** Already run a scanner? Import its results on the Controls step to pre-fill answers where its
+  checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
+  for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
+  for AWS (52 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
+  Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
+  never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources. Every pre-filled
+  answer shows its scan evidence, you can change any of them, and the report names the scanner, its version and the
+  account it covered. The file is read in your browser only.
 - **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
 - **IDCF Data Security Levels.** Optionally record the IDCF Data Security Level (DSL-0 to DSL-5+) your data owner
   chose for each crown jewel. The report shows, for each platform and for DSL-2 to DSL-4, whether your answers found
@@ -102,7 +105,8 @@ crownguard can suggest a level, but never fills it in for you.
 Only the questions relevant to your crown jewels and licences are asked, grouped by domain. Each one explains why it
 matters, what "yes" looks like and how to fix it, names any licence the fix needs, and lists the Microsoft, Google or AWS
 pages it comes from plus its CIS, Essential Eight, NIST CSF 2.0 and IDCF mappings. Unknown counts as a gap; N/A needs a
-reason. Microsoft tenants can pre-fill answers from an M365-Secure scan.
+reason. Answers can be pre-filled from a scan you have already run: M365-Secure for Microsoft 365, or Prowler for AWS
+and Azure.
 
 <p align="center"><img src="docs/screenshots/04-controls.png" alt="Controls step showing a Conditional Access question with its explanation, recommendation, licence note and references" width="100%"></p>
 

@@ -107,6 +107,8 @@ export const importMappingSchema = z.object({
   name: z.string(),
   platform: id,
   url: z.url(),
+  /** Scanner version the check ids were checked against. An import from another major version is flagged. */
+  checkedAgainst: z.string().optional(),
   mappings: z
     .array(
       z.object({

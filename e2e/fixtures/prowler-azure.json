@@ -1,0 +1,152 @@
+[
+  {
+    "message": "Ensure User Access Administrator role is restricted: The resource is not compliant with this check.",
+    "metadata": {
+      "event_code": "iam_role_user_access_admin_restricted",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "The resource is not compliant with this check.",
+    "status_id": 1,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Ensure User Access Administrator role is restricted",
+      "title": "Ensure User Access Administrator role is restricted",
+      "uid": "prowler-azure-iam_role_user_access_admin_restricted-0"
+    },
+    "resources": [
+      {
+        "region": "australiaeast",
+        "name": "ra-1",
+        "type": "AzureResource",
+        "uid": "subscriptions/11111111-2222-3333-4444-555555555555/providers/Microsoft.Authorization/roleAssignments/ra-1"
+      }
+    ],
+    "category_name": "Findings",
+    "class_name": "Detection Finding",
+    "cloud": {
+      "account": {
+        "name": "Riverbend Production",
+        "type": "Azure Subscription",
+        "uid": "11111111-2222-3333-4444-555555555555",
+        "labels": []
+      },
+      "org": {
+        "name": "riverbend.onmicrosoft.com",
+        "uid": ""
+      },
+      "provider": "azure",
+      "region": "australiaeast"
+    },
+    "time_dt": "2026-10-08T22:00:00.000000"
+  },
+  {
+    "message": "Ensure Key Vault vaults are recoverable: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "keyvault_recoverable",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Ensure Key Vault vaults are recoverable",
+      "title": "Ensure Key Vault vaults are recoverable",
+      "uid": "prowler-azure-keyvault_recoverable-1"
+    },
+    "resources": [
+      {
+        "region": "australiaeast",
+        "name": "riverbend-secrets",
+        "type": "AzureResource",
+        "uid": "subscriptions/11111111-2222-3333-4444-555555555555/providers/Microsoft.KeyVault/vaults/riverbend-secrets"
+      }
+    ],
+    "category_name": "Findings",
+    "class_name": "Detection Finding",
+    "cloud": {
+      "account": {
+        "name": "Riverbend Production",
+        "type": "Azure Subscription",
+        "uid": "11111111-2222-3333-4444-555555555555",
+        "labels": []
+      },
+      "org": {
+        "name": "riverbend.onmicrosoft.com",
+        "uid": ""
+      },
+      "provider": "azure",
+      "region": "australiaeast"
+    },
+    "time_dt": "2026-10-08T22:00:00.000000"
+  },
+  {
+    "message": "Ensure Key Vault vaults are recoverable: The resource is compliant with this check.",
+    "metadata": {
+      "event_code": "keyvault_recoverable",
+      "product": {
+        "name": "Prowler",
+        "uid": "prowler",
+        "vendor_name": "Prowler",
+        "version": "5.44.0"
+      },
+      "version": "1.3.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "The resource is compliant with this check.",
+    "status_id": 1,
+    "finding_info": {
+      "created_time_dt": "2026-10-08T22:00:00.000000",
+      "desc": "Ensure Key Vault vaults are recoverable",
+      "title": "Ensure Key Vault vaults are recoverable",
+      "uid": "prowler-azure-keyvault_recoverable-2"
+    },
+    "resources": [
+      {
+        "region": "australiaeast",
+        "name": "riverbend-app",
+        "type": "AzureResource",
+        "uid": "subscriptions/11111111-2222-3333-4444-555555555555/providers/Microsoft.KeyVault/vaults/riverbend-app"
+      }
+    ],
+    "category_name": "Findings",
+    "class_name": "Detection Finding",
+    "cloud": {
+      "account": {
+        "name": "Riverbend Production",
+        "type": "Azure Subscription",
+        "uid": "11111111-2222-3333-4444-555555555555",
+        "labels": []
+      },
+      "org": {
+        "name": "riverbend.onmicrosoft.com",
+        "uid": ""
+      },
+      "provider": "azure",
+      "region": "australiaeast"
+    },
+    "time_dt": "2026-10-08T22:00:00.000000"
+  }
+]
