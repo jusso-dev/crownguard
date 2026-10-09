@@ -1,6 +1,28 @@
 import { z } from "zod";
 import { exposures, type ExposureId } from "../content/schema";
 import { socProviders, type SocProvider } from "../engine/soc";
+import {
+  aiAccess,
+  aiAutonomy,
+  aiCriteria,
+  aiData,
+  aiDomains,
+  aiLifecycles,
+  aiRiskRatings,
+  aiStandardUse,
+  aiTechnologies,
+  aiUsagePatterns,
+  type AiAccess,
+  type AiAutonomy,
+  type AiCriterion,
+  type AiDataKind,
+  type AiDomain,
+  type AiLifecycle,
+  type AiRiskRating,
+  type AiStandardUse,
+  type AiTechnology,
+  type AiUsagePattern,
+} from "../engine/aiOptions";
 import { classifications, dsls, regulations, type Assessment, type Classification, type Dsl, type Regulation } from "../engine/types";
 
 const keys = <K extends string>(o: Record<K, unknown>) => Object.keys(o) as [K, ...K[]];
@@ -10,6 +32,7 @@ const note = z
   .string()
   .max(100_000)
   .transform((t) => t.slice(0, NOTE_MAX));
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const rating = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
 const regulation = z.enum(keys<Regulation>(regulations));
 
@@ -101,11 +124,48 @@ export const assessmentSchema = z.object({
       provider: z.enum(keys<SocProvider>(socProviders)).optional(),
     })
     .optional(),
+  aiRegister: z
+    .object({
+      entries: z
+        .array(
+          z.object({
+            id: z.string().max(60),
+            example: z.boolean().optional(),
+            kind: z.string().max(60),
+            name: z.string().max(200),
+            reference: z.string().max(100),
+            description: z.string().max(4000),
+            product: z.string().max(200),
+            technology: z.array(z.enum(keys<AiTechnology>(aiTechnologies))),
+            lifecycle: z.enum(keys<AiLifecycle>(aiLifecycles)).optional(),
+            technicalStandard: z.enum(keys<AiStandardUse>(aiStandardUse)).optional(),
+            domains: z.array(z.enum(keys<AiDomain>(aiDomains))),
+            usagePatterns: z.array(z.enum(keys<AiUsagePattern>(aiUsagePatterns))),
+            ownerName: z.string().max(200),
+            ownerEmail: z.string().max(254),
+            criteria: z.array(z.enum(keys<AiCriterion>(aiCriteria))),
+            inherentRisk: z.enum(keys<AiRiskRating>(aiRiskRatings)).optional(),
+            residualRisk: z.enum(keys<AiRiskRating>(aiRiskRatings)).optional(),
+            impactAssessmentDate: isoDate.optional(),
+            lastReview: isoDate.optional(),
+            nextReview: isoDate.optional(),
+            autonomy: z.enum(keys<AiAutonomy>(aiAutonomy)).optional(),
+            access: z.enum(keys<AiAccess>(aiAccess)).optional(),
+            data: z.array(z.enum(keys<AiDataKind>(aiData))),
+            jewels: z.array(z.string().max(50)).max(200),
+            answers: z.record(z.string().max(20), z.enum(["yes", "partial", "no", "unknown", "na"])),
+            notes: z.record(z.string().max(20), note),
+          }),
+        )
+        .max(200),
+    })
+    .optional(),
   progress: z
     .object({
       step: z.number().int().min(0).max(20),
       section: z.string().max(120).optional(),
       socSection: z.string().max(60).optional(),
+      aiSection: z.string().max(60).optional(),
       layout: z.number().int().min(1).max(20).optional(),
     })
     .optional(),

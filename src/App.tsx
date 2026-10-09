@@ -11,13 +11,14 @@ import { JewelsStep } from "./wizard/steps/JewelsStep";
 import { ControlsStep } from "./wizard/steps/ControlsStep";
 import { ReviewStep } from "./wizard/steps/ReviewStep";
 import { SocStep } from "./wizard/steps/SocStep";
+import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { createFileSaver, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { relativeTime } from "./wizard/time";
 
 // One view per entry in `steps` (wizard/store.ts), in the same order.
-const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, ReviewStep, BrandingStep, ReportStep];
+const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
 
 /** A step can be entered once the steps before it have their minimum inputs. */
 function useReachable(): number {
