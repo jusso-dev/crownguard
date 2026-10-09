@@ -1,5 +1,8 @@
 # crownguard
 
+[![CI](https://github.com/jusso-dev/crownguard/actions/workflows/ci.yml/badge.svg)](https://github.com/jusso-dev/crownguard/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/jusso-dev/crownguard/badge)](https://scorecard.dev/viewer/?uri=github.com/jusso-dev/crownguard)
+
 **Find your crown jewels in Microsoft 365, Google Workspace or AWS, see how exposed they are, and hand leadership a branded PDF that explains the risk.**
 
 crownguard is a guided self-assessment that runs entirely in your browser. You pick your environment, name the
