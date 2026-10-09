@@ -1,0 +1,84 @@
+{
+  "$schema": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v2.json",
+  "schemaVersion": 2,
+  "savedBy": {
+    "app": "crownguard",
+    "appVersion": "1.0.0",
+    "contentHash": "9f2c1ab34de56780",
+    "savedAt": "2026-10-09T02:15:00.000Z"
+  },
+  "org": {
+    "name": "Current Co",
+    "abn": "51824753556",
+    "sector": "Professional services",
+    "size": "200–999 staff",
+    "jurisdiction": "Australia",
+    "regulations": ["privacy-act"]
+  },
+  "platforms": ["microsoft"],
+  "modules": { "microsoft": ["azure"] },
+  "licence": { "microsoft": "business-premium" },
+  "jewels": [
+    {
+      "id": "j-current-1",
+      "name": "Entra ID tenant",
+      "platform": "microsoft",
+      "assetType": "ms-entra-tenant",
+      "description": "The identity plane everything else depends on.",
+      "classification": "highly-confidential",
+      "dsl": "dsl-3",
+      "confidentiality": 5,
+      "integrity": 5,
+      "availability": 4,
+      "regulations": ["privacy-act"],
+      "exposures": ["standing-admin", "guest-access"],
+      "businessProcesses": "Every sign-in to every SaaS app."
+    }
+  ],
+  "answers": { "MS-ID-001": "yes", "MS-ID-002": "partial" },
+  "notes": { "MS-ID-002": "Rolled out to admins first." },
+  "orphans": { "MS-OLD-014": { "answer": "no", "note": "Question retired in the September content update." } },
+  "branding": {
+    "primary": "#1f3a5f",
+    "accent": "#d97706",
+    "marking": "OFFICIAL: Sensitive",
+    "preparedBy": "Security team",
+    "preparedFor": "The board"
+  },
+  "evidence": {
+    "MS-ID-001": {
+      "source": "M365-Secure",
+      "tenant": "currentco.onmicrosoft.com",
+      "scannedAt": "2026-10-08T22:00:00.000Z",
+      "suggested": "yes",
+      "checks": [
+        {
+          "id": "CA-01",
+          "status": "pass",
+          "setting": "Conditional Access named locations",
+          "current": "Australia only",
+          "expected": "Australia only"
+        }
+      ]
+    }
+  },
+  "imports": [
+    {
+      "source": "M365-Secure",
+      "tenant": "currentco.onmicrosoft.com",
+      "scannedAt": "2026-10-08T22:00:00.000Z",
+      "importedAt": "2026-10-08T22:05:00.000Z",
+      "applied": 12
+    }
+  ],
+  "soc": {
+    "answers": { "SOC-BUS-001": 3, "SOC-TEC-002": "unknown" },
+    "notes": { "SOC-BUS-001": "Run by the managed provider." },
+    "outOfScope": ["threat-hunting"],
+    "targets": { "technology": { "maturity": 3, "capability": 2 } },
+    "provider": "outsourced"
+  },
+  "progress": { "step": 3, "section": "microsoft:identity", "socSection": "people", "layout": 2 },
+  "createdAt": "2026-10-08T21:00:00.000Z",
+  "updatedAt": "2026-10-09T02:15:00.000Z"
+}

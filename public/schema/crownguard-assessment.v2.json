@@ -1,0 +1,913 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "schemaVersion": {
+      "default": 2,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000
+    },
+    "savedBy": {
+      "type": "object",
+      "properties": {
+        "app": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "appVersion": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "contentHash": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "savedAt": {
+          "type": "string",
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "app",
+        "appVersion",
+        "savedAt"
+      ],
+      "additionalProperties": {}
+    },
+    "org": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "abn": {
+          "type": "string",
+          "pattern": "^\\d{0,11}$"
+        },
+        "sector": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "size": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "jurisdiction": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "regulations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "privacy-act",
+              "soci",
+              "cps-234",
+              "pci",
+              "gdpr",
+              "hipaa",
+              "other"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "sector",
+        "size",
+        "jurisdiction",
+        "regulations"
+      ],
+      "additionalProperties": false
+    },
+    "platforms": {
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 50
+      }
+    },
+    "modules": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 50
+        }
+      }
+    },
+    "licence": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 50
+      }
+    },
+    "jewels": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "platform": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "assetType": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "public",
+              "internal",
+              "confidential",
+              "highly-confidential"
+            ]
+          },
+          "dsl": {
+            "type": "string",
+            "enum": [
+              "dsl-0",
+              "dsl-1",
+              "dsl-2",
+              "dsl-3",
+              "dsl-4",
+              "dsl-5-plus"
+            ]
+          },
+          "confidentiality": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              },
+              {
+                "type": "number",
+                "const": 5
+              }
+            ]
+          },
+          "integrity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              },
+              {
+                "type": "number",
+                "const": 5
+              }
+            ]
+          },
+          "availability": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              },
+              {
+                "type": "number",
+                "const": 5
+              }
+            ]
+          },
+          "regulations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "privacy-act",
+                "soci",
+                "cps-234",
+                "pci",
+                "gdpr",
+                "hipaa",
+                "other"
+              ]
+            }
+          },
+          "exposures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "external-sharing",
+                "guest-access",
+                "internet-facing",
+                "standing-admin",
+                "third-party-apps",
+                "unmanaged-devices",
+                "ai-grounding"
+              ]
+            }
+          },
+          "businessProcesses": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "platform",
+          "assetType",
+          "description",
+          "classification",
+          "confidentiality",
+          "integrity",
+          "availability",
+          "regulations",
+          "exposures",
+          "businessProcesses"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "answers": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "yes",
+          "partial",
+          "no",
+          "unknown",
+          "na"
+        ]
+      }
+    },
+    "notes": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 4000
+      }
+    },
+    "orphans": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "partial",
+              "no",
+              "unknown",
+              "na"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "additionalProperties": {}
+      }
+    },
+    "branding": {
+      "type": "object",
+      "properties": {
+        "logoDataUrl": {
+          "type": "string",
+          "maxLength": 3000000,
+          "pattern": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$"
+        },
+        "logoBackdrop": {
+          "type": "string",
+          "enum": [
+            "none",
+            "white"
+          ]
+        },
+        "primary": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "accent": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "marking": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "preparedBy": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "preparedFor": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "primary",
+        "accent",
+        "marking",
+        "preparedBy",
+        "preparedFor"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "tenant": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "scannedAt": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "suggested": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "partial",
+              "no",
+              "unknown",
+              "na"
+            ]
+          },
+          "checks": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "warning",
+                    "review",
+                    "info",
+                    "unknown",
+                    "notlicensed"
+                  ]
+                },
+                "setting": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "current": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "expected": {
+                  "type": "string",
+                  "maxLength": 2000
+                }
+              },
+              "required": [
+                "id",
+                "status",
+                "setting",
+                "current",
+                "expected"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "source",
+          "tenant",
+          "scannedAt",
+          "checks"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "imports": {
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "tenant": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "scannedAt": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "importedAt": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "applied": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "source",
+          "tenant",
+          "scannedAt",
+          "importedAt",
+          "applied"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "soc": {
+      "type": "object",
+      "properties": {
+        "answers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              },
+              {
+                "type": "number",
+                "const": 2
+              },
+              {
+                "type": "number",
+                "const": 3
+              },
+              {
+                "type": "number",
+                "const": 4
+              },
+              {
+                "type": "number",
+                "const": 5
+              },
+              {
+                "type": "string",
+                "const": "unknown"
+              }
+            ]
+          }
+        },
+        "notes": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "outOfScope": {
+          "maxItems": 60,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 60
+          }
+        },
+        "targets": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "maturity": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 5,
+                "multipleOf": 0.5
+              },
+              "capability": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 3,
+                "multipleOf": 0.5
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "in-house",
+            "outsourced",
+            "hybrid",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "answers",
+        "outOfScope"
+      ],
+      "additionalProperties": {}
+    },
+    "aiRegister": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "maxItems": 200,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "example": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "reference": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "product": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "technology": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "generative-ai",
+                    "machine-learning",
+                    "natural-language-processing",
+                    "computer-vision"
+                  ]
+                }
+              },
+              "lifecycle": {
+                "type": "string",
+                "enum": [
+                  "discover",
+                  "operate",
+                  "retire"
+                ]
+              },
+              "technicalStandard": {
+                "type": "string",
+                "enum": [
+                  "not-applied",
+                  "partially-applied",
+                  "fully-applied"
+                ]
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "service-delivery",
+                    "compliance-fraud",
+                    "law-enforcement",
+                    "policy-legal",
+                    "scientific",
+                    "corporate"
+                  ]
+                }
+              },
+              "usagePatterns": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "decision-making",
+                    "analytics",
+                    "workplace-productivity",
+                    "image-processing"
+                  ]
+                }
+              },
+              "ownerName": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "ownerEmail": {
+                "type": "string",
+                "maxLength": 254
+              },
+              "criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "c1",
+                    "c2",
+                    "c3",
+                    "c4",
+                    "c5",
+                    "none"
+                  ]
+                }
+              },
+              "inherentRisk": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "residualRisk": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "impactAssessmentDate": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "lastReview": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "nextReview": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "autonomy": {
+                "type": "string",
+                "enum": [
+                  "assists",
+                  "hitl",
+                  "hotl",
+                  "hootl",
+                  "unknown"
+                ]
+              },
+              "access": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "delegated",
+                  "scoped",
+                  "org-wide",
+                  "privileged",
+                  "unknown"
+                ]
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "public",
+                    "official",
+                    "personal",
+                    "sensitive",
+                    "classified",
+                    "indigenous",
+                    "unknown"
+                  ]
+                }
+              },
+              "jewels": {
+                "maxItems": 200,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 50
+                }
+              },
+              "answers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "yes",
+                    "partial",
+                    "no",
+                    "unknown",
+                    "na"
+                  ]
+                }
+              },
+              "notes": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "maxLength": 4000
+                }
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "reference",
+              "description",
+              "product",
+              "technology",
+              "domains",
+              "usagePatterns",
+              "ownerName",
+              "ownerEmail",
+              "criteria",
+              "data",
+              "jewels",
+              "answers",
+              "notes"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "entries"
+      ],
+      "additionalProperties": {}
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "section": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "socSection": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "aiSection": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "layout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        }
+      },
+      "required": [
+        "step"
+      ],
+      "additionalProperties": false
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "org",
+    "platforms",
+    "modules",
+    "licence",
+    "jewels",
+    "answers",
+    "notes",
+    "branding",
+    "createdAt",
+    "updatedAt"
+  ],
+  "additionalProperties": {},
+  "$id": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v2.json",
+  "title": "crownguard assessment",
+  "description": "A .crownguard.json file: one crown-jewel risk assessment saved from https://jusso-dev.github.io/crownguard/. Fields the app does not know about are allowed and are carried through a re-save unchanged."
+}

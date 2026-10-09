@@ -1,12 +1,15 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import type { SocAnswer, SocProvider } from "../engine/soc";
 import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
 import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
 import type { ScanResult } from "../imports/m365Secure";
-import { NOTE_MAX } from "./assessmentSchema";
+import { NOTE_MAX, SCHEMA_VERSION } from "./assessmentSchema";
+import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
+
+export { STORAGE_KEY };
 
 export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
 
@@ -23,12 +26,10 @@ export function migrateProgress(p: Assessment["progress"]): Assessment["progress
   return { ...p, step, layout: STEP_LAYOUT };
 }
 
-export const STORAGE_KEY = "crownguard:v1";
-
 export const emptyAssessment = (): Assessment => {
   const now = new Date().toISOString();
   return {
-    version: 1,
+    schemaVersion: SCHEMA_VERSION,
     org: { name: "", sector: "", size: "", jurisdiction: "Australia", regulations: [] },
     platforms: [],
     modules: {},
@@ -105,6 +106,12 @@ interface State {
   /** Apply an automated scan: attach evidence everywhere, set answers where decisive. Returns answers set. */
   applyScan: (scan: ScanResult, opts: { platform: string; overwrite: boolean; licence: boolean }) => number;
   load: (a: Assessment) => void;
+  /**
+   * Open something that must not be written back over the user's own progress: a file saved by a newer crownguard.
+   * While this is set, nothing is written to this browser or to the open file, until the page is reloaded.
+   */
+  setReadOnly: (readOnly: boolean) => void;
+  readOnly: boolean;
   reset: () => void;
 }
 
@@ -115,6 +122,11 @@ export const useStore = create<State>()(
         set((s) => ({ assessment: { ...s.assessment, ...fn(s.assessment), updatedAt: new Date().toISOString() } }));
       return {
         assessment: emptyAssessment(),
+        readOnly: false,
+        setReadOnly: (readOnly) => {
+          setStorageReadOnly(readOnly);
+          set({ readOnly });
+        },
         setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step), layout: STEP_LAYOUT } })),
         setSection: (section) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, section, layout: STEP_LAYOUT } })),
         setSocSection: (socSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, socSection, layout: STEP_LAYOUT } })),
@@ -204,7 +216,7 @@ export const useStore = create<State>()(
     {
       name: STORAGE_KEY,
       version: 3,
-      storage: createJSONStorage(() => localStorage),
+      storage: checkedStorage,
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {

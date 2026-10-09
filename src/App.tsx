@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { catalogue } from "./content/catalogue";
+import { catalogue, contentHash } from "./content/catalogue";
+import { questionIdSet } from "./content/questionIds";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Assessment } from "./engine/types";
-import { assessmentSchema } from "./wizard/assessmentSchema";
+import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
+import { parseAssessment } from "./wizard/parseAssessment";
+import { rehydrateNotices } from "./wizard/persistence";
+import { toSaveFile } from "./wizard/saveFile";
 import { clampStep, hasProgress, steps, storageAvailable, useStep, useStore } from "./wizard/store";
 import { Button } from "./wizard/ui";
+import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
 import { JewelsStep } from "./wizard/steps/JewelsStep";
@@ -14,7 +19,6 @@ import { SocStep } from "./wizard/steps/SocStep";
 import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
-import { createFileSaver, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { relativeTime } from "./wizard/time";
 
 // One view per entry in `steps` (wizard/store.ts), in the same order.
@@ -30,6 +34,20 @@ function useReachable(): number {
 }
 
 const saveFileName = (a: Assessment) => `${slug(a.org.name)}.crownguard.json`;
+
+/** A message in the header bar. `details` are the individual problems; `actions` are what the user can do about it. */
+interface Notice {
+  kind: "error" | "ok" | "warn";
+  text: string;
+  details?: string[];
+  actions?: { label: string; onClick: () => void }[];
+}
+
+const noticeStyle: Record<Notice["kind"], string> = {
+  error: "border-danger/20 bg-danger-soft text-danger",
+  warn: "border-warn/20 bg-warn-soft text-warn",
+  ok: "border-ok/20 bg-ok-soft text-ok",
+};
 
 /** Re-render periodically so relative times stay current. */
 function useNow(ms = 30_000) {
@@ -111,22 +129,46 @@ function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onS
   );
 }
 
+/** Anything the last rehydrate couldn't use: stale, hand-edited, or written by something else on this origin. */
+function noticeFromRehydrate(): Notice | undefined {
+  const notices = rehydrateNotices();
+  if (!notices.length) return undefined;
+  const first = notices.find((n) => n.kind === "error") ?? notices[0];
+  const backup = notices.find((n) => n.backup)?.backup;
+  return {
+    kind: first.kind === "error" ? "error" : "warn",
+    text: first.text,
+    details: notices.filter((n) => n !== first).map((n) => n.text),
+    actions: backup
+      ? [{ label: "Download the unreadable data", onClick: () => download("crownguard-unreadable.json", backup, "application/json") }]
+      : undefined,
+  };
+}
+
 export function App() {
   const { assessment, setStep, load, reset } = useStore();
   const step = useStep();
   const reachable = useReachable();
   const fileInput = useRef<HTMLInputElement>(null);
-  const [notice, setNotice] = useState<{ kind: "error" | "ok"; text: string }>();
+  const [notice, setNotice] = useState<Notice | undefined>(noticeFromRehydrate);
   const [persisted] = useState(storageAvailable);
   const [resuming, setResuming] = useState(() => hasProgress(useStore.getState().assessment));
   const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
   const [saver] = useState(createFileSaver);
+  const readOnly = useStore((s) => s.readOnly);
   const View = views[step] ?? OrgStep;
 
   /** Save to a file without leaving the current step, question or scroll position. */
   const saveFile = useCallback(async () => {
     const a = useStore.getState().assessment;
-    const result = await saver.save(saveFileName(a), JSON.stringify(a, null, 2));
+    if (useStore.getState().readOnly) {
+      setNotice({
+        kind: "error",
+        text: "This assessment was opened read-only from a newer crownguard, so it can't be saved from here. Reload the page to update crownguard, then open the file again.",
+      });
+      return;
+    }
+    const result = await saver.save(saveFileName(a), toSaveFile(a, { contentHash }));
     if (result.kind === "cancelled") return;
     setFileSave({ file: result.file, at: new Date().toISOString(), downloaded: result.kind === "downloaded" });
   }, [saver]);
@@ -152,20 +194,61 @@ export function App() {
     window.scrollTo({ top: 0 });
   };
 
+  /** Show a file this build only partly understands, without any risk of writing it back over the user's work. */
+  function openReadOnly(a: Assessment) {
+    useStore.getState().setReadOnly(true);
+    load(a);
+    saver.reset();
+    setFileSave(undefined);
+    setResuming(false);
+    setNotice({
+      kind: "warn",
+      text: `Opened ${a.org.name || "assessment"} read-only. Nothing will be saved from here — reload the page to update crownguard before you work on this file.`,
+    });
+  }
+
   async function onOpen(file: File) {
     setNotice(undefined);
+    let raw: unknown;
     try {
-      const parsed = assessmentSchema.safeParse(JSON.parse(await file.text()));
-      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "unrecognised format");
-      load(parsed.data);
-      saver.reset();
-      setFileSave(undefined);
-      setResuming(false);
-      // Read the step back from the store: load() moves positions saved under an older step list.
-      setNotice({ kind: "ok", text: `Opened ${parsed.data.org.name || "assessment"}. Picking up at ${steps[clampStep(useStore.getState().assessment.progress?.step)]}.` });
-    } catch (e) {
-      setNotice({ kind: "error", text: `Couldn't open that file: ${(e as Error).message}` });
+      raw = JSON.parse(await file.text());
+    } catch {
+      setNotice({ kind: "error", text: "Couldn't open that file: it isn't valid JSON." });
+      return;
     }
+
+    const parsed = parseAssessment(raw, { questionIds: questionIdSet() });
+    if (parsed.kind === "error") {
+      setNotice({ kind: "error", text: `Couldn't open that file: ${parsed.message}`, details: parsed.issues });
+      return;
+    }
+
+    if (parsed.kind === "newer") {
+      const ahead = parsed.assessment;
+      const actions: Notice["actions"] = [];
+      if (ahead) actions.push({ label: "Open read-only", onClick: () => openReadOnly(ahead) });
+      actions.push({ label: "Cancel", onClick: () => setNotice(undefined) });
+      setNotice({
+        kind: "warn",
+        text: `This file was saved by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}). Reload the page to update, or open it here knowing that anything this version doesn't understand is at risk.`,
+        details: parsed.issues,
+        actions,
+      });
+      return;
+    }
+
+    load(parsed.assessment);
+    if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
+    saver.reset();
+    setFileSave(undefined);
+    setResuming(false);
+    const stepName = steps[clampStep(useStore.getState().assessment.progress?.step)];
+    setNotice({
+      kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
+      // Read the step back from the store: load() moves positions saved under an older step list.
+      text: `Opened ${parsed.assessment.org.name || "assessment"}. Picking up at ${stepName}.`,
+      details: parsed.notices.map((n) => n.text),
+    });
   }
 
   function startNew() {
@@ -199,7 +282,12 @@ export function App() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => void saveFile()} title="Save your progress to a file you can open later (Ctrl/⌘ S). You stay where you are.">
+            <Button
+              variant="secondary"
+              disabled={readOnly}
+              onClick={() => void saveFile()}
+              title={readOnly ? "This file came from a newer crownguard and can't be saved from here" : "Save your progress to a file you can open later (Ctrl/⌘ S). You stay where you are."}
+            >
               Save file
             </Button>
             <Button variant="secondary" onClick={() => fileInput.current?.click()} title="Continue from a saved file">
@@ -217,17 +305,34 @@ export function App() {
                 e.target.value = "";
               }}
             />
-            <Button variant="danger" onClick={onClear}>
+            <Button variant="danger" disabled={readOnly} onClick={onClear}>
               Clear data
             </Button>
           </div>
         </div>
         {notice && (
-          <div
-            role={notice.kind === "error" ? "alert" : "status"}
-            className={`border-t px-4 py-2 text-sm sm:px-6 ${notice.kind === "error" ? "border-danger/20 bg-danger-soft text-danger" : "border-ok/20 bg-ok-soft text-ok"}`}
-          >
-            <div className="mx-auto max-w-6xl">{notice.text}</div>
+          <div role={notice.kind === "error" ? "alert" : "status"} className={`border-t px-4 py-2 text-sm sm:px-6 ${noticeStyle[notice.kind]}`}>
+            <div className="mx-auto flex max-w-6xl flex-wrap items-start gap-x-6 gap-y-2">
+              <div className="min-w-0 flex-1">
+                <p>{notice.text}</p>
+                {notice.details && notice.details.length > 0 && (
+                  <ul className="mt-1.5 space-y-0.5 font-mono text-[0.6875rem] leading-relaxed opacity-80">
+                    {notice.details.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {notice.actions && notice.actions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {notice.actions.map((a) => (
+                    <Button key={a.label} variant="secondary" onClick={a.onClick}>
+                      {a.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </header>
