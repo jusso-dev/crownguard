@@ -71,16 +71,34 @@ export type ScanStatus = "pass" | "fail" | "warning" | "review" | "info" | "unkn
 
 /** Automated-scan results attached to a question when an import pre-filled (or tried to pre-fill) it. */
 export interface Evidence {
+  /** Mapping the evidence came from, e.g. "Prowler (AWS)". */
   source: string;
+  /** Scanner that produced the file, and its version, e.g. "Prowler" and "5.44.0". */
+  tool?: string;
+  toolVersion?: string;
+  /** Account, subscription or tenant the findings were taken from. */
+  account?: string;
   tenant: string;
   scannedAt: string;
   /** The answer the scan suggested, if its results were decisive. */
   suggested?: Answer;
-  checks: { id: string; status: ScanStatus; setting: string; current: string; expected: string }[];
+  checks: {
+    id: string;
+    status: ScanStatus;
+    setting: string;
+    current: string;
+    expected: string;
+    /** For checks reported once per resource: "3 of 41 resources fail". */
+    count?: string;
+    /** A few of the resources behind that count. */
+    examples?: string[];
+  }[];
 }
 
 export interface ImportRecord {
+  /** Scanner that produced the file, e.g. "Prowler (AWS)". */
   source: string;
+  toolVersion?: string;
   tenant: string;
   scannedAt: string;
   importedAt: string;

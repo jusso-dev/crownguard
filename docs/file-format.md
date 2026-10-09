@@ -3,7 +3,7 @@
 A saved assessment is one JSON object. It is written by **Save file** (or Ctrl/⌘ S) and read by **Open file**. Nothing
 is sent anywhere: the file is the whole of your data, and you choose where it lives.
 
-- Published JSON Schema: [`public/schema/crownguard-assessment.v2.json`](../public/schema/crownguard-assessment.v2.json),
+- Published JSON Schema: [`public/schema/crownguard-assessment.v3.json`](../public/schema/crownguard-assessment.v3.json),
   generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
 - Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
@@ -36,7 +36,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | Field | Type | Notes |
 | --- | --- | --- |
 | `$schema` | string | Written on save. Points at the published JSON Schema for this format. |
-| `schemaVersion` | integer | File format version. **2** is current. |
+| `schemaVersion` | integer | File format version. **3** is current. |
 | `savedBy` | object | `{ app, appVersion, contentHash?, savedAt }`. Who wrote the file, and the digest of the questions they saved against. For support and debugging. |
 | `org` | object | Organisation profile: `name`, `abn?`, `sector`, `size`, `jurisdiction`, `regulations`. |
 | `platforms` | string[] | Platform ids in scope, e.g. `["microsoft"]`. |
@@ -47,8 +47,8 @@ moved aside rather than deleted, and the app offers a copy to download.
 | `notes` | object | Question id to note. At most 4000 characters each. |
 | `orphans` | object | Answers and notes whose question is no longer asked. `{ answer?, note? }` per question id. |
 | `branding` | object | `logoDataUrl?`, `logoBackdrop?`, `primary`, `accent`, `marking`, `preparedBy`, `preparedFor`. |
-| `evidence` | object | Scan evidence per question id, from an optional automated import. |
-| `imports` | object[] | One row per scan import: source, tenant, scanned at, imported at, answers applied. |
+| `evidence` | object | Scan evidence per question id, from an optional automated import. Carries the scanner (`tool`, `toolVersion`), the `account` it covered, and per check a `count` ("3 of 41 resources failing") and up to ten `examples`. |
+| `imports` | object[] | One row per scan import: source, `toolVersion?`, tenant, scanned at, imported at, answers applied. |
 | `soc` | object | Optional SOC maturity self-assessment: `answers`, `notes?`, `outOfScope`, `targets?`, `provider?`. |
 | `progress` | object | Where you were: `step`, `section?`, `socSection?`, `layout?`. |
 | `createdAt`, `updatedAt` | string | ISO 8601 timestamps. |
@@ -57,7 +57,13 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ## Changelog
 
-### 2 — current
+### 3 — current
+
+- Scan provenance: `tool`, `toolVersion` and `account` on each piece of evidence, `count` and `examples` on each check,
+  and `toolVersion` on each import. All optional. The version moved rather than the fields simply appearing, because an
+  older build reading a file that had them would strip them on save; the newer-file guard stops that.
+
+### 2
 
 - `schemaVersion` replaces the bare `version: 1` marker. A file with `version: 1` is treated as format 1 and migrated
   up on open; the old key is dropped on the next save.
@@ -75,6 +81,6 @@ tell a file saved yesterday from one saved a year earlier.
 
 If you write `.crownguard.json` files yourself (the Hermes `crown-jewel-risk-assessor` profile does):
 
-1. Set `schemaVersion: 2` and fill in `savedBy`.
+1. Set `schemaVersion: 3` and fill in `savedBy`.
 2. Validate against the published JSON Schema before writing.
 3. Don't drop fields you don't recognise. crownguard keeps them, so keep them too.

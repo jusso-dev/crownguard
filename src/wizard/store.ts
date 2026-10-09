@@ -5,7 +5,7 @@ import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
 import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
-import type { ScanResult } from "../imports/m365Secure";
+import type { ScanResult } from "../imports/types";
 import { NOTE_MAX, SCHEMA_VERSION } from "./assessmentSchema";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
@@ -201,7 +201,7 @@ export const useStore = create<State>()(
               answers,
               evidence,
               licence: licence && scan.licence ? { ...a.licence, [platform]: scan.licence } : a.licence,
-              imports: [...(a.imports ?? []), { source: "M365-Secure", tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied }],
+              imports: [...(a.imports ?? []), { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied }],
             };
           });
           return applied;

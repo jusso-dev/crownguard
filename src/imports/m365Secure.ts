@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { ImportMapping } from "../content/schema";
-import type { Answer, Evidence, ScanStatus } from "../engine/types";
+import { suggestAll, type CheckRow } from "./aggregate";
+import { clip, type ScanImporter, type ScanResult } from "./types";
 
 const status = z.enum(["pass", "fail", "warning", "review", "info", "unknown", "notlicensed"]);
 
@@ -28,41 +29,6 @@ export const scanSchema = z.object({
 });
 export type Scan = z.infer<typeof scanSchema>;
 
-const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
-
-/** Statuses that actually say whether the control is in place. Review, info, unknown and not-licensed don't. */
-const decisive = new Set<ScanStatus>(["pass", "fail", "warning"]);
-
-export interface Suggestion {
-  question: string;
-  evidence: Evidence;
-}
-
-export interface ScanResult {
-  tenant: string;
-  domain: string;
-  scannedAt: string;
-  suggestions: Suggestion[];
-  /** Findings whose check id isn't mapped to any question. */
-  unmapped: number;
-  licence?: string;
-}
-
-/** All mapped checks pass → Yes; all fail → No; anything mixed, or any warning → Partial. */
-export function aggregate(statuses: ScanStatus[]): Answer | undefined {
-  const d = statuses.filter((s) => decisive.has(s));
-  if (!d.length) return undefined;
-  if (d.every((s) => s === "pass")) return "yes";
-  if (d.every((s) => s === "fail")) return "no";
-  return "partial";
-}
-
-/** Apply a mapping's safeguards on top of the plain aggregate. */
-export function suggestFor(m: ImportMapping["mappings"][number], statuses: ScanStatus[]): Answer | undefined {
-  const usable = m.failIsInconclusive ? statuses.filter((s) => s !== "fail") : statuses;
-  const answer = aggregate(usable);
-  return m.cap === "partial" && answer === "yes" ? "partial" : answer;
-}
 
 /** Licence SKU part numbers, highest tier first. */
 const skuTiers: [RegExp, string][] = [
@@ -80,40 +46,47 @@ export function suggestLicence(skus: string[]): string | undefined {
 }
 
 export function readScan(scan: Scan, mapping: ImportMapping): ScanResult {
-  const byId = new Map<string, Scan["findings"][number][]>();
-  for (const f of scan.findings) byId.set(f.check_id, [...(byId.get(f.check_id) ?? []), f]);
+  const byCheck = new Map<string, CheckRow[]>();
+  for (const f of scan.findings) {
+    const row: CheckRow = {
+      id: f.check_id,
+      status: f.status,
+      setting: clip(f.setting, 500),
+      current: clip(f.current_value, 2000),
+      expected: clip(f.expected_value, 2000),
+    };
+    byCheck.set(f.check_id, [...(byCheck.get(f.check_id) ?? []), row]);
+  }
   const mapped = new Set(mapping.mappings.flatMap((m) => m.checks));
   const tenant = scan.summary.tenant.display_name || scan.summary.tenant.primary_domain;
-
-  const suggestions = mapping.mappings
-    .map((m): Suggestion | null => {
-      const found = m.checks.flatMap((c) => byId.get(c) ?? []);
-      if (!found.length) return null;
-      return {
-        question: m.question,
-        evidence: {
-          source: mapping.name,
-          tenant,
-          scannedAt: scan.summary.timestamp,
-          suggested: suggestFor(m, found.map((f) => f.status)),
-          checks: found.slice(0, 50).map((f) => ({
-            id: f.check_id,
-            status: f.status,
-            setting: clip(f.setting, 500),
-            current: clip(f.current_value, 300),
-            expected: clip(f.expected_value, 300),
-          })),
-        },
-      };
-    })
-    .filter((s): s is Suggestion => s !== null);
+  const unmappedIds = [...new Set(scan.findings.map((f) => f.check_id).filter((id) => !mapped.has(id)))];
 
   return {
+    tool: mapping.name,
     tenant,
     domain: scan.summary.tenant.primary_domain,
     scannedAt: scan.summary.timestamp,
-    suggestions,
-    unmapped: new Set(scan.findings.map((f) => f.check_id).filter((id) => !mapped.has(id))).size,
+    suggestions: suggestAll(mapping, byCheck, { tool: mapping.name, tenant, scannedAt: scan.summary.timestamp }),
+    unmapped: unmappedIds.length,
+    unmappedFailing: unmappedIds.filter((id) => scan.findings.some((f) => f.check_id === id && f.status === "fail")),
     licence: suggestLicence(scan.summary.tenant.license_skus.map((s) => s.sku_part_number)),
   };
 }
+
+const looksLike = (text: string) => text.includes('"summary"') && text.includes('"findings"') && text.includes("license_skus");
+
+export const m365SecureImporter: ScanImporter = {
+  id: "m365-secure",
+  platform: "microsoft",
+  label: "M365-Secure",
+  hint: "_Assessment-Results_<domain>.json",
+  url: "https://github.com/jusso-dev/M365-Secure",
+  accept: ".json,application/json",
+  detect: looksLike,
+  read: (text, mapping) => {
+    const parsed = scanSchema.safeParse(JSON.parse(text));
+    if (!parsed.success) throw new Error("this doesn't look like an M365-Secure results file (_Assessment-Results_<domain>.json)");
+    return readScan(parsed.data, mapping);
+  },
+};
+

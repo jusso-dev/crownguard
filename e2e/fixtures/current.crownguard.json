@@ -1,6 +1,6 @@
 {
-  "$schema": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v2.json",
-  "schemaVersion": 2,
+  "$schema": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v3.json",
+  "schemaVersion": 3,
   "savedBy": {
     "app": "crownguard",
     "appVersion": "1.0.0",

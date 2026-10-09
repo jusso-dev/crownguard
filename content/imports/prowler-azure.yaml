@@ -1,10 +1,11 @@
 # Prowler Azure check ids mapped to crownguard questions, for importing a Prowler scan (CSV or OCSF JSON).
-# Check ids were checked against Prowler 5.44.0 (2026-09-29). crownguard doesn't read Prowler output yet:
-# these mappings are validated against the questions so an importer can use them.
+# Check ids were checked against Prowler 5.44.0 (2026-09-29); `checkedAgainst` records that so an import from
+# another major version is flagged. The importer reads Prowler's CSV and JSON-OCSF reports.
 id: prowler-azure
 name: Prowler (Azure)
 platform: microsoft
 url: https://github.com/prowler-cloud/prowler
+checkedAgainst: 5.44.0
 mappings:
   - question: MS-AZ-001
     checks: [iam_role_user_access_admin_restricted]

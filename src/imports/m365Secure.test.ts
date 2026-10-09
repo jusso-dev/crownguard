@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ImportMapping } from "../content/schema";
-import { aggregate, readScan, scanSchema, suggestLicence } from "./m365Secure";
+import { aggregate, suggestFor } from "./aggregate";
+import { readScan, scanSchema, suggestLicence } from "./m365Secure";
 
 const mapping: ImportMapping = {
   id: "m365-secure",
@@ -66,8 +67,7 @@ describe("M365-Secure import", () => {
 });
 
 describe("mapping safeguards", () => {
-  it("caps partial-coverage checks and ignores known false fails", async () => {
-    const { suggestFor } = await import("./m365Secure");
+  it("caps partial-coverage checks and ignores known false fails", () => {
     const base = { question: "MS-ID-001", checks: ["X"], rationale: "test only" };
     expect(suggestFor({ ...base, cap: "partial" }, ["pass"])).toBe("partial");
     expect(suggestFor({ ...base, cap: "partial" }, ["fail"])).toBe("no");

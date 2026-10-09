@@ -23,6 +23,14 @@ export const migrations: Migration[] = [
       return { ...rest, schemaVersion: 2 };
     },
   },
+  {
+    from: 2,
+    to: 3,
+    // Schema 3 recorded scan provenance: `tool`, `toolVersion` and `account` on each piece of evidence, `count` and
+    // `examples` on each check, and `toolVersion` on each import. All optional, so nothing to fill in here; the
+    // version moves so a build that predates them opens the file read-only instead of stripping them on save.
+    up: (raw) => ({ ...raw, schemaVersion: 3 }),
+  },
 ];
 
 /**

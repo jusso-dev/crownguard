@@ -52,7 +52,7 @@ const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
  * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
  * are migrated up on open (see `migrations.ts`). A file with a higher number than this build knows is opened read-only.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** Version of the app that wrote the file. Kept in sync with package.json. */
 export const APP_VERSION = "1.0.0";
@@ -130,6 +130,9 @@ export const assessmentSchema = z.looseObject({
       z.string(),
       z.object({
         source: z.string().max(80),
+        tool: z.string().max(80).optional(),
+        toolVersion: z.string().max(40).optional(),
+        account: z.string().max(300).optional(),
         tenant: z.string().max(300),
         scannedAt: z.string().max(60),
         suggested: answer.optional(),
@@ -141,6 +144,8 @@ export const assessmentSchema = z.looseObject({
               setting: z.string().max(500),
               current: z.string().max(2000),
               expected: z.string().max(2000),
+              count: z.string().max(200).optional(),
+              examples: z.array(z.string().max(300)).max(10).optional(),
             }),
           )
           .max(50),
@@ -148,7 +153,7 @@ export const assessmentSchema = z.looseObject({
     )
     .optional(),
   imports: z
-    .array(z.object({ source: z.string().max(80), tenant: z.string().max(300), scannedAt: z.string().max(60), importedAt: z.string().max(60), applied: z.number().int().min(0) }))
+    .array(z.object({ source: z.string().max(80), toolVersion: z.string().max(40).optional(), tenant: z.string().max(300), scannedAt: z.string().max(60), importedAt: z.string().max(60), applied: z.number().int().min(0) }))
     .max(50)
     .optional(),
   soc: z
