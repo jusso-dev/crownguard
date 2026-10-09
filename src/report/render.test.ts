@@ -6,6 +6,7 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { SocAnswer } from "../engine/soc";
+import { exampleEntries } from "../engine/aiExamples";
 import { ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
 import { registerFonts } from "./fonts";
@@ -22,7 +23,39 @@ beforeAll(() => {
   });
 });
 
+const pdfText = async (assessment: ReturnType<typeof fixtureAssessment>) => {
+  const buf = await renderToBuffer(createElement(ReportDocument, { model: buildReport(catalogue, assessment, new Date("2026-10-08")) }) as Parameters<typeof renderToBuffer>[0]);
+  const doc = await getDocument({ data: new Uint8Array(buf) }).promise;
+  const pages: string[] = [];
+  for (let i = 1; i <= doc.numPages; i++) pages.push((await (await doc.getPage(i)).getTextContent()).items.map((it) => ("str" in it ? it.str : "")).join(" "));
+  return pages.join("\n").replace(/\s+/g, " ");
+};
+
 describe("PDF report", () => {
+  it("adds the AI use-case register, with examples labelled, only when included", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.aiRegister = { entries: exampleEntries(a) };
+    const withAi = await pdfText(a);
+    for (const phrase of [
+      "AI use-case register",
+      "Optional AI use-case register: 3 use cases",
+      "example data loaded to show how the register works",
+      "EXAMPLE",
+      "Example: Grant application triage agent",
+      "Register fields still to fill in",
+      "Key dates",
+      "Where the sources are unclear",
+      "15 December 2025",
+      "Readiness is an indicative self-check",
+      "the Digital Transformation Agency",
+      "Digital Transformation Agency.",
+    ])
+      expect(withAi).toContain(phrase);
+    const without = await pdfText({ ...a, aiRegister: undefined });
+    expect(without).not.toContain("AI use-case register");
+    expect(without).not.toContain("Digital Transformation Agency");
+  }, 120_000);
+
   it("adds the SOC maturity section, with its attribution, only when included", async () => {
     const a = fixtureAssessment(catalogue, ["microsoft"]);
     const ratings = [0, 1, 2, 3, 4, 5, "unknown", 2, 3] as const;

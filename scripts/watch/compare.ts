@@ -337,6 +337,11 @@ export function citedByIndex(catalogue: Catalogue): Map<string, string[]> {
     for (const s of bundle.platform.sources) add(s, `platform:${bundle.platform.id}`);
   }
   for (const f of catalogue.frameworks.values()) for (const s of [f.source, ...f.sources]) add(s, `framework:${f.id}`);
+  if (catalogue.aiRegister) {
+    const { model, questions } = catalogue.aiRegister;
+    for (const q of questions) for (const s of q.sources) add(s, q.id);
+    for (const s of [...model.sources, ...model.dates.map((d) => d.source), ...model.caveats.flatMap((c) => c.sources), ...model.kinds.flatMap((k) => k.sources)]) add(s, "ai-register");
+  }
   for (const [k, v] of index) index.set(k, [...new Set(v)].sort());
   return index;
 }

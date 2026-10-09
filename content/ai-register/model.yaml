@@ -1,0 +1,114 @@
+# Optional AI use-case register. Register fields follow the DTA's Standard for accountability; readiness questions
+# (questions.yaml) follow the Policy for the responsible use of AI in government v2.0, the AI technical standard, its
+# agentic AI addendum, the AI impact assessment tool guidance and ASD's agentic AI guidance. Every date and requirement
+# here cites its page. Where a source doesn't settle something, it goes in `caveats` instead of being guessed.
+id: ai-use-case-register
+name: AI use-case register
+sources: [dta-ai-policy, dta-ai-accountability, dta-ai-classification, dta-ai-transparency, dta-agentic-addendum, dta-agentic-key-terms]
+attribution: >-
+  Register fields, in-scope criteria, dates and requirements are drawn from the Australian Government Policy for the
+  responsible use of AI in government v2.0 and the Digital Transformation Agency standards and guidance cited with
+  each question, © Commonwealth of Australia, licensed CC BY 4.0. Agentic AI questions also draw on ASD's "Careful
+  adoption of agentic AI services". The questions and summaries are crownguard's own and don't imply endorsement by the
+  DTA or ASD.
+appliesTo: >-
+  The policy applies to non-corporate Commonwealth entities. Other organisations, including corporate Commonwealth
+  entities, states, territories and Indigenous organisations, can use it as a benchmark, but its dates and
+  requirements aren't theirs.
+dates:
+  - { date: 2025-12-15, source: dta-ai-policy, text: "Version 2.0 of the policy takes effect." }
+  - date: 2026-12-15
+    derived: true
+    source: dta-ai-policy-strategy
+    text: >-
+      Internal register of in-scope AI use cases, and an accountable use case owner for each, due. The policy says
+      "within 12 months" of taking effect; the date is that arithmetic, so confirm it with your accountable official.
+  - { source: dta-ai-accountability, text: "Share the register with the DTA every 6 months, starting from when you create it." }
+  - { source: dta-ai-accountability, text: "Notify the DTA (ai@dta.gov.au) of each new high-risk use case." }
+  - date: 2027-04-30
+    source: dta-ai-impact-assessment
+    text: "Existing use cases not yet assessed: decide whether each is in scope and apply all relevant policy actions."
+  - { source: dta-ai-impact-assessment, text: "Review high-risk use cases at least every 12 months and report to the governing board or senior executive." }
+caveats:
+  - sources: [dta-agentic-addendum, dta-ai-policy-operations]
+    text: >-
+      The agentic AI addendum calls itself best practice guidance, to apply with the AI technical standard, and the
+      policy strongly recommends that standard rather than requiring it. crownguard shows the addendum's "must" and
+      "should" as written. Whether they bind your agency depends on whether it applies the standard.
+  - sources: [dta-agentic-design]
+    text: >-
+      The addendum asks agencies to set minimum technical requirements for kill switches and map them to operational
+      controls, but doesn't say what those requirements are. The switch-off question asks whether you've set and tested
+      your own.
+  - sources: [dta-ai-accountability]
+    text: >-
+      The register's AI technology types don't include agentic AI. Record an agent under the technology it uses
+      (usually Generative AI) and its oversight model under "What it can do and reach".
+  - sources: [dta-ai-impact-assessment, dta-aiia-inherent-risk]
+    text: >-
+      Inherent and residual risk ratings come from the AI impact assessment. crownguard records the ratings you give
+      it and never works them out for you.
+  - sources: [dta-ai-policy-appendices]
+    text: >-
+      General-purpose AI such as Microsoft 365 Copilot can be registered as one use case at its highest risk, or as
+      separate use cases with their own owners (Appendix B). Pick one approach and use it consistently.
+  - sources: [dta-ai-accountability]
+    text: >-
+      The Standard lists the accountable use case owner as one field, "name and email address". The export splits it
+      into two columns so it's easier to sort and check. Join them if your register needs a single field.
+themes:
+  - { id: accountability, name: Accountability, description: "A named person owns the use case and answers for what the AI decides and does." }
+  - { id: oversight, name: Human oversight, description: "People review outputs and can approve, stop or override actions." }
+  - { id: access, name: Access, description: "The AI and its agents can reach only what the use case needs." }
+  - { id: data, name: Data handled, description: "The data the AI uses is fit for purpose, lawful and kept as records where required." }
+  - { id: monitoring, name: Monitoring, description: "Behaviour, actions and changes are watched and evaluated over time." }
+  - { id: switch-off, name: Switch-off and incidents, description: "You can stop it, recover, report problems and retire it cleanly." }
+  - { id: transparency, name: Transparency, description: "People know when they're dealing with AI, and the public statement reflects it." }
+  - { id: assurance, name: Assurance, description: "Impact assessment, testing and review match the level of risk." }
+kinds:
+  - id: m365-copilot
+    name: Microsoft 365 Copilot
+    description: Copilot in Word, Outlook, Teams and the other Microsoft 365 apps, answering from your organisation's content.
+    product: Microsoft 365 Copilot
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: assists, access: delegated }
+    exposures: [ai-grounding]
+    relatedQuestions: [MS-AI-001, MS-AI-002, MS-AI-003]
+    sources: [dta-ai-policy-appendices]
+  - id: copilot-agent
+    name: Copilot Studio or Microsoft 365 agent
+    description: An agent built in Copilot Studio or Agent Builder that answers from your content or takes actions through connectors.
+    product: Microsoft Copilot Studio
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate] }
+    exposures: [ai-grounding]
+    relatedQuestions: [MS-AI-004, MS-AI-005, MS-AI-003]
+  - id: gemini-workspace
+    name: Gemini for Google Workspace
+    description: Gemini in Gmail, Docs, Drive, Meet and the Gemini app, answering from your organisation's content.
+    product: Gemini for Google Workspace
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: assists, access: delegated }
+    exposures: [ai-grounding]
+    relatedQuestions: [GO-AI-001, GO-AI-002]
+    sources: [dta-ai-policy-appendices]
+  - id: public-genai
+    name: ChatGPT, Claude or another public generative AI tool
+    description: A public generative AI service staff use in a browser or app, outside your managed tenant.
+    publicTool: true
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: assists, access: none }
+    relatedQuestions: [MS-AI-003, GO-AI-003]
+    sources: [dta-public-genai-agency]
+  - id: ai-connector
+    name: Third-party AI connector or OAuth app
+    description: An AI note-taker, assistant or plug-in that connects to mail, files, calendars or meetings through OAuth or an app registration.
+    defaults: { technology: [generative-ai], usagePatterns: [workplace-productivity], domains: [corporate] }
+    exposures: [third-party-apps]
+    relatedQuestions: [MS-APP-001, MS-APP-002, MS-APP-004, GO-APP-001, GO-APP-002, GO-APP-003, GO-AI-003]
+    sources: [asd-agentic-ai]
+  - id: in-house-agent
+    name: In-house AI agent
+    description: An agent your organisation built or configured that can use tools, call APIs or act across several steps.
+    defaults: { technology: [generative-ai] }
+    relatedQuestions: [MS-AI-005]
+    sources: [asd-agentic-ai]
+  - id: other
+    name: Other AI use case
+    description: Machine learning models, computer vision, analytics or any other AI not listed above.

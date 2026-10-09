@@ -61,6 +61,30 @@ describe("content", () => {
     expect(found).toContain("soc: aspect log-monitoring has no capability question");
   });
 
+  it("ships the AI register with DTA sources and a question for every theme", () => {
+    const ai = catalogue.aiRegister!;
+    expect(ai.model.sources.every((s) => catalogue.sources.get(s)?.url.startsWith("https://www.digital.gov.au/"))).toBe(true);
+    for (const q of ai.questions) expect(q.sources.length, q.id).toBeGreaterThan(0);
+    expect(ai.model.dates.filter((d) => d.derived).every((d) => d.text.includes("confirm"))).toBe(true);
+  });
+
+  it("rejects AI register questions with unknown themes, refs, sources or related questions", () => {
+    const files = readContentFiles();
+    const bad = `- { id: AIR-ACC-001, theme: nope, basis: guidance, severity: low, question: "Is it recorded?", why: "Because it matters a great deal.", yesLooksLike: "It is recorded.", remediation: "Record it in the register now.", sources: [nowhere], refs: [{ framework: dta-agentic-ai, ref: AGT.9.9 }] }
+- { id: AIR-ACC-001, theme: accountability, basis: guidance, severity: low, question: "Is it recorded?", why: "Because it matters a great deal.", yesLooksLike: "It is recorded.", remediation: "Record it in the register now.", sources: [dta-ai-policy] }`;
+    const { errors: found } = loadCatalogue({
+      ...files,
+      "content/ai-register/questions.yaml": bad,
+      "content/ai-register/model.yaml": files["content/ai-register/model.yaml"].replace("relatedQuestions: [MS-AI-001,", "relatedQuestions: [MS-AI-999,"),
+    });
+    expect(found).toContain("ai-register: unknown source nowhere");
+    expect(found).toContain("ai-register: kind m365-copilot has unknown related question MS-AI-999");
+    expect(found).toContain("ai-register: AIR-ACC-001: unknown theme nope");
+    expect(found).toContain("ai-register: AIR-ACC-001: dta-agentic-ai has no control AGT.9.9");
+    expect(found).toContain("ai-register: AIR-ACC-001: duplicate question id");
+    expect(found).toContain("ai-register: theme oversight has no questions");
+  });
+
   it("tags Essential Eight strategies the frameworks file knows about", () => {
     const e8 = catalogue.frameworks.get("essential-eight");
     expect(e8?.controls).toHaveLength(8);

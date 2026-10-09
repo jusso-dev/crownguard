@@ -1,0 +1,142 @@
+# Australian Government AI policy and guidance, used by the optional AI use-case register (content/ai-register/).
+# Content on digital.gov.au is licensed CC BY 4.0 (the Commonwealth Coat of Arms excepted). Summaries are crownguard's own.
+- id: dta-ai-policy
+  title: Policy for the responsible use of AI in government (version 2.0, effective 15 December 2025)
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/policy
+  retrieved: 2026-10-09
+- id: dta-ai-policy-strategy
+  title: "Policy for the responsible use of AI in government: strategy and oversight"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/policy/strategy-and-oversight
+  retrieved: 2026-10-09
+- id: dta-ai-policy-operations
+  title: "Policy for the responsible use of AI in government: preparedness and operations"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/policy/preparedness-and-operations
+  retrieved: 2026-10-09
+- id: dta-ai-policy-appendices
+  title: "Policy for the responsible use of AI in government: appendices (including Appendix C, in-scope criteria)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/appendices
+  retrieved: 2026-10-09
+- id: dta-ai-accountability
+  title: Standard for accountability (internal use case register and accountable use case owners)
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/accountability
+  retrieved: 2026-10-09
+- id: dta-ai-transparency
+  title: Standard for AI transparency statements
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/standard-ai-transparency-statements
+  retrieved: 2026-10-09
+- id: dta-ai-classification
+  title: Classification system for AI use (version 2.0, usage patterns and domains)
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/resources/use-classification
+  retrieved: 2026-10-09
+- id: dta-ai-impact-assessment
+  title: AI use case impact assessment (requirements under the policy)
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/ai-use-case-impact-assessment
+  retrieved: 2026-10-09
+- id: dta-aiia-tool
+  title: AI impact assessment tool
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool
+  retrieved: 2026-10-09
+- id: dta-aiia-inherent-risk
+  title: "AI impact assessment tool guidance: inherent risk assessment"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool/guidance/inherent-risk-assessment
+  retrieved: 2026-10-09
+- id: dta-aiia-reliability
+  title: "AI impact assessment tool guidance: reliability and safety (6.2 Indigenous data)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool/guidance/reliability-safety
+  retrieved: 2026-10-09
+- id: dta-aiia-privacy
+  title: "AI impact assessment tool guidance: privacy protection and security (7.2 privacy threshold and impact assessment)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool/guidance/privacy-protection-security
+  retrieved: 2026-10-09
+- id: dta-aiia-transparency
+  title: "AI impact assessment tool guidance: transparency and explainability (8.3 records, 8.4 disclosure)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool/guidance/transparency-and-explainability
+  retrieved: 2026-10-09
+- id: dta-aiia-accountability
+  title: "AI impact assessment tool guidance: accountability (11.1 human decision-makers)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/impact-assessment-tool/guidance/accountability
+  retrieved: 2026-10-09
+- id: dta-ai-technical-standard
+  title: Technical standard for government's use of artificial intelligence
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/AI-technical-standard
+  retrieved: 2026-10-09
+- id: dta-ai-technical-standard-s10
+  title: "AI technical standard, Statement 10: adopt a human-centred approach (criteria 32 to 37)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/AI-technical-standard/ai-technical-standard-statement-10
+  retrieved: 2026-10-09
+- id: dta-agentic-addendum
+  title: Agentic AI addendum (to the AI technical standard)
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum
+  retrieved: 2026-10-09
+- id: dta-agentic-key-terms
+  title: "Agentic AI addendum: key terms (human in, on and out of the loop)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/ai-agentic-addendum-key-terms
+  retrieved: 2026-10-09
+- id: dta-agentic-lifecycle
+  title: "Agentic AI addendum statements: whole of AI lifecycle (AGT.1 and AGT.2)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-whole-ai-lifecycle
+  retrieved: 2026-10-09
+- id: dta-agentic-design
+  title: "Agentic AI addendum statements: design (AGT.3)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-design
+  retrieved: 2026-10-09
+- id: dta-agentic-data
+  title: "Agentic AI addendum statements: data (AGT.4)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-data
+  retrieved: 2026-10-09
+- id: dta-agentic-train
+  title: "Agentic AI addendum statements: train (AGT.5)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-train
+  retrieved: 2026-10-09
+- id: dta-agentic-evaluate
+  title: "Agentic AI addendum statements: evaluate (AGT.6)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-evaluate
+  retrieved: 2026-10-09
+- id: dta-agentic-integrate
+  title: "Agentic AI addendum statements: integrate (AGT.7)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-integrate
+  retrieved: 2026-10-09
+- id: dta-agentic-monitor
+  title: "Agentic AI addendum statements: monitor (AGT.8)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-monitor
+  retrieved: 2026-10-09
+- id: dta-agentic-decommission
+  title: "Agentic AI addendum statements: decommission (Statement 41, Criterion 147)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum-statements-decommission
+  retrieved: 2026-10-09
+- id: dta-public-genai-agency
+  title: Agency guidance on public generative AI
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/policy/ai/agency-guidance-public-generative-ai
+  retrieved: 2026-10-09
+- id: asd-agentic-ai
+  title: Careful adoption of agentic AI services (May 2026)
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/business-government/secure-design/artificial-intelligence/careful-adoption-of-agentic-ai-services
+  retrieved: 2026-10-09

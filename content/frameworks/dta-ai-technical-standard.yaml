@@ -1,0 +1,13 @@
+# The criteria of the DTA's AI technical standard that the optional AI use-case register asks about. Only these are
+# listed: crownguard doesn't assess the rest of the standard.
+id: dta-ai-technical-standard
+name: Technical standard for government's use of artificial intelligence (DTA)
+shortName: AI technical standard
+publisher: Digital Transformation Agency
+source: dta-ai-technical-standard
+sources: [dta-ai-technical-standard-s10, dta-agentic-decommission]
+note: Criteria 33 and 36 sit under "Agencies must" in Statement 10. Criterion 147 (Statement 41) is the standard's existing decommissioning criterion, which the agentic addendum extends.
+controls:
+  - { id: Criterion 33, group: "Statement 10", title: "Establish a mechanism to inform users of AI interactions and output, as part of transparency" }
+  - { id: Criterion 36, group: "Statement 10", title: "Define human oversight and control mechanisms" }
+  - { id: Criterion 147, group: "Statement 41", title: "Securely decommission or repurpose all computing resources dedicated to the AI system, including individual and shared components" }

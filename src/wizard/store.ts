@@ -1,19 +1,25 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { SocAnswer, SocProvider } from "../engine/soc";
-import type { Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
+import type { AiKind } from "../content/schema";
+import { exampleEntries } from "../engine/aiExamples";
+import { newUseCase } from "../engine/aiRegister";
+import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
 import type { ScanResult } from "../imports/m365Secure";
 import { NOTE_MAX } from "./assessmentSchema";
 
-export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "Review", "Branding", "Report"] as const;
+export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
 
-/** Version of the step list. Layout 2 added "SOC maturity" after Controls. */
-export const STEP_LAYOUT = 2;
+/** Version of the step list. Layout 2 added "SOC maturity" after Controls; layout 3 added "AI register" after it. */
+export const STEP_LAYOUT = 3;
 
-/** Move a saved position onto the current step list: files saved before layout 2 point one step early from Review on. */
+/** Move a saved position onto the current step list: each added step moves positions saved after it on by one. */
 export function migrateProgress(p: Assessment["progress"]): Assessment["progress"] {
   if (!p) return p;
-  const step = (p.layout ?? 1) < 2 && p.step >= 4 ? p.step + 1 : p.step;
+  const layout = p.layout ?? 1;
+  let step = p.step;
+  if (layout < 2 && step >= 4) step++;
+  if (layout < 3 && step >= 5) step++;
   return { ...p, step, layout: STEP_LAYOUT };
 }
 
@@ -57,6 +63,11 @@ export const clampStep = (n: number | undefined) => Math.min(steps.length - 1, M
 /** The SOC block, or an empty one to change. */
 const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
 
+/** Change one AI register entry. */
+const editEntry = (a: Assessment, id: string, fn: (e: AiUseCase) => AiUseCase): Partial<Assessment> => ({
+  aiRegister: { entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
+});
+
 interface State {
   assessment: Assessment;
   setStep: (step: number) => void;
@@ -76,6 +87,19 @@ interface State {
   setSocTarget: (domainId: string, kind: "maturity" | "capability", value: number | undefined) => void;
   setSocProvider: (provider: SocProvider | undefined) => void;
   setNote: (questionId: string, note: string) => void;
+  /** Turn the optional AI use-case register on or off. Turning it off keeps nothing. */
+  setAiIncluded: (included: boolean) => void;
+  /** The open AI register entry, so the step resumes on it. */
+  setAiSection: (entryId: string) => void;
+  /** Add an entry from a preset and open it. Returns its id. */
+  addAiUseCase: (kind: AiKind) => string;
+  updateAiUseCase: (id: string, patch: Partial<Omit<AiUseCase, "id" | "example">>) => void;
+  removeAiUseCase: (id: string) => void;
+  setAiAnswer: (id: string, questionId: string, answer: Answer) => void;
+  setAiNote: (id: string, questionId: string, note: string) => void;
+  /** Add the example entries (replacing any already loaded), starting the register if needed. */
+  loadAiExamples: () => void;
+  removeAiExamples: () => void;
   upsertJewel: (jewel: CrownJewel) => void;
   removeJewel: (id: string) => void;
   /** Apply an automated scan: attach evidence everywhere, set answers where decisive. Returns answers set. */
@@ -116,11 +140,38 @@ export const useStore = create<State>()(
             return { soc: { ...soc(a), targets: { ...a.soc?.targets, [domain]: target } } };
           }),
         setSocProvider: (provider) => update((a) => ({ soc: { ...soc(a), provider } })),
+        setAiIncluded: (included) => update((a) => ({ aiRegister: included ? (a.aiRegister ?? { entries: [] }) : undefined })),
+        setAiSection: (aiSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection, layout: STEP_LAYOUT } })),
+        addAiUseCase: (kind) => {
+          const id = crypto.randomUUID();
+          update((a) => ({
+            aiRegister: { entries: [...(a.aiRegister?.entries ?? []), newUseCase(kind, id)] },
+            progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection: id, layout: STEP_LAYOUT },
+          }));
+          return id;
+        },
+        updateAiUseCase: (id, patch) => update((a) => editEntry(a, id, (e) => ({ ...e, ...patch }))),
+        removeAiUseCase: (id) => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
+        setAiAnswer: (id, q, answer) => update((a) => editEntry(a, id, (e) => ({ ...e, answers: { ...e.answers, [q]: answer } }))),
+        setAiNote: (id, q, note) => update((a) => editEntry(a, id, (e) => ({ ...e, notes: { ...e.notes, [q]: note.slice(0, NOTE_MAX) } }))),
+        loadAiExamples: () =>
+          update((a) => {
+            const examples = exampleEntries(a);
+            return {
+              aiRegister: { entries: [...(a.aiRegister?.entries ?? []).filter((e) => !e.example), ...examples] },
+              progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection: examples[0].id, layout: STEP_LAYOUT },
+            };
+          }),
+        removeAiExamples: () => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => !e.example) } })),
         upsertJewel: (j) =>
           update((a) => ({
             jewels: a.jewels.some((x) => x.id === j.id) ? a.jewels.map((x) => (x.id === j.id ? j : x)) : [...a.jewels, j],
           })),
-        removeJewel: (id) => update((a) => ({ jewels: a.jewels.filter((j) => j.id !== id) })),
+        removeJewel: (id) =>
+          update((a) => ({
+            jewels: a.jewels.filter((j) => j.id !== id),
+            ...(a.aiRegister && { aiRegister: { entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
+          })),
         applyScan: (scan, { platform, overwrite, licence }) => {
           let applied = 0;
           update((a) => {
@@ -152,14 +203,15 @@ export const useStore = create<State>()(
     },
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {
         const p = persisted as { assessment: Assessment; step?: number };
         if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step) };
-        if (version < 2 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress);
+        // migrateProgress reads the saved layout, so running it again on newer saves is harmless.
+        if (version < 3 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress);
         return { assessment: p.assessment } as State;
       },
     },

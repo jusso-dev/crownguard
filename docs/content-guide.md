@@ -13,13 +13,16 @@ content/
   platforms/<platform>/questions/<domain>.yaml
   soc/model.yaml                    # optional SOC maturity module (CC BY-SA 4.0)
   soc/questions/<domain>.yaml
+  ai-register/model.yaml            # optional AI use-case register: dates, presets, themes, caveats
+  ai-register/questions.yaml        # its readiness questions
 ```
 
 ## Sources
 
 Every question must cite at least one source. Sources are official vendor or government guidance pages.
 Every source must be cited by a question, a framework (its `source` or supporting `sources`), a platform's licence
-tiers or the SOC module (`source`, `licenceSource` or `sources` in `content/soc/model.yaml`), and no two sources may
+tiers, the SOC module (`source`, `licenceSource` or `sources` in `content/soc/model.yaml`) or the AI register (its
+model's `sources`, dates, caveats and presets, or a readiness question), and no two sources may
 point at the same page; `pnpm validate:content` rejects both.
 
 ```yaml
@@ -163,6 +166,47 @@ Writing rules:
   "aligned to the SOC-CMM® v2.4 model", not a SOC-CMM assessment.
 - Question ids are permanent keys in saved files: never reuse one for a different question.
 - Australian English, as everywhere else.
+
+## AI use-case register
+
+`content/ai-register/` holds the optional AI use-case register. Its wording comes from the Digital Transformation
+Agency's AI policy and standards (CC BY 4.0) and ASD guidance; the register fields themselves (technology types,
+lifecycle stages, domains, usage patterns, Appendix C criteria, risk ratings) are fixed lists in
+`src/engine/aiOptions.ts`, in the DTA's wording, because saved files store their keys.
+
+`model.yaml` sets:
+
+- `appliesTo`: who the policy applies to, shown before anything else.
+- `dates`: dated or ongoing requirements, each with a `source`. Set `derived: true` on a date worked out from the
+  source's wording rather than printed in it, and say so in the `text`.
+- `caveats`: points the sources leave unclear. They're shown in the app, the XLSX About sheet and the report. Add one
+  rather than guessing.
+- `themes`: the readiness themes. Every theme needs at least one question.
+- `kinds`: the presets offered when adding a use case, with default register values, the crown-jewel `exposures` this
+  kind of AI usually adds (offered on linked crown jewels, never ticked for the user) and `relatedQuestions`, platform
+  question ids shown with their Controls answers.
+
+```yaml
+- id: AIR-OFF-001          # AIR-<THEME>-<NNN>; ids are permanent keys in saved files
+  theme: switch-off
+  when: agentic            # all | agentic | personal-data | indigenous-data | in-scope | high-risk | public-tool
+  basis: addendum-must     # policy-must | standard-must | addendum-must | addendum-should | guidance
+  severity: critical
+  question: Can you stop the agent quickly with a kill switch you've tested, and roll back what it did?
+  why: ...
+  yesLooksLike: ...
+  remediation: ...
+  sources: [dta-agentic-design]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.4 }]
+```
+
+- `basis` must match the source: "must" only where the source says must. The agentic AI addendum is best practice
+  guidance applied with the AI technical standard, which the policy strongly recommends; keep that distinction.
+- Don't invent requirements, field names or dates. If a source is ambiguous, write the question so it asks whether
+  the agency has decided, and add a caveat.
+- `when` conditions only ever drop questions when the answers say they don't apply. "Not sure" keeps them in.
+- Readiness is never called compliance, and crownguard never works out risk ratings: they come from the agency's AI
+  impact assessment.
 
 ## Scan imports
 

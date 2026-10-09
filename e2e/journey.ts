@@ -21,9 +21,11 @@ export interface JourneyOptions {
   soc?: boolean;
   /** IDCF Data Security Level for the first crown jewel, e.g. "DSL-3". */
   dsl?: string;
+  /** Include the optional AI register: load the example entries and add one real use case. */
+  ai?: boolean;
 }
 
-export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl }: JourneyOptions = {}): Promise<string[]> {
+export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false }: JourneyOptions = {}): Promise<string[]> {
   await page.goto("./");
   await page.getByLabel("Organisation name").fill(ORG);
   await page.getByLabel(/^ABN/).fill("51824753556");
@@ -70,8 +72,14 @@ export async function runJourney(page: Page, platformName: string, { jewelCount 
   if (soc) await answerSoc(page);
   await next(page);
 
+  // So is the AI register.
+  await expect(page.getByRole("heading", { name: "Which AI tools and agents do you use?" })).toBeVisible();
+  if (ai) await fillAiRegister(page);
+  await next(page);
+
   await expect(page.getByRole("heading", { name: "Risk heatmap" })).toBeVisible();
   if (soc) await expect(page.getByRole("heading", { name: "SOC maturity (indicative)" })).toBeVisible();
+  if (ai) await expect(page.getByTestId("ai-card")).toContainText("4 use cases");
   await next(page);
 
   await page.getByTestId("logo-input").setInputFiles("e2e/fixtures/logo.svg");
@@ -108,6 +116,31 @@ export async function answerSoc(page: Page) {
     }
   }
   await expect(page.getByText(/(\d+) of \1 answered/)).toBeVisible();
+}
+
+/** Load the example entries, then add a real Microsoft 365 Copilot use case and answer its readiness questions. */
+export async function fillAiRegister(page: Page) {
+  await page.getByRole("button", { name: "Load example entries" }).click();
+  await expect(page.getByRole("note")).toContainText("3 example entries are loaded");
+  await page.getByRole("navigation", { name: "AI use cases" }).getByRole("button", { name: "+ Add a use case" }).click();
+  await page.getByRole("button", { name: "Add AI use case: Microsoft 365 Copilot" }).click();
+  const entry = page.locator("[data-ai-entry]");
+  await entry.getByLabel("Agency identifier (reference number)").fill("AI-2026-001");
+  await entry.getByRole("textbox", { name: /^Description/ }).fill("Copilot for staff in the corporate area, for drafting and summarising.");
+  await entry.getByRole("radiogroup", { name: "Lifecycle stage" }).getByRole("radio", { name: "Operate" }).click();
+  await entry.getByRole("radiogroup", { name: "Use of the Technical standard" }).getByRole("radio", { name: "Partially applied" }).click();
+  await entry.getByLabel("Accountable use case owner (name)").fill("Priya Natarajan");
+  await entry.getByLabel("Accountable use case owner (email address)").fill("priya.natarajan@riverbend.example");
+  await entry.getByRole("checkbox", { name: /^Criterion 4/ }).check({ force: true });
+  await expect(page.getByTestId("ai-scope")).toContainText("In scope");
+  await entry.getByRole("radiogroup", { name: "Inherent risk rating" }).getByRole("radio", { name: "Medium" }).click();
+  await entry.getByRole("radiogroup", { name: "Residual risk rating" }).getByRole("radio", { name: "Low" }).click();
+  await entry.getByLabel("Date the AI impact assessment was last updated").fill("2026-09-01");
+  await entry.getByRole("checkbox", { name: /^Personal information/ }).check({ force: true });
+  const cycle = ["Yes", "Partial", "No", "Unknown"];
+  const cards = entry.locator("article[data-ai-question]");
+  for (let i = 0; i < (await cards.count()); i++) await cards.nth(i).getByRole("radio", { name: cycle[i % cycle.length], exact: true }).click();
+  await expect(entry.getByText(/(\d+) of \1 answered/)).toBeVisible();
 }
 
 export async function pdfText(data: Uint8Array): Promise<string[]> {

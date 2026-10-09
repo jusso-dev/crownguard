@@ -1,0 +1,36 @@
+# Criteria of the DTA's Agentic AI addendum, by statement, with the addendum's own "must" or "should". Used by the
+# optional AI use-case register. The addendum calls itself best practice guidance to apply with the AI technical
+# standard, which the policy strongly recommends rather than requires; see content/ai-register/model.yaml.
+id: dta-agentic-ai
+name: Agentic AI addendum to the AI technical standard (DTA)
+shortName: Agentic AI addendum
+publisher: Digital Transformation Agency
+source: dta-agentic-addendum
+sources: [dta-agentic-lifecycle, dta-agentic-design, dta-agentic-data, dta-agentic-train, dta-agentic-evaluate, dta-agentic-integrate, dta-agentic-monitor, dta-agentic-decommission]
+note: Titles are the addendum's criterion titles. "(must)" and "(should)" follow the heading each criterion sits under.
+controls:
+  - { id: AGT.1.1, group: "AGT.1 Governance and safeguards", title: "Identify and assign responsibilities for agents and human accountability for decisions resulting from agentic AI systems (must)" }
+  - { id: AGT.1.2, group: "AGT.1 Governance and safeguards", title: "Identify effective human oversight and intervene when necessary (must)" }
+  - { id: AGT.1.3, group: "AGT.1 Governance and safeguards", title: "Explain agentic system decision-making processes (must)" }
+  - { id: AGT.1.4, group: "AGT.1 Governance and safeguards", title: "Establish an orchestration layer (should)" }
+  - { id: AGT.2.1, group: "AGT.2 Memory management", title: "Establish robust memory management mechanisms (should)" }
+  - { id: AGT.3.1, group: "AGT.3 Design for agentic workflow", title: "Define your business needs and identify goals (must)" }
+  - { id: AGT.3.2, group: "AGT.3 Design for agentic workflow", title: "Define the sequence and logical order for tasks and agents (must)" }
+  - { id: AGT.3.3, group: "AGT.3 Design for agentic workflow", title: "Identify guardrails and constraints (must)" }
+  - { id: AGT.3.4, group: "AGT.3 Design for agentic workflow", title: "Embed self-correction mechanisms, fail-safes, and feedback loops (must)" }
+  - { id: AGT.3.5, group: "AGT.3 Design for agentic workflow", title: "Choose the tools to integrate with the agentic workflow (should)" }
+  - { id: AGT.3.6, group: "AGT.3 Design for agentic workflow", title: "Define conditional branches and decision points (should)" }
+  - { id: AGT.3.7, group: "AGT.3 Design for agentic workflow", title: "Account for scalability and increased complexity in agentic systems and external systems (should)" }
+  - { id: AGT.4.1, group: "AGT.4 Routing and data flow", title: "Establish data management mechanisms to enable secure, efficient, and reliable data exchange between agents (must)" }
+  - { id: AGT.4.2, group: "AGT.4 Routing and data flow", title: "Ensure the system dynamically routes messages or tasks to appropriate agents (should)" }
+  - { id: AGT.5.1, group: "AGT.5 Agent, model and AI technology", title: "Ensure agent, model, and AI technology aligns with use case requirements (must)" }
+  - { id: AGT.5.2, group: "AGT.5 Agent, model and AI technology", title: "Consider trade-offs when selecting LLMs or pre-trained models (should)" }
+  - { id: AGT.5.3, group: "AGT.5 Agent, model and AI technology", title: "Select appropriate prompt engineering technique when using LLM-based agents (should)" }
+  - { id: AGT.6.1, group: "AGT.6 Continuous evaluation", title: "Test agents for robustness against unexpected inputs or scenarios (must)" }
+  - { id: AGT.6.2, group: "AGT.6 Continuous evaluation", title: "Evaluate the interaction between agents and integrated tools (must)" }
+  - { id: AGT.6.3, group: "AGT.6 Continuous evaluation", title: "Evaluate the interaction between agents and its environment (must)" }
+  - { id: AGT.6.4, group: "AGT.6 Continuous evaluation", title: "Evaluate the interaction between agents and memory (must)" }
+  - { id: AGT.7.1, group: "AGT.7 Tools and protocols", title: "Select tools that enable agents to communicate, interact, and expand their capabilities beyond their environment (should)" }
+  - { id: AGT.7.2, group: "AGT.7 Tools and protocols", title: "Identify and list necessary standard protocols required for AI agent interaction and communication (should)" }
+  - { id: AGT.8.1, group: "AGT.8 Ongoing monitoring", title: "Continuously monitor individual agents and how they interact with its environment (must)" }
+  - { id: AGT.8.2, group: "AGT.8 Ongoing monitoring", title: "Establish a control tower to provide system oversight (should)" }

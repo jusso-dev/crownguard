@@ -6,6 +6,8 @@ import { answerLabels } from "../../engine/types";
 import { useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";
+import { aiRegisterSummary } from "../../engine/aiRegister";
+import { ExampleBadge } from "./AiRegisterStep";
 
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 
@@ -102,6 +104,7 @@ export function ReviewStep() {
       </div>
 
       <SocCard />
+      <AiRegisterCard />
 
       {risks[0] && risks[0].gaps.length > 0 && (
         <Card className="mt-4">
@@ -163,6 +166,49 @@ function SocCard() {
           </li>
         ))}
       </ul>
+    </Card>
+  );
+}
+
+/** The optional AI use-case register: readiness per use case, reported apart from crown-jewel risk. */
+function AiRegisterCard() {
+  const assessment = useStore((s) => s.assessment);
+  const setStep = useStore((s) => s.setStep);
+  if (!assessment.aiRegister || !catalogue.aiRegister) return null;
+  const summary = aiRegisterSummary(catalogue, assessment, assessAll(catalogue, assessment));
+  return (
+    <Card className="mt-4" data-testid="ai-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-base font-semibold">AI use-case register</h2>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(5)}>
+          Edit AI register
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        {summary.entries.length} use case{summary.entries.length === 1 ? "" : "s"}, {summary.inScope} in scope of the policy, {summary.openGaps} open readiness gap
+        {summary.openGaps === 1 ? "" : "s"} ({summary.criticalGaps} critical), {summary.missingFields} register field{summary.missingFields === 1 ? "" : "s"} missing.
+        Readiness doesn&apos;t change the risk ratings; exposures you tick on linked crown jewels do.
+      </p>
+      {summary.entries.length > 0 && (
+        <ul className="mt-4 space-y-3">
+          {summary.entries.map((r) => (
+            <li key={r.entry.id} className="text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="flex items-center gap-2 text-ink">
+                  {r.entry.example && <ExampleBadge />}
+                  {r.entry.name || "Unnamed use case"}
+                </span>
+                <span className="whitespace-nowrap font-mono text-xs tabular-nums text-muted">
+                  {pct(r.score)} ready · {r.gaps.length} gap{r.gaps.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1 rounded-full bg-rule" role="img" aria-label={`${r.entry.name}: readiness ${pct(r.score)}`}>
+                <div className="h-full rounded-full bg-ink-2" style={{ width: pct(r.score ?? 0) }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }
