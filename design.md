@@ -8,7 +8,7 @@ The PDF report is separate: it takes the user's own logo and colours (see `src/r
 modern-minimal
 
 ## Macrostructure family
-- App views (all seven wizard steps): **Workbench**. A flush header bar, a step rail on the left
+- App views (all nine wizard steps): **Workbench**. A flush header bar, a step rail on the left
   (horizontal scroller on mobile), and one working column. Views vary only in their content blocks.
 - No marketing pages. No enrichment, illustration or decorative background anywhere.
 
@@ -64,7 +64,7 @@ progress bars, links and focus rings. Under 5 % of any viewport. Selected option
 - Every interactive element has default, hover, focus, active, disabled; the PDF button also has loading.
 
 ## What views MUST share
-The header bar, step rail, step eyebrow (`STEP 0N / 07`, stacked above the H1), button voice, card
+The header bar, step rail, step eyebrow (`STEP 0N / 09`, stacked above the H1), button voice, card
 treatment and token set.
 
 ## Exports
