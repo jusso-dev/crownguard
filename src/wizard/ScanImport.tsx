@@ -62,7 +62,7 @@ export function ScanImport() {
           try {
             i.read(text, mapping);
           } catch (e) {
-            throw new Error((e as Error).message);
+            throw new Error((e as Error).message, { cause: e });
           }
         }
         throw new Error("this file isn't output from a scanner crownguard can read");
