@@ -6,6 +6,8 @@ import { bandOf } from "../engine/risk";
 import { levelFor, socProviders, type SocResult } from "../engine/soc";
 import { answerLabels, classifications, dsls, regulations, type Answer } from "../engine/types";
 import { notVerifiedText, type IdcfCell } from "../engine/idcf";
+import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../engine/aiOptions";
+import { aiFieldLabels } from "../engine/aiRegister";
 import type { ReportModel } from "./model";
 
 const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
@@ -131,6 +133,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                   `Optional SOC maturity self-assessment: ${model.soc.model.domains.reduce((n, d) => n + d.aspects.length, 0)} aspects in ${model.soc.model.domains.length} domains, aligned to the SOC-CMM® v2.4 model`,
                 ]
               : []),
+            ...(model.aiRegister
+              ? [
+                  `Optional AI use-case register: ${model.aiRegister.entries.length} use case${model.aiRegister.entries.length === 1 ? "" : "s"}, checked against the Policy for the responsible use of AI in government and the agentic AI addendum${model.aiRegister.examples ? `, including ${model.aiRegister.examples} example entr${model.aiRegister.examples === 1 ? "y" : "ies"}` : ""}`,
+                ]
+              : []),
             ...(a.imports ?? []).map(
               (imp) =>
                 `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
@@ -189,6 +196,17 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                 return `An optional self-assessment rated security operations at an indicative ${r.overall.toFixed(1)} of 5 against a target of ${r.overallTarget.toFixed(1)}; ${below} of ${assessed} domains ${below === 1 ? "is" : "are"} below target.${
                   unsure ? ` ${unsure} of its ${r.total} questions ${unsure === 1 ? "is" : "are"} unanswered or unknown and scored 0.` : ""
                 } It is reported separately and doesn't change the risk ratings.`;
+              })()}
+            </Text>
+          )}
+          {model.aiRegister && (
+            <Text style={s.p}>
+              {(() => {
+                const r = model.aiRegister;
+                if (r.entries.length === 0) return "An optional AI use-case register was included, but no use cases have been recorded yet.";
+                return `The AI use-case register records ${r.entries.length} use case${r.entries.length === 1 ? "" : "s"}, ${r.inScope} of them in scope of the DTA policy${r.undetermined ? ` and ${r.undetermined} not yet checked` : ""}. ${
+                  r.openGaps ? `${r.openGaps} readiness gap${r.openGaps === 1 ? " is" : "s are"} open${r.criticalGaps ? `, ${r.criticalGaps} of them critical` : ""}.` : "No readiness gaps are open."
+                }${r.examples ? ` ${r.examples} ${r.examples === 1 ? "entry is" : "entries are"} example data, not real use cases.` : ""}`;
               })()}
             </Text>
           )}
@@ -466,6 +484,8 @@ export function ReportDocument({ model }: { model: ReportModel }) {
 
         {model.soc && <SocSection model={model} s={s} tableProps={tableProps} />}
 
+        {model.aiRegister && <AiRegisterSection model={model} s={s} tableProps={tableProps} />}
+
         {/* Methodology */}
         <Section s={s} title="Method and limitations">
           {[
@@ -483,7 +503,13 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                   "SOC results are self-ratings from far fewer questions than SOC-CMM's own tool. They are not SOC-CMM maturity or capability scores, are not comparable with SOC-CMM benchmarks or certification, and don't affect the crown-jewel risk ratings.",
                 ]
               : []),
-            `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
+            ...(model.aiRegister
+              ? [
+                  "The AI use-case register uses the minimum fields in the DTA's Standard for accountability, in its order, with the owner's name and email split into two fields. Readiness questions are drawn from the Policy for the responsible use of AI in government, its standards and impact assessment guidance, the agentic AI addendum and ASD guidance; each states whether its source says must or should. Readiness is scored like the control questions: Yes = 1, Partial = 0.5, No, Unknown and unanswered = 0, N/A excluded, weighted by severity. Agent questions are asked unless the use case only gives output.",
+                  "Readiness is an indicative self-check, not a policy compliance finding or a DTA assessment. Risk ratings come from the agency's own AI impact assessment; crownguard records them and doesn't work them out. The register doesn't change the crown-jewel risk ratings: any exposure it suggests must be ticked on the crown jewel itself.",
+                ]
+              : []),
+            `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.aiRegister ? ", the Digital Transformation Agency" : ""}${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
         </Section>
 
@@ -746,6 +772,151 @@ function SocSection({ model, s, tableProps }: { model: ReportModel; s: Styles; t
           </Text>
         )}
         <Text style={{ ...s.small, marginTop: 3 }}>The protective marking applies to this organisation&apos;s answers and results, not to the CC BY-SA question text.</Text>
+      </View>
+    </Section>
+  );
+}
+
+const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const exampleColors = { fg: "#7a5200", bg: "#fdf3dc" };
+
+/** Optional AI use-case register: the register table, then each use case's readiness, with the key dates and caveats. */
+function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
+  const r = model.aiRegister!;
+  const theme = model.theme;
+  const jewelName = (id: string) => model.assessment.jewels.find((j) => j.id === id)?.name;
+  const scopeText = (v: boolean | undefined) => (v === undefined ? "Not checked" : v ? "In scope" : "Not in scope");
+  return (
+    <Section
+      s={s}
+      title="AI use-case register"
+      lead="The organisation's AI use cases and agents, recorded with the minimum fields in the DTA's Standard for accountability, and an indicative readiness check against the Policy for the responsible use of AI in government and the agentic AI addendum. It's separate from the crown-jewel risk ratings and doesn't change them."
+    >
+      <Text style={s.p}>{r.model.appliesTo}</Text>
+      {r.examples > 0 && (
+        <View wrap={false} style={{ backgroundColor: exampleColors.bg, borderRadius: 3, padding: 8, marginBottom: 8 }}>
+          <Text style={{ fontSize: 8.5, color: exampleColors.fg, fontWeight: 600 }}>
+            {r.examples} of these entries {r.examples === 1 ? "is" : "are"} example data loaded to show how the register works. {r.examples === 1 ? "It's" : "They're"} marked EXAMPLE and {r.examples === 1 ? "isn't a real use case" : "aren't real use cases"}.
+          </Text>
+        </View>
+      )}
+      <View style={{ flexDirection: "row", gap: 10, marginTop: 2, marginBottom: 10 }}>
+        {[
+          ["Use cases", String(r.entries.length), r.undetermined ? `${r.undetermined} not yet checked for scope` : "all checked for scope"],
+          ["In scope", String(r.inScope), `${r.highRisk} rated high inherent risk`],
+          ["Open readiness gaps", String(r.openGaps), r.criticalGaps ? `${r.criticalGaps} critical` : "none critical"],
+          ["Register fields missing", String(r.missingFields), "across all use cases"],
+        ].map(([label, value, hint]) => (
+          <View key={label} style={{ flex: 1, backgroundColor: theme.tint, borderRadius: 4, padding: 8 }}>
+            <Text style={{ ...s.small, textTransform: "uppercase", letterSpacing: 0.6 }}>{label}</Text>
+            <Text style={{ fontSize: 17, fontWeight: 700, color: theme.heading, marginTop: 1 }}>{value}</Text>
+            <Text style={s.small}>{hint}</Text>
+          </View>
+        ))}
+      </View>
+
+      {r.entries.length > 0 && (
+        <Table
+          {...tableProps}
+          rows={r.entries}
+          columns={[
+            { header: "Use case", width: "25%", render: (x) => (
+              <View>
+                <Text style={{ fontWeight: 600 }}>{x.entry.name || "Unnamed use case"}</Text>
+                <Text style={s.small}>{[x.entry.reference, x.kind?.name].filter(Boolean).join(" · ")}</Text>
+                {x.entry.example && <Badge {...exampleColors}>EXAMPLE</Badge>}
+              </View>
+            ) },
+            { header: "Owner", width: "18%", render: (x) => x.entry.ownerName || "Not recorded" },
+            { header: "Stage", width: "9%", render: (x) => (x.entry.lifecycle ? aiLifecycles[x.entry.lifecycle] : "–") },
+            { header: "Scope", width: "11%", render: (x) => scopeText(x.inScope) },
+            { header: "Inherent / residual", width: "13%", render: (x) => `${x.entry.inherentRisk ? aiRiskRatings[x.entry.inherentRisk] : "–"} / ${x.entry.residualRisk ? aiRiskRatings[x.entry.residualRisk] : "–"}` },
+            { header: "Readiness", width: "12%", render: (x) => (x.score === null ? "Not answered" : pct(x.score)) },
+            { header: "Gaps", width: "12%", render: (x) => `${x.gaps.length}${x.missing.length ? ` · ${x.missing.length} fields` : ""}` },
+          ]}
+        />
+      )}
+
+      {r.entries.map((x) => (
+        <View key={x.entry.id} style={{ borderWidth: 0.5, borderColor: line, borderLeftWidth: 3, borderLeftColor: x.entry.example ? exampleColors.fg : theme.heading, borderRadius: 3, padding: 9, marginTop: 10 }}>
+          <View wrap={false}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <Text style={{ ...s.h3, marginBottom: 0, flex: 1 }}>{x.entry.name || "Unnamed use case"}</Text>
+              {x.entry.example && <Badge {...exampleColors}>EXAMPLE</Badge>}
+              <Text style={s.small}>Readiness {x.score === null ? "not answered" : pct(x.score)} · {x.answered} of {x.questions.length} answered</Text>
+            </View>
+            <Text style={s.small}>
+              {[
+                x.entry.product,
+                x.entry.autonomy && aiAutonomy[x.entry.autonomy].label,
+                x.entry.access && `Access: ${aiAccess[x.entry.access].label}`,
+                x.entry.data.length ? `Data: ${x.entry.data.map((d) => aiData[d]).join(", ")}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </Text>
+            {x.entry.criteria.length > 0 && <Text style={s.small}>Appendix C: {x.entry.criteria.map((c) => aiCriteria[c]).join("; ")}</Text>}
+            {x.entry.description && <Text style={{ fontSize: 8.5, marginTop: 4, lineHeight: 1.35 }}>{x.entry.description}</Text>}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 5 }}>
+              {x.themes.filter((t) => t.status !== "Not asked").map((t) => (
+                <Text key={t.id} style={{ fontSize: 7, paddingVertical: 1.5, paddingHorizontal: 4, borderRadius: 2, backgroundColor: t.status === "Met" ? "#e5f4ea" : t.status === "Not applicable" ? "#f1f3f5" : "#fbe9e2", color: t.status === "Met" ? good : t.status === "Not applicable" ? muted : "#8a3200" }}>
+                  {t.name}: {t.status}
+                </Text>
+              ))}
+            </View>
+          </View>
+          {x.jewels.length > 0 && (
+            <Text style={{ fontSize: 8.5, marginTop: 5 }}>
+              <Text style={{ fontWeight: 600 }}>Crown jewels it can reach: </Text>
+              {x.jewels.map((j) => (j.risk ? `${j.jewel.name} (${j.risk.band.toLowerCase()} risk, ${j.risk.score}/25)` : j.jewel.name)).join("; ")}
+            </Text>
+          )}
+          {x.gaps.length > 0 && (
+            <View style={{ marginTop: 5 }}>
+              {x.gaps.slice(0, 8).map((g) => (
+                <View key={g.question.id} wrap={false} style={{ flexDirection: "row", gap: 5, marginBottom: 2 }}>
+                  <Text style={{ width: 44, fontSize: 7, color: severityColors[g.question.severity], fontWeight: 600, textTransform: "uppercase", paddingTop: 1 }}>{g.question.severity}</Text>
+                  <Text style={{ flex: 1, fontSize: 8.5 }}>
+                    {g.question.question} <Text style={{ color: muted }}>({answerText(g.answer)}) </Text>
+                    <Text style={{ fontWeight: 600 }}>Fix: </Text>
+                    {firstSentence(g.question.remediation)}
+                  </Text>
+                </View>
+              ))}
+              {x.gaps.length > 8 && <Text style={s.small}>+ {x.gaps.length - 8} further gaps in the register export.</Text>}
+            </View>
+          )}
+          {x.missing.length > 0 && (
+            <Text style={{ fontSize: 8, marginTop: 4, color: "#7a5200" }}>Register fields still to fill in: {x.missing.map((f) => aiFieldLabels[f]).join("; ")}.</Text>
+          )}
+          {x.flags.map((f) => (
+            <Text key={f} style={{ fontSize: 8, marginTop: 3, color: "#8a3200" }}>{f}</Text>
+          ))}
+          {Object.entries(x.entry.notes)
+            .filter(([, n]) => n.trim())
+            .map(([id, n]) => (
+              <Text key={id} style={{ fontSize: 8, marginTop: 2, fontStyle: "italic", lineHeight: 1.35 }}>Note ({id}): {n.trim()}</Text>
+            ))}
+          {x.entry.jewels.some((id) => !jewelName(id)) && <Text style={s.small}>Some linked crown jewels have since been removed.</Text>}
+        </View>
+      ))}
+
+      <Text style={s.h2} minPresenceAhead={80}>Key dates</Text>
+      {r.model.dates.map((d) => (
+        <View key={d.text} wrap={false} style={{ flexDirection: "row", gap: 8, marginBottom: 3 }}>
+          <Text style={{ width: 92, fontSize: 8.5, fontWeight: 600 }}>{d.date ? `${dayText(d.date)}${d.derived ? "*" : ""}` : "Recurring"}</Text>
+          <Text style={{ flex: 1, fontSize: 8.5, lineHeight: 1.35 }}>{d.text}</Text>
+        </View>
+      ))}
+      {r.model.dates.some((d) => d.derived) && <Text style={s.small}>* Worked out from the policy&apos;s wording, not printed in it.</Text>}
+
+      <Text style={s.h2} minPresenceAhead={80}>Where the sources are unclear</Text>
+      {r.model.caveats.map((c) => (
+        <Text key={c.text} style={{ ...s.p, fontSize: 8.5 }}>{c.text}</Text>
+      ))}
+
+      <View wrap={false} style={{ marginTop: 8, borderWidth: 0.5, borderColor: line, borderRadius: 3, padding: 8 }}>
+        <Text style={{ ...s.small, lineHeight: 1.4 }}>{r.model.attribution}</Text>
       </View>
     </Section>
   );

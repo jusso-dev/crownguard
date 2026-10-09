@@ -1,4 +1,6 @@
-import type { Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
+import type { AiRegisterModel, Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
+import { aiRegisterSummary, type AiRegisterSummary } from "../engine/aiRegister";
+import { aiRegisterSources } from "../content/loader";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,
@@ -74,6 +76,8 @@ export interface ReportModel {
     source?: Source;
     licence?: Source;
   };
+  /** The optional AI use-case register, when included and the module's content is present. */
+  aiRegister?: AiRegisterSummary & { model: AiRegisterModel };
   risks: JewelRisk[];
   domains: DomainPosture[];
   e8: (E8Result & { title: string })[];
@@ -156,6 +160,11 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
       })()
     : undefined;
 
+  const risks = assessAll(catalogue, assessment);
+  const aiModule = assessment.aiRegister && catalogue.aiRegister;
+  const aiRegister = aiModule ? { ...aiRegisterSummary(catalogue, assessment, risks, generatedAt), model: aiModule.model } : undefined;
+  if (aiModule) for (const id of aiRegisterSources(aiModule)) sourceIds.add(id);
+
   const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));
   if (questions.some((q) => q.e8.length)) used.add("essential-eight");
   const roleOf = (id: string) =>
@@ -200,6 +209,12 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
       publisher: soc.source?.publisher ?? "SOC-CMM",
       role: "Structure for the optional SOC maturity self-assessment (indicative)",
     });
+  if (aiRegister)
+    for (const id of new Set(aiRegister.entries.flatMap((r) => r.questions.flatMap((q) => q.refs.map((x) => x.framework)))))
+      if (!used.has(id)) {
+        const f = catalogue.frameworks.get(id);
+        if (f) frameworksUsed.push({ name: f.name, publisher: f.publisher, role: "Mapping for the optional AI use-case register's readiness questions" });
+      }
 
   const domains = domainPosture(catalogue, assessment);
   const severityRank = { critical: 0, high: 1, medium: 2, low: 3 } as const;
@@ -233,7 +248,8 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     posture: overallPosture(catalogue, assessment),
     idcf,
     soc,
-    risks: assessAll(catalogue, assessment),
+    aiRegister,
+    risks,
     domains,
     e8: essentialEight(questions, answers).map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy })),
     roadmap: buildRoadmap(questions, jewels, answers),

@@ -52,6 +52,15 @@ export function ReportStep() {
           <dt className="text-muted">Crown jewels</dt><dd>{model.risks.length}</dd>
           <dt className="text-muted">Questions answered</dt><dd>{model.questions.filter((q) => model.answers[q.id]).length} of {model.questions.length}</dd>
           <dt className="text-muted">Roadmap actions</dt><dd>{model.roadmap.length}</dd>
+          {model.aiRegister && (
+            <>
+              <dt className="text-muted">AI use cases</dt>
+              <dd>
+                {model.aiRegister.entries.length}, {model.aiRegister.openGaps} readiness gap{model.aiRegister.openGaps === 1 ? "" : "s"} open
+                {model.aiRegister.examples ? ` (${model.aiRegister.examples} example)` : ""}
+              </dd>
+            </>
+          )}
           <dt className="text-muted">Marking</dt><dd>{assessment.branding.marking}</dd>
         </dl>
         </div>
