@@ -1,0 +1,29 @@
+name: Dependency review
+
+# Fails a pull request that introduces a dependency with a known high or critical vulnerability, or a licence the
+# project doesn't accept. Only looks at what the PR adds or changes.
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  dependency-review:
+    name: dependency-review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          # crownguard is MIT. Content under content/soc is CC BY-SA 4.0 and CIS material is CC BY-NC-SA 4.0, but
+          # neither ships as an npm dependency. Anything else needs a look before it lands.
+          allow-licenses: >-
+            MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense,
+            Python-2.0, CC-BY-4.0, CC-BY-SA-4.0, MPL-2.0

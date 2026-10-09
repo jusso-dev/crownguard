@@ -55,3 +55,15 @@ always matches the code.
 
 crownguard must never send assessment data anywhere. Don't add analytics, remote fonts, CDNs or any
 network calls. `e2e/privacy.spec.ts` fails if the app makes a request to another origin.
+
+## How changes ship
+
+`main` is protected by a [ruleset](https://github.com/jusso-dev/crownguard/rulesets): no force pushes, no deletion,
+every change lands through a pull request, and the `check` and `e2e` CI jobs have to pass. Squash merges only, so a
+branch's history stays out of `main`.
+
+The Pages deploy is the last job in the CI workflow, so a commit whose tests failed never reaches the site. Actions in
+`.github/workflows/` are pinned to full commit SHAs with the tag in a comment; `scripts/workflows.test.ts` fails the
+build if that's undone or if a job widens its permissions. Dependabot keeps the actions and npm dependencies current,
+dependency review rejects new dependencies with a known high-severity vulnerability or a licence we haven't accepted,
+and CodeQL and OpenSSF Scorecard run on the repo. Please report security issues privately — see [SECURITY.md](SECURITY.md).
