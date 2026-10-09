@@ -1,0 +1,184 @@
+- id: AWS-BCK-001
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: high
+  question: Are crown-jewel databases, file systems, volumes and buckets backed up by AWS Backup plans or point-in-time recovery, with frequency and retention set by business need?
+  why: >-
+    Ransomware, a bad deployment or a malicious administrator can destroy production data. Without regular
+    backups that match how much data loss the business can tolerate, that data is simply gone.
+  yesLooksLike: >-
+    Backup plans assigned by tag or resource cover every crown-jewel RDS, Aurora, DynamoDB, EFS, EBS and
+    S3 resource (or an equivalent backup product does); frequency and retention follow agreed recovery
+    point objectives; continuous backup or point-in-time recovery is on for databases that need it;
+    related resources are backed up on the same schedule so they can be restored to a common point in
+    time; backups are kept in vaults with restricted access, with copies in a second Region or account
+    where business continuity needs it; and AWS Backup Audit Manager or Security Hub CSPM reports any
+    unprotected resource.
+  remediation: >-
+    Create AWS Backup plans per data tier with schedules and retention matching your recovery point
+    objectives, assign resources by tag, enable continuous backup for RDS and S3 and point-in-time
+    recovery for DynamoDB, add copy rules to another Region or account for critical systems, use an
+    organisation backup policy so new accounts are covered, and set up Backup Audit Manager reports.
+  effort: M
+  licence: [aws-backup]
+  sources: [aws-backup-plans, aws-dynamodb-pitr, aws-s3-versioning, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: RDS.11 }
+    - { framework: aws-fsbp, ref: RDS.50 }
+    - { framework: aws-fsbp, ref: DynamoDB.2 }
+    - { framework: aws-fsbp, ref: EFS.2 }
+    - { framework: aws-fsbp, ref: EFS.7 }
+    - { framework: aws-fsbp, ref: Redshift.3 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: AWS-BCK-002
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: medium
+  question: Have you restored crown-jewel systems from AWS backups to a common point in time within the last 12 months, as part of a disaster recovery exercise?
+  why: >-
+    Backups that have never been restored often fail when they are needed: missing keys, wrong
+    permissions, incomplete coverage, or restores that take longer than the business can wait.
+  yesLooksLike: >-
+    AWS Backup restore testing plans regularly restore and validate recovery points of crown-jewel
+    resources, and at least once a year a disaster recovery exercise restores a whole system (databases,
+    files and configuration) to a common point in time in an isolated account, with the time taken
+    recorded against the recovery time objective.
+  remediation: >-
+    Create restore testing plans in AWS Backup for crown-jewel resources with validation (for example a
+    Lambda function that checks the restored database), and schedule a yearly recovery exercise that
+    restores a complete system into an isolated recovery account.
+  effort: M
+  licence: [aws-backup]
+  sources: [aws-backup-restore-testing, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: RC.RP-03 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: AWS-BCK-003
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: high
+  question: Are developers and other non-administrator roles unable to delete or change backups, or to restore or copy backups of systems they don't own?
+  why: >-
+    A developer's stolen credentials, or a careless script running as a developer role, shouldn't be
+    able to delete recovery points or pull another team's data out of a backup.
+  yesLooksLike: >-
+    Non-administrator permission sets and workload roles don't include AWS Backup delete, update or
+    restore permissions (for example no AWSBackupFullAccess), can't delete or share EBS, RDS or other
+    snapshots, and can't change S3 versioning or lifecycle settings on crown-jewel buckets.
+  remediation: >-
+    Review permission sets and roles for backup:*, ec2:DeleteSnapshot, ec2:ModifySnapshotAttribute,
+    rds:DeleteDBSnapshot, rds:ModifyDBSnapshotAttribute and s3:PutBucketVersioning, remove them from
+    non-administrator roles, and add a vault access policy that denies backup:DeleteRecoveryPoint and
+    backup:UpdateRecoveryPointLifecycle except for the backup administrator role.
+  effort: S
+  licence: [aws-backup]
+  sources: [aws-backup-access-control, aws-backup-vault-access-policy, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: AWS-BCK-004
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: critical
+  question: Are crown-jewel backups protected so that production administrators can't change or delete them, or restore and copy backups of systems they don't run?
+  why: >-
+    Attackers who gain administrator rights in a production account delete its backups and snapshots
+    before encrypting or wiping data, or copy them out to steal the data. Backups that production
+    administrators can't touch survive.
+  yesLooksLike: >-
+    Production administrators can't delete, change, restore or share crown-jewel backups of systems
+    they don't administer, and can't delete or change any backups. Common ways to get there: recovery
+    points copied to a vault in a dedicated backup account that production administrators can't sign in
+    to, or to a logically air-gapped vault; vault access policies denying deletion and lifecycle changes
+    except to a named backup administrator role; and IAM policies or SCPs denying snapshot copy, share
+    and delete actions in the EC2 and RDS APIs (which vault access policies don't cover) to everyone but
+    that role.
+  remediation: >-
+    Turn on cross-account backup in AWS Backup, create a backup account in a Security or Infrastructure
+    OU (or use a logically air-gapped vault), add copy actions to backup plans, apply vault access
+    policies denying backup:DeleteRecoveryPoint and backup:UpdateRecoveryPointLifecycle except for the
+    backup administrator role, and add an SCP denying ec2:DeleteSnapshot, ec2:ModifySnapshotAttribute,
+    ec2:CopySnapshot, rds:DeleteDBSnapshot, rds:ModifyDBSnapshotAttribute and rds:CopyDBSnapshot outside
+    that role. Cross-account copies of RDS, EBS and other resources not fully managed by AWS Backup need a
+    customer managed KMS key shared with the backup account, so re-encrypt crown-jewel resources that use
+    AWS managed keys first.
+  effort: M
+  licence: [aws-backup]
+  sources: [aws-backup-cross-account, aws-backup-encryption, aws-backup-access-control, aws-backup-air-gapped, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: Backup.1 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: regular-backups, level: 2 }
+
+- id: AWS-BCK-005
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: high
+  question: Are crown-jewel backups locked so that not even backup administrators can delete them or shorten their retention early?
+  why: >-
+    An attacker who compromises the backup administrator, or a malicious insider, can still delete
+    backups unless the platform itself refuses. Immutable backups are the last line of defence against
+    ransomware.
+  yesLooksLike: >-
+    Vaults holding crown-jewel recovery points use AWS Backup Vault Lock in compliance mode (past its grace
+    time) or are logically air-gapped vaults, with minimum and maximum retention set, and S3 copies of
+    crown-jewel data use S3 Object Lock in compliance mode. The lock configuration is recorded.
+  remediation: >-
+    Apply Vault Lock in compliance mode with suitable minimum and maximum retention to the backup
+    account's vaults (try governance mode first, because compliance mode can't be removed after the grace
+    time), or create a logically air-gapped vault, and use S3 Object Lock in compliance mode for S3 backup
+    copies. Pair a logically air-gapped vault with multi-party approval so you can still recover if the
+    owning account is lost.
+  effort: M
+  licence: [aws-backup]
+  sources: [aws-backup-vault-lock, aws-backup-air-gapped, aws-s3-object-lock, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+  e8:
+    - { strategy: regular-backups, level: 3 }
+
+- id: AWS-BCK-006
+  module: core
+  domain: backup-recovery
+  appliesTo: ["*"]
+  severity: medium
+  question: Is restoring from backups limited to backup administrators, so other users and administrators can't restore or copy even their own systems' backups?
+  why: >-
+    Backups hold complete copies of your most sensitive data. Anyone who can restore a recovery point into
+    an account they control can take the data without touching production.
+  yesLooksLike: >-
+    Only a named backup administrator role can start restore or copy jobs, share recovery points or
+    copy and share EBS and RDS snapshots, including for the workload's own account; vault access policies
+    and IAM policies or SCPs deny those actions to everyone else; logically air-gapped vaults are shared
+    through AWS RAM only with the named recovery account; KMS key policies on backup keys allow
+    decryption only by AWS Backup and backup administrators; and restore activity is logged and reviewed.
+  remediation: >-
+    Limit sign-in to the backup account to the backup administrator group, add vault access policy
+    statements denying backup:StartRestoreJob and other restore and copy actions to other principals,
+    deny EC2 and RDS snapshot copy and share actions to everyone but that role with an SCP, restrict AWS
+    RAM shares of air-gapped vaults, tighten backup key policies, and alert on StartRestoreJob events.
+  effort: S
+  licence: [aws-backup]
+  sources: [aws-backup-vault-access-policy, aws-backup-access-control, aws-backup-air-gapped, aws-kms-key-policies]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+  e8:
+    - { strategy: regular-backups, level: 3 }

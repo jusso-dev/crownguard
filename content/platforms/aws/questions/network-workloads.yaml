@@ -1,0 +1,595 @@
+- id: AWS-NET-001
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-data-stores]
+  severity: critical
+  question: Are security groups closed to inbound internet traffic except web traffic to load balancers, with no admin, database or file-sharing ports open to the internet?
+  why: >-
+    SSH, RDP, database and file-sharing ports open to 0.0.0.0/0 or ::/0 face password guessing and
+    exploits within minutes, and are one of the most common ways into cloud servers and data.
+  yesLooksLike: >-
+    No security group allows 0.0.0.0/0 or ::/0 to SSH (22), RDP (3389), database ports, file sharing
+    (SMB/CIFS 445) or all ports; internet traffic reaches only load balancers or CloudFront on ports 80
+    and 443, and any other internet-facing port is a documented exception; no network ACL allows
+    0.0.0.0/0 or ::/0 to ports 22 or 3389; and the default security group in each VPC has no rules.
+  remediation: >-
+    Find open rules with Security Hub CSPM or your CSPM tool, replace them with rules that reference load
+    balancer security groups or your VPN ranges, add network ACL deny entries for ports 22 and 3389 from
+    the internet where you rely on them, and remove all rules from default security groups.
+  effort: M
+  sources: [aws-sg-rules, aws-default-sg]
+  refs:
+    - { framework: cis-aws, ref: "6.1.2" }
+    - { framework: cis-aws, ref: "6.2" }
+    - { framework: cis-aws, ref: "6.3" }
+    - { framework: cis-aws, ref: "6.4" }
+    - { framework: cis-aws, ref: "6.5" }
+    - { framework: aws-fsbp, ref: EC2.2 }
+    - { framework: aws-fsbp, ref: EC2.18 }
+    - { framework: aws-fsbp, ref: EC2.19 }
+    - { framework: aws-fsbp, ref: EC2.21 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-NET-002
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads]
+  severity: medium
+  question: Are workloads kept off public IP addresses, with VPC Block Public Access or an equivalent control stopping new direct internet exposure?
+  why: >-
+    Every instance or task with a public IP address is one security group mistake away from being exposed.
+    Keeping workloads in private subnets behind load balancers makes internet exposure a deliberate
+    decision.
+  yesLooksLike: >-
+    Instances, ECS tasks and launch templates don't get public IP addresses, subnets don't assign them
+    automatically, internet-facing services sit behind load balancers or CloudFront, and VPC Block Public
+    Access (ideally enforced by an EC2 declarative policy) blocks internet gateway traffic except for
+    documented excluded subnets such as those holding load balancers and NAT gateways.
+  remediation: >-
+    Turn off automatic public IPv4 assignment on subnets, launch templates and ECS services, move
+    workloads into private subnets behind Application Load Balancers or CloudFront, then turn on VPC Block
+    Public Access with exclusions for the public subnets that need it.
+  effort: M
+  sources: [aws-vpc-bpa, aws-declarative-policies]
+  refs:
+    - { framework: aws-fsbp, ref: EC2.9 }
+    - { framework: aws-fsbp, ref: EC2.15 }
+    - { framework: aws-fsbp, ref: EC2.25 }
+    - { framework: aws-fsbp, ref: EC2.172 }
+    - { framework: aws-fsbp, ref: ECS.2 }
+    - { framework: aws-fsbp, ref: ECS.16 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-NET-003
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-privileged-identities, aws-data-stores]
+  severity: high
+  question: Do all EC2 instances require IMDSv2, with IMDSv2 set as the account default in every region?
+  why: >-
+    IMDSv1 lets a server-side request forgery flaw in a web application read the instance role's
+    credentials and then the data that role can reach, the technique behind several large cloud data
+    breaches. IMDSv2's session tokens block that attack.
+  yesLooksLike: >-
+    Every running instance and launch template has HttpTokens set to required, the account-level instance
+    metadata defaults require IMDSv2 in every region (or an EC2 declarative policy enforces it), and the
+    hop limit is 1 except where containers need 2.
+  remediation: >-
+    Use the MetadataNoToken CloudWatch metric to find software still calling IMDSv1 and update it, require
+    IMDSv2 on running instances and launch templates, then set IMDSv2 as the default in each region's EC2
+    Data protection and security settings or with a declarative policy.
+  effort: M
+  sources: [aws-imds, aws-imds-defaults, aws-declarative-policies]
+  refs:
+    - { framework: cis-aws, ref: "6.7" }
+    - { framework: aws-fsbp, ref: EC2.8 }
+    - { framework: aws-fsbp, ref: EC2.170 }
+    - { framework: aws-fsbp, ref: AutoScaling.3 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+
+- id: AWS-NET-004
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-privileged-identities, aws-data-stores]
+  severity: critical
+  question: Do internet-facing instances, containers and functions run with roles limited to what they need, never administrator or broad data-access roles?
+  why: >-
+    When an internet-facing workload is compromised, the attacker inherits its role. A web server with
+    AdministratorAccess, or s3:* on every bucket, turns one application bug into a breach of the whole
+    account. CSPM tools rank this combination among the most direct paths to a crown jewel.
+  yesLooksLike: >-
+    Each workload has its own role scoped to the buckets, tables, queues and keys it uses; no
+    internet-facing EC2 instance, ECS task, EKS pod or Lambda function has AdministratorAccess,
+    PowerUserAccess, IAM write access or wildcard data permissions; EKS pods get their own roles through
+    EKS Pod Identity or IAM roles for service accounts rather than using a broad node role; and your
+    CSPM's attack-path or toxic combination findings for public workloads with privileged roles are
+    resolved.
+  remediation: >-
+    List internet-facing workloads (public IP addresses, load balancer targets, function URLs and API
+    Gateway backends) and their roles, replace broad managed policies with least-privilege policies (IAM
+    Access Analyzer can generate them from CloudTrail activity), use one role per workload and EKS Pod
+    Identity for pods, and rerun your posture checks.
+  effort: M
+  sources: [aws-iam-roles-ec2, aws-eks-pod-identity, aws-iam-best-practices, aws-access-analyzer]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-NET-005
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads]
+  severity: high
+  question: Are internet-facing web applications and APIs on AWS protected by AWS WAF or an equivalent web application firewall with managed rules?
+  why: >-
+    Internet-facing applications are probed constantly for injection flaws, known exploits and
+    credential stuffing. A web application firewall with maintained rules blocks much of that traffic
+    and can be updated within hours when a new exploit appears, before the application is patched.
+  yesLooksLike: >-
+    Every internet-facing CloudFront distribution, Application Load Balancer, API Gateway stage and
+    Amazon Cognito user pool has an AWS WAF web ACL (or sits behind an equivalent web application
+    firewall) with AWS Managed Rules such as the core rule set and known bad inputs, plus rate-based
+    rules; WAF logging is on; and AWS Firewall Manager or your CSPM reports any internet-facing endpoint
+    without one.
+  remediation: >-
+    Create web ACLs with the AWS Managed Rules baseline and use-case rule groups that fit each
+    application, start in count mode, review the logs and switch to block, associate them with every
+    internet-facing CloudFront distribution, load balancer and API stage, and use AWS Firewall Manager
+    policies to apply them across accounts.
+  effort: M
+  licence: [aws-waf]
+  sources: [aws-waf-managed-rules, aws-waf]
+  refs:
+    - { framework: aws-fsbp, ref: CloudFront.6 }
+    - { framework: aws-fsbp, ref: APIGateway.4 }
+    - { framework: aws-fsbp, ref: WAF.10 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: nist-csf-2, ref: DE.CM-01 }
+
+- id: AWS-NET-006
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-data-stores]
+  severity: high
+  question: Does every internet-facing API and Lambda function URL require authentication, unless it is deliberately public and approved?
+  why: >-
+    An API Gateway route with no authoriser, or a Lambda function URL with no authentication, runs your
+    code and returns your data for anyone on the internet who finds the address.
+  yesLooksLike: >-
+    API Gateway routes and methods use an IAM, Lambda, JWT or Amazon Cognito authoriser; Lambda function
+    URLs use AWS_IAM authentication (or the function is a deliberate public endpoint with its own
+    authentication and an owner's sign-off); and Amazon Cognito identity pools don't allow
+    unauthenticated identities beyond what the app needs.
+  remediation: >-
+    List API Gateway APIs and Lambda function URLs, add an authoriser to each route or method, change
+    function URL authentication to AWS_IAM or put the function behind API Gateway with an authoriser,
+    and record the few endpoints that are public by design.
+  effort: M
+  sources: [aws-apigw-access-control, aws-lambda-url-auth]
+  refs:
+    - { framework: aws-fsbp, ref: APIGateway.8 }
+    - { framework: aws-fsbp, ref: Cognito.2 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-NET-007
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads]
+  severity: high
+  question: Is the Kubernetes API of each EKS cluster private or limited to known networks, with its audit logs turned on?
+  why: >-
+    A public cluster endpoint invites credential attacks and exploits against the control plane, and
+    without audit logs nobody can see who deployed or ran commands in what.
+  yesLooksLike: >-
+    EKS clusters use a private endpoint, or a public endpoint restricted to specific address ranges, and
+    the audit and authenticator control plane logs go to CloudWatch Logs or your SIEM. Answer N/A if you
+    don't run EKS.
+  remediation: >-
+    In each cluster's networking settings, turn off public endpoint access or restrict it to your office
+    and VPN ranges, and enable the audit and authenticator log types. Manage cluster access with EKS
+    access entries rather than the aws-auth ConfigMap. Clusters on Kubernetes 1.28 or later already
+    envelope-encrypt secrets with KMS; use a customer managed key for crown-jewel clusters if you need
+    to control the key.
+  effort: M
+  sources: [aws-eks-endpoint, aws-eks-control-plane-logs, aws-eks-access-entries, aws-eks-envelope-encryption, aws-eks-security]
+  refs:
+    - { framework: aws-fsbp, ref: EKS.1 }
+    - { framework: aws-fsbp, ref: EKS.8 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+
+- id: AWS-NET-008
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-data-stores]
+  severity: medium
+  question: Are AI workloads on Amazon Bedrock and SageMaker AI that use crown-jewel data limited to that data and kept off the open internet?
+  why: >-
+    AI agents, knowledge bases and notebooks are often given broad roles so they "just work", and
+    notebooks with direct internet access and root are a convenient place to copy data out. A prompt
+    injection or a stolen notebook session then reaches everything the role can.
+  yesLooksLike: >-
+    Bedrock agents, knowledge bases and AgentCore runtimes use their own roles scoped to the data sources
+    and actions they need, and AgentCore gateways require authorisation; SageMaker AI notebook instances
+    run in your VPC without direct internet access or root access for users; Bedrock model invocation
+    logging, if used, writes to a protected log store; and Bedrock Guardrails filter sensitive
+    information where agents answer people. Answer N/A if you run no AI workloads on AWS.
+  remediation: >-
+    Give each agent, knowledge base and notebook its own least-privilege role, place SageMaker AI
+    notebooks in a VPC with direct internet access and root access turned off, require authorisation on
+    AgentCore gateways, protect any model invocation log destination like other sensitive logs, and
+    attach Bedrock Guardrails with sensitive information filters to customer- or staff-facing agents.
+  effort: M
+  sources: [aws-bedrock-iam, aws-sagemaker-notebook-internet, aws-bedrock-invocation-logging, aws-bedrock-guardrails]
+  refs:
+    - { framework: aws-fsbp, ref: SageMaker.1 }
+    - { framework: aws-fsbp, ref: SageMaker.3 }
+    - { framework: aws-fsbp, ref: BedrockAgentCore.2 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-NET-009
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads]
+  severity: medium
+  question: Are DNS records removed when the AWS resources they point to are deleted, so attackers can't take over your subdomains?
+  why: >-
+    A Route 53 record that delegates to a deleted hosted zone, or points at a released Elastic IP
+    address, a deleted S3 website bucket or CloudFront distribution, can be claimed by someone else, who
+    can then serve phishing pages or steal cookies from your own domain.
+  yesLooksLike: >-
+    NS records in each parent domain match the delegation set of the Route 53 hosted zone they delegate
+    to, and delegations are removed before a hosted zone is deleted; infrastructure as code removes DNS
+    records together with the resources they point to; records are reviewed regularly (or monitored by
+    your CSPM) for targets that no longer exist; and findings are fixed promptly.
+  remediation: >-
+    Compare parent-domain NS records with each hosted zone's name servers and remove stale delegations,
+    consider DNSSEC signing, manage DNS records alongside their resources in CloudFormation or Terraform,
+    use alias records for AWS targets, and run a regular check for records whose targets no longer exist.
+  effort: S
+  sources: [aws-dangling-dns]
+  refs:
+    - { framework: aws-fsbp, ref: CloudFront.12 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+
+- id: AWS-NET-010
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: high
+  question: Are EC2 servers administered only through Session Manager, EC2 Instance Connect Endpoint or a hardened jump server, rather than directly from administrators' devices?
+  why: >-
+    Servers that accept SSH or RDP straight from administrators' devices need open ports and keys
+    scattered across laptops. A single brokered entry point, controlled by IAM and logged, narrows
+    administration to one monitored route.
+  yesLooksLike: >-
+    Administrators reach EC2 instances through Session Manager (with session logging on) or EC2 Instance
+    Connect Endpoint, granted through IAM permissions limited to admin groups, or through a hardened
+    jump server reached from their privileged environment; security groups don't allow SSH or RDP from
+    administrators' networks or the internet; and direct connections that bypass these are blocked. Answer
+    N/A if you run no EC2 instances.
+  remediation: >-
+    Make instances Systems Manager managed nodes (for example with Default Host Management
+    Configuration), turn on Session Manager session logging to the log archive, limit
+    ssm:StartSession and ec2-instance-connect:OpenTunnel to admin groups and tagged instances, and then
+    remove SSH and RDP rules from security groups.
+  effort: M
+  sources: [aws-session-manager, aws-session-manager-logging, aws-eice, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: SSM.1 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-NET-011
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: high
+  question: Does everyone who signs in to your EC2 servers, administrators and other users alike, authenticate with phishing-resistant MFA?
+  why: >-
+    A server sign-in that needs only an SSH key file or a password can be replayed by anyone who copies
+    it. Tying server access to a phishing-resistant sign-in stops stolen keys and passwords working on
+    their own.
+  yesLooksLike: >-
+    People reach EC2 instances only through Session Manager or EC2 Instance Connect, which require an
+    AWS session from IAM Identity Center or your identity provider protected by phishing-resistant MFA
+    (AWS-IAM-006), or sign in to Windows and Linux servers with smart cards, security keys or another
+    phishing-resistant method; no one signs in with a long-lived SSH key or a password alone. Answer N/A
+    if you run no EC2 instances.
+  remediation: >-
+    Move server access to Session Manager or EC2 Instance Connect, require phishing-resistant MFA for the
+    permission sets that allow ssm:StartSession and EC2 Instance Connect, remove long-lived SSH keys from
+    authorized_keys and stop handing out key pairs, and use phishing-resistant sign-in for any direct
+    Windows logons that remain.
+  effort: M
+  sources: [aws-session-manager-access, aws-eice, aws-identity-center-mfa-types, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: AWS-NET-012
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Are local administrator and root credentials on EC2 servers unique to each instance, randomly generated and managed?
+  why: >-
+    One local administrator password or SSH key shared across servers lets an attacker who recovers it
+    from one machine sign in to all of them.
+  yesLooksLike: >-
+    Windows instances' local Administrator passwords are unique, random and rotated, for example by
+    Windows LAPS with AWS Managed Microsoft AD or by a scheduled rotation into Parameter Store or Secrets
+    Manager; Linux instances don't share key pairs or root passwords across servers, and people connect
+    through Session Manager or EC2 Instance Connect instead; and retrieving these credentials is limited
+    and logged. Answer N/A if you run no EC2 instances.
+  remediation: >-
+    Turn on Windows LAPS for domain-joined Windows instances (or rotate the local Administrator password
+    into Parameter Store with Systems Manager), stop sharing key pairs between instances, remove
+    unneeded local accounts, and limit who can read stored local credentials.
+  effort: M
+  sources: [aws-ds-windows-laps, aws-ec2rescue-reset, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-NET-013
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Are LSA protection, Credential Guard, Remote Credential Guard and memory integrity turned on for Windows EC2 instances, wherever the instance supports them?
+  why: >-
+    Credential theft tools read passwords, hashes and Kerberos tickets from server memory to move from
+    one machine to the next. These Windows features protect those secrets, so one compromised server
+    doesn't give up the credentials of every administrator who has signed in to it.
+  yesLooksLike: >-
+    Windows instances run LSA as a protected process; Credential Guard is on for instances launched on a
+    supported instance type from an AMI with NitroTPM and UEFI Secure Boot; Remote Credential Guard is
+    required for Remote Desktop connections; and memory integrity is on where AWS supports it (AWS's
+    Credential Guard instructions require memory integrity to be off, so record that exception). Answer
+    N/A if you run no Windows instances.
+  remediation: >-
+    Launch Windows instances from NitroTPM and UEFI Secure Boot AMIs on supported instance types, apply
+    Group Policy or Systems Manager State Manager settings for LSA protection, Credential Guard and
+    Remote Credential Guard, and check that the features are running.
+  effort: M
+  sources: [aws-ec2-credential-guard, ms-lsa-protection, ms-memory-integrity, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: AWS-NET-014
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: high
+  question: Is a vulnerability scanner, such as Amazon Inspector, scanning every EC2 instance's operating system and installed software, daily for internet-facing instances and at least fortnightly for the rest?
+  why: >-
+    Unpatched servers are one of the most common ways in. You can only fix what you can see, and cloud
+    instances appear and change too quickly for occasional manual scans.
+  yesLooksLike: >-
+    Amazon Inspector (or an equivalent scanner with an up-to-date vulnerability database and automated
+    asset discovery) covers every account and region; new instances are discovered and scanned
+    automatically; the coverage view shows every instance actively scanned, including internet-facing
+    ones at least daily and others at least fortnightly; and findings flow to Security Hub CSPM or your
+    ticketing system. Answer N/A if you run no EC2 instances.
+  remediation: >-
+    Register a delegated administrator for Inspector and activate EC2 scanning for all member accounts
+    with automatic enablement (or deploy your scanner organisation-wide), fix the reasons instances
+    aren't covered (for example a missing SSM Agent or unsupported operating system), and route findings
+    to their owners.
+  effort: S
+  licence: [inspector]
+  sources: [aws-inspector, aws-inspector-ec2, aws-inspector-supported, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: Inspector.1 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: ID.AM-01 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+    - { strategy: patch-applications, level: 1 }
+
+- id: AWS-NET-015
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: high
+  question: Are EC2 operating systems patched on time, with critical or exploited vulnerabilities on internet-facing instances fixed within 48 hours and unsupported operating systems replaced?
+  why: >-
+    Attackers exploit published operating system vulnerabilities within days, and internet-facing servers
+    are hit first.
+  yesLooksLike: >-
+    Operating system patches reach internet-facing instances within 48 hours when a vulnerability is
+    critical or has a working exploit (two weeks otherwise) and other instances within one month, whether
+    through Systems Manager Patch Manager, another patching tool or rebuilding from patched AMIs; patch
+    status is reported centrally; and no instance runs an operating system its vendor no longer supports.
+    Answer N/A if you run no EC2 instances.
+  remediation: >-
+    Make instances managed nodes and create a Quick Setup patch policy for the organisation with patch
+    baselines and schedules matching these timeframes (or configure your own tool to the same
+    deadlines), use scanner findings with known exploits to trigger out-of-cycle patching, and replace
+    instances on unsupported operating systems.
+  effort: M
+  sources: [aws-patch-manager, aws-patch-compliance, aws-inspector-severity, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: SSM.2 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+  e8:
+    - { strategy: patch-operating-systems, level: 1 }
+
+- id: AWS-NET-016
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: high
+  question: Are the internet-facing applications you run on AWS, including container images and Lambda functions, scanned daily and patched within 48 hours for critical or exploited vulnerabilities, with unsupported versions removed?
+  why: >-
+    Web applications, frameworks and libraries exposed to the internet are attacked as soon as a
+    vulnerability is published, and unsupported runtimes stop receiving fixes altogether.
+  yesLooksLike: >-
+    Every internet-facing application on EC2, ECS, EKS or Lambda is scanned at least daily for missing
+    patches (for example Inspector EC2, ECR enhanced and Lambda scanning, or an equivalent scanner);
+    critical or exploited issues are fixed or mitigated within 48 hours and others within two weeks;
+    container images are rebuilt and redeployed rather than patched in place; no Lambda function uses a
+    deprecated runtime; and EKS clusters and node groups run a supported Kubernetes version. Answer N/A
+    if you run no internet-facing applications on AWS.
+  remediation: >-
+    Give each internet-facing application an owner, turn on ECR enhanced scanning and Lambda scanning,
+    route critical findings to owners with due dates, rebuild container images when base images are
+    updated, move Lambda functions off deprecated runtimes, and upgrade EKS clusters before standard
+    support ends.
+  effort: M
+  licence: [inspector]
+  sources: [aws-inspector, aws-ecr-scanning, aws-lambda-runtimes, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: Inspector.2 }
+    - { framework: aws-fsbp, ref: Inspector.3 }
+    - { framework: aws-fsbp, ref: Inspector.4 }
+    - { framework: aws-fsbp, ref: ECR.1 }
+    - { framework: aws-fsbp, ref: Lambda.2 }
+    - { framework: aws-fsbp, ref: EKS.2 }
+    - { framework: aws-fsbp, ref: EKS.9 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: AWS-NET-017
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: On EC2 instances and any Amazon WorkSpaces, are security agents and any browser, office, email or PDF software scanned weekly, patched within two weeks and removed once unsupported?
+  why: >-
+    Security agents run with high privileges on every server, and browsers or PDF readers left on
+    servers are easy to exploit. A flaw in either hands over the machine.
+  yesLooksLike: >-
+    A scanner checks security products such as EDR and antivirus agents, and any browser, office suite,
+    email client or PDF reader installed on instances or WorkSpaces, at least weekly; their updates are
+    applied within two weeks of release; and versions their vendors no longer support are removed. Answer
+    N/A if you run no EC2 instances or WorkSpaces.
+  remediation: >-
+    Turn on automatic updates for security agents, remove browsers and office or PDF software from
+    servers that don't need them, patch the rest with Patch Manager or your software deployment tool,
+    and check the scanner's findings weekly.
+  effort: S
+  sources: [aws-inspector-ec2, aws-patch-manager, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: AWS-NET-018
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Are other applications on AWS, such as database engines, web servers, runtimes and container base images, scanned at least fortnightly and updated within one month of release?
+  why: >-
+    Server software outside the operating system carries its own vulnerabilities and is easily missed
+    when only the operating system is patched, leaving internal systems open to an attacker who is
+    already inside.
+  yesLooksLike: >-
+    A scanner checks software installed on instances and in container images at least fortnightly;
+    updates are applied within one month of release; RDS and Aurora engines take minor version updates
+    automatically or within a month through maintenance windows; and software installed outside package
+    managers has an owner who applies vendor updates on time. Answer N/A if you run no EC2 instances,
+    containers or managed databases.
+  remediation: >-
+    Keep Inspector or your scanner covering instances and ECR images, install server software from
+    package repositories so Patch Manager can update it, turn on automatic minor version upgrades for RDS
+    and Aurora, rebuild container images regularly, and track updates for anything installed another way.
+  effort: M
+  sources: [aws-inspector-ec2, aws-patch-manager, aws-rds-maintenance, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-aws, ref: "3.2.2" }
+    - { framework: aws-fsbp, ref: RDS.13 }
+    - { framework: aws-fsbp, ref: RDS.35 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-applications, level: 2 }
+
+- id: AWS-NET-019
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Are critical fixes for security agents and any browser, office, email or PDF software on EC2 and WorkSpaces applied within 48 hours, and is any application its vendor no longer supports removed?
+  why: >-
+    Capable attackers use exploits for these programs within days of release, and software past its end
+    of support, such as an old database engine or runtime, is never fixed again.
+  yesLooksLike: >-
+    Security agents and any browser, office, email or PDF software on instances and WorkSpaces get fixes
+    for critical or exploited vulnerabilities within 48 hours of release (others within two weeks); and
+    the scanner shows no application on any instance, container image or managed database past its
+    vendor's end of support. Answer N/A if you run no EC2 instances, WorkSpaces or containers.
+  remediation: >-
+    Push urgent fixes for agents and user software the day they're released, and remove or replace
+    end-of-life software, runtimes, database engines and base images that your scanner reports.
+  effort: M
+  sources: [aws-inspector-ec2, aws-lambda-runtimes, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-applications, level: 3 }
+
+- id: AWS-NET-020
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Do all EC2 instances, including internal ones, get operating system and driver fixes for critical or exploited vulnerabilities within 48 hours?
+  why: >-
+    Capable attackers who get a foothold move to internal servers that are patched less urgently.
+    Closing the gap for exploited operating system and driver flaws limits how far they get.
+  yesLooksLike: >-
+    Critical or exploited operating system fixes reach every instance within 48 hours of release and other
+    fixes within one month; AWS drivers on Windows instances (ENA, NVMe and PV) and other drivers are
+    scanned at least fortnightly and updated on the same timeframes, for example through Systems Manager
+    Distributor; and firmware of the underlying hardware is maintained by AWS under the shared
+    responsibility model. Answer N/A if you run no EC2 instances.
+  remediation: >-
+    Run on-demand Patch Manager operations (or your tool) for critical fixes on all instances within 48
+    hours, schedule driver packages such as AwsEnaNetworkDriver and AWSPVDriver through Distributor or
+    State Manager, and watch vendor advisories so urgent fixes start the day they ship.
+  effort: M
+  sources: [aws-patch-manager, aws-ena-windows-driver, aws-shared-responsibility, asd-patching, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }
+
+- id: AWS-NET-021
+  module: core
+  domain: network-workloads
+  appliesTo: ["*"]
+  severity: medium
+  question: Do EC2 instances run the latest or previous release of their operating system?
+  why: >-
+    Older operating system releases lack newer security features and are the first to lose fixes.
+    Servers left on them are easy targets once an attacker is inside.
+  yesLooksLike: >-
+    Each instance runs the newest or previous release in the servicing channel it uses, for example one
+    of the two most recent Windows Server Long-Term Servicing Channel releases or the current Amazon Linux release, and
+    instances on older releases have a rebuild date (the answer is Partial until they move). Answer N/A
+    if you run no EC2 instances.
+  remediation: >-
+    Use Systems Manager inventory or your scanner to list operating system versions, plan rebuilds onto
+    the newest release before the previous one is superseded, and stop launching instances from older
+    AMIs.
+  effort: M
+  sources: [aws-windows-ami-reference, ms-windows-server-release-info, asd-e8-faq, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: nist-csf-2, ref: ID.AM-08 }
+  e8:
+    - { strategy: patch-operating-systems, level: 3 }

@@ -48,7 +48,7 @@ describe("PDF report", () => {
     expect(without).not.toContain("SOC-CMM");
   }, 120_000);
 
-  for (const platforms of [["microsoft"], ["google"], ["microsoft", "google"]])
+  for (const platforms of [["microsoft"], ["google"], ["aws"], ["microsoft", "google", "aws"]])
     it(`renders for ${platforms.join(" + ")}`, async () => {
       const model = buildReport(catalogue, fixtureAssessment(catalogue, platforms), new Date("2026-10-08"));
       const buf = await renderToBuffer(createElement(ReportDocument, { model }) as Parameters<typeof renderToBuffer>[0]);

@@ -63,6 +63,10 @@ only record recommendation numbers and short titles, never recommendation body t
 licence tiers (each a set of licence features), and question domains. Its `sources` list cites the vendor pages the
 licence tiers are based on (edition comparisons, nonprofit offers), so the source watch tracks them too.
 
+A platform needs at least one licence tier. AWS has no editions: its single pay-as-you-go tier includes every licence
+feature, and the features (GuardDuty, Security Hub CSPM, Macie and so on) mark fixes that add a running cost rather
+than something the customer might not own. The wizard hides the tier picker for a platform with one tier.
+
 ## Asset types (crown-jewel categories)
 
 ```yaml
@@ -114,7 +118,9 @@ Writing rules:
   questions stops the strategy there (the report shows it as not verified, which also leaves the matching IDCF level
   not verified), except a level ASD defines with no new requirements (patching operating systems at Maturity Level 2;
   see `NO_NEW_REQUIREMENTS` in `src/engine/maturity.ts`). The questions tagged at a level must together cover
-  everything that level adds over the one below.
+  everything that level adds over the one below. Questions are only asked when a crown jewel of one of their
+  `appliesTo` types is recorded, so give the questions tagged at the same strategy and level the same `appliesTo`
+  (account-wide controls use `["*"]`); otherwise a scope can reach a level with part of it never asked.
 - Severity reflects how directly the gap enables compromise of a crown jewel, not how hard the fix is.
 
 ## SOC maturity module
@@ -175,7 +181,14 @@ mappings:
 
 Only map a check when its pass or fail genuinely answers the question. When several checks map to one question,
 all pass gives Yes, all fail gives No, and anything mixed (or a warning) gives Partial. Statuses that can't settle
-a question (review, info, unknown, not licensed) leave it for the assessor.
+a question (review, info, unknown, not licensed) leave it for the assessor. `cap: partial` turns an all-pass into
+Partial when the checks cover only part of the question; `failIsInconclusive: true` sends a fail to review instead of
+No when a check also fails for reasons the question doesn't ask about.
+
+The wizard imports M365-Secure results today. `prowler-aws.yaml` and `prowler-azure.yaml` map
+[Prowler](https://github.com/prowler-cloud/prowler) check ids to the AWS and Azure questions under the same rules; they
+are validated with the content but no importer reads them yet. Pin new check ids to a Prowler release in the file's
+header comment, because Prowler renames checks between versions.
 
 ## Source watch
 
@@ -222,8 +235,8 @@ and runs the tests itself before opening it. A simulated run (`simulate` on a ma
 Workspace Help and Google Cloud docs (CC BY 4.0), cyber.gov.au (CC BY 4.0), NIST publications (public domain), and the
 Microsoft Learn pages whose public GitHub mirror is openly licensed (entra-docs under MIT, azure-docs and
 power-platform under CC BY 4.0). Learn's own terms don't permit republishing the rest, so those pages, the Google Help
-Center, CIS and Microsoft marketing pages are summarised by section names and word counts only. Page text is never
-committed; the text used for diffs is kept in the Actions cache.
+Center, AWS documentation and pricing pages, CIS and Microsoft marketing pages are summarised by section names and
+word counts only. Page text is never committed; the text used for diffs is kept in the Actions cache.
 
 **Optional Claude triage.** Add an `ANTHROPIC_API_KEY` repository secret and the workflow asks Claude
 (`claude-opus-5-5`, at most 8 pages a night) whether each substantial change affects the questions that cite the page.

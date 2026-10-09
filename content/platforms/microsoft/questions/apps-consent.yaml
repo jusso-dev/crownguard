@@ -60,7 +60,7 @@
 - id: MS-APP-003
   module: core
   domain: apps-consent
-  appliesTo: [ms-workload-identities, ms-azure-key-vault]
+  appliesTo: [ms-workload-identities, ms-azure-subscriptions]
   severity: high
   question: Do your app registrations authenticate with certificates, managed identities or workload identity federation instead of long-lived client secrets?
   why: >-

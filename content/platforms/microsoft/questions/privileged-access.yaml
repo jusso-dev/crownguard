@@ -1,7 +1,7 @@
 - id: MS-PA-001
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles, ms-hybrid-identity]
+  appliesTo: [ms-privileged-roles, ms-hybrid-identity, ms-azure-subscriptions]
   severity: critical
   question: Do administrators use separate cloud-only admin accounts that have no mailbox and are not synchronised from on-premises Active Directory?
   why: >-
@@ -9,8 +9,9 @@
     gives an attacker the keys to the tenant. Synchronised admin accounts also let an on-premises
     compromise climb straight into the cloud.
   yesLooksLike: >-
-    Every directory role holder uses a dedicated admin account (for example on the onmicrosoft.com
-    domain) that is cloud-only, has no Exchange or Office app licence, and is never used for email or
+    Every directory role holder, and everyone holding a privileged Azure role such as Owner or User
+    Access Administrator, uses a dedicated admin account (for example on the onmicrosoft.com domain)
+    that is cloud-only, has no Exchange or Office app licence, and is never used for email or
     browsing.
   remediation: >-
     Create cloud-only admin accounts for each administrator, move role assignments off daily accounts,
@@ -22,6 +23,7 @@
   refs:
     - { framework: cis-m365, ref: "1.1.1" }
     - { framework: cis-m365, ref: "1.1.4" }
+    - { framework: cis-azure, ref: "5.3.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-1 }
   e8:
@@ -61,7 +63,7 @@
 - id: MS-PA-003
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles]
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
   severity: high
   question: Are privileged roles held as eligible assignments activated just-in-time through Privileged Identity Management, rather than permanently assigned?
   why: >-
@@ -112,6 +114,7 @@
   sources: [ms-access-reviews, ms-pim-configure]
   refs:
     - { framework: cis-m365, ref: "5.3.3" }
+    - { framework: cis-azure, ref: "5.3.4" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-4 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
@@ -121,7 +124,7 @@
 - id: MS-PA-005
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles]
+  appliesTo: [ms-privileged-roles, ms-azure-subscriptions]
   severity: high
   question: Do you have at least two cloud-only emergency access accounts, protected by FIDO2 keys or certificates, alerted on every use and tested at least every 90 days?
   why: >-
@@ -150,7 +153,7 @@
 - id: MS-PA-006
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles, ms-managed-endpoints]
+  appliesTo: [ms-privileged-roles, ms-managed-endpoints, ms-azure-subscriptions]
   severity: high
   question: Do administrators perform privileged tasks only from dedicated, hardened admin workstations, separate from the device they use for email and browsing?
   why: >-
@@ -296,7 +299,7 @@
 - id: MS-PA-011
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles, ms-hybrid-identity, ms-managed-endpoints]
+  appliesTo: [ms-privileged-roles, ms-hybrid-identity, ms-managed-endpoints, ms-azure-subscriptions]
   severity: high
   question: Do administrators use their admin accounts only in a separate privileged environment that their everyday accounts can't sign in to?
   why: >-
@@ -328,7 +331,7 @@
 - id: MS-PA-012
   module: core
   domain: privileged-access
-  appliesTo: [ms-privileged-roles, ms-managed-endpoints]
+  appliesTo: [ms-privileged-roles, ms-managed-endpoints, ms-azure-subscriptions]
   severity: medium
   question: Is each administrator's privileged environment kept off their everyday device, rather than running as a virtual machine inside it?
   why: >-

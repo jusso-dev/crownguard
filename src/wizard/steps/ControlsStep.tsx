@@ -32,7 +32,7 @@ export function ControlsStep() {
   return (
     <>
       <StepHeader title="How well are they protected?">
-        These questions come from Microsoft and Google security guidance, mapped to CIS Benchmarks, the ASD Essential
+        These questions come from Microsoft, Google and AWS security guidance, mapped to CIS Benchmarks, the ASD Essential
         Eight, NIST CSF 2.0 and the IDCF. Only questions relevant to your crown jewels are shown. If you're not sure, answer
         <strong> Unknown</strong>: it counts as a gap, and the report flags it so someone can check.
       </StepHeader>

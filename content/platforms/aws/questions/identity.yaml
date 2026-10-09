@@ -1,0 +1,645 @@
+- id: AWS-IAM-001
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: critical
+  question: Have the root user credentials of every member account been removed through centralised root access?
+  why: >-
+    Every AWS account has a root user that can do anything in it, including closing the account and
+    recovering access. A member-account root password or access key that nobody remembers is a quiet way
+    to take over an account that no service control policy can fully stop.
+  yesLooksLike: >-
+    Root credentials management and privileged root actions in member accounts are enabled under Root
+    access management in IAM, and the per-account status shows no root password, access keys, signing
+    certificates or MFA devices in any member account. Tasks that need root in a member account are done
+    as short privileged root sessions from the management account. Answer N/A if you run a single
+    standalone account that isn't in AWS Organizations.
+  remediation: >-
+    In the management account's IAM console, open Root access management and enable Root credentials
+    management and Privileged root actions in member accounts (this needs trusted access for IAM in AWS
+    Organizations), then delete the existing root credentials of each member account from the same page.
+    New accounts created in the organisation start without root credentials.
+  effort: S
+  sources: [aws-root-centralise, aws-root-best-practices]
+  refs:
+    - { framework: cis-aws, ref: "2.1.1" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-IAM-002
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: critical
+  question: Is every remaining root user, such as the management account's, kept for emergencies only, with no access keys and its credentials held under control?
+  why: >-
+    In the management account or a standalone account no policy can limit the root user. A leaked root
+    access key or a root password that several people know is a complete account takeover, and routine
+    root use makes misuse hard to spot.
+  yesLooksLike: >-
+    The root user of the management account (and of any standalone account) has no access keys; its
+    password and MFA devices are kept in separate controlled safes or vaults with a record of who opens
+    them; its email address is a monitored team mailbox; the IAM credential report and CloudTrail show
+    root sign-ins only for the few tasks that need root; and every root sign-in raises an alert (see
+    AWS-LOG-006). MFA on root users is asked in AWS-IAM-005 and AWS-IAM-006.
+  remediation: >-
+    Sign in as root, delete any access keys under Security credentials, set a long unique password, move
+    the account email to a team mailbox, store the password and MFA devices separately with access
+    logged, and document which tasks justify root use. Use IAM roles or IAM Identity Center for
+    everything else.
+  effort: S
+  sources: [aws-root-best-practices, aws-root-access-keys, aws-root-user]
+  refs:
+    - { framework: cis-aws, ref: "2.4" }
+    - { framework: cis-aws, ref: "2.7" }
+    - { framework: aws-fsbp, ref: IAM.4 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-IAM-003
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do people sign in to AWS through IAM Identity Center or your identity provider with their own named account, rather than through IAM users?
+  why: >-
+    IAM users are separate passwords and keys in each account that are easily forgotten when people
+    leave and sit outside your normal sign-in controls. Central sign-in gives one place to enforce MFA,
+    remove access and see who did what.
+  yesLooksLike: >-
+    IAM Identity Center, connected to your directory (for example Microsoft Entra ID, Okta or Google) or
+    using its own directory, is how staff and contractors reach every account through permission sets
+    assigned to groups. No person has an IAM user with a console password, logins aren't shared, and
+    leavers lose AWS access when their directory account is disabled (SCIM provisioning). Emergency
+    access users (AWS-IAM-020) are the only exception.
+  remediation: >-
+    Enable IAM Identity Center in the management account (or delegate its administration), connect your
+    identity provider with SCIM provisioning, create permission sets for each job role and assign them to
+    groups, then move people off IAM users and delete their console passwords and access keys.
+  effort: M
+  sources: [aws-identity-center, aws-permission-sets, aws-iam-best-practices]
+  refs:
+    - { framework: cis-aws, ref: "2.19" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: AWS-IAM-004
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: If people sign in to AWS through an external identity provider, is that provider protected to at least the same standard as AWS itself?
+  why: >-
+    Whoever controls the identity provider that IAM Identity Center trusts can sign in to every AWS
+    account it grants, or change who is in the administrator groups. The provider is part of your AWS
+    environment, and the weakest part sets the level of protection.
+  yesLooksLike: >-
+    The external identity provider (for example Microsoft Entra ID, Okta or Google) requires
+    phishing-resistant MFA for the AWS application; its own administrator roles are held by a few
+    people with phishing-resistant MFA; only those administrators can change the AWS SAML application,
+    its signing certificate, SCIM settings or the groups mapped to AWS permission sets; the SCIM access
+    token is rotated before it expires; and changes to the AWS application and to administrator groups
+    raise alerts. Answer N/A if IAM Identity Center uses its own directory.
+  remediation: >-
+    Review the provider against its vendor's hardening guidance: require phishing-resistant MFA for its
+    administrators and for the AWS application, limit who can edit enterprise applications and group
+    membership, alert on changes to the AWS application and its certificate, and track the SCIM access
+    token's expiry date in IAM Identity Center settings. Keep an emergency path into AWS that doesn't
+    depend on the provider (AWS-IAM-020).
+  effort: M
+  sources: [aws-identity-center-external-idp, aws-identity-center]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: idcf, ref: "Whole system" }
+
+- id: AWS-IAM-005
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: critical
+  question: Is MFA required for every person who signs in to AWS, including root users and any remaining IAM users?
+  why: >-
+    A password alone is easily phished or guessed, and one AWS console session can be enough to read
+    data, weaken guardrails and delete backups.
+  yesLooksLike: >-
+    IAM Identity Center requires MFA (prompting every time, or when the sign-in context changes, which is
+    its default) and users without an MFA device must register one at sign-in, or your external identity
+    provider enforces MFA for the AWS application; every root user that still has credentials has MFA;
+    and the IAM credential report shows MFA active for every IAM user with a console password.
+  remediation: >-
+    In IAM Identity Center settings, under Authentication, turn on MFA and require users without a
+    registered device to register one at sign-in (prompting every time is stronger again). With an
+    external identity provider, enforce MFA in its sign-in policy for the AWS application. Register MFA
+    for root users, and use the IAM credential report to find IAM users with a password but no MFA.
+  effort: S
+  sources: [aws-identity-center-mfa, aws-iam-mfa, aws-root-mfa, aws-credential-report]
+  refs:
+    - { framework: cis-aws, ref: "2.5" }
+    - { framework: cis-aws, ref: "2.10" }
+    - { framework: aws-fsbp, ref: IAM.5 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: AWS-IAM-006
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Does everyone who signs in to AWS, or to the staff applications you host on it, use phishing-resistant MFA such as passkeys or security keys?
+  why: >-
+    Attackers routinely relay one-time codes and push approvals through fake sign-in pages. Passkeys and
+    security keys are bound to the genuine sign-in site, so they can't be replayed by a phishing page.
+  yesLooksLike: >-
+    IAM Identity Center allows only security keys and built-in authenticators, or your external identity
+    provider requires a phishing-resistant authentication method for the AWS application and for the
+    staff applications you host on AWS; root users have passkeys or security keys; and any remaining IAM
+    users with console access use passkeys or security keys.
+  remediation: >-
+    Have users register passkeys or security keys, starting with administrators, then in IAM Identity
+    Center settings under Authentication limit MFA types to security keys and built-in authenticators.
+    With an external identity provider, require phishing-resistant MFA in its policy for the AWS
+    application and for staff applications. Register passkeys or security keys for root users and
+    remaining IAM users.
+  effort: M
+  sources: [aws-identity-center-mfa-types, aws-iam-passkeys, aws-root-mfa, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-aws, ref: "2.6" }
+    - { framework: aws-fsbp, ref: IAM.6 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: AWS-IAM-007
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do staff have to use MFA to sign in to the applications you host on AWS that hold sensitive data, such as internal tools and the admin side of customer-facing apps?
+  why: >-
+    Internal web applications and admin consoles built on AWS often have their own logins that skip the
+    MFA protecting AWS itself. A guessed or reused password then gives direct access to the data behind
+    the application.
+  yesLooksLike: >-
+    Every application you host on AWS that holds sensitive data authenticates staff through your
+    identity provider with MFA, for example an Application Load Balancer authenticate action or AWS
+    Verified Access in front of internal apps, or federation from the app's Amazon Cognito user pool to
+    your provider, and no staff member signs in with a local password alone. Answer N/A if you host no
+    such applications on AWS.
+  remediation: >-
+    List the applications you host on AWS and how staff sign in to each. Put internal web apps behind an
+    Application Load Balancer authenticate-oidc action or AWS Verified Access connected to your identity
+    provider, federate customer apps' admin sign-in to the provider, and remove local staff passwords.
+  effort: M
+  sources: [aws-alb-authenticate, aws-verified-access, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: AWS-IAM-008
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Do customers have to use MFA to sign in to the online services you host on AWS that hold their sensitive data?
+  why: >-
+    Customer accounts protected only by a password are taken over with leaked passwords from other
+    breaches, exposing the customer's own records and anything they can see or change in your service.
+  yesLooksLike: >-
+    Every customer-facing service hosted on AWS that holds sensitive customer data requires customers to
+    complete MFA at sign-in (something they have plus something they know or are), for example an Amazon
+    Cognito user pool with MFA required or passkey sign-in. Answer N/A if you host no such services.
+  remediation: >-
+    In each Amazon Cognito user pool (or your own sign-in service), set MFA to required with an
+    authenticator app or passkeys, prompt existing customers to enrol at their next sign-in, and turn on
+    threat protection to block sign-ins with compromised credentials.
+  effort: M
+  sources: [aws-cognito-mfa, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: Cognito.5 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 1 }
+
+- id: AWS-IAM-009
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: low
+  question: Can customers choose a phishing-resistant sign-in method, such as a passkey, for the online services you host on AWS that hold their sensitive data?
+  why: >-
+    One-time codes sent by SMS or email, and codes typed from an authenticator app, can be phished. A
+    passkey option lets customers who want stronger protection have it.
+  yesLooksLike: >-
+    Every customer-facing service hosted on AWS that holds sensitive customer data lets customers
+    register and sign in with a passkey or another phishing-resistant method, for example passkeys in an
+    Amazon Cognito user pool's choice-based sign-in. Answer N/A if you host no such services.
+  remediation: >-
+    Add Passkey to the choice-based sign-in options of each Amazon Cognito user pool (with user
+    verification required), allow the USER_AUTH flow on the app client, and invite customers to
+    register a passkey after they sign in.
+  effort: S
+  sources: [aws-cognito-auth-flows, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: AWS-IAM-010
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Do customers have to sign in with phishing-resistant MFA, such as passkeys, to the online services you host on AWS that hold their sensitive data?
+  why: >-
+    While customers can still fall back to codes or passwords, attackers phish the weaker method. Making
+    passkeys the only way to sign in removes that route.
+  yesLooksLike: >-
+    Every customer-facing service hosted on AWS that holds sensitive customer data requires customers to
+    sign in with a passkey (with user verification) or another phishing-resistant method, and weaker
+    methods are used only to set one up or recover access. Answer N/A if you host no such services.
+  remediation: >-
+    Once customers have registered passkeys, remove password and one-time-code sign-in from the Amazon
+    Cognito user pool's choice-based sign-in options (or your own service), and keep a verified recovery
+    process for lost passkeys.
+  effort: L
+  sources: [aws-cognito-auth-flows, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 3 }
+
+- id: AWS-IAM-011
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do administrators use a dedicated privileged identity for AWS administration, separate from the everyday account they use for email and web browsing?
+  why: >-
+    An everyday account reads email and browses the web, so it is the account most likely to be phished
+    or have its session stolen. If the same account holds AWS administrator access, one malicious link
+    can hand over your cloud environment.
+  yesLooksLike: >-
+    Everyone who receives an administrator or other privileged permission set (or a privileged IAM role)
+    gets it through a separate admin user in your identity provider or IAM Identity Center that has no
+    mailbox, isn't used for web browsing beyond the AWS console and the admin tools it needs, and is
+    used only for privileged work. Everyday accounts hold only read-only or developer permission sets.
+  remediation: >-
+    Create separate admin users (for example adm-firstname) in your identity provider without mailbox
+    or productivity licences, put them in the groups that receive privileged permission sets, remove
+    those permission sets from everyday accounts, and block the admin users from email and general web
+    access with your identity provider and web filtering.
+  effort: M
+  sources: [aws-permission-sets, aws-fedramp-privileged, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: AWS-IAM-012
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do administrators use their AWS admin identity only from a separate privileged environment that everyday accounts can't sign in to?
+  why: >-
+    Malware on the laptop someone uses for email can ride along with any admin session opened from it.
+    Doing AWS administration only from a separate environment keeps that session away from the device
+    attackers most often compromise.
+  yesLooksLike: >-
+    Privileged AWS work happens only from a dedicated admin device or an admin desktop (for example an
+    Amazon WorkSpaces desktop used solely for administration) that everyday accounts can't sign in to,
+    and admin identities can't sign in to everyday devices. Your identity provider's device or network
+    conditions, or aws:SourceIp, aws:SourceVpc or AWS Management Console Private Access controls on
+    privileged permission sets, stop admin sessions from anywhere else.
+  remediation: >-
+    Provide a privileged environment (a dedicated device or an admin virtual desktop), restrict sign-in
+    to it to admin identities, then limit privileged permission sets to that environment with identity
+    provider device conditions or IAM conditions on source network or VPC endpoint, or route admin
+    console traffic through AWS Management Console Private Access.
+  effort: L
+  sources: [aws-console-private-access, aws-fedramp-privileged, aws-workspaces, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: AWS-IAM-013
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Is each administrator's privileged environment kept off their everyday device, rather than running as a virtual machine inside it?
+  why: >-
+    An admin virtual machine running on a laptop used for email shares that laptop's hardware and host
+    operating system. If the host is compromised, the attacker can watch or control the admin session
+    inside it.
+  yesLooksLike: >-
+    No administrator's privileged environment is a virtual machine hosted on the device they use for
+    email and browsing; privileged environments run on dedicated hardware or on separately managed hosts,
+    such as Amazon WorkSpaces desktops, that everyday accounts can't reach.
+  remediation: >-
+    Replace admin virtual machines hosted on everyday devices with dedicated admin devices or remote
+    admin desktops on separately managed infrastructure, and restrict sign-in to those environments to
+    admin identities.
+  effort: M
+  sources: [aws-workspaces, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-IAM-014
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Do administrators perform privileged AWS tasks only from hardened, dedicated secure admin workstations?
+  why: >-
+    A capable attacker targets the device an administrator works from. A locked-down workstation used
+    only for administration, with application control and no email or browsing, is far harder to
+    compromise than a general-purpose device.
+  yesLooksLike: >-
+    Privileged AWS work is done only from secure admin workstations that are dedicated to administration,
+    hardened to ASD or vendor guidance, run application control and endpoint detection and response, and
+    are the only devices or networks your identity provider or permission-set conditions accept for
+    privileged sessions.
+  remediation: >-
+    Build a small fleet of hardened admin workstations, enforce them as the only place admin identities
+    can sign in from (identity provider device conditions, or source network and VPC endpoint conditions
+    on privileged permission sets), and retire admin access from other devices.
+  effort: L
+  sources: [aws-fedramp-privileged, aws-console-private-access, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: AWS-IAM-015
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Is every request for administrator access to AWS checked and approved by someone accountable, other than the requester, before it is granted?
+  why: >-
+    Administrator rights handed out on request without a check build up on people who don't need them,
+    and can be granted to an attacker who already has a foothold.
+  yesLooksLike: >-
+    Administrator permission sets, administrator IAM roles and root access are assigned only through a
+    request approved and recorded by an accountable owner who isn't the requester, and assignments made
+    outside that process are detected and reversed.
+  remediation: >-
+    Define an approval workflow (a ticketing system, identity governance tool or your temporary elevated
+    access solution) for administrator permission sets and roles, limit who can create account
+    assignments in IAM Identity Center to the identity team, and compare CloudTrail CreateAccountAssignment
+    events with approved requests.
+  effort: S
+  sources: [aws-temporary-elevated-access, aws-permission-sets]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 1 }
+
+- id: AWS-IAM-016
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: medium
+  question: Is administrator access to AWS revalidated at least every 12 months and removed after 45 days without use?
+  why: >-
+    Access that is never reviewed outlives job changes and projects. Dormant administrator accounts and
+    roles are prime targets because nobody notices when they are used.
+  yesLooksLike: >-
+    An owner reviews administrator permission-set assignments, administrator IAM roles and IAM users at
+    least every 12 months and removes those not revalidated; administrator access unused for 45 days is
+    removed using role last-used dates for the AWSReservedSSO roles, CloudTrail sign-in events and IAM
+    Access Analyzer unused access findings; and the reviews are recorded.
+  remediation: >-
+    Schedule an annual review of administrator permission sets and roles in your identity governance tool
+    or a recorded register, turn on an unused access analyzer for the organisation with a 45-day tracking
+    period and act on its findings, and disable people in your identity provider when they stop needing
+    access.
+  effort: M
+  licence: [access-analyzer-unused-access]
+  sources: [aws-access-analyzer, aws-iam-last-accessed, aws-credential-report]
+  refs:
+    - { framework: cis-aws, ref: "2.11" }
+    - { framework: aws-fsbp, ref: IAM.8 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-IAM-017
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Is administrator access to production, security and management accounts granted just in time for a limited period, rather than held permanently?
+  why: >-
+    Standing administrator rights mean a stolen session or a phished administrator gives an attacker full
+    control at any moment. Time-limited, logged elevation shrinks that window and leaves a clear record.
+  yesLooksLike: >-
+    Administrator permission sets for production, security and management accounts are not permanently
+    assigned. People request them with a justification through a temporary elevated access solution
+    (for example one of the AWS-validated partner solutions or AWS's open-source TEAM solution), grants
+    expire automatically within hours and are logged, and only documented emergency access (AWS-IAM-020)
+    is standing. Approval of requests is asked in AWS-IAM-015.
+  remediation: >-
+    Deploy a temporary elevated access solution that works with IAM Identity Center, define eligibility
+    per account and permission set, set maximum durations, and remove permanent administrator
+    permission-set assignments.
+  effort: L
+  sources: [aws-temporary-elevated-access, aws-team-blog, aws-permission-sets]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: AWS-IAM-018
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Are permissions limited to what each person and workload needs, with full administrator access confined to a few named administrators?
+  why: >-
+    Every identity with AdministratorAccess or a "*:*" policy can read every bucket, switch off logging
+    and delete backups. Broad permissions turn any one compromised account, laptop or workload into a
+    breach of the whole environment.
+  yesLooksLike: >-
+    No customer managed or inline policy allows every action on every resource except the administrator
+    permission set held by a small named group; service wildcards such as s3:* are rare and justified;
+    job-function permission sets and workload roles are scoped to the services and resources each one
+    uses; and unused roles and permissions found by IAM Access Analyzer or last accessed information are
+    removed.
+  remediation: >-
+    Find administrator and wildcard policies with Security Hub CSPM controls IAM.1 and IAM.21 or your
+    CSPM tool, replace AdministratorAccess on job-function permission sets with narrower AWS managed or
+    custom policies, attach policies to groups or roles rather than IAM users, and turn on an unused
+    access analyzer for the organisation, reviewing its findings at least quarterly.
+  effort: L
+  licence: [access-analyzer-unused-access]
+  sources: [aws-iam-best-practices, aws-iam-last-accessed, aws-access-analyzer]
+  refs:
+    - { framework: cis-aws, ref: "2.14" }
+    - { framework: aws-fsbp, ref: IAM.1 }
+    - { framework: aws-fsbp, ref: IAM.21 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: AWS-IAM-019
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Are permissions that let someone give themselves more access, such as passing any role to a service or editing policies and role trusts, limited to administrators?
+  why: >-
+    A developer or workload that can pass any role to a new EC2 instance or Lambda function, create a new
+    policy version or attach policies to itself can quietly become an administrator. CSPM tools report
+    these privilege-escalation paths because attackers look for them first.
+  yesLooksLike: >-
+    iam:PassRole is granted only for named role ARNs (with an iam:PassedToService condition); only
+    administrators can create or change IAM policies, roles, users and trust policies, whether through
+    custom or AWS managed policies such as IAMFullAccess; teams that create their own roles must attach a
+    permissions boundary; and privilege-escalation findings from your CSPM tool are resolved.
+  remediation: >-
+    Review policies for iam:PassRole on "*", iam:CreatePolicyVersion, iam:Attach*Policy, iam:Put*Policy,
+    iam:UpdateAssumeRolePolicy and iam:CreateAccessKey, and scope them to named resources. Require a
+    permissions boundary on roles that delegated teams create (enforce it with an SCP condition on
+    iam:PermissionsBoundary), and recheck with your posture tool after policy changes.
+  effort: M
+  sources: [aws-iam-passrole, aws-iam-boundaries, aws-iam-best-practices]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-IAM-020
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Is there a tested emergency way into AWS for when IAM Identity Center or your identity provider is unavailable, with its credentials locked away and every use alerted?
+  why: >-
+    If your identity provider or IAM Identity Center fails or is compromised, administrators can be
+    locked out during an incident. Emergency credentials that are poorly kept become a back door
+    instead.
+  yesLooksLike: >-
+    A documented emergency path exists, such as a direct federation role or a small number of emergency
+    IAM users in a dedicated account that can only assume a recovery role. Its credentials are long,
+    unique and random, protected by passkeys or security keys kept in separate safes, and not used day
+    to day; any use raises an alert to the security team; and the path is tested at least once a year.
+  remediation: >-
+    Follow AWS's emergency access guidance: decide which failure each path covers, create the emergency
+    users or federation roles with only the permissions needed to recover, store credentials and MFA
+    devices separately with access recorded, add an EventBridge or SIEM alert on their sign-in, and test
+    the procedure on a schedule.
+  effort: M
+  sources: [aws-identity-center-emergency, aws-wa-emergency-access, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: RC.RP-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-IAM-021
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: critical
+  question: Do people, workloads and pipelines use temporary credentials from IAM Identity Center, IAM roles or OIDC federation instead of long-lived IAM access keys?
+  why: >-
+    An IAM access key works from anywhere, without MFA, until someone deletes it. Keys leak through code
+    repositories, laptops, build logs and suppliers' systems, and leaked keys are one of the most common
+    ways AWS accounts are breached.
+  yesLooksLike: >-
+    People get short-term credentials from the AWS access portal or the AWS CLI signed in through IAM
+    Identity Center; EC2, ECS, EKS and Lambda workloads use attached roles; CI/CD pipelines (GitHub
+    Actions, GitLab, Bitbucket) assume roles through an OIDC identity provider; and on-premises servers
+    use IAM Roles Anywhere. Any access keys that must remain belong to a named owner and system, are
+    rotated at least every 90 days, and there is at most one active key per user.
+  remediation: >-
+    Use the IAM credential report to list access keys with their age and last use. Replace keys used by
+    people with IAM Identity Center sign-in for the AWS CLI, keys used by workloads with instance
+    profiles or task and pod roles, and keys used by pipelines with an OIDC identity provider and a role
+    whose trust policy is pinned to the repository (AWS-IAM-022). Deactivate, then delete, unused keys
+    and rotate any that must stay.
+  effort: M
+  sources: [aws-iam-access-keys, aws-iam-roles-ec2, aws-iam-oidc, aws-credential-report]
+  refs:
+    - { framework: cis-aws, ref: "2.12" }
+    - { framework: cis-aws, ref: "2.16" }
+    - { framework: aws-fsbp, ref: IAM.3 }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-IAM-022
+  module: core
+  domain: identity
+  appliesTo: ["*"]
+  severity: high
+  question: Are roles trusted by CI/CD pipelines, other AWS accounts and suppliers pinned to the specific repository, role or supplier that needs them?
+  why: >-
+    A role trust policy decides who outside the account can become that role. A GitHub Actions role that
+    trusts any repository, or a supplier role without an external ID, can be assumed by someone else's
+    pipeline or by another customer of the same supplier.
+  yesLooksLike: >-
+    Roles trusted by GitHub Actions, GitLab or another OIDC provider check the audience and pin the
+    subject to specific repositories and branches or environments (for GitHub,
+    token.actions.githubusercontent.com:sub without broad wildcards); roles trusted by other accounts
+    name a specific role rather than the whole account; supplier roles require the supplier's external
+    ID; and service roles use aws:SourceArn or aws:SourceAccount conditions to prevent confused deputy
+    access.
+  remediation: >-
+    List roles whose trust policies name an OIDC provider, another account or a service, tighten the
+    sub and aud conditions to exact repositories and branches (protect deployment environments in
+    GitHub), replace account-root principals with named roles, add sts:ExternalId conditions for
+    suppliers, and add source conditions to service trusts.
+  effort: M
+  sources: [aws-iam-oidc-role, aws-iam-third-party, aws-confused-deputy]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+
+- id: AWS-IAM-023
+  module: core
+  domain: identity
+  appliesTo: [aws-data-stores, aws-keys-secrets, aws-privileged-identities, aws-workloads]
+  severity: high
+  question: Is IAM Access Analyzer checking the whole organisation for external access, with every resource shared publicly or outside it reviewed and either justified or removed?
+  why: >-
+    Resource policies can quietly give another AWS account, a supplier or the whole internet access to
+    your data, keys, functions and scripts. Access Analyzer finds these grants, but only helps if
+    someone acts on what it finds.
+  yesLooksLike: >-
+    An external access analyzer with the organisation as its zone of trust runs in every region in use,
+    managed from the delegated security account, with no unreviewed active findings. Resources shared
+    publicly or with accounts outside the organisation are on an approved list; SQS, SNS, Lambda
+    function, KMS, Secrets Manager, S3 and ECR repository policies don't allow "Principal": "*" without
+    restricting conditions; and SSM documents aren't shared publicly, with block public sharing on in
+    every region.
+  remediation: >-
+    Create an organisation external access analyzer in each region you use, resolve or archive each
+    finding (with archive rules for approved partners), remove "*" principals or add aws:PrincipalOrgID
+    or source conditions, make shared SSM documents private and turn on block public sharing for SSM
+    documents, and route new findings to the security team.
+  effort: M
+  sources: [aws-access-analyzer, aws-access-analyzer-resources, aws-ecr-repo-policies, aws-ssm-document-sharing]
+  refs:
+    - { framework: cis-aws, ref: "2.18" }
+    - { framework: cis-aws, ref: "2.21" }
+    - { framework: aws-fsbp, ref: KMS.5 }
+    - { framework: aws-fsbp, ref: Lambda.1 }
+    - { framework: aws-fsbp, ref: SNS.4 }
+    - { framework: aws-fsbp, ref: SQS.3 }
+    - { framework: aws-fsbp, ref: S3.6 }
+    - { framework: aws-fsbp, ref: SSM.4 }
+    - { framework: aws-fsbp, ref: SSM.7 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "Sharing agreement" }

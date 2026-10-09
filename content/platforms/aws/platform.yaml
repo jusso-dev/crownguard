@@ -1,0 +1,79 @@
+id: aws
+name: Amazon Web Services
+vendor: Amazon Web Services
+description: >-
+  An AWS environment: the organisation in AWS Organizations and its member accounts, IAM Identity
+  Center and IAM, data stores such as Amazon S3 and Amazon RDS, EC2, container and serverless
+  workloads, KMS keys and secrets, logging and threat detection, and AWS Backup. Questions follow
+  AWS's own security best practices and multi-account guidance, the posture checks a cloud
+  security posture management tool would flag, and are cross-referenced to the CIS Amazon Web
+  Services Foundations Benchmark and the AWS Foundational Security Best Practices standard.
+
+
+# Licence features below are based on these vendor pricing pages.
+sources:
+  [aws-guardduty-pricing, aws-security-hub-cspm-pricing, aws-macie-pricing, aws-inspector-pricing, aws-config-pricing,
+   aws-backup-pricing, aws-cloudtrail-pricing, aws-access-analyzer-pricing, aws-secrets-manager-pricing, aws-waf-pricing]
+
+modules:
+  - id: core
+    name: AWS accounts and organisation
+    description: The AWS organisation, its accounts and identities, data stores, workloads, keys and secrets, logging and backups.
+    optional: false
+
+# AWS has no editions: services are billed pay-as-you-go to every account, so there is one tier that
+# includes every feature. The features below are security services billed separately by usage (pricing
+# pages retrieved 2026-10-09). They annotate questions whose fix adds a running cost, not an entitlement
+# the customer may lack. IAM, IAM Identity Center, AWS Organizations (SCPs, RCPs, declarative policies),
+# S3 Block Public Access, the first copy of CloudTrail management events and IAM Access Analyzer external
+# access analysis carry no extra charge, so they have no feature. General usage costs that some fixes add
+# (CloudWatch Logs ingestion and alarms, VPC flow log delivery, KMS customer managed keys, storage) are not
+# annotated.
+licenceTiers:
+  - id: aws-pay-as-you-go
+    name: AWS (pay-as-you-go services)
+    features:
+      [guardduty, security-hub-cspm, macie, inspector, aws-config, aws-backup, cloudtrail-data-events,
+       access-analyzer-unused-access, secrets-manager, aws-waf]
+
+licenceFeatures:
+  - id: guardduty
+    name: Amazon GuardDuty (billed by volume analysed, per protection plan)
+  - id: security-hub-cspm
+    name: AWS Security Hub CSPM (billed per security check)
+  - id: macie
+    name: Amazon Macie (billed per bucket and data inspected)
+  - id: inspector
+    name: Amazon Inspector (billed per instance, image and function scanned)
+  - id: aws-config
+    name: AWS Config (billed per configuration item and rule evaluation)
+  - id: aws-backup
+    name: AWS Backup (billed per GB stored, copied and restored)
+  - id: cloudtrail-data-events
+    name: CloudTrail data events and additional trails (billed per event)
+  - id: access-analyzer-unused-access
+    name: IAM Access Analyzer unused access analysis (billed per role and user analysed)
+  - id: secrets-manager
+    name: AWS Secrets Manager (billed per secret and API call)
+  - id: aws-waf
+    name: AWS WAF (billed per web ACL, rule and request)
+
+domains:
+  - id: identity
+    name: Identity & privileged access
+    description: Root users, sign-in and MFA for staff and customers, administrator accounts and environments, least privilege, emergency access, long-lived keys, role trust and access shared outside the organisation.
+  - id: organisation
+    name: Organisation guardrails
+    description: AWS Organizations structure, the management account, service and resource control policies, and delegated security administration.
+  - id: data-protection
+    name: Data protection
+    description: Public exposure, discovery, encryption at rest and in transit, keys, secrets, database access and deletion protection for S3, databases, snapshots and other data stores.
+  - id: network-workloads
+    name: Network & workloads
+    description: Internet exposure, web application protection, instance metadata, server administration, AI workloads, and vulnerability scanning and patching of EC2, containers, Kubernetes and Lambda.
+  - id: logging-detection
+    name: Logging & detection
+    description: CloudTrail and its protection, data access, server and network logs, GuardDuty, Security Hub CSPM, AWS Config, alerting, triage and incident response.
+  - id: backup-recovery
+    name: Backup & recovery
+    description: AWS Backup coverage, restore testing, and who can change, delete or restore backups.

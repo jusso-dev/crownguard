@@ -1,0 +1,345 @@
+- id: AWS-LOG-001
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Does an organisation trail record management events from every account and region into a central log archive, together with sign-in and MFA events from your identity provider?
+  why: >-
+    CloudTrail is the record of who did what in AWS, including every sign-in, role assumption and
+    permission change. Without it from every account and region in one place, there is no way to
+    investigate a breach or show what was touched.
+  yesLooksLike: >-
+    A multi-region CloudTrail organisation trail, homed in a region that is enabled by default, logs read
+    and write management events for all accounts to an S3 bucket in the Log Archive account (or a
+    CloudTrail Lake organisation event data store), keeping at least 12 months; IAM Identity Center
+    sign-in, MFA and account assignment events arrive with it; and if people sign in through an external
+    identity provider, its sign-in, MFA and group change logs are collected in the same central store or
+    SIEM.
+  remediation: >-
+    Create an organisation trail from the management account or CloudTrail delegated administrator
+    covering all regions and read and write management events, deliver it to a bucket in the Log Archive
+    account with lifecycle retention, and forward your identity provider's sign-in and audit logs to the
+    same SIEM or log store.
+  effort: M
+  sources: [aws-org-trail, aws-log-archive, asd-event-logging, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-aws, ref: "4.1" }
+    - { framework: aws-fsbp, ref: CloudTrail.1 }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-LOG-002
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are your central logs protected so that administrators of workload accounts can't change, stop or delete them?
+  why: >-
+    An attacker with administrator rights tries to erase their tracks. Logs that a compromised
+    production administrator can stop or delete can't be trusted after an incident.
+  yesLooksLike: >-
+    The organisation trail can be changed only from the management account or the CloudTrail delegated
+    administrator, and access to both is restricted to a few named people; the log archive bucket sits in
+    a separate Log Archive account that workload administrators can't sign in to, is private, and is
+    protected by S3 Object Lock or a bucket policy denying deletion and policy changes; and SCPs stop
+    member accounts stopping or deleting any trails they create themselves.
+  remediation: >-
+    Restrict who can sign in to the management account and the CloudTrail delegated administrator
+    account, limit the Log Archive account to the security team, turn on S3 Object Lock (or a deny-delete
+    bucket policy) for the log bucket, and add an SCP denying cloudtrail:StopLogging, DeleteTrail and
+    UpdateTrail in member accounts. Log file validation and SSE-KMS encryption add tamper evidence and a
+    further access check.
+  effort: M
+  sources: [aws-org-trail, aws-log-archive, aws-s3-object-lock, aws-cloudtrail-validation, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-aws, ref: "4.2" }
+    - { framework: cis-aws, ref: "4.5" }
+    - { framework: aws-fsbp, ref: CloudTrail.2 }
+    - { framework: aws-fsbp, ref: CloudTrail.4 }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: PR.DS-10 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-LOG-003
+  module: core
+  domain: logging-detection
+  appliesTo: [aws-data-stores]
+  severity: medium
+  question: Are S3 data events logged for buckets that hold crown-jewel data, so you can see who read, wrote or deleted objects?
+  why: >-
+    Management events don't show object reads. After a breach, data events are the only way to tell which
+    files were downloaded and by whom, which decides what you must notify under the Privacy Act.
+  yesLooksLike: >-
+    A trail or CloudTrail Lake event data store records read and write data events for crown-jewel buckets
+    (advanced event selectors scoped to those buckets keep cost down), and the logs land in the log
+    archive with the same protection as management events.
+  remediation: >-
+    Add advanced event selectors for S3 data events on the crown-jewel bucket ARNs to your organisation
+    trail (or a dedicated trail), confirm delivery to the log archive bucket, and include the events in
+    retention and alerting.
+  effort: S
+  licence: [cloudtrail-data-events]
+  sources: [aws-cloudtrail-data-events]
+  refs:
+    - { framework: cis-aws, ref: "4.8" }
+    - { framework: cis-aws, ref: "4.9" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+
+- id: AWS-LOG-004
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Is Amazon GuardDuty on in every account and region, managed centrally, with protection plans for the services that hold your crown jewels?
+  why: >-
+    GuardDuty watches CloudTrail, VPC flow, DNS and runtime activity for signs of compromise such as
+    stolen credentials used from unusual places, crypto-mining and data exfiltration. An account or
+    region without it is a blind spot attackers use.
+  yesLooksLike: >-
+    GuardDuty is enabled for all organisation members from the delegated security account, with automatic
+    enablement for new accounts, in every region (including regions you don't use, with your region-deny
+    SCP exempting the security tooling roles). S3 Protection, RDS Protection, EKS Protection, Runtime
+    Monitoring, Malware Protection and Lambda Protection are on where those services hold crown jewels,
+    and findings go to Security Hub CSPM and a monitored channel.
+  remediation: >-
+    Register a delegated administrator for GuardDuty, enable it for all accounts in every region with
+    automatic enablement, turn on the protection plans that match your workloads, and send findings to
+    Security Hub CSPM and through EventBridge to your alerting tool.
+  effort: S
+  licence: [guardduty]
+  sources: [aws-guardduty, aws-guardduty-orgs]
+  refs:
+    - { framework: aws-fsbp, ref: GuardDuty.1 }
+    - { framework: aws-fsbp, ref: GuardDuty.5 }
+    - { framework: aws-fsbp, ref: GuardDuty.6 }
+    - { framework: aws-fsbp, ref: GuardDuty.7 }
+    - { framework: aws-fsbp, ref: GuardDuty.8 }
+    - { framework: aws-fsbp, ref: GuardDuty.9 }
+    - { framework: aws-fsbp, ref: GuardDuty.10 }
+    - { framework: aws-fsbp, ref: GuardDuty.11 }
+    - { framework: aws-fsbp, ref: GuardDuty.12 }
+    - { framework: aws-fsbp, ref: GuardDuty.13 }
+    - { framework: nist-csf-2, ref: DE.CM-01 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+
+- id: AWS-LOG-005
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are AWS Config and Security Hub CSPM on in every account and region, checking against AWS Foundational Security Best Practices, with failed controls assigned and fixed?
+  why: >-
+    Misconfigurations such as an open security group or a public snapshot appear every week as teams
+    build. Continuous posture checks find them in minutes instead of at the next audit, and AWS Config
+    records how each resource changed.
+  yesLooksLike: >-
+    AWS Config records resources in every region for every account; Security Hub CSPM is enabled across
+    the organisation with central configuration from the delegated security account; the AWS Foundational
+    Security Best Practices standard (and the CIS AWS Foundations Benchmark if you report against it) is
+    on; findings are aggregated to one region; and critical and high failed controls have owners and due
+    dates. A third-party CSPM with equivalent coverage also counts.
+  remediation: >-
+    Turn on AWS Config recording in all accounts and regions (Quick Setup or CloudFormation StackSets),
+    enable Security Hub CSPM with central configuration from the delegated administrator, apply a
+    configuration policy that turns on the standard for all accounts and regions, aggregate findings to a
+    home region, and review critical findings at least weekly.
+  effort: M
+  licence: [security-hub-cspm, aws-config]
+  sources: [aws-security-hub-cspm, aws-config-recording, aws-fsbp]
+  refs:
+    - { framework: cis-aws, ref: "4.3" }
+    - { framework: cis-aws, ref: "5.16" }
+    - { framework: aws-fsbp, ref: Config.1 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+
+- id: AWS-LOG-006
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are you alerted in near real time to root user activity, console sign-in without MFA and changes to IAM, CloudTrail, KMS keys, security groups and AWS Organizations?
+  why: >-
+    These are the first moves attackers make to keep access or cover their tracks. An alert within
+    minutes lets you respond before the damage spreads; finding out at month end does not.
+  yesLooksLike: >-
+    CloudWatch metric filters and alarms on the trail's log group, EventBridge rules or SIEM detections
+    alert a monitored channel on root user activity, console sign-in without MFA and repeated failures,
+    unauthorised API calls, IAM policy changes, CloudTrail and AWS Config configuration changes, KMS keys
+    being disabled or scheduled for deletion, S3 bucket policy changes, changes to security groups,
+    network ACLs, gateways, route tables and VPCs, and AWS Organizations changes; a named team triages
+    the alerts.
+  remediation: >-
+    Send the organisation trail to CloudWatch Logs and create the metric filters and alarms from AWS's
+    CloudTrail alarm examples (or equivalent EventBridge rules or SIEM detections), route them through
+    Amazon SNS to your on-call channel, and test them with a harmless change.
+  effort: M
+  sources: [aws-cloudtrail-alarms]
+  refs:
+    - { framework: cis-aws, ref: "5.1" }
+    - { framework: cis-aws, ref: "5.2" }
+    - { framework: cis-aws, ref: "5.3" }
+    - { framework: cis-aws, ref: "5.4" }
+    - { framework: cis-aws, ref: "5.5" }
+    - { framework: cis-aws, ref: "5.6" }
+    - { framework: cis-aws, ref: "5.7" }
+    - { framework: cis-aws, ref: "5.8" }
+    - { framework: cis-aws, ref: "5.9" }
+    - { framework: cis-aws, ref: "5.10" }
+    - { framework: cis-aws, ref: "5.11" }
+    - { framework: cis-aws, ref: "5.12" }
+    - { framework: cis-aws, ref: "5.13" }
+    - { framework: cis-aws, ref: "5.14" }
+    - { framework: cis-aws, ref: "5.15" }
+    - { framework: aws-fsbp, ref: CloudTrail.5 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: nist-csf-2, ref: DE.AE-06 }
+
+- id: AWS-LOG-007
+  module: core
+  domain: logging-detection
+  appliesTo: [aws-workloads, aws-data-stores]
+  severity: medium
+  question: Are VPC flow logs turned on for the VPCs that hold crown-jewel workloads and data, and kept in the log archive?
+  why: >-
+    Flow logs show which addresses talked to which, how much data left and when. Without them you can't
+    confirm or rule out data exfiltration after an incident.
+  yesLooksLike: >-
+    Every VPC (at least production and crown-jewel VPCs) publishes flow logs of accepted and rejected
+    traffic to the Log Archive account or CloudWatch Logs, kept for at least 12 months. GuardDuty analyses
+    flow data on its own, but doesn't give you a copy to investigate with.
+  remediation: >-
+    Create flow logs for each VPC (and check coverage with AWS Config or your CSPM), deliver them to the
+    central bucket in the Log Archive account, and set lifecycle retention.
+  effort: S
+  sources: [aws-vpc-flow-logs]
+  refs:
+    - { framework: cis-aws, ref: "4.7" }
+    - { framework: aws-fsbp, ref: EC2.6 }
+    - { framework: nist-csf-2, ref: DE.CM-01 }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+
+- id: AWS-LOG-008
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: Are high and critical GuardDuty, Security Hub CSPM and other security findings for AWS triaged by a named person or service within a defined time?
+  why: >-
+    Detection only helps if someone acts on it. Attackers in AWS can move from first access to data theft
+    or ransomware within hours, so findings left unread for days give them the time they need.
+  yesLooksLike: >-
+    Findings flow through EventBridge or Security Hub CSPM integrations to a monitored queue or SIEM, and
+    a named team or managed detection and response provider triages high and critical findings against a
+    response-time target (for example the same day), including outside business hours under an agreed
+    arrangement.
+  remediation: >-
+    Route GuardDuty and Security Hub CSPM findings through EventBridge to your ticketing system or SIEM,
+    set response times by severity, assign an owner or provider for after-hours triage, and review missed
+    targets monthly.
+  effort: M
+  licence: [guardduty, security-hub-cspm]
+  sources: [aws-guardduty-findings, aws-security-hub-cspm, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: nist-csf-2, ref: RS.MA-02 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-LOG-009
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: high
+  question: If you run internet-facing servers or web front ends on AWS, are their logs collected centrally and analysed for signs of compromise in a timely manner?
+  why: >-
+    Internet-facing servers are scanned and attacked within minutes of going online, and a compromised
+    server exposes the data and role credentials it holds. Its logs only help if someone reviews them
+    while there's still time to act.
+  yesLooksLike: >-
+    Every internet-facing EC2 instance sends its system, authentication and security logs (through the
+    CloudWatch agent, an EDR agent or a SIEM agent) to the central log store; access logs from
+    internet-facing load balancers, CloudFront distributions, API Gateway stages and AWS WAF are turned
+    on and collected; detections or GuardDuty Runtime Monitoring raise alerts from them; and those alerts
+    reach the same triage queue as other findings. Answer N/A if you run nothing internet-facing on AWS.
+  remediation: >-
+    Install the CloudWatch agent or your EDR or SIEM agent on internet-facing instances to collect
+    syslog, authentication logs and Windows security events, turn on access logging for internet-facing
+    load balancers, CloudFront, API Gateway and AWS WAF, send them to your SIEM or central log account,
+    and add detections for common attacks.
+  effort: M
+  sources: [aws-cloudwatch-agent, aws-guardduty, asd-event-logging, asd-e8-maturity-model]
+  refs:
+    - { framework: cis-aws, ref: "4.10" }
+    - { framework: aws-fsbp, ref: ELB.5 }
+    - { framework: aws-fsbp, ref: CloudFront.5 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-LOG-010
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: When a cyber security incident in AWS is identified, is your incident response plan put into action, with the incident reported to your CISO (or their delegate) and to ASD as soon as possible?
+  why: >-
+    Without a plan, the first hours of an AWS incident are lost working out who decides what, and
+    reporting to ASD brings in help and warns others about the same attack.
+  yesLooksLike: >-
+    A written incident response plan covers AWS, with playbooks for likely scenarios such as a leaked
+    access key, a public bucket or a compromised instance; it names who leads the response, how
+    incidents are escalated to the CISO or their delegate, and when and how they're reported to ASD
+    through cyber.gov.au; and records of recent incidents or exercises show the plan was followed and the
+    reports were made. Exercising the plan at least yearly is recommended.
+  remediation: >-
+    Write or extend your incident response plan for AWS using AWS's playbook guidance, add escalation to
+    the CISO and reporting to ASD, keep forensic access roles and procedures ready, and run a tabletop or
+    simulated incident each year.
+  effort: M
+  sources: [aws-wa-ir-playbooks, asd-ir-planning, asd-report-incident, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: RS.MA-01 }
+    - { framework: nist-csf-2, ref: RS.CO-02 }
+  e8:
+    - { strategy: mfa, level: 2 }
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-LOG-011
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are event logs from EC2 servers that aren't internet-facing, and from any Amazon WorkSpaces, collected centrally and analysed for signs of compromise in a timely manner?
+  why: >-
+    Capable attackers who get in move quietly to internal servers and admin desktops. Logs from those
+    machines are how you spot the lateral movement before it reaches your data.
+  yesLooksLike: >-
+    Every internal EC2 instance and WorkSpaces desktop runs the CloudWatch agent, an EDR agent or a SIEM
+    agent that sends its security event logs to the central store; detections or GuardDuty Runtime
+    Monitoring raise alerts that are triaged with other findings; and inventory shows no instances
+    missing. Answer N/A if you run no EC2 instances or WorkSpaces.
+  remediation: >-
+    Extend the CloudWatch agent, EDR or SIEM agent rollout to internal instances and WorkSpaces (for
+    example with Systems Manager State Manager), add detections for credential theft and lateral
+    movement, and compare agent coverage with your instance inventory each month.
+  effort: M
+  sources: [aws-cloudwatch-agent, aws-guardduty, asd-event-logging, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+  e8:
+    - { strategy: mfa, level: 3 }
+    - { strategy: restrict-admin-privileges, level: 3 }

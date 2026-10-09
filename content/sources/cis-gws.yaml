@@ -9,3 +9,13 @@
   publisher: Center for Internet Security
   url: https://www.cisecurity.org/benchmark/google_cloud_computing_platform
   retrieved: 2026-10-08
+- id: cis-aws
+  title: CIS Amazon Web Services Foundations Benchmark v7.0.0
+  publisher: Center for Internet Security
+  url: https://www.cisecurity.org/benchmark/amazon_web_services
+  retrieved: 2026-10-09
+- id: cis-azure
+  title: CIS Microsoft Azure Foundations Benchmark v6.0.0
+  publisher: Center for Internet Security
+  url: https://www.cisecurity.org/benchmark/azure
+  retrieved: 2026-10-09

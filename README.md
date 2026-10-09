@@ -1,11 +1,11 @@
 # crownguard
 
-**Find your crown jewels in Microsoft 365 or Google Workspace, see how exposed they are, and hand leadership a branded PDF that explains the risk.**
+**Find your crown jewels in Microsoft 365, Google Workspace or AWS, see how exposed they are, and hand leadership a branded PDF that explains the risk.**
 
 crownguard is a guided self-assessment that runs entirely in your browser. You pick your environment, name the
 systems and information that would hurt most if compromised (your Entra ID tenant, Global Administrators, the HR
 SharePoint site, the finance shared drive, Gemini or Copilot's reach into your data), answer plain-language control
-questions drawn from Microsoft and Google security guidance, and download a report themed with your organisation's
+questions drawn from Microsoft, Google and AWS security guidance, and download a report themed with your organisation's
 logo and colours.
 
 Nothing you enter leaves your device. There is no backend, no account and no analytics.
@@ -20,9 +20,14 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 
 - **Crown-jewel discovery.** Guided prompts per category: identity plane, privileged access, business data,
   collaboration and email, endpoints, cloud infrastructure and AI assistants.
-- **Vendor-grounded questions.** Each question cites the Microsoft or Google guidance it comes from and maps to
+- **Vendor-grounded questions.** Each question cites the Microsoft, Google or AWS guidance it comes from and maps to
   CIS Benchmark recommendations, the ASD Essential Eight, NIST CSF 2.0 and the Department of Home Affairs Industry
   Data Classification Framework (IDCF).
+- **Cloud posture for Azure, Google Cloud and AWS.** Optional Azure and Google Cloud modules and an AWS platform ask
+  about the misconfigurations a cloud security posture management (CSPM) tool flags first: privileged access to the
+  management plane, public storage, databases and snapshots, secrets in configuration, logging and threat detection,
+  organisation guardrails and backups an attacker can't delete. They map to the CIS Foundations Benchmarks for each
+  cloud, the Microsoft cloud security benchmark and AWS Foundational Security Best Practices.
 - **Risk per crown jewel.** Impact × likelihood on a 5×5 matrix, driven by your answers, the exposures you record
   and how sensitive or regulated the data is.
 - **A report people will read.** It opens by stating the scope, the standards it's assessed against and that it is a
@@ -35,7 +40,7 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
   copy, including older ones: open it, add a logo or ABN, and regenerate the report.
 - **Optional scan import (Microsoft).** Already run [M365-Secure](https://github.com/jusso-dev/M365-Secure) against
-  your tenant? Import its `_Assessment-Results_<domain>.json` on the Controls step to pre-fill answers (55 of the 108
+  your tenant? Import its `_Assessment-Results_<domain>.json` on the Controls step to pre-fill answers (59 of the 147
   Microsoft questions have mapped checks) where its checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Every pre-filled answer shows the scan
   evidence, you can change any of them, and the report says which answers came from the scan. The file is read in
   your browser only.
@@ -61,8 +66,8 @@ are regenerated from the app itself (`SCREENSHOTS=1 pnpm exec playwright test e2
 
 Start with the organisation: name, ABN (checked against the ATO check digit), sector, size and the obligations that
 apply to it, such as the Privacy Act and its Notifiable Data Breaches scheme. A logo is optional and sets the report's
-colours. Then choose the platforms in scope, Microsoft 365 and Entra ID, Google Workspace, or both, with their licence
-tiers and optional Azure or Google Cloud modules.
+colours. Then choose the platforms in scope (Microsoft 365 and Entra ID, Google Workspace, Amazon Web Services, or any mix),
+with their licence tiers and optional Azure or Google Cloud modules.
 
 <table>
   <tr>
@@ -84,7 +89,7 @@ crownguard can suggest a level, but never fills it in for you.
 ### 3. Controls
 
 Only the questions relevant to your crown jewels and licences are asked, grouped by domain. Each one explains why it
-matters, what "yes" looks like and how to fix it, names any licence the fix needs, and lists the Microsoft or Google
+matters, what "yes" looks like and how to fix it, names any licence the fix needs, and lists the Microsoft, Google or AWS
 pages it comes from plus its CIS, Essential Eight, NIST CSF 2.0 and IDCF mappings. Unknown counts as a gap; N/A needs a
 reason. Microsoft tenants can pre-fill answers from an M365-Secure scan.
 
@@ -212,7 +217,9 @@ it builds on the SOC-CMM® model's structure (see [its NOTICE](content/soc/NOTIC
 Sources include Microsoft Learn (Zero Trust deployment guidance, Entra ID security operations, privileged access,
 Conditional Access, Microsoft 365 Copilot oversharing guidance, Purview, Defender), Google Workspace Admin Help
 (security checklists, administrator and super admin best practices, Drive, Gmail, Gemini) and Google Cloud
-(enterprise foundations, organisation policies, Security Command Center), plus the ASD Essential Eight Maturity Model,
+(enterprise foundations, organisation policies, Security Command Center), Azure documentation (Azure RBAC and PIM,
+Defender for Cloud, Storage, Key Vault, networking, Azure Backup), AWS documentation (IAM and IAM Identity Center,
+Organizations, S3, CloudTrail, GuardDuty, Security Hub CSPM, AWS Backup), plus the ASD Essential Eight Maturity Model,
 NIST CSF 2.0, the Home Affairs Industry Data Classification Framework and the SOC-CMM® model.
 
 ### Keeping the sources current
@@ -244,7 +251,7 @@ benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit 
 ## Limitations
 
 This is a self-assessment, not an audit. It doesn't connect to your tenant or verify answers, and it covers your
-Microsoft or Google cloud platform, not your whole environment (on-premises networks, line-of-business apps,
+Microsoft, Google or AWS cloud platform, not your whole environment (on-premises networks, line-of-business apps,
 suppliers, physical security). Use it to start the right conversation and to prioritise, then verify.
 
 ## Stack
@@ -263,6 +270,6 @@ Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and 
 guide to system security" by the Australian Government Department of Home Affairs, used under the department's website
 terms (CC BY 3.0 AU). CIS Benchmarks are referenced by recommendation number and title only, under CC BY-NC-SA 4.0.
 
-crownguard is independent and not affiliated with or endorsed by Microsoft, Google, CIS, ASD, NIST, the Department of
+crownguard is independent and not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of
 Home Affairs, CSIRO or SOC-CMM. SOC-CMM® is a registered trademark of its owner.
 Product names are trademarks of their respective owners.

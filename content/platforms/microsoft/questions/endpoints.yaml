@@ -154,7 +154,7 @@
 - id: MS-END-006
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are updates for office productivity suites (such as Microsoft 365 Apps), web browsers and their extensions, email clients, PDF software and security products applied within two weeks of release?
   why: >-
@@ -184,7 +184,7 @@
 - id: MS-END-007
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints, ms-hybrid-identity]
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-azure-workloads]
   severity: high
   question: Does every Windows and macOS device and server run endpoint detection and response, with tamper protection on?
   why: >-
@@ -192,8 +192,8 @@
     isolate a device in seconds and, with automatic attack disruption, can contain ransomware before
     it spreads.
   yesLooksLike: >-
-    All devices and servers are onboarded to Defender for Endpoint Plan 2 or Defender for Business
-    (or an equivalent EDR), tamper protection is enforced tenant-wide, EDR in block mode is on, and
+    All devices and servers, including Azure virtual machines (through Defender for Servers), are
+    onboarded to Defender for Endpoint Plan 2 or Defender for Business (or an equivalent EDR), tamper protection is enforced tenant-wide, EDR in block mode is on, and
     automated investigation and response is set to remediate.
   remediation: >-
     Onboard devices to Defender through Intune, turn on tamper protection and EDR in block mode,
@@ -201,7 +201,7 @@
     healthy in the device inventory.
   effort: M
   licence: [defender-endpoint-p2]
-  sources: [ms-edr-block-mode, ms-tamper-protection, ms-defender-business]
+  sources: [ms-edr-block-mode, ms-tamper-protection, ms-defender-business, ms-defender-servers]
   refs:
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: ES-1 }
@@ -265,7 +265,7 @@
 - id: MS-END-010
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are unmanaged devices discovered automatically, and are all workstations and servers scanned for missing updates by a vulnerability scanner at least weekly, and internet-facing servers daily?
   why: >-
@@ -283,11 +283,13 @@
     Onboard all devices and servers to Defender for Endpoint and keep standard device discovery on,
     onboard the unmanaged devices it finds, and review the Defender Vulnerability Management weaknesses,
     software inventory and security recommendations pages (or your scanner's reports) at least weekly to
-    drive patching and the removal of unsupported software.
+    drive patching and the removal of unsupported software. Azure virtual machines get the same
+    assessment through Defender for Servers.
   effort: M
   licence: [defender-endpoint-p2]
-  sources: [ms-mdvm, ms-device-discovery, ms-e8-patch-applications, asd-e8-maturity-model]
+  sources: [ms-mdvm, ms-device-discovery, ms-defender-servers, ms-e8-patch-applications, asd-e8-maturity-model]
   refs:
+    - { framework: cis-azure, ref: "8.1.10" }
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: mcsb, ref: AM-1 }
@@ -299,7 +301,7 @@
 - id: MS-END-011
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are operating system patches for internet-facing servers applied within two weeks of release (48 hours when critical or a working exploit exists), and for other servers within one month?
   why: >-
@@ -330,7 +332,7 @@
 - id: MS-END-012
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are applications other than office suites, web browsers and their extensions, email clients, PDF software and security products scanned for missing updates by a vulnerability scanner at least fortnightly, with updates or vendor mitigations applied within one month of release?
   why: >-
@@ -363,7 +365,7 @@
 - id: MS-END-013
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are updates for office productivity suites (such as Microsoft 365 Apps), web browsers and their extensions, email clients, PDF software and security products applied within 48 hours when the vendor rates a vulnerability critical or a working exploit exists, and within two weeks otherwise?
   why: >-
@@ -400,7 +402,7 @@
 - id: MS-END-014
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: medium
   question: Are applications that their vendor no longer supports removed from workstations and servers?
   why: >-
@@ -430,7 +432,7 @@
 - id: MS-END-015
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: high
   question: Are operating system updates for workstations and servers that aren't internet-facing applied within 48 hours when the vendor rates a vulnerability critical or a working exploit exists, and within one month otherwise?
   why: >-
@@ -462,7 +464,7 @@
 - id: MS-END-016
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: medium
   question: Are missing driver and firmware updates on workstations and servers found by a scanner at least fortnightly and installed within one month of release, or within 48 hours when a vulnerability is critical or a working exploit exists?
   why: >-
@@ -474,7 +476,8 @@
     reports or the hardware vendor's tooling show missing driver and firmware updates at least
     fortnightly, driver update policies in Intune or Windows Autopatch approve recommended driver and
     firmware updates within one month, and fixes for critical or exploited vulnerabilities are approved
-    and installed within 48 hours.
+    and installed within 48 hours. For Azure virtual machines, Microsoft maintains the physical hosts
+    and hypervisor, so answer for the drivers inside each VM's operating system.
   remediation: >-
     Create Windows driver update policies in Intune, or manage drivers through Windows Autopatch, with
     automatic approval of recommended updates and a short delay, approve critical fixes as soon as they
@@ -484,7 +487,7 @@
     tools for firmware that Windows Update doesn't deliver.
   effort: M
   licence: [intune, defender-endpoint-p2]
-  sources: [ms-e8-patch-os, ms-intune-driver-updates, ms-dvm-firmware, asd-e8-maturity-model]
+  sources: [ms-e8-patch-os, ms-intune-driver-updates, ms-dvm-firmware, ms-azure-shared-responsibility, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: PR.PS-03 }
@@ -496,7 +499,7 @@
 - id: MS-END-017
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints]
+  appliesTo: [ms-managed-endpoints, ms-azure-workloads]
   severity: medium
   question: Do all workstations and servers run the latest or the previous release of their operating system?
   why: >-
@@ -1030,7 +1033,7 @@
 - id: MS-END-035
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles]
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles, ms-azure-subscriptions]
   severity: high
   question: Does every Windows device and server have its own local administrator password that Windows LAPS rotates and backs up?
   why: >-
@@ -1060,7 +1063,7 @@
 - id: MS-END-036
   module: core
   domain: endpoints
-  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles]
+  appliesTo: [ms-managed-endpoints, ms-hybrid-identity, ms-privileged-roles, ms-azure-subscriptions]
   severity: high
   question: Are memory integrity, LSA protection, Credential Guard and Remote Credential Guard turned on for Windows devices and servers?
   why: >-

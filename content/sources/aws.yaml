@@ -1,0 +1,757 @@
+# Amazon Web Services documentation and pricing pages cited by the aws platform and the AWS FSBP framework.
+
+- id: aws-fsbp
+  title: AWS Foundational Security Best Practices standard in Security Hub CSPM
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html
+  retrieved: 2026-10-09
+- id: aws-guardduty-pricing
+  title: "Amazon GuardDuty Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/guardduty/pricing/
+  retrieved: 2026-10-09
+- id: aws-security-hub-cspm-pricing
+  title: "AWS Security Hub CSPM Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/security-hub/cspm/pricing/
+  retrieved: 2026-10-09
+- id: aws-macie-pricing
+  title: "Amazon Macie Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/macie/pricing/
+  retrieved: 2026-10-09
+- id: aws-inspector-pricing
+  title: "Amazon Inspector Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/inspector/pricing/
+  retrieved: 2026-10-09
+- id: aws-config-pricing
+  title: "AWS Config Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/config/pricing/
+  retrieved: 2026-10-09
+- id: aws-backup-pricing
+  title: "AWS Backup Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/backup/pricing/
+  retrieved: 2026-10-09
+- id: aws-cloudtrail-pricing
+  title: "AWS CloudTrail pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/cloudtrail/pricing/
+  retrieved: 2026-10-09
+- id: aws-access-analyzer-pricing
+  title: "IAM Access Analyzer Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/iam/access-analyzer/pricing/
+  retrieved: 2026-10-09
+- id: aws-secrets-manager-pricing
+  title: "AWS Secrets Manager Pricing"
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/secrets-manager/pricing/
+  retrieved: 2026-10-09
+- id: aws-root-mfa
+  title: "Multi-factor authentication for AWS account root user"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-mfa-for-root.html
+  retrieved: 2026-10-09
+- id: aws-root-access-keys
+  title: "Delete access keys for the root user"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_delete-key.html
+  retrieved: 2026-10-09
+- id: aws-root-centralise
+  title: "Centralize root access for member accounts"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-enable-root-access.html
+  retrieved: 2026-10-09
+- id: aws-root-best-practices
+  title: "Root user best practices for your AWS account"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html
+  retrieved: 2026-10-09
+- id: aws-identity-center
+  title: "What is IAM Identity Center?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html
+  retrieved: 2026-10-09
+- id: aws-identity-center-mfa
+  title: "MFA for Identity Center directory users"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-mfa.html
+  retrieved: 2026-10-09
+- id: aws-identity-center-mfa-types
+  title: "Available MFA types for IAM Identity Center"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/mfa-types.html
+  retrieved: 2026-10-09
+- id: aws-iam-mfa
+  title: "AWS Multi-factor authentication in IAM"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html
+  retrieved: 2026-10-09
+- id: aws-iam-passkeys
+  title: "Assign a passkey or security key in the AWS Management Console"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_fido.html
+  retrieved: 2026-10-09
+- id: aws-iam-access-keys
+  title: "Manage access keys for IAM users"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
+  retrieved: 2026-10-09
+- id: aws-iam-best-practices
+  title: "Security best practices in IAM"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+  retrieved: 2026-10-09
+- id: aws-iam-roles-ec2
+  title: "Use an IAM role to grant permissions to applications running on Amazon EC2 instances"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
+  retrieved: 2026-10-09
+- id: aws-iam-oidc
+  title: "Create an OpenID Connect (OIDC) identity provider in IAM"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html
+  retrieved: 2026-10-09
+- id: aws-iam-passrole
+  title: "Grant a user permissions to pass a role to an AWS service"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html
+  retrieved: 2026-10-09
+- id: aws-iam-boundaries
+  title: "Permissions boundaries for IAM entities"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html
+  retrieved: 2026-10-09
+- id: aws-access-analyzer
+  title: "Using AWS Identity and Access Management Access Analyzer"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html
+  retrieved: 2026-10-09
+- id: aws-access-analyzer-resources
+  title: "IAM Access Analyzer supported resource types for external and internal access"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-resources.html
+  retrieved: 2026-10-09
+- id: aws-iam-third-party
+  title: "Access to AWS accounts owned by third parties"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_third-party.html
+  retrieved: 2026-10-09
+- id: aws-confused-deputy
+  title: "The confused deputy problem"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/confused-deputy.html
+  retrieved: 2026-10-09
+- id: aws-temporary-elevated-access
+  title: "Temporary elevated access for AWS accounts"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/temporary-elevated-access.html
+  retrieved: 2026-10-09
+- id: aws-iam-last-accessed
+  title: "Refine permissions in AWS using last accessed information"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html
+  retrieved: 2026-10-09
+- id: aws-permission-sets
+  title: "Manage AWS accounts with permission sets"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/permissionsetsconcept.html
+  retrieved: 2026-10-09
+- id: aws-credential-report
+  title: "Generate credential reports for your AWS account"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html
+  retrieved: 2026-10-09
+- id: aws-org-mgmt-account
+  title: "Best practices for the management account"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_best-practices_mgmt-acct.html
+  retrieved: 2026-10-09
+- id: aws-scps
+  title: "Service control policies (SCPs)"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html
+  retrieved: 2026-10-09
+- id: aws-scp-examples
+  title: "Service control policy examples"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_examples.html
+  retrieved: 2026-10-09
+- id: aws-rcps
+  title: "Resource control policies (RCPs)"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_rcps.html
+  retrieved: 2026-10-09
+- id: aws-data-perimeter
+  title: "Building a Data Perimeter on AWS"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws/building-a-data-perimeter-on-aws.html
+  retrieved: 2026-10-09
+- id: aws-org-services
+  title: "Using AWS Organizations with other AWS services"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html
+  retrieved: 2026-10-09
+- id: aws-foundational-ous
+  title: "Foundational OUs"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/foundational-ous.html
+  retrieved: 2026-10-09
+- id: aws-multi-account
+  title: "Organizing Your AWS Environment Using Multiple Accounts"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/organizing-your-aws-environment.html
+  retrieved: 2026-10-09
+- id: aws-alternate-contacts
+  title: "Update the alternate contacts for your AWS account"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-update-contact-alternate.html
+  retrieved: 2026-10-09
+- id: aws-declarative-policies
+  title: "Declarative policies in AWS Organizations"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_declarative_policies.html
+  retrieved: 2026-10-09
+- id: aws-org-s3-policies
+  title: "Amazon S3 policies"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_s3.html
+  retrieved: 2026-10-09
+- id: aws-s3-block-public-access
+  title: "Blocking public access to your Amazon S3 storage"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
+  retrieved: 2026-10-09
+- id: aws-s3-object-ownership
+  title: "Controlling ownership of objects and disabling ACLs for your bucket"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
+  retrieved: 2026-10-09
+- id: aws-s3-security-best-practices
+  title: "Security best practices for Amazon S3"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html
+  retrieved: 2026-10-09
+- id: aws-macie
+  title: "What is Amazon Macie?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/macie/latest/user/what-is-macie.html
+  retrieved: 2026-10-09
+- id: aws-macie-automated-discovery
+  title: "Performing automated sensitive data discovery"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/macie/latest/user/discovery-asdd.html
+  retrieved: 2026-10-09
+- id: aws-ebs-snapshot-bpa
+  title: "Block public access for Amazon EBS snapshots"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/ebs/latest/userguide/block-public-access-snapshots.html
+  retrieved: 2026-10-09
+- id: aws-ami-bpa
+  title: "Understand block public access for AMIs"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-public-access-to-amis.html
+  retrieved: 2026-10-09
+- id: aws-rds-snapshot-sharing
+  title: "Sharing a DB snapshot for Amazon RDS"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ShareSnapshot.html
+  retrieved: 2026-10-09
+- id: aws-rds-vpc
+  title: "Working with a DB instance in a VPC"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html
+  retrieved: 2026-10-09
+- id: aws-ebs-default-encryption
+  title: "Enable Amazon EBS encryption by default"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/ebs/latest/userguide/encryption-by-default.html
+  retrieved: 2026-10-09
+- id: aws-rds-encryption
+  title: "Encrypting Amazon RDS resources"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html
+  retrieved: 2026-10-09
+- id: aws-kms-key-policies
+  title: "Key policies in AWS KMS"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html
+  retrieved: 2026-10-09
+- id: aws-kms-iam-best-practices
+  title: "Best practices for IAM policies"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/kms/latest/developerguide/iam-policies-best-practices.html
+  retrieved: 2026-10-09
+- id: aws-kms-rotation
+  title: "Rotate AWS KMS keys"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html
+  retrieved: 2026-10-09
+- id: aws-kms-deletion
+  title: "Delete an AWS KMS key"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html
+  retrieved: 2026-10-09
+- id: aws-secrets-rotation
+  title: "Rotate AWS Secrets Manager secrets"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html
+  retrieved: 2026-10-09
+- id: aws-secrets-best-practices
+  title: "AWS Secrets Manager best practices"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html
+  retrieved: 2026-10-09
+- id: aws-rds-secrets-manager
+  title: "Password management with Amazon RDS and AWS Secrets Manager"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html
+  retrieved: 2026-10-09
+- id: aws-rds-iam-auth
+  title: "IAM database authentication for MariaDB, MySQL, and PostgreSQL"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html
+  retrieved: 2026-10-09
+- id: aws-sg-rules
+  title: "Security group rules for different use cases"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html
+  retrieved: 2026-10-09
+- id: aws-session-manager
+  title: "AWS Systems Manager Session Manager"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html
+  retrieved: 2026-10-09
+- id: aws-eice
+  title: "Connect to an Amazon EC2 instance using EC2 Instance Connect Endpoint"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-using-eice.html
+  retrieved: 2026-10-09
+- id: aws-vpc-bpa
+  title: "Block public access to VPCs and subnets"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/vpc/latest/userguide/security-vpc-bpa.html
+  retrieved: 2026-10-09
+- id: aws-imds
+  title: "Use the Instance Metadata Service to access instance metadata"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
+  retrieved: 2026-10-09
+- id: aws-imds-defaults
+  title: "Configure instance metadata options for new instances"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html
+  retrieved: 2026-10-09
+- id: aws-inspector
+  title: "What is Amazon Inspector?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html
+  retrieved: 2026-10-09
+- id: aws-inspector-ec2
+  title: "Scanning Amazon EC2 instances with Amazon Inspector"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/inspector/latest/user/scanning-ec2.html
+  retrieved: 2026-10-09
+- id: aws-inspector-severity
+  title: "Understanding severity levels for your Amazon Inspector findings"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/inspector/latest/user/findings-understanding-severity.html
+  retrieved: 2026-10-09
+- id: aws-patch-manager
+  title: "AWS Systems Manager Patch Manager"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager.html
+  retrieved: 2026-10-09
+- id: aws-patch-compliance
+  title: "Working with patch compliance reports"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-compliance-reports.html
+  retrieved: 2026-10-09
+- id: aws-lambda-runtimes
+  title: "Lambda runtimes"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
+  retrieved: 2026-10-09
+- id: aws-ecr-scanning
+  title: "Scan images for software vulnerabilities in Amazon ECR"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html
+  retrieved: 2026-10-09
+- id: aws-ecr-repo-policies
+  title: "Private repository policies in Amazon ECR"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-policies.html
+  retrieved: 2026-10-09
+- id: aws-eks-endpoint
+  title: "Cluster API server endpoint"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
+  retrieved: 2026-10-09
+- id: aws-eks-security
+  title: "Best Practices for Security"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/best-practices/security.html
+  retrieved: 2026-10-09
+- id: aws-eks-control-plane-logs
+  title: "Send control plane logs to CloudWatch Logs"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
+  retrieved: 2026-10-09
+- id: aws-lambda-url-auth
+  title: "Control access to Lambda function URLs"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+  retrieved: 2026-10-09
+- id: aws-ssm-document-sharing
+  title: "Sharing SSM documents"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/documents-ssm-sharing.html
+  retrieved: 2026-10-09
+- id: aws-dangling-dns
+  title: "Protection from dangling delegation records in Route 53"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/protection-from-dangling-dns.html
+  retrieved: 2026-10-09
+- id: aws-org-trail
+  title: "Creating a trail for an organization"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-trail-organization.html
+  retrieved: 2026-10-09
+- id: aws-cloudtrail-validation
+  title: "Validating CloudTrail log file integrity"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-intro.html
+  retrieved: 2026-10-09
+- id: aws-cloudtrail-data-events
+  title: "Logging data events"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html
+  retrieved: 2026-10-09
+- id: aws-log-archive
+  title: "Security OU – Log Archive account"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/log-archive.html
+  retrieved: 2026-10-09
+- id: aws-guardduty
+  title: "What is Amazon GuardDuty?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html
+  retrieved: 2026-10-09
+- id: aws-guardduty-orgs
+  title: "Managing GuardDuty accounts with AWS Organizations"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html
+  retrieved: 2026-10-09
+- id: aws-guardduty-findings
+  title: "GuardDuty finding types"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types-active.html
+  retrieved: 2026-10-09
+- id: aws-config-recording
+  title: "Recording AWS Resources with AWS Config"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/config/latest/developerguide/select-resources.html
+  retrieved: 2026-10-09
+- id: aws-security-hub-cspm
+  title: "Introduction to AWS Security Hub CSPM"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/securityhub/latest/userguide/what-is-securityhub.html
+  retrieved: 2026-10-09
+- id: aws-cloudtrail-alarms
+  title: "Creating CloudWatch alarms for CloudTrail events: examples"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudwatch-alarms-for-cloudtrail.html
+  retrieved: 2026-10-09
+- id: aws-vpc-flow-logs
+  title: "Logging IP traffic using VPC Flow Logs"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html
+  retrieved: 2026-10-09
+- id: aws-s3-object-lock
+  title: "Locking objects with Object Lock"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html
+  retrieved: 2026-10-09
+- id: aws-backup-plans
+  title: "Backup plans"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/about-backup-plans.html
+  retrieved: 2026-10-09
+- id: aws-backup-restore-testing
+  title: "Restore testing"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing.html
+  retrieved: 2026-10-09
+- id: aws-backup-cross-account
+  title: "Creating backup copies across AWS accounts"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/create-cross-account-backup.html
+  retrieved: 2026-10-09
+- id: aws-backup-vault-lock
+  title: "AWS Backup Vault Lock"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/vault-lock.html
+  retrieved: 2026-10-09
+- id: aws-backup-air-gapped
+  title: "Logically air-gapped vault"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/logicallyairgappedvault.html
+  retrieved: 2026-10-09
+- id: aws-backup-vault-access-policy
+  title: "Vault access policies"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/create-a-vault-access-policy.html
+  retrieved: 2026-10-09
+- id: aws-dynamodb-pitr
+  title: "Point-in-time backups for DynamoDB"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Point-in-time-recovery.html
+  retrieved: 2026-10-09
+- id: aws-s3-versioning
+  title: "Retaining multiple versions of objects with S3 Versioning"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html
+  retrieved: 2026-10-09
+- id: aws-waf-pricing
+  title: AWS WAF Pricing
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/waf/pricing/
+  retrieved: 2026-10-09
+- id: aws-root-user
+  title: AWS account root user
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html
+  retrieved: 2026-10-09
+- id: aws-identity-center-external-idp
+  title: External identity providers
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/manage-your-identity-source-idp.html
+  retrieved: 2026-10-09
+- id: aws-identity-center-emergency
+  title: Set up emergency access to the AWS Management Console
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/singlesignon/latest/userguide/emergency-access.html
+  retrieved: 2026-10-09
+- id: aws-wa-emergency-access
+  title: SEC03-BP03 Establish emergency access process
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_permissions_emergency_process.html
+  retrieved: 2026-10-09
+- id: aws-alb-authenticate
+  title: Authenticate users using an Application Load Balancer
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
+  retrieved: 2026-10-09
+- id: aws-verified-access
+  title: "What is AWS Verified Access?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/verified-access/latest/ug/what-is-verified-access.html
+  retrieved: 2026-10-09
+- id: aws-cognito-mfa
+  title: Adding MFA to a user pool
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html
+  retrieved: 2026-10-09
+- id: aws-cognito-auth-flows
+  title: Authentication flows
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html
+  retrieved: 2026-10-09
+- id: aws-fedramp-privileged
+  title: Privileged Account Guidance
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/fedramp/latest/userguide/privileged-account-guidance.html
+  retrieved: 2026-10-09
+- id: aws-console-private-access
+  title: AWS Management Console Private Access
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/console-private-access.html
+  retrieved: 2026-10-09
+- id: aws-workspaces
+  title: "What is Amazon WorkSpaces?"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html
+  retrieved: 2026-10-09
+- id: aws-team-blog
+  title: Temporary elevated access management with IAM Identity Center
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/blogs/security/temporary-elevated-access-management-with-iam-identity-center/
+  retrieved: 2026-10-09
+- id: aws-iam-oidc-role
+  title: Create a role for OpenID Connect federation (console)
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html
+  retrieved: 2026-10-09
+- id: aws-org-account-access-role
+  title: Accessing a member account that has OrganizationAccountAccessRole with AWS Organizations
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_access-cross-account-role.html
+  retrieved: 2026-10-09
+- id: aws-iam-deny-region
+  title: "AWS: Denies access to AWS based on the requested Region"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_examples_aws_deny-requested-region.html
+  retrieved: 2026-10-09
+- id: aws-org-delegate-policies
+  title: Delegated administrator for AWS Organizations
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html
+  retrieved: 2026-10-09
+- id: aws-opensearch-vpc
+  title: Launching your Amazon OpenSearch Service domains within a VPC
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html
+  retrieved: 2026-10-09
+- id: aws-alb-https-listener
+  title: Create an HTTPS listener for your Application Load Balancer
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html
+  retrieved: 2026-10-09
+- id: aws-cloudfront-https-viewers
+  title: Require HTTPS for communication between viewers and CloudFront
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html
+  retrieved: 2026-10-09
+- id: aws-rds-ssl
+  title: Using SSL/TLS to encrypt a connection to a DB instance or cluster
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html
+  retrieved: 2026-10-09
+- id: aws-rds-deletion
+  title: Deleting a DB instance
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html
+  retrieved: 2026-10-09
+- id: aws-dynamodb-tables
+  title: Basic operations on DynamoDB tables
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.Basics.html
+  retrieved: 2026-10-09
+- id: aws-default-sg
+  title: Default security groups for your VPCs
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/vpc/latest/userguide/default-security-group.html
+  retrieved: 2026-10-09
+- id: aws-eks-pod-identity
+  title: Learn how EKS Pod Identity grants pods access to AWS services
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html
+  retrieved: 2026-10-09
+- id: aws-waf
+  title: AWS WAF
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html
+  retrieved: 2026-10-09
+- id: aws-waf-managed-rules
+  title: AWS Managed Rules for AWS WAF
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups.html
+  retrieved: 2026-10-09
+- id: aws-apigw-access-control
+  title: Control and manage access to REST APIs in API Gateway
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html
+  retrieved: 2026-10-09
+- id: aws-eks-access-entries
+  title: Grant IAM users access to Kubernetes with EKS access entries
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html
+  retrieved: 2026-10-09
+- id: aws-eks-envelope-encryption
+  title: Default envelope encryption for all Kubernetes API Data
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/eks/latest/userguide/envelope-encryption.html
+  retrieved: 2026-10-09
+- id: aws-bedrock-iam
+  title: Identity and access management for Amazon Bedrock
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam.html
+  retrieved: 2026-10-09
+- id: aws-sagemaker-notebook-internet
+  title: Connect a Notebook Instance in a VPC to External Resources
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/sagemaker/latest/dg/appendix-notebook-and-internet-access.html
+  retrieved: 2026-10-09
+- id: aws-bedrock-invocation-logging
+  title: Monitor model invocation using CloudWatch Logs and Amazon S3
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html
+  retrieved: 2026-10-09
+- id: aws-bedrock-guardrails
+  title: Detect and filter harmful content by using Amazon Bedrock Guardrails
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html
+  retrieved: 2026-10-09
+- id: aws-session-manager-logging
+  title: Enabling and disabling session logging
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-logging.html
+  retrieved: 2026-10-09
+- id: aws-session-manager-access
+  title: "Step 3: Control session access to managed nodes"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-restrict-access.html
+  retrieved: 2026-10-09
+- id: aws-ds-windows-laps
+  title: Using Windows LAPS with AWS Managed Microsoft AD
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_using_windows_laps.html
+  retrieved: 2026-10-09
+- id: aws-ec2rescue-reset
+  title: Troubleshoot impaired Windows instance with EC2Rescue and Systems Manager
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2rw-ssm.html
+  retrieved: 2026-10-09
+- id: aws-ec2-credential-guard
+  title: Credential Guard for Windows instances
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/credential-guard.html
+  retrieved: 2026-10-09
+- id: aws-inspector-supported
+  title: Supported operating systems and programming languages for Amazon Inspector
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/inspector/latest/user/supported.html
+  retrieved: 2026-10-09
+- id: aws-rds-maintenance
+  title: Maintaining a DB instance
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+  retrieved: 2026-10-09
+- id: aws-ena-windows-driver
+  title: Install the ENA driver on EC2 Windows instances
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-adapter-driver-install-upgrade-win.html
+  retrieved: 2026-10-09
+- id: aws-shared-responsibility
+  title: Shared Responsibility Model
+  publisher: Amazon Web Services
+  url: https://aws.amazon.com/compliance/shared-responsibility-model/
+  retrieved: 2026-10-09
+- id: aws-windows-ami-reference
+  title: AWS Windows AMI reference
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/ec2/latest/windows-ami-reference/windows-amis.html
+  retrieved: 2026-10-09
+- id: aws-cloudwatch-agent
+  title: Collect metrics, logs, and traces using the CloudWatch agent
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html
+  retrieved: 2026-10-09
+- id: aws-wa-ir-playbooks
+  title: SEC10-BP04 Develop and test security incident response playbooks
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_playbooks.html
+  retrieved: 2026-10-09
+- id: aws-backup-access-control
+  title: Access control
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html
+  retrieved: 2026-10-09
+- id: aws-backup-encryption
+  title: Encryption for backups in AWS Backup
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html
+  retrieved: 2026-10-09

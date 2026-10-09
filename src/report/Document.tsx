@@ -7,6 +7,8 @@ import { levelFor, socProviders, type SocResult } from "../engine/soc";
 import { answerLabels, classifications, dsls, regulations, type Answer } from "../engine/types";
 import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import type { ReportModel } from "./model";
+
+const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
 import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
 
 const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
@@ -84,7 +86,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           <Text style={{ fontSize: 32, fontWeight: 700, marginTop: 8, lineHeight: 1.15 }}>{a.org.name}</Text>
           {a.org.abn && isValidAbn(a.org.abn) && <Text style={{ fontSize: 11, marginTop: 6, opacity: 0.9 }}>ABN {formatAbn(a.org.abn)}</Text>}
           <View style={{ height: 3, width: 56, backgroundColor: theme.accent, marginTop: 18, marginBottom: 18 }} />
-          <Text style={{ fontSize: 12 }}>{model.platformNames.join(" and ")}</Text>
+          <Text style={{ fontSize: 12 }}>{andList(model.platformNames)}</Text>
         </View>
         <View style={{ position: "absolute", bottom: 72, left: 56, right: 56, fontSize: 9.5, lineHeight: 1.6 }}>
           {a.branding.preparedFor && <Text>Prepared for: {a.branding.preparedFor}</Text>}
@@ -110,7 +112,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         {/* About */}
         <Section s={s} title="About this report" breakBefore={false}>
           <Text style={s.p}>
-            This report assesses how well {a.org.name} protects its crown jewels in {model.platformNames.join(" and ")}. It was
+            This report assesses how well {a.org.name} protects its crown jewels in {andList(model.platformNames)}. It was
             prepared with crownguard, a guided self-assessment, from answers given by the organisation. It is not an audit or a
             certification.
           </Text>
@@ -170,7 +172,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               : ""}
           </Text>
           <Text style={s.p}>
-            The assessment covered {model.risks.length} crown jewel{model.risks.length === 1 ? "" : "s"} across {model.platformNames.join(" and ")}.
+            The assessment covered {model.risks.length} crown jewel{model.risks.length === 1 ? "" : "s"} across {andList(model.platformNames)}.
             {extreme + high > 0
               ? ` ${extreme + high} ${extreme + high === 1 ? "is" : "are"} rated high or extreme risk${top ? `, led by “${top.jewel.name}” (${top.band.toLowerCase()}, ${top.score}/25)` : ""}, and the priority actions below address them first.`
               : " None is currently rated high or extreme risk."}
@@ -468,12 +470,12 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         <Section s={s} title="Method and limitations">
           {[
             "This is a self-assessment. Answers were provided by the organisation and have not been independently verified. Treat it as a structured starting point for a security conversation, not as an audit or certification.",
-            "Questions are drawn from current Microsoft and Google security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model, NIST CSF 2.0 and the Department of Home Affairs Industry Data Classification Framework. Each question cites its sources in the references section.",
+            "Questions are drawn from current Microsoft, Google and AWS security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model, NIST CSF 2.0 and the Department of Home Affairs Industry Data Classification Framework. Each question cites its sources in the references section.",
             "Answers score Yes = 1, Partial = 0.5, No = 0. Unknown and unanswered questions also score 0, so uncertainty is never counted as protection. N/A questions are excluded. Questions are weighted by severity: critical 4, high 3, medium 2, low 1.",
             "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions relevant to a crown jewel, plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
             "Risk bands: 1–4 Low, 5–9 Medium, 10–19 High, 20–25 Extreme.",
             "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). The assessor reviewed and could change every answer; scan evidence is shown against each finding.",
-            "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud collaboration platform, or levels not asked, are reported as not assessed.",
+            "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
             "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
             ...(model.soc
               ? [
@@ -481,7 +483,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                   "SOC results are self-ratings from far fewer questions than SOC-CMM's own tool. They are not SOC-CMM maturity or capability scores, are not comparable with SOC-CMM benchmarks or certification, and don't affect the crown-jewel risk ratings.",
                 ]
               : []),
-            `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
+            `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
         </Section>
 

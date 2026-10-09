@@ -1,0 +1,220 @@
+# Prowler AWS check ids mapped to crownguard questions, for importing a Prowler scan (CSV or OCSF JSON).
+# Check ids were checked against Prowler 5.44.0 (2026-09-29). crownguard doesn't read Prowler output yet:
+# these mappings are validated against the questions so an importer can use them.
+id: prowler-aws
+name: Prowler (AWS)
+platform: aws
+url: https://github.com/prowler-cloud/prowler
+mappings:
+  - question: AWS-BCK-001
+    checks: [backup_plans_exist, rds_instance_backup_enabled, rds_instance_protected_by_backup_plan, dynamodb_tables_pitr_enabled, efs_have_backup_enabled]
+    rationale: Shows backups exist for RDS, DynamoDB and EFS; S3, EBS, retention by business need and second-copy resilience aren't checked.
+    cap: partial
+  - question: AWS-BCK-005
+    checks: [s3_bucket_object_lock]
+    rationale: Object Lock on buckets covers the S3 part only; Vault Lock compliance mode isn't checked, and buckets that aren't backup copies fail without risk.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-DATA-001
+    checks: [s3_account_level_public_access_blocks, s3_bucket_public_access, s3_bucket_acl_prohibited, s3_access_point_public_access_block, s3_multi_region_access_point_public_access_block]
+    rationale: Account-level Block Public Access, no public buckets or access points and ACLs disabled is exactly the Yes state.
+  - question: AWS-DATA-002
+    checks: [ec2_ebs_snapshot_account_block_public_access, ec2_ami_account_block_public_access, ec2_ebs_public_snapshot, ec2_ami_public, rds_snapshots_public_access]
+    rationale: Snapshot and AMI block public access in every region plus no public EBS, AMI or RDS snapshots is the Yes state.
+  - question: AWS-DATA-003
+    checks: [rds_instance_no_public_access, redshift_cluster_public_access, opensearch_service_domains_not_publicly_accessible]
+    rationale: No publicly accessible RDS instances, Redshift clusters or OpenSearch domains; Redshift Serverless workgroups and private-subnet routing aren't checked.
+    cap: partial
+  - question: AWS-DATA-004
+    checks: [macie_is_enabled, macie_automated_sensitive_data_discovery_enabled]
+    rationale: Macie with automated discovery on; review of its findings isn't checked.
+    cap: partial
+  - question: AWS-DATA-005
+    checks: [ec2_ebs_default_encryption, ec2_ebs_volume_encryption, rds_instance_storage_encrypted, rds_cluster_storage_encrypted, efs_encryption_at_rest_enabled, redshift_cluster_encrypted_at_rest, opensearch_service_domains_encryption_at_rest_enabled, s3_bucket_default_encryption]
+    rationale: Encryption at rest across EBS (default and volumes), RDS, EFS, Redshift, OpenSearch and S3 default encryption is the Yes state now that customer managed keys are a recommendation, not a requirement.
+  - question: AWS-DATA-006
+    checks: [s3_bucket_secure_transport_policy, elbv2_ssl_listeners, cloudfront_distributions_https_enabled, rds_instance_transport_encrypted]
+    rationale: TLS-only bucket policies, HTTPS listeners, CloudFront HTTPS and RDS transport encryption is the Yes state; the S3 check fails buckets that aren't crown jewels or that rely on an RCP, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-DATA-007
+    checks: [kms_key_not_publicly_accessible, iam_policy_no_full_access_to_kms, iam_inline_policy_no_full_access_to_kms]
+    rationale: No public key policies and no kms:* grants; decrypt-on-all-keys and key policies naming specific roles aren't fully checked.
+    cap: partial
+  - question: AWS-DATA-008
+    checks: [kms_cmk_not_deleted_unintentionally]
+    rationale: No keys pending deletion; who can schedule deletion or disable keys isn't checked.
+    cap: partial
+  - question: AWS-DATA-009
+    checks: [awslambda_function_no_secrets_in_variables, awslambda_function_no_secrets_in_code, ec2_instance_secrets_user_data, ec2_launch_template_no_secrets, ecs_task_definitions_no_environment_secrets, codebuild_project_no_secrets_in_variables, cloudformation_stack_outputs_find_secrets, ssm_document_secrets, secretsmanager_has_restrictive_resource_policy]
+    rationale: Secret detection in the places the question names plus restrictive secret policies; detection is heuristic (it can miss secrets and code repositories aren't checked), so a pass is Partial, and false positives send a fail to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-DATA-010
+    checks: [secretsmanager_automatic_rotation_enabled]
+    rationale: Rotation on for Secrets Manager secrets; it passes when no secrets exist there and doesn't see other vaults.
+    cap: partial
+  - question: AWS-DATA-011
+    checks: [rds_instance_iam_authentication_enabled, rds_cluster_iam_authentication_enabled]
+    rationale: IAM authentication enabled doesn't prove people use it with phishing-resistant MFA instead of shared passwords.
+    cap: partial
+  - question: AWS-DATA-012
+    checks: [rds_instance_deletion_protection, rds_cluster_deletion_protection, dynamodb_table_deletion_protection_enabled]
+    rationale: Deletion protection on every RDS instance, Aurora cluster and DynamoDB table implies the Yes state; databases that aren't crown jewels fail without risk, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-IAM-001
+    checks: [iam_root_credentials_management_enabled]
+    rationale: Shows centralised root credentials management is on; it doesn't show that existing member-account root passwords, keys and MFA devices were deleted (IAM > Root access management shows each account's status).
+    cap: partial
+  - question: AWS-IAM-002
+    checks: [iam_no_root_access_key, iam_avoid_root_usage]
+    rationale: No root access keys and no recent root use; safe storage of the password and MFA devices and the team mailbox aren't checked.
+    cap: partial
+  - question: AWS-IAM-003
+    checks: [iam_check_saml_providers_sts]
+    rationale: Shows federation is configured; it can't show that no person still uses an IAM user.
+    cap: partial
+  - question: AWS-IAM-005
+    checks: [iam_root_mfa_enabled, iam_user_mfa_enabled_console_access]
+    rationale: Covers root and IAM users only; Identity Center or external IdP MFA enforcement isn't checked. Member accounts whose root credentials were removed may be reported differently by the root check.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-IAM-006
+    checks: [iam_root_hardware_mfa_enabled, iam_user_hardware_mfa_enabled]
+    rationale: Hardware MFA for root and IAM users is part of phishing-resistant MFA; Identity Center MFA types and the IdP aren't checked, and treatment of passkeys and of root-less member accounts is unconfirmed.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-IAM-008
+    checks: [cognito_user_pool_mfa_enabled]
+    rationale: Shows MFA on Cognito user pools; it can't tell which pools serve sensitive customer data or other sign-in services, and pools without sensitive data fail without risk.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-IAM-016
+    checks: [iam_user_accesskey_unused, iam_user_console_access_unused]
+    rationale: Removes unused IAM user credentials (45 days); annual revalidation and Identity Center assignments aren't checked.
+    cap: partial
+  - question: AWS-IAM-018
+    checks: [iam_customer_attached_policy_no_administrative_privileges, iam_inline_policy_no_administrative_privileges, iam_user_administrator_access_policy]
+    rationale: No custom or inline *:* policies and no AdministratorAccess on users; scoping of job-function permission sets and removal of unused permissions aren't checked.
+    # iam_aws_attached_policy_no_administrative_privileges left out: it fails on the legitimate administrator permission set. iam_policy_attached_only_to_group_or_roles dropped because groups-only is no longer part of the Yes state.
+    cap: partial
+  - question: AWS-IAM-019
+    checks: [iam_policy_allows_privilege_escalation, iam_inline_policy_allows_privilege_escalation]
+    rationale: Finds escalation combinations in customer managed and inline policies; AWS managed policies such as IAMFullAccess and permissions-boundary enforcement aren't checked.
+    cap: partial
+  - question: AWS-IAM-021
+    checks: [iam_user_accesskey_unused, iam_rotate_access_key_90_days, iam_user_two_active_access_key, ec2_instance_profile_attached]
+    rationale: Shows remaining keys are used, rotated and single and instances have roles; it can't show people, pipelines and workloads use temporary credentials instead of keys.
+    cap: partial
+  - question: AWS-IAM-022
+    checks: [iam_role_cross_service_confused_deputy_prevention]
+    rationale: Covers confused-deputy conditions on service trusts only; OIDC sub/aud pinning, named cross-account principals and supplier external IDs need manual review.
+    cap: partial
+  - question: AWS-IAM-023
+    checks: [accessanalyzer_enabled, accessanalyzer_enabled_without_findings, kms_key_not_publicly_accessible, sqs_queues_not_publicly_accessible, sns_topics_not_publicly_accessible, awslambda_function_not_publicly_accessible, secretsmanager_not_publicly_accessible, ecr_repositories_not_publicly_accessible, ssm_documents_set_as_public]
+    rationale: Access Analyzer on with no active findings and no public policies on the listed resource types; an account-zone analyzer also passes and the SSM block-public-sharing setting isn't checked, so a pass is Partial.
+    cap: partial
+  - question: AWS-LOG-001
+    checks: [cloudtrail_multi_region_enabled_logging_management_events]
+    rationale: Multi-region management events are logged; the organisation trail, log archive delivery and identity provider logs aren't checked.
+    cap: partial
+  - question: AWS-LOG-002
+    checks: [cloudtrail_logs_s3_bucket_is_not_publicly_accessible, cloudtrail_log_file_validation_enabled, cloudtrail_kms_encryption_enabled]
+    rationale: Private trail bucket with validation and KMS; account separation, Object Lock and who can change the organisation trail aren't checked, and validation or KMS are recommendations rather than the Yes state, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-LOG-003
+    checks: [cloudtrail_s3_dataevents_read_enabled, cloudtrail_s3_dataevents_write_enabled]
+    rationale: Prowler passes when data events cover all buckets, which implies Yes; logging only crown-jewel buckets fails it, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-LOG-004
+    checks: [guardduty_is_enabled, guardduty_centrally_managed, guardduty_s3_protection_enabled, guardduty_rds_protection_enabled, guardduty_eks_audit_log_enabled, guardduty_runtime_monitoring_enabled, guardduty_ec2_malware_protection_enabled, guardduty_lambda_protection_enabled]
+    rationale: GuardDuty on, centrally managed, with every protection plan is the Yes state; plans for services you don't use fail without risk, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-LOG-005
+    checks: [config_recorder_all_regions_enabled, securityhub_enabled]
+    rationale: Config and Security Hub CSPM enabled; the FSBP standard and triage of failed controls aren't checked.
+    cap: partial
+  - question: AWS-LOG-006
+    checks: [cloudwatch_log_metric_filter_root_usage, cloudwatch_log_metric_filter_sign_in_without_mfa, cloudwatch_log_metric_filter_authentication_failures, cloudwatch_log_metric_filter_unauthorized_api_calls, cloudwatch_log_metric_filter_policy_changes, cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled, cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled, cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk, cloudwatch_log_metric_filter_for_s3_bucket_policy_changes, cloudwatch_log_metric_filter_security_group_changes, cloudwatch_changes_to_network_acls_alarm_configured, cloudwatch_changes_to_network_gateways_alarm_configured, cloudwatch_changes_to_network_route_tables_alarm_configured, cloudwatch_changes_to_vpcs_alarm_configured, cloudwatch_log_metric_filter_aws_organizations_changes]
+    rationale: The CIS section 5 metric-filter alarms are the events the question lists; organisations alerting through EventBridge or a SIEM fail these checks, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-LOG-007
+    checks: [vpc_flow_logs_enabled]
+    rationale: Flow logs on every VPC answers the question (retention isn't checked but is secondary).
+  - question: AWS-LOG-009
+    checks: [elbv2_logging_enabled, cloudfront_distributions_logging_enabled, apigateway_restapi_logging_enabled, wafv2_webacl_logging_enabled]
+    rationale: Web front-end access logging is on; operating system logs from internet-facing instances and timely analysis aren't checked.
+    cap: partial
+  - question: AWS-NET-001
+    checks: [ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389, ec2_securitygroup_allow_ingress_from_internet_to_all_ports, ec2_securitygroup_allow_ingress_from_internet_to_high_risk_tcp_ports, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mysql_3306, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_postgres_5432, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_sql_server_1433_1434, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_oracle_1521_2483, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_mongodb_27017_27018, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_redis_6379, ec2_instance_port_cifs_exposed_to_internet, ec2_networkacl_allow_ingress_tcp_port_22, ec2_networkacl_allow_ingress_tcp_port_3389, ec2_securitygroup_default_restrict_traffic, ec2_securitygroup_allow_ingress_from_internet_to_any_port]
+    rationale: No admin, database, file-sharing, high-risk, all-port or any-port ingress from the internet, NACLs closed on 22 and 3389 and default security groups empty is the Yes state; the any-port check also fails load balancers legitimately open on 443, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-NET-002
+    checks: [ec2_instance_public_ip, vpc_subnet_no_public_ip_by_default, ec2_launch_template_no_public_ip, ecs_task_set_no_assign_public_ip, ecs_service_no_assign_public_ip]
+    rationale: No public IPs on instances, subnets, templates, ECS services or task sets; VPC Block Public Access isn't checked.
+    cap: partial
+  - question: AWS-NET-003
+    checks: [ec2_instance_imdsv2_enabled, ec2_launch_template_imdsv2_required, ec2_instance_account_imdsv2_enabled]
+    rationale: Instances, launch templates and the regional IMDS defaults require IMDSv2, which is the Yes state (the hop limit is minor).
+  - question: AWS-NET-004
+    checks: [ec2_instance_internet_facing_with_instance_profile]
+    rationale: Flags internet-facing instances with any instance profile, not only privileged ones, and doesn't cover containers or functions.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-NET-005
+    checks: [elbv2_waf_acl_attached, cloudfront_distributions_using_waf, apigateway_restapi_waf_acl_attached, cognito_user_pool_waf_acl_attached, wafv2_webacl_logging_enabled]
+    rationale: WAF on load balancers, distributions, API stages and user pools with logging is the Yes state; internal load balancers and endpoints behind a third-party WAF fail without risk, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-NET-006
+    checks: [apigateway_restapi_authorizers_enabled, apigatewayv2_api_authorizers_enabled, awslambda_function_url_public, cognito_identity_pool_guest_access_disabled]
+    rationale: Authorisers on APIs, no unauthenticated function URLs and no guest identities is the Yes state; endpoints that are public by design fail, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-NET-007
+    checks: [eks_cluster_not_publicly_accessible, eks_control_plane_logging_all_types_enabled]
+    rationale: Private or restricted endpoint and control plane logging is the Yes state; the all-types logging check is stricter than audit plus authenticator, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-NET-008
+    checks: [sagemaker_notebook_instance_without_direct_internet_access_configured, sagemaker_notebook_instance_root_access_disabled, bedrock_agent_role_least_privilege, bedrock_guardrails_configured]
+    rationale: Covers notebook exposure, agent role scope and guardrails; knowledge-base roles, AgentCore gateway authorisation and invocation-log protection aren't checked.
+    cap: partial
+  - question: AWS-NET-009
+    checks: [route53_dangling_ip_subdomain_takeover, cloudfront_distributions_s3_origin_non_existent_bucket]
+    rationale: Covers A records to released IPs and CloudFront origins pointing at deleted buckets, not NS delegations to deleted hosted zones.
+    cap: partial
+  - question: AWS-NET-010
+    checks: [ec2_instance_managed_by_ssm, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22, ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389]
+    rationale: Managed nodes and no internet SSH or RDP; session logging, IAM limits on StartSession and the absence of direct admin paths from internal networks aren't checked.
+    cap: partial
+  - question: AWS-NET-014
+    checks: [inspector2_is_enabled, inspector2_coverage_scan_status_active]
+    rationale: Inspector EC2 scanning active with resources actively scanned is the Yes state (Inspector rescans continuously); organisations using an equivalent scanner fail, so a fail goes to review.
+    failIsInconclusive: true
+  - question: AWS-NET-015
+    checks: [ec2_instance_managed_by_ssm, ssm_managed_compliant_patching]
+    rationale: Managed and patch-compliant instances; the 48-hour, two-week and one-month timeframes aren't checked, and other patching tools fail.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-NET-016
+    checks: [inspector2_active_findings_no_known_exploited_vulnerabilities, awslambda_function_using_supported_runtimes, eks_cluster_uses_a_supported_version, ecr_repositories_scan_images_on_push_enabled]
+    rationale: No open known-exploited vulnerabilities, supported runtimes and versions, and image scanning; daily scanning and the two-week timeframe aren't checked.
+    cap: partial
+  - question: AWS-NET-018
+    checks: [rds_instance_minor_version_upgrade_enabled, rds_cluster_minor_version_upgrade_enabled]
+    rationale: Automatic minor version upgrades for RDS and Aurora cover part of the question; software on instances and container base images aren't checked.
+    cap: partial
+  - question: AWS-ORG-001
+    checks: [organizations_account_part_of_organizations]
+    rationale: Confirms the account is in an organisation; management-account workloads and OU structure aren't checked.
+    cap: partial
+  - question: AWS-ORG-004
+    checks: [organizations_scp_check_deny_regions]
+    rationale: Shows a region-deny SCP; exemptions for security tooling roles aren't checked.
+    cap: partial
+  - question: AWS-ORG-006
+    checks: [organizations_delegated_administrators, guardduty_delegated_admin_enabled_all_regions, securityhub_delegated_admin_enabled_all_regions, config_delegated_admin_and_org_aggregator_all_regions]
+    rationale: Delegated admin for GuardDuty, Security Hub CSPM and Config; Access Analyzer, Macie, Inspector, Backup and Organizations policy delegation aren't checked.
+    cap: partial
+  - question: AWS-ORG-007
+    checks: [account_security_contact_information_is_registered, account_maintain_current_contact_details]
+    rationale: These are the CIS contact checks; account_maintain_current_contact_details is manual in Prowler and monitored team mailboxes can't be checked.
+    cap: partial

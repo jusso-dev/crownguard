@@ -226,16 +226,21 @@ mappings:
     # Group and service principal assignments and PIM activation settings are not evaluated.
     cap: partial
   - question: MS-AZ-002
-    checks: [AZ-DEFENDER-001, AZ-DEFENDER-002]
-    rationale: Check that every relevant Defender for Cloud plan is Standard where matching resources exist and no high-severity recommendation is unhealthy.
+    checks: [AZ-DEFENDER-001]
+    rationale: Passes when every relevant Defender for Cloud plan is Standard where matching resources exist.
+    # Alert flow to Defender XDR or Microsoft Sentinel is not checked.
+    cap: partial
   - question: MS-AZ-003
-    checks: [AZ-KV-001, AZ-KV-002]
-    rationale: Check every key vault for enableRbacAuthorization, enablePurgeProtection, public network access disabled or firewall default Deny, and a diagnostic setting with a destination.
+    checks: [AZ-KV-001]
+    rationale: Checks every key vault for Azure RBAC, purge protection and restricted networking, so a pass shows purge protection is on.
+    # A fail can come from the permission model or networking, which MS-AZ-037 and MS-AZ-006 ask.
+    failIsInconclusive: true
   - question: MS-AZ-004
     checks: [AZ-MI-001]
     rationale: Passes when every storage account has allowSharedKeyAccess false and every App Service or Functions app has a managed identity.
-    # VMs, pipelines, Key Vault rotation and secret scanning are not checked.
+    # VMs, AKS, Container Apps and Logic Apps are not checked. A fail can come from Shared Key access, which MS-AZ-013 asks.
     cap: partial
+    failIsInconclusive: true
   - question: MS-AZ-005
     checks: [AZ-BACKUP-001]
     rationale: Passes when every Recovery Services and Backup vault has always-on soft delete and locked immutability.
@@ -244,3 +249,27 @@ mappings:
   - question: MS-AZ-006
     checks: [AZ-PUBLIC-001]
     rationale: Passes when storage accounts disallow anonymous blob access and restrict public network access, and SQL, Cosmos DB, PostgreSQL, MySQL, Synapse and Redis have public network access disabled.
+    # Key vaults, Azure AI Search and Foundry resources are not checked. A fail can come from anonymous blob access, which MS-AZ-012 asks.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-012
+    checks: [AZ-PUBLIC-001]
+    rationale: Passes when storage accounts disallow anonymous blob access and PaaS data services have public network access disabled.
+    # A fail can come from public network access, which MS-AZ-006 asks.
+    failIsInconclusive: true
+  - question: MS-AZ-013
+    checks: [AZ-MI-001]
+    rationale: Passes when every storage account has allowSharedKeyAccess false and every App Service or Functions app has a managed identity.
+    # A fail can come from apps without a managed identity, which MS-AZ-004 asks.
+    failIsInconclusive: true
+  - question: MS-AZ-032
+    checks: [AZ-KV-002]
+    rationale: Passes when every key vault sends diagnostic logs to a destination.
+    # Storage, database and AKS resource logs are not checked.
+    cap: partial
+  - question: MS-AZ-037
+    checks: [AZ-KV-001]
+    rationale: Checks every key vault for Azure RBAC, purge protection and restricted networking, so a pass shows the RBAC permission model is in use.
+    # Who holds data-plane roles is not checked. A fail can come from purge protection or networking.
+    cap: partial
+    failIsInconclusive: true

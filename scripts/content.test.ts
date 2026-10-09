@@ -7,7 +7,7 @@ const { catalogue, errors } = loadCatalogue(readContentFiles());
 describe("content", () => {
   it("validates", () => expect(errors).toEqual([]));
 
-  it("ships both platforms", () => expect([...catalogue.platforms.keys()].sort()).toEqual(["google", "microsoft"]));
+  it("ships every platform", () => expect([...catalogue.platforms.keys()].sort()).toEqual(["aws", "google", "microsoft"]));
 
   it("grounds every question in the platform vendor's own guidance", () => {
     for (const { platform, questions } of catalogue.platforms.values())

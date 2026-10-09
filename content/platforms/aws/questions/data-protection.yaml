@@ -1,0 +1,354 @@
+- id: AWS-DATA-001
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores, aws-backups]
+  severity: critical
+  question: Are S3 buckets and access points blocked from public access, with Block Public Access on for every account and ACLs disabled?
+  why: >-
+    One public bucket can expose millions of customer records, and automated scanners find public buckets
+    within hours. Block Public Access overrides any bucket policy or ACL that would make data public.
+  yesLooksLike: >-
+    An S3 policy in AWS Organizations (or account-level Block Public Access in every account) blocks all
+    public access; Object Ownership is set to bucket owner enforced so ACLs are disabled; and IAM Access
+    Analyzer shows no public buckets, access points or Multi-Region Access Points. Any account that
+    genuinely serves public content is a documented exception. Buckets created since April 2023 have
+    these settings by default, so the risk is mostly in older buckets.
+  remediation: >-
+    Find public buckets with IAM Access Analyzer and the Access column in the S3 console, move public
+    website content behind CloudFront with origin access control, then attach an S3 policy at the
+    organisation root that turns on all four Block Public Access settings (or turn them on in each
+    account's Block Public Access settings), and set Object Ownership to bucket owner enforced on existing
+    buckets.
+  effort: S
+  sources: [aws-s3-block-public-access, aws-org-s3-policies, aws-s3-object-ownership, aws-s3-security-best-practices]
+  refs:
+    - { framework: cis-aws, ref: "3.1.4" }
+    - { framework: aws-fsbp, ref: S3.1 }
+    - { framework: aws-fsbp, ref: S3.2 }
+    - { framework: aws-fsbp, ref: S3.3 }
+    - { framework: aws-fsbp, ref: S3.8 }
+    - { framework: aws-fsbp, ref: S3.12 }
+    - { framework: aws-fsbp, ref: S3.19 }
+    - { framework: aws-fsbp, ref: S3.24 }
+    - { framework: aws-fsbp, ref: CloudFront.13 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: AWS-DATA-002
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores, aws-backups, aws-workloads]
+  severity: high
+  question: Are public AMIs and public EBS snapshots blocked in every region, with no RDS snapshots shared publicly?
+  why: >-
+    A public snapshot or machine image is a full copy of a disk or database that anyone with an AWS
+    account can restore, including any passwords and keys stored on it.
+  yesLooksLike: >-
+    Block public access for EBS snapshots is set to block all sharing and block public access for AMIs is
+    on in every region (ideally enforced by an EC2 declarative policy), no RDS or Aurora snapshot is
+    public, and snapshots are shared only with accounts in your organisation.
+  remediation: >-
+    Find public snapshots and images (Security Hub CSPM controls EC2.1 and RDS.1, or filters in the EC2
+    and RDS consoles) and make them private, then enable block public access for EBS snapshots and AMIs in
+    each region, or attach an EC2 declarative policy at the organisation root that sets both.
+  effort: S
+  sources: [aws-ebs-snapshot-bpa, aws-ami-bpa, aws-rds-snapshot-sharing, aws-declarative-policies]
+  refs:
+    - { framework: aws-fsbp, ref: EC2.1 }
+    - { framework: aws-fsbp, ref: EC2.182 }
+    - { framework: aws-fsbp, ref: RDS.1 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: AWS-DATA-003
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores]
+  severity: critical
+  question: Are databases and data services such as RDS, Aurora, Redshift and OpenSearch kept off the internet, reachable only from your private networks?
+  why: >-
+    A database with a public endpoint is exposed to password guessing and exploits from anywhere.
+    Attackers scan cloud address ranges continuously for open database ports.
+  yesLooksLike: >-
+    No RDS or Aurora instance has Publicly accessible set to Yes; databases sit in private subnets without
+    a route to an internet gateway; Redshift clusters and Redshift Serverless workgroups have public
+    access turned off; OpenSearch domains run inside a VPC; and security groups admit database ports only
+    from application tiers or a VPN.
+  remediation: >-
+    Set Publicly accessible to No on each RDS instance (Modify, Connectivity), move databases into private
+    subnets, and turn off public access on Redshift clusters and Redshift Serverless workgroups. A public
+    OpenSearch domain can't be moved into a VPC, so create a new domain inside a VPC and migrate the data
+    with snapshots. Give administrators access through Session Manager port forwarding or a VPN.
+  effort: M
+  sources: [aws-rds-vpc, aws-opensearch-vpc, aws-sg-rules]
+  refs:
+    - { framework: cis-aws, ref: "3.2.3" }
+    - { framework: aws-fsbp, ref: RDS.2 }
+    - { framework: aws-fsbp, ref: RDS.46 }
+    - { framework: aws-fsbp, ref: Redshift.1 }
+    - { framework: aws-fsbp, ref: RedshiftServerless.3 }
+    - { framework: aws-fsbp, ref: Opensearch.2 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: AWS-DATA-004
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores]
+  severity: medium
+  question: Do you know which S3 buckets hold sensitive data, through Amazon Macie automated sensitive data discovery or another discovery tool?
+  why: >-
+    You can't protect data you don't know about. Exports, logs and test copies of customer data end up in
+    buckets nobody classified, and those are the ones left open or unencrypted.
+  yesLooksLike: >-
+    Macie is enabled for the organisation from the delegated security account with automated sensitive
+    data discovery on (or an equivalent data security posture tool covers S3), sensitive data findings
+    are reviewed, and buckets holding personal, payment or health information are recorded as crown
+    jewels with matching controls.
+  remediation: >-
+    Enable Macie in the delegated administrator account, add all member accounts, turn on automated
+    sensitive data discovery, review the bucket sensitivity map, and add custom data identifiers for your
+    own record formats such as customer or policy numbers.
+  effort: M
+  licence: [macie]
+  sources: [aws-macie, aws-macie-automated-discovery]
+  refs:
+    - { framework: cis-aws, ref: "3.1.3" }
+    - { framework: aws-fsbp, ref: Macie.1 }
+    - { framework: aws-fsbp, ref: Macie.2 }
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: idcf, ref: "Risk assessment" }
+
+- id: AWS-DATA-005
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores, aws-backups]
+  severity: medium
+  question: Is encryption at rest on for every crown-jewel data store, with EBS encryption by default enabled in every region?
+  why: >-
+    Unencrypted volumes, databases and snapshots can be copied and read without any key permission check.
+    Encryption with KMS adds a second permission an attacker must also hold, and a log of every use.
+  yesLooksLike: >-
+    EBS encryption by default is on in every region in use; RDS and Aurora databases, EFS file systems,
+    Redshift clusters and OpenSearch domains are encrypted; S3 buckets use default encryption (all new
+    objects are encrypted); and any unencrypted resource Security Hub CSPM reports has a migration plan.
+  remediation: >-
+    Turn on EBS encryption by default in each region's EC2 settings (Data protection and security),
+    recreate unencrypted RDS databases from encrypted snapshot copies, and create encrypted EFS file
+    systems and copy data across. Consider customer managed KMS keys for crown-jewel stores so you
+    control who can use the key (AWS-DATA-007) and can copy backups across accounts (AWS-BCK-004).
+  effort: M
+  sources: [aws-ebs-default-encryption, aws-rds-encryption]
+  refs:
+    - { framework: cis-aws, ref: "6.1.1" }
+    - { framework: cis-aws, ref: "3.2.1" }
+    - { framework: cis-aws, ref: "3.3.1" }
+    - { framework: aws-fsbp, ref: EC2.3 }
+    - { framework: aws-fsbp, ref: EC2.7 }
+    - { framework: aws-fsbp, ref: RDS.3 }
+    - { framework: aws-fsbp, ref: RDS.27 }
+    - { framework: aws-fsbp, ref: EFS.1 }
+    - { framework: aws-fsbp, ref: EFS.8 }
+    - { framework: aws-fsbp, ref: Redshift.10 }
+    - { framework: aws-fsbp, ref: Opensearch.1 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+
+- id: AWS-DATA-006
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores, aws-workloads]
+  severity: medium
+  question: Is crown-jewel data encrypted in transit, with S3 buckets refusing requests without TLS and internet-facing endpoints accepting only HTTPS?
+  why: >-
+    Data sent without encryption can be read or altered on the way, and an endpoint that still accepts
+    plain HTTP lets a mistake or a downgrade expose sessions and data.
+  yesLooksLike: >-
+    Bucket policies or a resource control policy deny S3 requests where aws:SecureTransport is false for
+    crown-jewel buckets; internet-facing Application Load Balancers and CloudFront distributions redirect
+    HTTP to HTTPS and use a current TLS security policy; and databases holding crown-jewel data require
+    TLS for client connections.
+  remediation: >-
+    Add a deny statement for aws:SecureTransport false to crown-jewel bucket policies (or an RCP), add
+    HTTP-to-HTTPS redirect rules on Application Load Balancer listeners with a recommended security
+    policy, set CloudFront viewer protocol policies to Redirect HTTP to HTTPS or HTTPS only, and turn on
+    the database engine's require-TLS setting through its parameter group.
+  effort: S
+  sources: [aws-s3-security-best-practices, aws-alb-https-listener, aws-cloudfront-https-viewers, aws-rds-ssl]
+  refs:
+    - { framework: cis-aws, ref: "3.1.1" }
+    - { framework: aws-fsbp, ref: S3.5 }
+    - { framework: aws-fsbp, ref: ELB.1 }
+    - { framework: aws-fsbp, ref: ELB.17 }
+    - { framework: aws-fsbp, ref: CloudFront.3 }
+    - { framework: aws-fsbp, ref: CloudFront.15 }
+    - { framework: aws-fsbp, ref: Redshift.2 }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: idcf, ref: Movement }
+
+- id: AWS-DATA-007
+  module: core
+  domain: data-protection
+  appliesTo: [aws-keys-secrets, aws-data-stores]
+  severity: high
+  question: Can the KMS keys that protect crown-jewel data be used only by the roles that need them?
+  why: >-
+    Whoever can use a key can decrypt the data it protects. A key policy that trusts everyone in the
+    account, or an IAM policy allowing decryption with every key, removes the second lock that
+    encryption is meant to add.
+  yesLooksLike: >-
+    Crown-jewel data that needs its own access control is encrypted with customer managed keys whose key
+    policies name specific roles rather than "*" or broad account access; no IAM policy allows kms:Decrypt
+    or kms:ReEncrypt on all keys; and no key policy is public.
+  remediation: >-
+    Review key policies and remove broad principals, rewrite IAM policies to list key ARNs instead of
+    "*", and move crown-jewel stores that use AWS managed keys to customer managed keys when you need to
+    restrict or share access. Turning on automatic key rotation for customer managed keys is good
+    hygiene as well.
+  effort: M
+  sources: [aws-kms-key-policies, aws-kms-iam-best-practices, aws-kms-rotation]
+  refs:
+    - { framework: aws-fsbp, ref: KMS.1 }
+    - { framework: aws-fsbp, ref: KMS.2 }
+    - { framework: aws-fsbp, ref: KMS.5 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-DATA-008
+  module: core
+  domain: data-protection
+  appliesTo: [aws-keys-secrets, aws-data-stores, aws-backups]
+  severity: high
+  question: Are disabling and deleting the KMS keys that protect crown-jewel data and backups limited to a key administrator role?
+  why: >-
+    Whoever can schedule a key's deletion can make the data it protects, and every backup encrypted with
+    it, unrecoverable. Deleting or disabling keys is a known ransomware technique in the cloud.
+  yesLooksLike: >-
+    Only a named key administrator role can call kms:ScheduleKeyDeletion, kms:DisableKey and
+    kms:PutKeyPolicy on crown-jewel and backup keys, enforced by key policies and an SCP that denies those
+    actions to everyone else; the deletion waiting period is the maximum 30 days; and no crown-jewel key
+    is pending deletion. Alerts on these events are asked in AWS-LOG-006.
+  remediation: >-
+    Add an SCP denying kms:ScheduleKeyDeletion and kms:DisableKey except for the key administrator role
+    (using aws:PrincipalArn), remove those permissions from other roles' policies, set a 30-day waiting
+    period when scheduling deletion, and cancel any unexpected pending deletion.
+  effort: S
+  sources: [aws-kms-deletion, aws-kms-key-policies, aws-scps]
+  refs:
+    - { framework: aws-fsbp, ref: KMS.3 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+
+- id: AWS-DATA-009
+  module: core
+  domain: data-protection
+  appliesTo: ["*"]
+  severity: high
+  question: Are application secrets such as database passwords and API keys kept in a managed secret store, and never in code, environment variables, user data or templates?
+  why: >-
+    Secrets in Lambda environment variables, ECS task definitions, EC2 user data, CloudFormation outputs
+    or code repositories can be read by anyone with broad read access and end up in logs and backups.
+  yesLooksLike: >-
+    Applications fetch secrets at run time from AWS Secrets Manager, Parameter Store SecureString
+    parameters or an equivalent vault; RDS master passwords are managed by Secrets Manager; secrets are
+    long, unique and randomly generated; your CSPM or secret scanning finds no secrets in Lambda
+    variables, task definitions, user data, launch templates, CodeBuild variables or stack outputs; and
+    secret resource policies allow only the roles that need them.
+  remediation: >-
+    Turn on Secrets Manager management of RDS master passwords, move secrets out of environment variables
+    and templates into Secrets Manager or Parameter Store and reference them by ARN (ECS secrets, the
+    Lambda extension), scan code and templates with a secret scanner, and replace any secret that was
+    ever exposed.
+  effort: M
+  licence: [secrets-manager]
+  sources: [aws-secrets-best-practices, aws-rds-secrets-manager, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: ECS.8 }
+    - { framework: aws-fsbp, ref: CodeBuild.1 }
+    - { framework: aws-fsbp, ref: CodeBuild.2 }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: AWS-DATA-010
+  module: core
+  domain: data-protection
+  appliesTo: [aws-keys-secrets, aws-data-stores, aws-workloads]
+  severity: medium
+  question: Are database passwords and other application credentials rotated automatically?
+  why: >-
+    A password that never changes stays useful to anyone who copied it, from a former contractor to an
+    attacker who read an old backup or log.
+  yesLooksLike: >-
+    Automatic rotation is on for database and service credentials held in Secrets Manager (or your
+    vault's equivalent), RDS master passwords managed by Secrets Manager rotate on schedule, and secrets
+    that can't rotate automatically have an owner and a manual rotation date.
+  remediation: >-
+    Turn on rotation for each secret in Secrets Manager with the managed rotation for RDS, Aurora and
+    Redshift or a rotation function for other services, use the alternating-users strategy where
+    applications can't tolerate a password change, and record exceptions with an owner.
+  effort: M
+  licence: [secrets-manager]
+  sources: [aws-secrets-rotation, aws-rds-secrets-manager]
+  refs:
+    - { framework: aws-fsbp, ref: SecretsManager.1 }
+    - { framework: aws-fsbp, ref: SecretsManager.4 }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+
+- id: AWS-DATA-011
+  module: core
+  domain: data-protection
+  appliesTo: ["*"]
+  severity: high
+  question: Do people reach crown-jewel databases only with their own AWS identity protected by phishing-resistant MFA, rather than shared database passwords?
+  why: >-
+    Shared database logins can't be tied to a person, survive staff changes and skip MFA entirely, so a
+    leaked password gives direct access to the data.
+  yesLooksLike: >-
+    Administrators and analysts reach databases and other data repositories through their own identity
+    after signing in with phishing-resistant MFA: IAM database authentication for RDS and Aurora MySQL,
+    MariaDB and PostgreSQL, Kerberos authentication through AWS Managed Microsoft AD for RDS for SQL
+    Server and Oracle, and Redshift through its IAM Identity Center integration, all reached through IAM
+    Identity Center sessions rather than access keys. The master password is held in Secrets Manager for
+    emergencies only and shared human logins have been removed. Answer N/A if no one signs in to a
+    database or data repository directly.
+  remediation: >-
+    Enable IAM database authentication on RDS and Aurora (or Kerberos for SQL Server and Oracle), create
+    database users mapped to IAM roles that people reach through IAM Identity Center permission sets with
+    phishing-resistant MFA (AWS-IAM-006), connect Redshift to IAM Identity Center, and remove shared
+    logins once people have moved.
+  effort: M
+  sources: [aws-rds-iam-auth, aws-identity-center, asd-e8-maturity-model]
+  refs:
+    - { framework: aws-fsbp, ref: RDS.10 }
+    - { framework: aws-fsbp, ref: RDS.12 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+  e8:
+    - { strategy: mfa, level: 3 }
+
+- id: AWS-DATA-012
+  module: core
+  domain: data-protection
+  appliesTo: [aws-data-stores, aws-backups]
+  severity: medium
+  question: Is deletion protection turned on for crown-jewel databases and tables?
+  why: >-
+    Ransomware crews and destructive insiders delete live databases, not just backups. Deletion
+    protection makes deletion a deliberate two-step change that is logged and can be alerted on.
+  yesLooksLike: >-
+    Deletion protection is on for every crown-jewel RDS instance, Aurora cluster and DynamoDB table (and
+    DocumentDB or Neptune clusters if you use them), and turning it off is limited to administrators and
+    raises an alert.
+  remediation: >-
+    Turn on deletion protection in each database's or table's settings, set it by default in your
+    infrastructure as code, and add an EventBridge rule or SIEM alert on the modify calls that turn it
+    off.
+  effort: S
+  sources: [aws-rds-deletion, aws-dynamodb-tables]
+  refs:
+    - { framework: aws-fsbp, ref: RDS.7 }
+    - { framework: aws-fsbp, ref: RDS.8 }
+    - { framework: aws-fsbp, ref: DynamoDB.6 }
+    - { framework: aws-fsbp, ref: DocumentDB.5 }
+    - { framework: aws-fsbp, ref: Neptune.4 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }

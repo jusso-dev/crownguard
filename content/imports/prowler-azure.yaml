@@ -1,0 +1,145 @@
+# Prowler Azure check ids mapped to crownguard questions, for importing a Prowler scan (CSV or OCSF JSON).
+# Check ids were checked against Prowler 5.44.0 (2026-09-29). crownguard doesn't read Prowler output yet:
+# these mappings are validated against the questions so an importer can use them.
+id: prowler-azure
+name: Prowler (Azure)
+platform: microsoft
+url: https://github.com/prowler-cloud/prowler
+mappings:
+  - question: MS-AZ-001
+    checks: [iam_role_user_access_admin_restricted]
+    rationale: Fails when User Access Administrator is held as a standing assignment at subscription scope; PIM eligibility for Owner isn't checked, so a pass caps at Partial.
+    # A PIM activation that happens to be live during the scan also fails the check, so a fail on a single assignment is worth a second look.
+    cap: partial
+  - question: MS-AZ-002
+    checks: [defender_ensure_defender_for_server_is_on, defender_ensure_defender_for_storage_is_on, defender_ensure_defender_for_keyvault_is_on, defender_ensure_defender_for_arm_is_on, defender_ensure_defender_for_azure_sql_databases_is_on, defender_ensure_defender_for_sql_servers_is_on, defender_ensure_defender_for_os_relational_databases_is_on, defender_ensure_defender_for_cosmosdb_is_on, defender_ensure_defender_for_containers_is_on, defender_ensure_defender_for_app_services_is_on]
+    rationale: All Defender workload plans on in every subscription gives Yes. A plan that's off for a workload type you don't run, or in a non-production subscription, gives a mixed result (Partial) that the assessor may upgrade.
+  - question: MS-AZ-003
+    checks: [keyvault_recoverable]
+    rationale: Passes when a vault has soft delete and purge protection on, which is the question. Prowler checks every vault, not only production ones, so a fail on a non-production vault may still be Yes.
+    failIsInconclusive: true
+  - question: MS-AZ-004
+    checks: [app_register_with_identity, app_function_identity_is_configured]
+    rationale: Confirms App Service and Functions apps have a managed identity; it can't see whether keys or connection strings are still used, or cover VMs, AKS and Container Apps, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-006
+    checks: [storage_default_network_access_rule_is_denied, cosmosdb_account_firewall_use_selected_networks, sqlserver_unrestricted_inbound_access, postgresql_flexible_server_allow_access_services_disabled, aisearch_service_not_publicly_accessible]
+    rationale: Default-deny storage networking, selected networks on Cosmos DB, no 0.0.0.0-255.255.255.255 SQL rule, Azure services access off on PostgreSQL and no public AI Search are evidence the data services are closed. MySQL, key vaults, Foundry resources and SQL's 'Allow Azure services' rule aren't all checked, and a default-deny account can still have a broad IP allow list, so a pass caps at Partial. Prowler checks every resource, not only those holding sensitive data, and AI Search with IP rules may fail although the question accepts allow lists, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-007
+    checks: [iam_subscription_roles_owner_custom_not_created]
+    rationale: Fails when a custom role grants Owner-level (*) rights at subscription scope; the number of Owners isn't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-009
+    checks: [entra_conditional_access_policy_require_mfa_for_management_api, entra_conditional_access_policy_require_mfa_for_admin_portals]
+    rationale: Confirm an enabled Conditional Access policy for All users requires MFA for Windows Azure Service Management API and admin portals, but not the phishing-resistant authentication strength, so a pass caps at Partial.
+    # Prowler counts only the built-in 'mfa' grant control (verified in the check source), so a policy that uses the Phishing-resistant MFA authentication strength, or one scoped to Azure role holders instead of All users, fails although it can be the Yes state.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-010
+    checks: [app_function_identity_without_admin_privileges]
+    rationale: Fails when a Functions app identity holds admin-level roles; other managed identities and service principals aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-012
+    checks: [storage_blob_public_access_level_is_disabled]
+    rationale: Passes only when every storage account has Allow Blob anonymous access disabled, which is exactly the question.
+  - question: MS-AZ-013
+    checks: [storage_account_key_access_disabled]
+    rationale: Allow storage account key access disabled is the Yes state. Prowler checks every account, not only those holding sensitive data, so a fail on a non-sensitive account may still be Yes.
+    failIsInconclusive: true
+  - question: MS-AZ-014
+    checks: [storage_secure_transfer_required_is_enabled, storage_ensure_minimum_tls_version_12, sqlserver_recommended_minimal_tls_version, app_minimum_tls_version_12, app_ensure_http_is_redirected_to_https, app_function_ensure_http_is_redirected_to_https, cosmosdb_account_minimum_tls_version, mysql_flexible_server_minimum_tls_version_12, mysql_flexible_server_ssl_connection_enabled, postgresql_flexible_server_enforce_ssl_enabled]
+    rationale: Together these confirm secure transfer, HTTPS Only, enforced SSL on PostgreSQL and MySQL, and TLS 1.2 minimum across storage, SQL, Cosmos DB, MySQL, App Service and Functions, which is the question.
+  - question: MS-AZ-015
+    checks: [storage_ensure_soft_delete_is_enabled, storage_blob_versioning_is_enabled, storage_ensure_file_shares_soft_delete_is_enabled]
+    rationale: Blob soft delete, versioning and file share soft delete are checked; container soft delete isn't (the soft delete check reads blob delete retention only), so a pass caps at Partial. Prowler checks every account rather than only crown-jewel ones, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-016
+    checks: [keyvault_rbac_key_expiration_set, keyvault_key_expiration_set_in_non_rbac, keyvault_rbac_secret_expiration_set, keyvault_non_rbac_secret_expiration_set, keyvault_key_rotation_enabled]
+    rationale: Expiry on every key and secret plus a key rotation policy are the observable parts of the question; secret rotation and near-expiry alerting aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-017
+    checks: [sqlserver_azuread_administrator_enabled, postgresql_flexible_server_entra_id_authentication_enabled, cosmosdb_account_use_aad_and_rbac]
+    rationale: An Entra administrator on SQL and Entra authentication on PostgreSQL are prerequisites, not proof that SQL logins and local passwords are disabled; Cosmos DB local auth disabled is checked directly. A pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-018
+    checks: [vm_backup_enabled, recovery_vault_has_protected_items, vm_sufficient_daily_backup_retention_period, recovery_vault_backup_policy_retention_adequate, cosmosdb_account_backup_policy_continuous]
+    rationale: Show VMs and Cosmos DB are backed up with adequate retention; other data stores, point-in-time consistency and who can reach the vaults aren't checked, so a pass caps at Partial. Prowler checks every VM, not only crown-jewel ones, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-019
+    checks: [defender_ensure_defender_cspm_is_on]
+    rationale: Defender CSPM on is a prerequisite for sensitive data discovery but doesn't show the extension is enabled or results reviewed, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-020
+    checks: [network_rdp_internet_access_restricted, network_ssh_internet_access_restricted, network_udp_internet_access_restricted]
+    rationale: No NSG allows RDP, SSH or UDP from the internet; database and other management ports aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-023
+    checks: [aks_cluster_local_accounts_disabled, aks_cluster_rbac_enabled]
+    rationale: Local accounts disabled (which requires Microsoft Entra integration) and RBAC enabled on every cluster are the Yes state.
+  - question: MS-AZ-024
+    checks: [aks_clusters_public_access_disabled]
+    rationale: Passes when a cluster has a private API server FQDN and no node public IPs, which is a Yes. A cluster using authorised IP ranges fails although the question accepts it, so a fail goes to review.
+    # aks_clusters_created_with_private_nodes dropped: it checks node public IPs, not the API server the question asks about.
+    failIsInconclusive: true
+  - question: MS-AZ-025
+    checks: [containerregistry_admin_user_disabled]
+    rationale: Covers the admin user; anonymous pull isn't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-026
+    checks: [app_ftp_deployment_disabled, app_function_ftps_deployment_disabled]
+    rationale: Check FTP state on web and Functions apps, not the FTP or SCM Basic Auth Publishing Credentials switches the question asks about, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-027
+    checks: [vm_trusted_launch_enabled]
+    rationale: Passes when a VM has Secure Boot and vTPM enabled (verified in the check source), which is the question. Prowler checks every VM, not only production ones, so a fail goes to review.
+    failIsInconclusive: true
+  - question: MS-AZ-028
+    checks: [app_ensure_java_version_is_latest, app_ensure_php_version_is_latest, app_ensure_python_version_is_latest, app_function_latest_runtime_version, defender_container_images_resolved_vulnerabilities]
+    rationale: Current runtimes and no unresolved container image vulnerabilities are evidence of patching; daily scanning, the 48-hour timeline and application dependencies aren't checked, so a pass caps at Partial.
+    # defender_ensure_system_updates_are_applied dropped: VM operating system patching is now MS-END-011's job.
+    cap: partial
+  - question: MS-AZ-029
+    checks: [defender_ensure_notify_emails_to_owners, defender_additional_email_configured_with_a_security_contact, defender_ensure_notify_alerts_severity_is_high, defender_attack_path_notifications_properly_configured]
+    rationale: Owner notification, an additional security contact, high-severity alert emails and attack path notifications are CIS 8.1.12-8.1.15, which the question groups; the SIEM routing clause isn't checked but the email settings are the question.
+  - question: MS-AZ-030
+    checks: [defender_ensure_defender_cspm_is_on]
+    rationale: Defender CSPM on is a prerequisite for attack paths, critical assets and governance rules; classification and remediation ownership aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-031
+    checks: [monitor_diagnostic_settings_exists, monitor_diagnostic_setting_with_appropriate_categories]
+    rationale: A subscription diagnostic setting with the required categories is the export; whether its destination is a central workspace or SIEM isn't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-032
+    checks: [keyvault_logging_enabled, sqlserver_auditing_enabled]
+    rationale: Cover Key Vault logging and SQL auditing; storage, other database and AKS resource logs aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-033
+    checks: [network_watcher_enabled, network_flow_log_captured_sent, network_flow_log_more_than_90_days]
+    rationale: Network Watcher in every region, flow logs with traffic analytics to Log Analytics and 90-day retention are the Yes state. The checks read every flow log under each Network Watcher, so virtual network flow logs count (verified in the check source). A region with a Network Watcher but no crown-jewel networks fails, so a fail goes to review.
+    failIsInconclusive: true
+  - question: MS-AZ-034
+    checks: [monitor_alert_create_update_nsg, monitor_alert_delete_nsg, monitor_alert_create_update_sqlserver_fr, monitor_alert_delete_sqlserver_fr, monitor_alert_create_update_public_ip_address_rule, monitor_alert_delete_public_ip_address_rule, monitor_alert_create_policy_assignment, monitor_alert_delete_policy_assignment, monitor_alert_create_update_security_solution, monitor_alert_delete_security_solution]
+    rationale: Activity log alerts for the ten CIS 6.1.2.x operations; privileged role assignments, lock deletion and diagnostic setting deletion aren't checked, so a pass caps at Partial. Alerts built in Sentinel instead fail these checks, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-035
+    checks: [policy_ensure_asc_enforcement_enabled]
+    rationale: Confirms no Microsoft cloud security benchmark policy is disabled (CIS 8.1.11); management group hierarchy and Deny guardrails aren't checked, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-036
+    checks: [iam_custom_role_has_permissions_to_administer_resource_locks]
+    rationale: Shows a custom lock-administrator role exists; it doesn't check that crown-jewel resources carry locks, so a pass caps at Partial.
+    cap: partial
+  - question: MS-AZ-037
+    checks: [keyvault_rbac_enabled]
+    rationale: Confirms the Azure RBAC permission model; who holds data-plane roles isn't checked, so a pass caps at Partial. Prowler checks every vault, not only production ones, so a fail goes to review.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-AZ-042
+    checks: [storage_cross_tenant_replication_disabled]
+    rationale: Confirms cross-tenant replication is off on every storage account; the network security perimeter isn't checked, so a pass caps at Partial.
+    cap: partial

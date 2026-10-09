@@ -4,7 +4,8 @@ vendor: Microsoft
 description: >-
   Microsoft 365 tenants and their Microsoft Entra ID identity plane: Exchange Online, SharePoint,
   OneDrive, Teams, Purview, Intune-managed devices, Microsoft 365 Copilot and agents, with an
-  optional Azure module for subscriptions, Key Vault and Azure backups.
+  optional Azure module for cloud security posture (Azure access, data stores and keys, networks and
+  workloads, monitoring and guardrails).
 
 
 # Licence tiers below are based on these vendor pages.
@@ -17,11 +18,14 @@ modules:
     optional: false
   - id: azure
     name: Azure
-    description: Azure management groups and subscriptions, Key Vault, Defender for Cloud and Azure Backup.
+    description: >-
+      Cloud security posture for Azure: management groups and subscriptions, role assignments, workload
+      identities and service provider access, storage, databases, disks and Key Vault, networks, VMs, AKS,
+      App Service and AI services, Defender for Cloud, logging, Azure Policy and Azure Backup.
     optional: true
 
 # Base plans only. Add-ons (Copilot, SharePoint Advanced Management, Microsoft 365 Backup,
-# Workload Identities, Defender for Cloud, Sentinel) are not part of any tier, so questions that
+# Workload Identities, Defender for Cloud, Defender CSPM, Sentinel) are not part of any tier, so questions that
 # need them always show the licence gap. Business Premium includes Defender for Business, which
 # provides endpoint detection and response comparable to Defender for Endpoint Plan 2 for
 # organisations of up to 300 users, so it is mapped to defender-endpoint-p2.
@@ -195,6 +199,11 @@ licenceFeatures:
     name: Microsoft Sentinel (consumption)
   - id: defender-for-cloud
     name: Microsoft Defender for Cloud plans (Azure)
+  # Billed per Azure resource like the other Defender for Cloud plans, so like defender-for-cloud it is not part of
+  # any tier. Foundational CSPM (free) gives recommendations and secure score; attack path analysis, critical
+  # assets, cloud security explorer and data security posture need the paid Defender CSPM plan (ms-mdc-cspm).
+  - id: defender-cspm
+    name: Microsoft Defender CSPM plan (Azure, paid)
 
 domains:
   - id: identity
@@ -230,6 +239,15 @@ domains:
   - id: backup-recovery
     name: Backup & recovery
     description: Recovering Microsoft 365 data after ransomware, malicious deletion or a rogue administrator.
-  - id: azure
-    name: Azure
-    description: Azure management plane, secrets, posture management and backups.
+  - id: azure-identity
+    name: Azure access and identities
+    description: Azure role assignments, just-in-time access, elevated access, MFA for Azure management, service provider access, and the managed identities and service principals workloads run as.
+  - id: azure-data
+    name: Azure data and keys
+    description: Exposure, authentication, secrets, recoverability and backups of storage accounts, databases, disks and Key Vault.
+  - id: azure-network
+    name: Azure network and workloads
+    description: Internet exposure of virtual machines and web apps, and the hardening and patching of VMs, AKS, App Service, container registries and AI services.
+  - id: azure-logging
+    name: Azure monitoring and guardrails
+    description: Defender for Cloud, attack paths, activity and resource logs, flow logs, alerts, Azure Policy and resource locks.

@@ -1,0 +1,180 @@
+- id: AWS-ORG-001
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: high
+  question: Are all your AWS accounts in one organisation, with the management account kept free of workloads and production separated into its own accounts and OUs?
+  why: >-
+    The management account can't be restricted by service control policies and can take over every
+    member account, so anything running there widens the path to total compromise. Separate accounts for
+    production, security tooling and logs limit how far one breach spreads.
+  yesLooksLike: >-
+    Every company AWS account is a member of your AWS Organizations organisation. The management account
+    holds no workloads, data or everyday users and is used only for organisation, billing and identity
+    tasks by a few named administrators. OUs group accounts by environment and sensitivity (for example
+    Security, Infrastructure, production and non-production workloads, Sandbox), with Log Archive and
+    Security Tooling accounts in a Security OU.
+  remediation: >-
+    Invite stray company accounts into the organisation, move any workloads out of the management account
+    into member accounts, create foundational OUs following AWS's multi-account guidance (AWS Control
+    Tower can set up the Security OU and its accounts), and restrict management account access to a small
+    administrator group.
+  effort: L
+  sources: [aws-org-mgmt-account, aws-multi-account, aws-foundational-ous]
+  refs:
+    - { framework: cis-aws, ref: "2.1.3" }
+    - { framework: cis-aws, ref: "2.1.4" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-ORG-002
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: high
+  question: Can only a small named group in the management account assume OrganizationAccountAccessRole or other administrator roles that it holds in member accounts?
+  why: >-
+    AWS Organizations creates OrganizationAccountAccessRole with full administrator rights in every
+    account it creates, trusted by the whole management account. Anyone in the management account who can
+    assume it can take over every member account, including production and backups.
+  yesLooksLike: >-
+    Permission to assume OrganizationAccountAccessRole (and AWSControlTowerExecution, if you use AWS
+    Control Tower) is granted only to a small administrator group in the management account, with MFA
+    required; the role has been removed from accounts that no longer need it, or its trust policy names
+    that specific administrator role rather than the whole management account; and its use raises an
+    alert.
+  remediation: >-
+    List the cross-account administrator roles in each member account, check which management account
+    users and roles can call sts:AssumeRole on them, restrict that permission to one administrator group,
+    narrow each role's trust policy to that group's role (keeping AWSControlTowerExecution as AWS Control
+    Tower requires), delete the role where nobody uses it, and alert on its AssumeRole events.
+  effort: M
+  sources: [aws-org-account-access-role, aws-org-mgmt-account]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-ORG-003
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: high
+  question: Do service control policies stop member accounts from leaving the organisation or switching off security logging and detection?
+  why: >-
+    Without guardrails, anyone who gains administrator rights in one account can stop its CloudTrail
+    trails, disable GuardDuty, or leave the organisation to escape your controls entirely.
+  yesLooksLike: >-
+    SCPs attached at the root or top-level OUs deny leaving the organisation; deny stopping, deleting or
+    changing account-level CloudTrail trails, GuardDuty, Security Hub CSPM, AWS Config and IAM Access
+    Analyzer; and protect the roles the security team relies on from being changed, except by those
+    roles. Changes to SCPs are reviewed. (The organisation trail itself can only be changed from the
+    management account or its delegated administrator; see AWS-LOG-002.)
+  remediation: >-
+    Start from AWS's SCP examples: attach deny statements for organizations:LeaveOrganization and for
+    disabling logging and detection services, with an aws:PrincipalArn exception for the security team's
+    roles. Test them on a non-production OU first, then attach them at the root.
+  effort: M
+  sources: [aws-scps, aws-scp-examples]
+  refs:
+    - { framework: cis-aws, ref: "2.1.2" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+
+- id: AWS-ORG-004
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: low
+  question: Does a service control policy deny the use of AWS Regions you don't operate in, while still letting your security services run there?
+  why: >-
+    Regions nobody watches are where attackers build crypto-mining fleets or stage stolen data. Denying
+    unused regions removes that hiding place, as long as detection keeps running in them.
+  yesLooksLike: >-
+    A region-deny SCP using the aws:RequestedRegion condition is attached at the root or workload OUs,
+    exempts global services, and exempts the roles your security tooling uses, so GuardDuty, AWS Config
+    and Security Hub CSPM can still be enabled and managed in every region.
+  remediation: >-
+    Adapt AWS's example policy that denies access based on the requested Region as an SCP: list the regions you use,
+    keep the global-service exemptions, add aws:PrincipalArn exemptions for security tooling and
+    deployment roles, and test it on a non-production OU before attaching it.
+  effort: S
+  sources: [aws-iam-deny-region, aws-scps, aws-guardduty-orgs]
+  refs:
+    - { framework: cis-aws, ref: "2.1.2" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+
+- id: AWS-ORG-005
+  module: core
+  domain: organisation
+  appliesTo: [aws-organization, aws-data-stores, aws-keys-secrets]
+  severity: medium
+  question: Do resource control policies make sure your S3 buckets, KMS keys, secrets and role trusts can be used only by identities in your organisation?
+  why: >-
+    One bucket policy or key policy written too loosely can expose data to anyone. A resource control
+    policy sets an organisation-wide ceiling, so even a mistaken or malicious resource policy can't hand
+    data to outside accounts.
+  yesLooksLike: >-
+    RCPs attached at the root or production OUs deny access to S3, STS, KMS, SQS and Secrets Manager
+    resources (and other supported services you use, such as DynamoDB and ECR) by principals outside the
+    organisation, using aws:PrincipalOrgID with exceptions for AWS service access and approved partners.
+    Exceptions are documented. Because RCPs don't apply to resources in the management account, to
+    service-linked roles or to AWS managed KMS keys, no crown-jewel data sits in the management account
+    (AWS-ORG-001).
+  remediation: >-
+    Follow AWS's data perimeter guidance and example RCPs, use IAM Access Analyzer external access
+    findings to identify legitimate outside access and add it as exceptions, test on a non-production OU,
+    then attach the RCPs at the root.
+  effort: M
+  sources: [aws-rcps, aws-data-perimeter]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
+
+- id: AWS-ORG-006
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: medium
+  question: Are your security services administered from a dedicated security account through delegated administration, rather than from the management account?
+  why: >-
+    Running security tooling from the management account means more people need access to the most
+    powerful account in the organisation. A delegated security account lets the security team see and
+    manage findings across all accounts without that access.
+  yesLooksLike: >-
+    GuardDuty, Security Hub CSPM, IAM Access Analyzer, AWS Config aggregation, Macie, Inspector and AWS
+    Backup (where used) have the Security Tooling account as delegated administrator, new accounts are
+    enrolled automatically, and AWS Organizations policy management is delegated so routine policy
+    changes don't need the management account.
+  remediation: >-
+    In each service's settings in the management account, register the Security Tooling account as
+    delegated administrator and turn on auto-enable for new member accounts, then attach a resource-based
+    delegation policy in AWS Organizations so that account can manage the policy types it needs.
+  effort: S
+  sources: [aws-org-services, aws-org-delegate-policies, aws-foundational-ous]
+  refs:
+    - { framework: cis-aws, ref: "2.1.5" }
+    - { framework: cis-aws, ref: "2.1.6" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-ORG-007
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: low
+  question: Does every AWS account have current security and operations contacts that reach a monitored team mailbox?
+  why: >-
+    AWS contacts the security contact when it sees signs of compromise, such as exposed access keys or
+    abuse coming from your resources. If those notices go to a former employee or an unread inbox, the
+    warning is missed.
+  yesLooksLike: >-
+    Every account has security, operations and billing alternate contacts set (centrally from the
+    management account or a delegated administrator) that point to monitored shared mailboxes and phone
+    numbers, and each account's primary contact details are current.
+  remediation: >-
+    Enable trusted access for AWS Account Management in AWS Organizations, then set alternate contacts for
+    every member account from the management account (console or the PutAlternateContact API), using team
+    mailboxes rather than individuals.
+  effort: S
+  sources: [aws-alternate-contacts]
+  refs:
+    - { framework: cis-aws, ref: "2.2" }
+    - { framework: cis-aws, ref: "2.3" }
+    - { framework: aws-fsbp, ref: Account.1 }
+    - { framework: nist-csf-2, ref: GV.RM-05 }

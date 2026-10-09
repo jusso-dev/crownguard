@@ -12,6 +12,7 @@ const SIGN_IN_HOSTS = new Set([
   "login.microsoftonline.com",
   "login.microsoft.com",
   "login.live.com",
+  "signin.aws.amazon.com",
 ]);
 
 /** Text in a body that marks a bot challenge or block page rather than the requested content. */

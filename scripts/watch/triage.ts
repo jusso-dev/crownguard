@@ -14,7 +14,7 @@ const TriageSchema = z.object({
 });
 
 const SYSTEM = `You help maintain crownguard, an open-source self-assessment that asks IT leads yes/no questions about
-their Microsoft 365 or Google Workspace security controls. Every question cites official vendor or government guidance.
+their Microsoft 365, Google Workspace or AWS security controls. Every question cites official vendor or government guidance.
 
 You receive one cited guidance page that changed since it was last reviewed: what changed (sections, terms, word counts,
 publisher commit messages, and a text diff), plus the crownguard questions that cite the page. Decide whether those

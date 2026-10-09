@@ -1,0 +1,299 @@
+- id: MS-AZ-002
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions, ms-azure-key-vault, ms-azure-data-stores, ms-azure-workloads]
+  severity: high
+  question: Is Microsoft Defender for Cloud enabled on every subscription, with Defender plans turned on for production workloads?
+  why: >-
+    Cloud misconfigurations such as open storage, exposed management ports and unpatched VMs are
+    found by attackers within hours. Defender for Cloud measures posture against the Microsoft cloud
+    security benchmark and its workload plans detect attacks on servers, storage, databases, Key Vault
+    and the Azure control plane as they happen.
+  yesLooksLike: >-
+    Foundational CSPM is on for every subscription, and production subscriptions have the Defender
+    plans that match what they run: Servers, Storage, Databases (SQL, open-source relational and
+    Cosmos DB), Key Vault, Resource Manager, Containers and App Service, with their alerts flowing to
+    Defender XDR or Microsoft Sentinel.
+  remediation: >-
+    Enable Defender for Cloud on all subscriptions through Azure Policy at management group scope,
+    turn on the relevant Defender plans and their components (such as vulnerability assessment and
+    agentless scanning for machines) for production, and connect Defender for Cloud alerts to Defender
+    XDR or Sentinel.
+  effort: M
+  licence: [defender-for-cloud]
+  sources: [ms-mdc, ms-defender-servers, ms-mdc-containers, ms-mcsb]
+  refs:
+    - { framework: cis-azure, ref: "8.1.3.1" }
+    - { framework: cis-azure, ref: "8.1.3.2" }
+    - { framework: cis-azure, ref: "8.1.3.3" }
+    - { framework: cis-azure, ref: "8.1.3.4" }
+    - { framework: cis-azure, ref: "8.1.4.1" }
+    - { framework: cis-azure, ref: "8.1.5.1" }
+    - { framework: cis-azure, ref: "8.1.6.1" }
+    - { framework: cis-azure, ref: "8.1.7.1" }
+    - { framework: cis-azure, ref: "8.1.7.2" }
+    - { framework: cis-azure, ref: "8.1.7.3" }
+    - { framework: cis-azure, ref: "8.1.7.4" }
+    - { framework: cis-azure, ref: "8.1.8.1" }
+    - { framework: cis-azure, ref: "8.1.9.1" }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: mcsb, ref: LT-1 }
+    - { framework: mcsb, ref: PV-5 }
+    - { framework: ms-zero-trust, ref: Infrastructure I }
+
+- id: MS-AZ-029
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads]
+  severity: low
+  question: Does Defender for Cloud email a monitored security contact, as well as subscription owners, about high-severity alerts and attack paths?
+  why: >-
+    Defender for Cloud alerts are only useful if someone sees them in time. Left at the defaults,
+    notifications go to whoever happens to own the subscription, who may have left or may never read
+    them.
+  yesLooksLike: >-
+    Email notifications for every subscription go to a monitored security mailbox or distribution list
+    and to users with the Owner role, alerts of high severity or above and attack paths at high risk or
+    above trigger an email, and the same alerts also reach your SIEM or Defender XDR queue.
+  remediation: >-
+    In Defender for Cloud's Environment settings, open Email notifications for each subscription, add
+    the security team's mailbox as an email recipient, notify the Owner role, set the alert severity
+    and attack path risk thresholds to High, and test that the mailbox is monitored.
+  effort: S
+  licence: [defender-for-cloud, defender-cspm]
+  sources: [ms-mdc-email-notifications]
+  refs:
+    - { framework: cis-azure, ref: "8.1.12" }
+    - { framework: cis-azure, ref: "8.1.13" }
+    - { framework: cis-azure, ref: "8.1.14" }
+    - { framework: cis-azure, ref: "8.1.15" }
+    - { framework: nist-csf-2, ref: DE.AE-06 }
+    - { framework: mcsb, ref: IR-2 }
+
+- id: MS-AZ-030
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads, ms-azure-key-vault]
+  severity: high
+  question: Are your crown-jewel resources marked as critical assets in Defender for Cloud, with attack paths and high-risk recommendations that reach them assigned an owner and a due date?
+  why: >-
+    Attackers chain small weaknesses: an internet-facing VM with a vulnerability, a managed identity
+    with too much access, a storage account full of customer data. Attack path analysis shows those
+    chains, but only fixing them closes the route to your crown jewels.
+  yesLooksLike: >-
+    Defender CSPM is on for production subscriptions, crown-jewel storage accounts, databases, key
+    vaults and workloads are classified as critical assets, every attack path and high or critical
+    risk recommendation that reaches them has a named owner and due date through governance rules, and
+    progress is reviewed at least monthly.
+  remediation: >-
+    Turn on Defender CSPM with agentless scanning, create critical asset classification rules for
+    your crown-jewel resources, review the Attack path analysis page and risk-prioritised
+    recommendations, assign owners and due dates with governance rules, and track closure in a regular
+    security meeting.
+  effort: M
+  licence: [defender-cspm]
+  sources: [ms-mdc-attack-path, ms-mdc-critical-assets, ms-mdc-governance-rules, ms-mdc-cspm]
+  refs:
+    - { framework: cis-azure, ref: "8.1.1.1" }
+    - { framework: nist-csf-2, ref: ID.AM-05 }
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: ID.RA-05 }
+    - { framework: mcsb, ref: AM-1 }
+    - { framework: ms-zero-trust, ref: Applications VI }
+
+- id: MS-AZ-031
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions]
+  severity: high
+  question: Is the activity log of every subscription exported by a diagnostic setting to a central Log Analytics workspace or SIEM?
+  why: >-
+    The activity log records who changed role assignments, network rules, keys and resources, and
+    Azure keeps it for only 90 days. Intrusions are often found months later, and without the log you
+    can't tell what an attacker changed or whether they are still there.
+  yesLooksLike: >-
+    Every subscription has a diagnostic setting, applied by Azure Policy at management group scope,
+    that sends the Administrative, Security, Policy and Alert categories (or all categories) to a
+    central Log Analytics workspace, Microsoft Sentinel or another SIEM that the security team can
+    search.
+  remediation: >-
+    Assign the built-in policy that configures activity log diagnostic settings at the root or top
+    management group, send all categories to a central Log Analytics workspace that Sentinel or your
+    SIEM reads, keep the entries well beyond Azure's 90 days (12 months or more is a good target, or
+    archive to immutable storage), and check new subscriptions are covered automatically.
+  effort: S
+  licence: []
+  sources: [ms-azure-activity-log, ms-azure-diagnostic-settings]
+  refs:
+    - { framework: cis-azure, ref: "6.1.1.1" }
+    - { framework: cis-azure, ref: "6.1.1.2" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: mcsb, ref: LT-5 }
+    - { framework: mcsb, ref: LT-6 }
+    - { framework: ms-zero-trust, ref: SecOps I }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 2 }
+
+- id: MS-AZ-032
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-key-vault, ms-azure-data-stores, ms-azure-workloads]
+  severity: medium
+  question: Are resource logs from key vaults, crown-jewel storage accounts, databases and AKS clusters sent to a central Log Analytics workspace or SIEM?
+  why: >-
+    The activity log shows who changed a resource, not who read the data in it. Without resource logs
+    you can't tell which secrets were read, which blobs were downloaded or which queries ran against a
+    database during an incident.
+  yesLooksLike: >-
+    Diagnostic settings send Key Vault AuditEvent logs, storage read, write and delete logs for
+    crown-jewel accounts, Azure SQL auditing, other database audit logs and AKS control plane audit
+    logs to a central Log Analytics workspace or SIEM.
+  remediation: >-
+    Assign Azure Policy DeployIfNotExists definitions that create diagnostic settings with the allLogs
+    or audit category group for Key Vault, storage, SQL and AKS at management group scope, turn on
+    server-level auditing for Azure SQL to Log Analytics, keep the logs for at least 90 days (longer for
+    Key Vault and database auditing), and build alerts on unusual secret reads and mass downloads.
+  effort: M
+  licence: []
+  sources: [ms-kv-logging, ms-azure-sql-auditing, ms-azure-diagnostic-settings]
+  refs:
+    - { framework: cis-azure, ref: "6.1.1.4" }
+    - { framework: cis-azure, ref: "6.1.4" }
+    - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: mcsb, ref: LT-3 }
+    - { framework: mcsb, ref: LT-5 }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+
+- id: MS-AZ-033
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-workloads, ms-azure-data-stores]
+  severity: medium
+  question: Are virtual network flow logs turned on for networks hosting crown-jewel workloads, kept for at least 90 days and sent to Log Analytics?
+  why: >-
+    Flow logs show which addresses talked to which, so you can tell whether an attacker reached a
+    database or copied data out. Without them, scoping a network intrusion is guesswork.
+  yesLooksLike: >-
+    Network Watcher is enabled in every region you use, virtual network flow logs cover the virtual
+    networks of production workloads with retention of 90 days or more, traffic analytics sends them
+    to a Log Analytics workspace, and any remaining NSG flow logs are being replaced.
+  remediation: >-
+    Enable virtual network flow logs at virtual network scope (Azure Policy can deploy them at scale),
+    store them in a storage account with a retention of at least 90 days, turn on traffic analytics to
+    a central Log Analytics workspace, and disable NSG flow logs on the same workloads to avoid
+    duplicates.
+  effort: S
+  licence: []
+  sources: [ms-vnet-flow-logs]
+  refs:
+    - { framework: cis-azure, ref: "6.1.1.6" }
+    - { framework: cis-azure, ref: "7.6" }
+    - { framework: cis-azure, ref: "7.8" }
+    - { framework: nist-csf-2, ref: DE.CM-01 }
+    - { framework: mcsb, ref: LT-4 }
+
+- id: MS-AZ-034
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads]
+  severity: high
+  question: Are you alerted when privileged Azure role assignments, network security groups, SQL firewall rules, public IP addresses, Azure Policy assignments, resource locks, diagnostic settings or Defender for Cloud settings are created, changed or deleted?
+  why: >-
+    Granting a new Owner, opening a firewall rule, attaching a public IP, removing a lock or switching
+    off logging is how an attacker, or a hurried administrator, quietly exposes a crown jewel or
+    prepares to destroy it. An alert within minutes lets you reverse the change before it's used.
+  yesLooksLike: >-
+    Activity log alert rules, or equivalent Sentinel analytics rules, cover Owner, Contributor and User
+    Access Administrator role assignments; create, update and delete of network security groups, SQL
+    server firewall rules, public IP addresses, policy assignments and security solutions; and deletion
+    of resource locks and diagnostic settings, for every production subscription, and route to a
+    monitored action group or the incident queue.
+  remediation: >-
+    Create activity log alert rules for these operations at subscription scope (Azure Policy can deploy
+    them) and a log search alert on the AzureActivity table for privileged role assignments, attach an
+    action group that emails or pages the security team, or build the same detections in Microsoft
+    Sentinel from the Azure Activity connector, and test each one.
+  effort: S
+  licence: []
+  sources: [ms-azure-alert-types, ms-azure-activity-log, ms-azure-role-assignment-alerts]
+  refs:
+    - { framework: cis-azure, ref: "6.1.2.1" }
+    - { framework: cis-azure, ref: "6.1.2.2" }
+    - { framework: cis-azure, ref: "6.1.2.3" }
+    - { framework: cis-azure, ref: "6.1.2.4" }
+    - { framework: cis-azure, ref: "6.1.2.5" }
+    - { framework: cis-azure, ref: "6.1.2.6" }
+    - { framework: cis-azure, ref: "6.1.2.7" }
+    - { framework: cis-azure, ref: "6.1.2.8" }
+    - { framework: cis-azure, ref: "6.1.2.9" }
+    - { framework: cis-azure, ref: "6.1.2.10" }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: mcsb, ref: LT-1 }
+
+- id: MS-AZ-035
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads, ms-azure-key-vault]
+  severity: medium
+  question: Do Azure Policy assignments at management group scope enforce your security baseline on every subscription, including the Microsoft cloud security benchmark with none of its policies disabled?
+  why: >-
+    Without guardrails, every new subscription and resource starts from whatever its creator chose.
+    Policies assigned high in the management group hierarchy stop public storage, open ports and
+    missing logs being deployed in the first place, including in subscriptions created later.
+  yesLooksLike: >-
+    Production subscriptions sit under a management group hierarchy, not directly under the root;
+    the Microsoft cloud security benchmark is assigned (as Defender for Cloud's default standard) with
+    no non-deprecated policies set to Disabled; and Deny or DeployIfNotExists policies at management
+    group scope block or fix the highest-risk settings, with exemptions documented and time-limited.
+  remediation: >-
+    Build a management group hierarchy (for example platform, production and non-production), move
+    subscriptions into it, check the Microsoft cloud security benchmark assignment in Defender for
+    Cloud's security policies and re-enable any disabled policies, and assign Deny policies for public
+    network access, anonymous blob access and management ports from the internet after testing them
+    in Audit mode.
+  effort: M
+  licence: []
+  sources: [ms-azure-policy, ms-azure-management-groups, ms-mdc-security-policy, ms-mdc-manage-mcsb]
+  refs:
+    - { framework: cis-azure, ref: "8.1.11" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-1 }
+    - { framework: mcsb, ref: PV-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure IV }
+
+- id: MS-AZ-036
+  module: azure
+  domain: azure-logging
+  appliesTo: [ms-azure-data-stores, ms-azure-key-vault, ms-azure-subscriptions, ms-backups]
+  severity: medium
+  question: Do crown-jewel Azure resources, such as production storage accounts, key vaults, Recovery Services vaults and Log Analytics workspaces, carry delete locks that only a small group can remove?
+  why: >-
+    A single command or a compromised automation account can delete a whole storage account,
+    database server or log workspace. A delete lock forces a deliberate extra step, which stops
+    accidents and slows an attacker down long enough to be noticed.
+  yesLooksLike: >-
+    Production storage accounts, databases, key vaults, Recovery Services and Backup vaults, Log
+    Analytics workspaces and DNS zones have CanNotDelete (Delete) locks, applied by infrastructure as
+    code or a custom Azure Policy definition, and only a small group (for example a custom
+    lock-administrator role activated through PIM) can remove them.
+  remediation: >-
+    Add Delete locks to crown-jewel resources or their resource groups (but not to the resource groups
+    Azure Backup creates for VM restore points, where a lock makes backups fail), create a custom role
+    with only Microsoft.Authorization/locks permissions for the people who manage them and make it
+    eligible through PIM, and keep Owner and User Access Administrator (which can also remove locks) to
+    a minimum.
+  effort: S
+  licence: []
+  sources: [ms-azure-locks]
+  refs:
+    - { framework: cis-azure, ref: "6.2" }
+    - { framework: cis-azure, ref: "5.5" }
+    - { framework: cis-azure, ref: "9.3.9" }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: AM-3 }

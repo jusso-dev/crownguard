@@ -1,0 +1,122 @@
+- id: aws-organization
+  module: core
+  tier: cloud
+  name: AWS organisation & management account
+  description: >-
+    The AWS Organizations management account, the organisation's accounts and OUs, and the service and
+    resource control policies that bound everything inside it. Whoever controls the management account
+    can take over every member account.
+  examples: [Management (payer) account, Production and Security OUs, Service control policies and resource control policies, Log Archive and Security Tooling accounts]
+  discoveryPrompts:
+    - Who can sign in to the management account, and does it run any workloads?
+    - Which accounts and OUs hold production systems or customer data?
+    - Are there AWS accounts outside your organisation that hold company data or workloads?
+    - Who in the management account can assume OrganizationAccountAccessRole (or AWSControlTowerExecution) in member accounts?
+  exposures: [standing-admin, third-party-apps, internet-facing]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1562.008, name: "Impair Defenses: Disable or Modify Cloud Logs" }
+    - { technique: T1666, name: Modify Cloud Resource Hierarchy }
+    - { technique: T1531, name: Account Access Removal }
+
+- id: aws-privileged-identities
+  module: core
+  tier: privileged
+  name: Root users, admin roles & automation identities
+  description: >-
+    Root users, administrator permission sets in IAM Identity Center, IAM roles and users with broad
+    permissions, and the roles used by CI/CD pipelines and third-party tools. Any of them can change
+    guardrails, read data and delete backups.
+  examples:
+    - Root user of the management account
+    - AdministratorAccess permission set
+    - CI/CD deployment role (GitHub Actions, GitLab, Bitbucket)
+    - Cross-account roles trusted by vendors and monitoring tools
+    - IAM users with long-lived access keys
+  discoveryPrompts:
+    - Who holds administrator permission sets or roles, and is any of that access permanent?
+    - Which pipelines, scripts or vendors use IAM access keys or assume roles in your accounts?
+    - Where are root user passwords and MFA devices kept?
+  exposures: [standing-admin, third-party-apps, internet-facing]
+  threats:
+    - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
+    - { technique: T1552.001, name: "Unsecured Credentials: Credentials In Files" }
+    - { technique: T1098.001, name: "Account Manipulation: Additional Cloud Credentials" }
+    - { technique: T1098.003, name: "Account Manipulation: Additional Cloud Roles" }
+    - { technique: T1621, name: Multi-Factor Authentication Request Generation }
+
+- id: aws-data-stores
+  module: core
+  tier: data
+  name: AWS data stores (S3, RDS, DynamoDB and more)
+  description: >-
+    Buckets, databases, file systems and warehouses holding customer, financial or operational data,
+    and the snapshots and images copied from them.
+  examples: [S3 buckets with customer documents or data exports, RDS or Aurora application databases, DynamoDB tables, EFS file shares, Redshift warehouse, EBS and RDS snapshots]
+  discoveryPrompts:
+    - Which buckets, databases and tables hold personal, payment, health or commercially sensitive data?
+    - Are any of them public, shared with other AWS accounts or reachable from the internet?
+    - Where do snapshots, exports and copies of that data end up?
+  exposures: [internet-facing, external-sharing, third-party-apps]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1537, name: Transfer Data to Cloud Account }
+    - { technique: T1578.001, name: "Modify Cloud Compute Infrastructure: Create Snapshot" }
+    - { technique: T1485, name: Data Destruction }
+    - { technique: T1486, name: Data Encrypted for Impact }
+
+- id: aws-workloads
+  module: core
+  tier: cloud
+  name: AWS workloads (EC2, containers, Lambda)
+  description: >-
+    EC2 instances, EKS and ECS clusters, Lambda functions and the internet-facing applications built
+    on them. A compromised workload can use its attached role to reach data and other accounts.
+  examples: [Internet-facing web application on EC2 or ECS, EKS cluster running customer services, Lambda functions behind API Gateway or function URLs, Windows or Linux servers migrated from on-premises]
+  discoveryPrompts:
+    - Which workloads face the internet, and what IAM role does each one run with?
+    - How do administrators connect to servers and clusters?
+    - Which workloads process or store crown-jewel data, including AI applications on Amazon Bedrock or SageMaker AI?
+  exposures: [internet-facing, standing-admin, third-party-apps]
+  threats:
+    - { technique: T1190, name: Exploit Public-Facing Application }
+    - { technique: T1552.005, name: "Unsecured Credentials: Cloud Instance Metadata API" }
+    - { technique: T1133, name: External Remote Services }
+    - { technique: T1496, name: Resource Hijacking }
+    - { technique: T1651, name: Cloud Administration Command }
+
+- id: aws-keys-secrets
+  module: core
+  tier: cloud
+  name: KMS keys & secrets
+  description: >-
+    AWS KMS keys that encrypt crown-jewel data, and database passwords, API keys and other secrets in
+    Secrets Manager or Parameter Store. Whoever can use a key or read a secret can read the data it
+    protects.
+  examples: [Customer managed KMS keys for S3, RDS and backups, Database credentials in Secrets Manager, Third-party API keys in Parameter Store]
+  discoveryPrompts:
+    - Which KMS keys encrypt your most sensitive data and backups, and who can use them?
+    - Where do applications get their database passwords and API keys from?
+  exposures: [standing-admin, third-party-apps]
+  threats:
+    - { technique: T1552, name: Unsecured Credentials }
+    - { technique: T1555.006, name: "Credentials from Password Stores: Cloud Secrets Management Stores" }
+    - { technique: T1485, name: Data Destruction }
+
+- id: aws-backups
+  module: core
+  tier: data
+  name: AWS backups & recovery points
+  description: >-
+    AWS Backup vaults and recovery points, cross-account backup copies and S3 data protected by
+    versioning or Object Lock. They are the way back after ransomware or a malicious deletion, so
+    attackers try to delete them first.
+  examples: [AWS Backup vaults in a dedicated backup account, Logically air-gapped vault, RDS and DynamoDB point-in-time recovery, S3 buckets with Object Lock]
+  discoveryPrompts:
+    - Which crown-jewel data stores are backed up, and in which account are the backups kept?
+    - Could someone with administrator access to a production account delete its backups?
+    - When did you last restore a crown-jewel system from backup?
+  exposures: [standing-admin]
+  threats:
+    - { technique: T1490, name: Inhibit System Recovery }
+    - { technique: T1485, name: Data Destruction }

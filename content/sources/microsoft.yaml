@@ -60,7 +60,7 @@
   url: https://learn.microsoft.com/en-us/security/operations/incident-response-playbooks
   retrieved: 2026-10-08
 - id: ms-entra-secops-privileged
-  title: Microsoft Entra security operations for privileged accounts
+  title: Security operations for privileged accounts in Microsoft Entra ID
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/architecture/security-operations-privileged-accounts
   retrieved: 2026-10-08
@@ -195,12 +195,12 @@
   url: https://learn.microsoft.com/en-us/entra/identity-platform/security-best-practices-for-app-registration
   retrieved: 2026-10-08
 - id: ms-workload-identity-federation
-  title: Workload identity federation
+  title: Workload identity federation concepts
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
   retrieved: 2026-10-08
 - id: ms-managed-identities
-  title: "What are managed identities for Azure resources?"
+  title: "What is managed identities for Azure resources?"
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
   retrieved: 2026-10-08
@@ -525,7 +525,7 @@
   url: https://learn.microsoft.com/en-us/compliance/assurance/assurance-data-resiliency-overview
   retrieved: 2026-10-08
 - id: ms-mcsb
-  title: Overview of the Microsoft cloud security benchmark v2 (preview)
+  title: Overview of Microsoft cloud security benchmark v2 (preview)
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/security/benchmark/azure/overview
   retrieved: 2026-10-08
@@ -565,22 +565,22 @@
   url: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide
   retrieved: 2026-10-08
 - id: ms-kv-soft-delete
-  title: Azure Key Vault soft-delete overview
+  title: "Azure Key Vault: soft-delete overview"
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview
   retrieved: 2026-10-08
 - id: ms-azure-backup-immutable
-  title: Concept of immutable vault for Azure Backup
+  title: Immutable vault for Azure Backup
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/backup/backup-azure-immutable-vault-concept
   retrieved: 2026-10-08
 - id: ms-azure-backup-mua
-  title: Multi-user authorization using Resource Guard
+  title: Multiuser authorization using Resource Guard
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/backup/multi-user-authorization-concept
   retrieved: 2026-10-08
 - id: ms-storage-anon
-  title: Remediate anonymous read access to blob data
+  title: Remediate anonymous read access to blob data (Azure Resource Manager deployments)
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-prevent
   retrieved: 2026-10-08
@@ -924,4 +924,406 @@
   title: Ending Support in 2025
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/lifecycle/end-of-support/end-of-support-2025
+  retrieved: 2026-10-09
+
+# Azure cloud security posture (Azure module domains azure-identity, azure-data, azure-network, azure-logging)
+- id: ms-ca-azure-mgmt
+  title: Require MFA for Azure management
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-old-require-mfa-azure-mgmt
+  retrieved: 2026-10-09
+- id: ms-mi-best-practice
+  title: Managed identity best practice recommendations
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/managed-identity-best-practice-recommendations
+  retrieved: 2026-10-09
+- id: ms-mdc-ciem
+  title: Cloud infrastructure entitlement management (CIEM)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/permissions-management
+  retrieved: 2026-10-09
+- id: ms-azure-rbac-external
+  title: Assign Azure roles to external users using the Azure portal
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-external-users
+  retrieved: 2026-10-09
+- id: ms-pim-resource-reviews
+  title: Create an access review of Azure resource and Microsoft Entra roles in PIM
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-create-roles-and-resource-roles-review
+  retrieved: 2026-10-09
+- id: ms-azure-custom-roles
+  title: Azure custom roles
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles
+  retrieved: 2026-10-09
+- id: ms-storage-portal-entra-auth
+  title: Choose how to authorize access to blob data in the Azure portal
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/blobs/authorize-data-operations-portal
+  retrieved: 2026-10-09
+- id: ms-storage-secure-transfer
+  title: Require secure transfer to ensure secure connections
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer
+  retrieved: 2026-10-09
+- id: ms-azure-sql-connectivity
+  title: Connectivity settings
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-sql/database/connectivity-settings?view=azuresql
+  retrieved: 2026-10-09
+- id: ms-app-service-security
+  title: Secure your Azure App Service deployment
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/app-service/overview-security
+  retrieved: 2026-10-09
+- id: ms-storage-data-protection
+  title: Data protection overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/blobs/data-protection-overview
+  retrieved: 2026-10-09
+- id: ms-storage-immutable
+  title: Store business-critical blob data with immutable storage in a write once, read many (WORM) state
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/blobs/immutable-storage-overview
+  retrieved: 2026-10-09
+- id: ms-kv-key-rotation
+  title: Configure cryptographic key auto-rotation in Azure Key Vault
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/keys/how-to-configure-key-rotation
+  retrieved: 2026-10-09
+- id: ms-cosmos-entra-rbac
+  title: Connect to Azure Cosmos DB for NoSQL using role-based access control and Microsoft Entra ID
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-connect-role-based-access-control
+  retrieved: 2026-10-09
+- id: ms-postgres-entra
+  title: Microsoft Entra authentication in Azure Database for PostgreSQL flexible server
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/postgresql/security/security-entra-concepts
+  retrieved: 2026-10-09
+- id: ms-azure-backup-overview
+  title: "What is the Azure Backup service?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/backup/backup-overview
+  retrieved: 2026-10-09
+- id: ms-azure-sql-backups
+  title: Automated backups in Azure SQL Database
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-sql/database/automated-backups-overview?view=azuresql
+  retrieved: 2026-10-09
+- id: ms-mdc-dspm
+  title: Overview - About data security posture management
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/concept-data-security-posture
+  retrieved: 2026-10-09
+- id: ms-mdc-cspm
+  title: What is Cloud Security Posture Management (CSPM)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/concept-cloud-security-posture-management
+  retrieved: 2026-10-09
+- id: ms-azure-nsg
+  title: Azure network security groups overview
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview
+  retrieved: 2026-10-09
+- id: ms-mdc-jit
+  title: Just-in-time machine access in Microsoft Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/just-in-time-access-overview
+  retrieved: 2026-10-09
+- id: ms-azure-public-ip
+  title: Public IP addresses
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-addresses
+  retrieved: 2026-10-09
+- id: ms-azure-network-best-practices
+  title: Azure network security best practices
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/security/fundamentals/network-best-practices
+  retrieved: 2026-10-09
+- id: ms-waf-app-gateway
+  title: "What is Azure Web Application Firewall on Azure Application Gateway?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/ag-overview
+  retrieved: 2026-10-09
+- id: ms-waf-front-door
+  title: Azure Web Application Firewall on Azure Front Door
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/web-application-firewall/afds/afds-overview
+  retrieved: 2026-10-09
+- id: ms-aks-local-accounts
+  title: Manage local accounts with Microsoft Entra integration
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/aks/local-accounts
+  retrieved: 2026-10-09
+- id: ms-aks-entra-authz
+  title: Use Microsoft Entra ID authorization for the Kubernetes API in Azure Kubernetes Service (AKS)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/aks/entra-id-authorization
+  retrieved: 2026-10-09
+- id: ms-aks-private
+  title: Create a private Azure Kubernetes Service (AKS) cluster
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/aks/private-clusters
+  retrieved: 2026-10-09
+- id: ms-aks-authorized-ips
+  title: Secure access to the API server using authorized IP address ranges in Azure Kubernetes Service (AKS)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
+  retrieved: 2026-10-09
+- id: ms-acr-auth
+  title: Authenticate with Azure Container Registry
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-authentication
+  retrieved: 2026-10-09
+- id: ms-acr-anonymous-pull
+  title: Unauthenticated anonymous pull access
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/container-registry/anonymous-pull-access
+  retrieved: 2026-10-09
+- id: ms-app-service-basic-auth
+  title: Disable basic authentication in Azure App Service deployments
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/app-service/configure-basic-auth-disable
+  retrieved: 2026-10-09
+- id: ms-vm-trusted-launch
+  title: Trusted Launch for Azure virtual machines
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch
+  retrieved: 2026-10-09
+- id: ms-mdc-container-va
+  title: Vulnerability management for containers
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/agentless-vulnerability-assessment-azure
+  retrieved: 2026-10-09
+- id: ms-app-service-patching
+  title: Azure App Service OS and runtime patching
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/app-service/overview-patch-os-runtime
+  retrieved: 2026-10-09
+- id: ms-mdc-email-notifications
+  title: Configure email notifications for alerts and attack paths
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/configure-email-notifications
+  retrieved: 2026-10-09
+- id: ms-mdc-attack-path
+  title: Identify and remediate attack paths in Microsoft Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/how-to-manage-attack-path
+  retrieved: 2026-10-09
+- id: ms-mdc-critical-assets
+  title: Critical assets protection in Microsoft Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/critical-assets-protection
+  retrieved: 2026-10-09
+- id: ms-azure-activity-log
+  title: Activity log in Azure Monitor
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/activity-log
+  retrieved: 2026-10-09
+- id: ms-azure-diagnostic-settings
+  title: Diagnostic settings in Azure Monitor
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-monitor/data-collection/diagnostic-settings
+  retrieved: 2026-10-09
+- id: ms-kv-logging
+  title: Azure Key Vault logging
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/general/logging
+  retrieved: 2026-10-09
+- id: ms-azure-sql-auditing
+  title: Auditing for Azure SQL Database
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-sql/database/auditing-overview?view=azuresql
+  retrieved: 2026-10-09
+- id: ms-vnet-flow-logs
+  title: Virtual network flow logs
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/network-watcher/vnet-flow-logs-overview
+  retrieved: 2026-10-09
+- id: ms-azure-alert-types
+  title: Choose the right type of alert rule
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-types
+  retrieved: 2026-10-09
+- id: ms-azure-policy
+  title: "What is Azure Policy?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/governance/policy/overview
+  retrieved: 2026-10-09
+- id: ms-azure-management-groups
+  title: "What are Azure management groups?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/governance/management-groups/overview
+  retrieved: 2026-10-09
+- id: ms-mdc-security-policy
+  title: Security policies in Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/security-policy-concept
+  retrieved: 2026-10-09
+- id: ms-azure-locks
+  title: Lock your Azure resources to protect your infrastructure
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources
+  retrieved: 2026-10-09
+- id: ms-mdc-containers
+  title: Introduction to Microsoft Defender for Containers
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-containers-introduction
+  retrieved: 2026-10-09
+- id: ms-storage-network
+  title: Azure Storage firewall rules and network access control
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/storage-network-security
+  retrieved: 2026-10-09
+- id: ms-private-endpoint
+  title: "What is a private endpoint?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview
+  retrieved: 2026-10-09
+- id: ms-azure-sql-firewall
+  title: Azure SQL Database IP firewall rules
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/azure-sql/database/firewall-configure?view=azuresql
+  retrieved: 2026-10-09
+- id: ms-app-service-configure
+  title: Configure an App Service app
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/app-service/configure-common
+  retrieved: 2026-10-09
+- id: ms-storage-min-tls
+  title: Enforce a minimum required version of Transport Layer Security (TLS) for requests to a storage account
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version
+  retrieved: 2026-10-09
+- id: ms-files-soft-delete
+  title: Azure file share soft delete
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/files/storage-files-prevent-file-share-deletion
+  retrieved: 2026-10-09
+- id: ms-mysql-entra
+  title: Microsoft Entra authentication for Azure Database for MySQL - Flexible Server
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/mysql/security/security-entra-authentication
+  retrieved: 2026-10-09
+- id: ms-mdc-data-ai-dashboard
+  title: Data and AI security dashboard
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/data-aware-security-dashboard-overview
+  retrieved: 2026-10-09
+- id: ms-mdc-governance-rules
+  title: Drive recommendation remediation by using governance rules
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/governance-rules
+  retrieved: 2026-10-09
+- id: ms-mdc-manage-mcsb
+  title: Manage MCSB recommendations in Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/manage-mcsb
+  retrieved: 2026-10-09
+- id: ms-lighthouse-security
+  title: Recommended security practices
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/lighthouse/concepts/recommended-security-practices
+  retrieved: 2026-10-09
+- id: ms-lighthouse-service-providers
+  title: View and manage service providers
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/lighthouse/how-to/view-manage-service-providers
+  retrieved: 2026-10-09
+- id: ms-lighthouse-eligible
+  title: Create eligible authorizations
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/lighthouse/how-to/create-eligible-authorizations
+  retrieved: 2026-10-09
+- id: ms-foundry-disable-local-auth
+  title: Disable local authentication in Foundry Tools
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/ai-services/disable-local-auth
+  retrieved: 2026-10-09
+- id: ms-foundry-vnets
+  title: Configure Foundry Tools virtual networks
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/ai-services/cognitive-services-virtual-networks
+  retrieved: 2026-10-09
+- id: ms-mdc-ai-posture
+  title: Overview - AI security posture management
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/ai-security-posture
+  retrieved: 2026-10-09
+- id: ms-disks-restrict-export
+  title: Restrict managed disks from being imported or exported
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-machines/disks-restrict-import-export-overview
+  retrieved: 2026-10-09
+- id: ms-disks-private-link
+  title: Restrict import and export access for managed disks by using Azure Private Link
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-machines/disks-enable-private-links-for-import-export-portal
+  retrieved: 2026-10-09
+- id: ms-gallery-community
+  title: Share images by using a community gallery
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-machines/share-gallery-community
+  retrieved: 2026-10-09
+- id: ms-app-service-kv-references
+  title: Use Key Vault references as app settings in Azure App Service, Azure Functions, and Azure Logic Apps (Standard)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references
+  retrieved: 2026-10-09
+- id: ms-vm-custom-data
+  title: Custom data on Azure virtual machines
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/virtual-machines/custom-data
+  retrieved: 2026-10-09
+- id: ms-mdc-secrets-scanning
+  title: Protecting secrets in Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/secrets-scanning
+  retrieved: 2026-10-09
+- id: ms-mdc-secrets-deployments
+  title: Protect cloud deployment secrets
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/secrets-scanning-cloud-deployment
+  retrieved: 2026-10-09
+- id: ms-storage-sas-expiration
+  title: Configure an expiration policy for shared access signatures
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/sas-expiration-policy
+  retrieved: 2026-10-09
+- id: ms-storage-sas-overview
+  title: Grant limited access to Azure Storage resources using shared access signatures (SAS)
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview
+  retrieved: 2026-10-09
+- id: ms-kv-rbac-migration
+  title: Migrate to Azure RBAC from access policies
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-migration
+  retrieved: 2026-10-09
+- id: ms-network-security-perimeter
+  title: "What is a network security perimeter?"
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/private-link/network-security-perimeter-concepts
+  retrieved: 2026-10-09
+- id: ms-storage-cross-tenant-replication
+  title: Prevent object replication across Microsoft Entra tenants
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/storage/blobs/object-replication-prevent-cross-tenant-policies
+  retrieved: 2026-10-09
+- id: ms-mdc-attack-path-concept
+  title: Security explorer and attack paths in Microsoft Defender for Cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/concept-attack-path
+  retrieved: 2026-10-09
+- id: ms-azure-shared-responsibility
+  title: Shared responsibility in the cloud
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility
+  retrieved: 2026-10-09
+- id: ms-azure-role-assignment-alerts
+  title: Alert on privileged Azure role assignments
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-alert
   retrieved: 2026-10-09

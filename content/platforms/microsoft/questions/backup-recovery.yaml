@@ -54,7 +54,7 @@
 - id: MS-BCK-003
   module: core
   domain: backup-recovery
-  appliesTo: [ms-backups, ms-privileged-roles]
+  appliesTo: [ms-backups, ms-privileged-roles, ms-azure-data-stores, ms-azure-workloads]
   severity: high
   question: Are backups protected so that only dedicated backup administrators can browse, restore, change or delete them?
   why: >-
@@ -65,7 +65,8 @@
     administration, can browse, restore, change or delete backups. Global, SharePoint and Exchange
     Administrators can also manage Microsoft 365 Backup, so every holder of those roles is one of that
     group; Owner, Contributor and backup roles on Azure vault subscriptions are limited the same way;
-    and third-party backup consoles admit only those accounts.
+    and third-party backup consoles admit only those accounts. Answer for the backup products you use:
+    the Microsoft 365 Backup roles don't matter if you don't use it.
   remediation: >-
     Assign the Microsoft 365 Backup Administrator role, Azure Backup roles and third-party console
     access to a small dedicated group, ideally as eligible assignments through PIM. Keep Global,
@@ -117,7 +118,7 @@
 - id: MS-BCK-005
   module: core
   domain: backup-recovery
-  appliesTo: [ms-backups, ms-privileged-roles]
+  appliesTo: [ms-backups, ms-privileged-roles, ms-azure-data-stores, ms-azure-workloads]
   severity: low
   question: Is access to backups limited to backup administrators, so other users and administrators can't browse or restore even their own data from them?
   why: >-
@@ -130,7 +131,8 @@
     also manage Microsoft 365 Backup) and Owner and Contributor on Azure vault subscriptions are held
     only by those backup administrators, or Resource Guard protects restores; end-user self-service
     restore portals are turned off; and no other account holds a backup role. Recycle bins and version
-    history aren't backups and don't count here.
+    history aren't backups and don't count here. Answer for the backup products you use: the Microsoft
+    365 Backup roles don't matter if you don't use it.
   remediation: >-
     Turn off end-user self-service restore in third-party backup products and route restore requests
     through the backup administrators. Assign the Microsoft 365 Backup Administrator role and Azure

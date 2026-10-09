@@ -264,15 +264,18 @@
   description: >-
     Management groups, subscriptions and the Owner, Contributor and User Access Administrator
     roles that control them. Global Administrators can elevate themselves to control every
-    subscription, so the Entra and Azure planes share one fate.
+    subscription, so the Entra and Azure planes share one fate. Record the subscriptions that hold
+    your Azure data stores, workloads and key vaults too: questions about Azure administrators, their
+    MFA and the activity log are asked through this asset type.
   examples:
     - Production subscriptions hosting line-of-business apps
-    - Storage accounts and databases holding customer data
+    - Owner, Contributor and User Access Administrator role assignments
     - Management group hierarchy and Azure Policy assignments
+    - Service principals and pipelines that deploy to production
   discoveryPrompts:
     - Which Azure subscriptions run production systems or hold customer data?
     - Who holds Owner or User Access Administrator at the subscription or management group level?
-    - Are any storage accounts, databases or web apps reachable directly from the internet?
+    - Which pipelines, automation accounts or third parties can change production subscriptions?
   exposures: [standing-admin, internet-facing, third-party-apps]
   threats:
     - { technique: T1078.004, name: "Valid Accounts: Cloud Accounts" }
@@ -302,3 +305,56 @@
     - { technique: T1555.006, name: "Credentials from Password Stores: Cloud Secrets Management Stores" }
     - { technique: T1552.001, name: "Unsecured Credentials: Credentials In Files" }
     - { technique: T1485, name: Data Destruction }
+
+- id: ms-azure-data-stores
+  module: azure
+  tier: data
+  name: Azure storage accounts & databases
+  description: >-
+    Storage accounts, data lakes and databases holding customer records, documents, exports and
+    backups. A single public container, leaked account key or database open to the internet exposes the
+    whole store without any user signing in.
+  examples:
+    - Blob storage and Data Lake Storage holding customer documents or data exports
+    - Azure Files shares used as company file servers
+    - Azure SQL databases and managed instances behind line-of-business apps
+    - Cosmos DB, PostgreSQL and MySQL databases behind customer-facing apps
+  discoveryPrompts:
+    - Which storage accounts and databases hold customer, financial, health or HR information?
+    - Do any applications, scripts or partners connect with a storage account key, SAS token or SQL login?
+    - Could you recover a storage account or database if someone deleted or encrypted it tonight?
+  exposures: [internet-facing, external-sharing, standing-admin, third-party-apps]
+  threats:
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1537, name: Transfer Data to Cloud Account }
+    - { technique: T1552.001, name: "Unsecured Credentials: Credentials In Files" }
+    - { technique: T1485, name: Data Destruction }
+    - { technique: T1486, name: Data Encrypted for Impact }
+    - { technique: T1619, name: Cloud Storage Object Discovery }
+
+- id: ms-azure-workloads
+  module: azure
+  tier: cloud
+  name: Azure VMs, AKS clusters & web apps
+  description: >-
+    The compute that runs your applications: virtual machines, AKS clusters, App Service and Functions
+    apps and the container images they run. Internet-facing workloads are attacked constantly, and a
+    compromised one hands over whatever data and managed identity permissions it holds.
+  examples:
+    - Customer-facing websites and APIs on App Service or AKS
+    - Line-of-business application and database servers on Azure VMs
+    - Azure Functions and Logic Apps that process orders, payments or records
+    - Container registries holding production images
+    - Microsoft Foundry and Azure OpenAI resources behind your apps and agents
+  discoveryPrompts:
+    - Which of your Azure applications, VMs or clusters can be reached from the internet?
+    - Which workloads run with a managed identity or service principal that can read data stores or change resources?
+    - How do administrators connect to Azure VMs and clusters, and from where?
+  exposures: [internet-facing, standing-admin, third-party-apps]
+  threats:
+    - { technique: T1190, name: Exploit Public-Facing Application }
+    - { technique: T1133, name: External Remote Services }
+    - { technique: T1552.005, name: "Unsecured Credentials: Cloud Instance Metadata API" }
+    - { technique: T1610, name: Deploy Container }
+    - { technique: T1496, name: Resource Hijacking }
+    - { technique: T1525, name: Implant Internal Image }

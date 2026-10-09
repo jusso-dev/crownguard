@@ -1,0 +1,286 @@
+- id: MS-AZ-001
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions]
+  severity: critical
+  question: Are Owner and User Access Administrator roles on management groups and subscriptions eligible through PIM rather than permanently assigned?
+  why: >-
+    Standing Owner rights let any compromised admin or automation account take over production
+    workloads, read data, or delete resources and backups in one step.
+  yesLooksLike: >-
+    No person holds permanent Owner or User Access Administrator at management group or subscription
+    scope (other than documented break-glass), and those assignments are eligible in PIM, with MFA and
+    justification needed to activate them for a few hours at most.
+  remediation: >-
+    Review Azure role assignments at root, management group and subscription scope, convert human
+    assignments of Owner, User Access Administrator and other privileged administrator roles to
+    PIM-eligible, set a short maximum activation duration in the PIM role settings for each scope, and
+    consider requiring approval to activate Owner and User Access Administrator on production.
+  effort: M
+  licence: [entra-p2]
+  sources: [ms-azure-rbac-best, ms-pim-configure, ms-mcsb-privileged-access]
+  refs:
+    - { framework: cis-azure, ref: "5.3.3" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-1 }
+    - { framework: mcsb, ref: PA-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure III }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: MS-AZ-004
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-workloads, ms-azure-key-vault]
+  severity: high
+  question: Do Azure workloads authenticate to storage, databases, Key Vault and other Azure services with managed identities rather than keys, connection strings or service principal secrets?
+  why: >-
+    Keys and connection strings end up in code repositories, pipelines and config files where they
+    leak easily, and they work from anywhere without MFA, Conditional Access or a named identity in
+    the logs.
+  yesLooksLike: >-
+    App Service and Functions apps, VMs, AKS workloads, Container Apps and Logic Apps use managed
+    identities (or AKS workload identity) with Microsoft Entra authentication to reach storage,
+    databases, Key Vault and Azure Resource Manager, and none of them connects with a storage account
+    key, database password or service principal secret.
+  remediation: >-
+    Enable a system-assigned or user-assigned managed identity on each workload and grant it scoped
+    roles, update application code to use Microsoft Entra authentication to downstream services (for
+    example DefaultAzureCredential in the Azure SDKs), use AKS workload identity for pods, and then
+    remove the keys, passwords and secrets the managed identity replaces.
+  effort: L
+  licence: []
+  sources: [ms-managed-identities, ms-workload-identity-federation, ms-mi-best-practice]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-3 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }
+
+- id: MS-AZ-007
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions]
+  severity: high
+  question: Does each production subscription have no more than three Owners, with no custom roles that grant Owner-level rights?
+  why: >-
+    Every Owner can read data, change networking, grant access to anyone and delete the subscription's
+    resources and backups. Owner rights sprawled across many accounts, or hidden in a custom role with
+    wildcard permissions, multiply the accounts an attacker can use to take everything.
+  yesLooksLike: >-
+    Each production subscription and management group has two or three named Owners, other
+    administrators hold narrower built-in roles such as Contributor or a service-specific role at
+    resource group scope, and no custom role grants "*" actions or role-assignment rights at
+    subscription scope. Both parts must hold for Yes.
+  remediation: >-
+    In Access control (IAM) for each management group and subscription, list Owner and other
+    privileged administrator role assignments, reduce Owners to two or three, replace the rest with
+    narrower built-in roles scoped to resource groups, and review custom roles for "*" or
+    Microsoft.Authorization/*/write actions. Defender for Cloud's identity recommendations flag
+    subscriptions with too many owners.
+  effort: M
+  licence: []
+  sources: [ms-azure-rbac-best, ms-azure-custom-roles]
+  refs:
+    - { framework: cis-azure, ref: "5.4" }
+    - { framework: cis-azure, ref: "5.7" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-1 }
+    - { framework: mcsb, ref: PA-7 }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: MS-AZ-008
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions, ms-privileged-roles, ms-azure-data-stores, ms-azure-workloads, ms-azure-key-vault]
+  severity: high
+  question: Is Global Administrator elevated access to Azure ("Access management for Azure resources") switched off, with every use alerted and removed straight afterwards?
+  why: >-
+    Any Global Administrator can flip one switch to become User Access Administrator over every
+    subscription and management group in the tenant. An attacker who phishes a Global Administrator
+    uses it to grant themselves Owner on your production subscriptions, and a forgotten elevation
+    leaves that door open indefinitely.
+  yesLooksLike: >-
+    No account holds User Access Administrator at root scope ("/"); elevation is used only for
+    recovery tasks, is removed as soon as the task is done, and each elevate-access event in the
+    Microsoft Entra audit log raises an alert to the security team.
+  remediation: >-
+    Check for users with elevated access from the banner in the Azure portal or by listing role
+    assignments at root scope, remove any you find, stream Microsoft Entra audit logs to Log Analytics
+    or Microsoft Sentinel and alert on the elevate-access operation, and document when elevation is
+    allowed.
+  effort: S
+  licence: []
+  sources: [ms-elevate-access, ms-entra-secops-privileged]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: mcsb, ref: PA-1 }
+    - { framework: mcsb, ref: PA-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure III }
+
+- id: MS-AZ-009
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions]
+  severity: high
+  question: Does Conditional Access require phishing-resistant MFA for everyone who manages Azure resources, including people with Azure roles but no Entra directory role?
+  why: >-
+    The Azure portal, CLI and PowerShell give direct control of production resources. Policies scoped to
+    Entra directory roles miss people who hold only Azure roles such as Owner or Contributor, and
+    Microsoft's mandatory MFA for Azure accepts methods that can be phished in real time.
+  yesLooksLike: >-
+    A Conditional Access policy targeting the Windows Azure Service Management API (and Microsoft
+    Admin Portals) requires the built-in "Phishing-resistant MFA" authentication strength for all
+    users, or at least every user and group holding an Azure role at management group, subscription
+    or resource group scope, excluding only emergency access accounts.
+  remediation: >-
+    Register passkeys, FIDO2 security keys or Windows Hello for Business for Azure administrators,
+    then create a Conditional Access policy for all users targeting Windows Azure Service Management
+    API with the phishing-resistant MFA authentication strength, starting in report-only mode and
+    excluding emergency access accounts. Move scripts that sign in as users to managed identities or
+    workload identity federation.
+  effort: M
+  licence: [entra-p1]
+  sources: [ms-ca-azure-mgmt, ms-auth-strengths, ms-mandatory-mfa]
+  refs:
+    - { framework: cis-azure, ref: "3.1.1" }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-6 }
+    - { framework: mcsb, ref: IM-7 }
+    - { framework: ms-zero-trust, ref: Identity II }
+  e8:
+    - { strategy: mfa, level: 2 }
+
+- id: MS-AZ-010
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions, ms-workload-identities]
+  severity: high
+  question: Do managed identities and service principals hold only roles scoped to the resources they need, with none holding Owner, Contributor or User Access Administrator at subscription or management group scope?
+  why: >-
+    Workload identities never sign in interactively, so MFA doesn't protect them. An attacker who
+    exploits an internet-facing app, or steals a pipeline's credential, inherits every permission its
+    identity holds, and an identity with Owner or Contributor on the subscription turns one bug into
+    control of the whole environment.
+  yesLooksLike: >-
+    Managed identities and service principals hold data-plane or service-specific roles (such as
+    Storage Blob Data Reader on one storage account or Key Vault Secrets User on one vault) at
+    resource or resource group scope; none holds Owner, Contributor, User Access Administrator or a
+    broad data-plane role at subscription or management group scope unless it is a documented
+    deployment identity protected by workload identity federation; and unused permissions are
+    removed.
+  remediation: >-
+    List role assignments for service principals and managed identities at subscription and
+    management group scope (Access control (IAM) filtered by type, or Azure Resource Graph), replace
+    broad roles with the narrowest built-in roles at resource scope, and give each workload its own
+    identity. Defender CSPM's permissions management (CIEM) recommendations highlight unused and
+    excessive permissions.
+  effort: M
+  licence: []
+  sources: [ms-mi-best-practice, ms-azure-rbac-best, ms-mdc-ciem]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: IM-3 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }
+  e8:
+    - { strategy: restrict-admin-privileges, level: 3 }
+
+- id: MS-AZ-011
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads, ms-azure-key-vault]
+  severity: medium
+  question: Are Azure role assignments that aren't privileged, including every role held by a guest, reviewed at least every six months, with assignments of disabled and deleted identities removed?
+  why: >-
+    Azure role assignments outlive the reasons they were granted. Contractors' guest accounts,
+    departed staff and orphaned assignments ("Identity not found") keep access to data and resources
+    nobody remembers granting, and an outside party's compromise becomes yours.
+  yesLooksLike: >-
+    A recurring access review covers Azure role assignments beyond the privileged administrator
+    roles (for example Reader, data-plane and service roles) at management group, subscription and
+    resource group scope; reviewers are the resource owners; denied or unreviewed access is removed;
+    guest accounts hold Azure roles only with a documented need; and no disabled user or "Identity not
+    found" assignment remains. Reviews of Owner, Contributor and User Access Administrator are asked
+    separately.
+  remediation: >-
+    Create access reviews for Azure resource roles in Privileged Identity Management (or Microsoft
+    Entra ID Governance) with auto-apply, filter Access control (IAM) for guests, disabled users and
+    "Identity not found" entries and remove them, and document who approves guest access to Azure.
+  effort: S
+  licence: [entra-p2]
+  sources: [ms-pim-resource-reviews, ms-azure-rbac-external, ms-access-reviews]
+  refs:
+    - { framework: cis-azure, ref: "5.3.2" }
+    - { framework: cis-azure, ref: "5.3.5" }
+    - { framework: cis-azure, ref: "5.3.7" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-4 }
+    - { framework: ms-zero-trust, ref: Identity IV }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+
+- id: MS-AZ-044
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-subscriptions, ms-azure-data-stores, ms-azure-workloads, ms-azure-key-vault]
+  severity: high
+  question: Is access to your Azure subscriptions by managed service providers and other outside organisations, through Azure Lighthouse or their own apps, limited to the roles and scopes they need and reviewed regularly?
+  why: >-
+    A provider with standing Contributor rights on your subscriptions is a path straight to your data:
+    if the provider's own tenant or staff are compromised, the attacker arrives with your access
+    already granted. Delegations made for a past project or a previous provider are easy to forget.
+  yesLooksLike: >-
+    You know every Azure Lighthouse delegation (Service providers in the Azure portal) and every
+    service principal from another tenant that holds an Azure role; each grants only the built-in
+    roles and the subscriptions or resource groups the provider needs, with privileged roles set up as
+    eligible authorisations that need MFA to activate; delegations are reviewed at least every six
+    months and removed when a contract ends; and the built-in Azure Policy definition that audits
+    delegations to managing tenants is assigned.
+  remediation: >-
+    Open Service providers in the Azure portal to list offers and delegations, remove any you no
+    longer need, ask providers to re-onboard with the narrowest built-in roles and eligible
+    authorisations instead of permanent Contributor, find other tenants' service principals in Access
+    control (IAM) and review them the same way, and assign the built-in policy that audits delegation
+    of scopes to a managing tenant at management group scope.
+  effort: M
+  licence: []
+  sources: [ms-lighthouse-security, ms-lighthouse-service-providers, ms-lighthouse-eligible]
+  refs:
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: PA-4 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Identity IV }
+
+- id: MS-AZ-045
+  module: azure
+  domain: azure-identity
+  appliesTo: [ms-azure-workloads, ms-azure-data-stores, ms-azure-key-vault]
+  severity: critical
+  question: Are the managed identities of internet-facing VMs, apps and containers limited to the data their own application uses, with no rights to change resources or role assignments?
+  why: >-
+    An attacker who exploits an internet-facing app can request tokens for its managed identity from
+    inside the workload. If that identity can read every storage account, open any key vault or
+    change resources, one unpatched web app becomes a breach of your most sensitive data.
+  yesLooksLike: >-
+    Each internet-facing App Service, Functions or Container Apps app, AKS workload and VM has its own
+    managed identity with data-plane roles on only the storage accounts, databases, key vaults or
+    secrets its application uses; none of these identities holds Contributor, Owner or User Access
+    Administrator, or a data role at a scope wider than the resources it uses.
+  remediation: >-
+    List internet-facing workloads and the role assignments of their managed identities (Defender
+    CSPM's cloud security explorer and attack path analysis show internet-exposed resources whose
+    identity reaches sensitive data), split shared identities so each app has its own, scope roles to
+    the individual storage account, database or vault, and move deployment rights to pipeline
+    identities instead of the running app.
+  effort: M
+  licence: []
+  sources: [ms-mi-best-practice, ms-mdc-attack-path-concept, ms-mdc-ciem]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: IM-3 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }

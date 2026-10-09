@@ -1,7 +1,7 @@
 {
   "name": "crownguard",
   "version": "1.0.0",
-  "description": "Crown-jewel risk assessment wizard for Microsoft 365 and Google environments, with a branded PDF report. Runs entirely in your browser.",
+  "description": "Crown-jewel risk assessment wizard for Microsoft 365, Google and AWS environments, with a branded PDF report. Runs entirely in your browser.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

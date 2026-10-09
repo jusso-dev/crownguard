@@ -20,8 +20,8 @@ export function EnvironmentStep() {
   return (
     <>
       <StepHeader title="Your environment">
-        Choose the platforms your organisation runs on. Pick both if you have a mixed estate. Your licence tier tells
-        the report which fixes you already own and which need an upgrade.
+        Choose the platforms your organisation runs on, as many as you use. Your licence tier tells the report which
+        fixes you already own and which need an upgrade.
       </StepHeader>
       <div className="grid gap-4 md:grid-cols-2">
         {bundles.map(({ platform }) => {
@@ -40,21 +40,23 @@ export function EnvironmentStep() {
                   <span className="mt-1 block text-sm leading-relaxed text-muted">{platform.description}</span>
                 </span>
               </label>
-              {on && (
+              {on && (platform.licenceTiers.length > 1 || platform.modules.some((m) => m.optional)) && (
                 <div className="mt-5 space-y-4 border-t border-rule pt-4">
-                  <Field label="Licence tier">
-                    <select
-                      className={inputClass}
-                      value={assessment.licence[platform.id] ?? ""}
-                      onChange={(e) => update((a) => ({ licence: { ...a.licence, [platform.id]: e.target.value } }))}
-                    >
-                      {platform.licenceTiers.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
+                  {platform.licenceTiers.length > 1 && (
+                    <Field label="Licence tier">
+                      <select
+                        className={inputClass}
+                        value={assessment.licence[platform.id] ?? ""}
+                        onChange={(e) => update((a) => ({ licence: { ...a.licence, [platform.id]: e.target.value } }))}
+                      >
+                        {platform.licenceTiers.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  )}
                   {platform.modules
                     .filter((m) => m.optional)
                     .map((m) => (

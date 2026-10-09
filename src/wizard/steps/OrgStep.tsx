@@ -24,7 +24,7 @@ export function OrgStep() {
     <>
       <StepHeader title="Your organisation">
         Crown jewels are the systems and information whose loss, exposure or corruption would seriously hurt your
-        organisation. This assessment helps you name them, check how well your Microsoft or Google environment protects
+        organisation. This assessment helps you name them, check how well your Microsoft, Google or AWS environment protects
         them, and produce a report you can take to leadership. Nothing you enter leaves this browser.
       </StepHeader>
       <div className="mb-8 flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--radius-control)] border border-rule bg-surface px-4 py-3 text-sm">

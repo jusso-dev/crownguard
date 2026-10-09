@@ -29,7 +29,7 @@
 - id: MS-LOG-002
   module: core
   domain: logging-detection
-  appliesTo: [ms-entra-tenant, ms-privileged-roles, ms-workload-identities]
+  appliesTo: [ms-entra-tenant, ms-privileged-roles, ms-workload-identities, ms-azure-subscriptions]
   severity: high
   question: Are Entra ID sign-in and audit logs, and Microsoft 365 audit logs, sent to a central log store or SIEM and kept for at least 12 months?
   why: >-
@@ -49,6 +49,7 @@
   licence: [entra-p1]
   sources: [ms-entra-log-integration, ms-sentinel]
   refs:
+    - { framework: cis-azure, ref: "6.1.1.8" }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.AE-03 }
     - { framework: mcsb, ref: LT-5 }
@@ -62,7 +63,7 @@
 - id: MS-LOG-003
   module: core
   domain: logging-detection
-  appliesTo: [ms-privileged-roles, ms-entra-tenant, ms-workload-identities, ms-hybrid-identity]
+  appliesTo: [ms-privileged-roles, ms-entra-tenant, ms-workload-identities, ms-hybrid-identity, ms-azure-subscriptions]
   severity: high
   question: Are you alerted in near real time to new privileged role assignments, Conditional Access changes, emergency account sign-ins and new credentials added to applications?
   why: >-

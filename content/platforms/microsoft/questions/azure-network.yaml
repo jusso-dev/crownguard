@@ -1,0 +1,288 @@
+- id: MS-AZ-020
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads, ms-azure-subscriptions]
+  severity: critical
+  question: Do network security groups block RDP, SSH and other management, database and UDP ports from the internet?
+  why: >-
+    Remote Desktop and SSH open to the internet are brute-forced and exploited within hours of a VM
+    appearing, and an exposed database port invites the same. One permissive rule is often all it
+    takes for ransomware operators to get in.
+  yesLooksLike: >-
+    No NSG rule allows inbound RDP (3389), SSH (22), other remote management ports, database ports
+    (such as 1433, 3306 and 5432) or broad UDP ranges from Any, Internet or 0.0.0.0/0.
+  remediation: >-
+    Review NSG inbound rules with Defender for Cloud's network recommendations or Azure Resource Graph,
+    delete rules that allow management, database or UDP ports from the internet, and give
+    administrators Azure Bastion or just-in-time VM access (Defender for Servers Plan 2) instead.
+    Associate an NSG with every workload subnet, and assign Azure Policy to audit or deny new rules of
+    this kind.
+  effort: M
+  licence: []
+  sources: [ms-azure-nsg, ms-mdc-jit]
+  refs:
+    - { framework: cis-azure, ref: "7.1" }
+    - { framework: cis-azure, ref: "7.2" }
+    - { framework: cis-azure, ref: "7.3" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-1 }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }
+
+- id: MS-AZ-021
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: high
+  question: Are public IP addresses kept off virtual machines, with internet-facing services published only through a load balancer, Application Gateway or Front Door?
+  why: >-
+    A VM with its own public IP address is directly reachable for every port its NSG and firewall leave
+    open, and forgotten public IPs on old test machines are what attackers find first.
+  yesLooksLike: >-
+    No VM's network interface has a public IP address, and internet-facing applications sit behind
+    Application Gateway, Front Door or a load balancer that publishes only the ports the application
+    needs.
+  remediation: >-
+    List public IP addresses and what they are attached to, remove them from VMs (use Azure Bastion for
+    administration and a NAT gateway for outbound traffic), publish applications through Application
+    Gateway or Front Door, assign the Azure Policy definition that denies network interfaces with
+    public IPs in production subscriptions, and review the remaining public IPs and their owners on a
+    schedule.
+  effort: M
+  licence: []
+  sources: [ms-azure-public-ip, ms-azure-network-best-practices]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-1 }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }
+
+- id: MS-AZ-022
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: medium
+  question: Are internet-facing web applications and APIs protected by Azure Web Application Firewall (or an equivalent) in prevention mode?
+  why: >-
+    Web applications are the most common way into cloud environments, through injection flaws,
+    vulnerable frameworks and credential stuffing. A web application firewall blocks known attack
+    patterns and bad bots before they reach code you haven't patched yet.
+  yesLooksLike: >-
+    Every internet-facing web app and API is published through Application Gateway or Front Door with
+    a WAF policy in Prevention mode, using the current default (managed) rule set and bot protection
+    with request body inspection on, or through an equivalent third-party WAF, and the app can't be
+    reached directly around it.
+  remediation: >-
+    Put internet-facing apps behind Application Gateway WAF or Front Door Premium with a WAF policy,
+    start in Detection mode to tune exclusions, then switch to Prevention; enable the bot manager rule
+    set and request body inspection; and restrict the app's own inbound access (access restrictions or
+    private endpoints) so traffic must pass through the WAF.
+  effort: M
+  licence: []
+  sources: [ms-waf-app-gateway, ms-waf-front-door]
+  refs:
+    - { framework: cis-azure, ref: "7.10" }
+    - { framework: cis-azure, ref: "7.14" }
+    - { framework: cis-azure, ref: "7.15" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-6 }
+
+- id: MS-AZ-023
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: high
+  question: Do AKS clusters use Microsoft Entra ID for Kubernetes access, with local accounts disabled?
+  why: >-
+    Every AKS cluster has a local cluster-admin credential that anyone with the right Azure role can
+    download. It never expires, skips MFA and Conditional Access, and can't be tied to a person in the
+    logs.
+  yesLooksLike: >-
+    Every AKS cluster has Microsoft Entra integration and local accounts disabled
+    (disableLocalAccounts), and access is granted through Azure RBAC for Kubernetes authorisation or
+    Kubernetes RBAC bound to Entra groups.
+  remediation: >-
+    Enable AKS-managed Microsoft Entra integration, grant access to Entra groups with Azure RBAC for
+    Kubernetes authorisation or Kubernetes role bindings, then disable local accounts with
+    --disable-local-accounts and rotate the cluster certificates to invalidate any downloaded admin
+    kubeconfig. Enforce it with the built-in Azure Policy definition for AKS local authentication, and
+    keep cluster-admin to a small group, ideally activated through PIM.
+  effort: M
+  licence: []
+  sources: [ms-aks-local-accounts, ms-aks-entra-authz]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: PA-7 }
+
+- id: MS-AZ-024
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: high
+  question: Is each AKS cluster's API server private, or limited to authorised IP address ranges?
+  why: >-
+    A public Kubernetes API server can be reached by anyone on the internet who has, or steals, a
+    credential, and Kubernetes vulnerabilities are exploited at scale. Limiting where the API can be
+    reached from turns a stolen kubeconfig into a much smaller problem.
+  yesLooksLike: >-
+    Production AKS clusters are private clusters (including clusters using API Server VNet
+    Integration with private cluster mode on), or have API server authorised IP ranges limited to your
+    administration networks and build agents; no production cluster's API server accepts connections
+    from the whole internet.
+  remediation: >-
+    Create new production clusters as private clusters (or with API Server VNet Integration and
+    private cluster mode turned on), and for existing clusters configure authorised IP ranges covering only your admin networks, Azure Bastion or
+    jump hosts and CI/CD agents. Run pipelines from self-hosted agents inside the virtual network where
+    the API is private.
+  effort: M
+  licence: []
+  sources: [ms-aks-private, ms-aks-authorized-ips]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }
+
+- id: MS-AZ-025
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: medium
+  question: Do container registries have the admin user and anonymous pull access disabled, so images are pushed and pulled only with Microsoft Entra identities?
+  why: >-
+    The registry admin account has full push and pull rights with a shared password, so anyone who
+    finds it in a pipeline can plant a backdoored image that your clusters then run. Anonymous pull
+    publishes every image, and any secrets baked into them, to the internet.
+  yesLooksLike: >-
+    Every Azure Container Registry has the admin user disabled and anonymous pull access off; AKS
+    and App Service pull with managed identities (AcrPull); and pipelines push with workload identity
+    federation or a scoped service principal.
+  remediation: >-
+    Disable the admin user on each registry, turn off anonymous pull, attach registries to AKS with the
+    kubelet managed identity, grant AcrPull and AcrPush roles to managed identities and pipeline
+    identities, and assign the built-in Azure Policy definitions for registry local authentication.
+    Registries that hold production images should also be closed to public network access.
+  effort: S
+  licence: []
+  sources: [ms-acr-auth, ms-acr-anonymous-pull]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: DS-6 }
+
+- id: MS-AZ-026
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: medium
+  question: Is basic authentication (FTP and SCM publishing credentials) disabled on App Service and Azure Functions apps?
+  why: >-
+    Publishing credentials are a username and password that can upload code straight to your web app.
+    They bypass MFA, leak through downloaded publish profiles and pipelines, and an attacker who has
+    them can plant a web shell on a live site.
+  yesLooksLike: >-
+    "FTP Basic Auth Publishing Credentials" and "SCM Basic Auth Publishing Credentials" are off for
+    every App Service and Functions app, FTP state is Disabled (or FTPS only where genuinely needed),
+    and deployments use Microsoft Entra identities such as GitHub Actions with OpenID Connect or Azure
+    Pipelines with workload identity federation.
+  remediation: >-
+    Move deployments to Microsoft Entra-based authentication, then turn off FTP and SCM basic
+    authentication in each app's Configuration settings, set FTP state to Disabled, assign the
+    built-in audit and remediation policies for FTP and SCM basic authentication, and monitor
+    AppServiceAuditLogs for remaining basic authentication attempts.
+  effort: S
+  licence: []
+  sources: [ms-app-service-basic-auth, ms-app-service-security]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: NS-8 }
+
+- id: MS-AZ-027
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: low
+  question: Do Azure virtual machines use Trusted Launch with Secure Boot and vTPM turned on?
+  why: >-
+    Bootkits and rootkits load before the operating system and its security agents, so they survive
+    reimaging and hide from EDR. Secure Boot blocks unsigned boot components and vTPM lets Defender
+    for Cloud check boot integrity.
+  yesLooksLike: >-
+    Production VMs and scale sets are Generation 2 with Trusted Launch, and Secure Boot and vTPM are
+    enabled on each of them.
+  remediation: >-
+    Create new VMs as Gen2 with Trusted Launch (the default), enable Trusted Launch on existing Gen2 VMs,
+    upgrade Gen1 VMs where the operating system supports it or set a rebuild date, turn on Secure Boot
+    and vTPM, and install the Guest Attestation extension so Defender for Cloud can monitor boot
+    integrity.
+  effort: M
+  licence: []
+  sources: [ms-vm-trusted-launch]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: mcsb, ref: PV-3 }
+
+- id: MS-AZ-028
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads]
+  severity: high
+  question: Are the code, runtimes and container images of internet-facing applications you run on Azure scanned daily for missing patches, with critical fixes applied within 48 hours and unsupported versions removed?
+  why: >-
+    Your own websites, APIs and customer portals are online services that attackers scan constantly.
+    A published exploit in a framework, runtime or container image you missed can mean compromise
+    within hours, along with the data and managed identity permissions behind it.
+  yesLooksLike: >-
+    The application code, frameworks, language runtimes and container images of every internet-facing
+    app on App Service, Functions, AKS, Container Apps or VMs are scanned at least daily by a scanner
+    with a current vulnerability database (for example Defender for Cloud vulnerability assessment for
+    container images, plus dependency scanning in the build); critical or exploited fixes are applied
+    within 48 hours of release and other fixes within two weeks; and no app runs a language runtime,
+    base image or framework past its end of support. Operating system patching of VMs is asked
+    separately.
+  remediation: >-
+    Keep an inventory of internet-facing apps, turn on Defender for Containers and Defender for
+    Servers vulnerability assessment and dependency scanning in your pipelines, track findings
+    against the 48-hour and two-week deadlines, rebuild container images on supported base images,
+    and move App Service and Functions apps off runtime versions that App Service lists as out of
+    support.
+  effort: M
+  licence: [defender-for-cloud]
+  sources: [ms-mdc-container-va, ms-app-service-patching, ms-defender-servers, ms-e8-patch-applications, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: mcsb, ref: PV-5 }
+    - { framework: mcsb, ref: PV-6 }
+  e8:
+    - { strategy: patch-applications, level: 1 }
+
+- id: MS-AZ-043
+  module: azure
+  domain: azure-network
+  appliesTo: [ms-azure-workloads, ms-azure-data-stores]
+  severity: high
+  question: Do Microsoft Foundry and Azure OpenAI resources accept only Microsoft Entra authentication, with API keys disabled?
+  why: >-
+    An API key works for anyone who has it, from anywhere, without MFA or a named identity in the logs.
+    A leaked key lets attackers run up large model bills in your name and reach the data your AI apps
+    and agents are connected to.
+  yesLooksLike: >-
+    Every Foundry, Azure OpenAI and other Foundry Tools resource used in production has local (key)
+    authentication disabled (disableLocalAuth), and applications call it with managed identities that
+    hold a data-plane role on that resource only.
+  remediation: >-
+    Move applications to Microsoft Entra authentication with managed identities, then disable local
+    authentication on each resource and assign the built-in policy "Azure AI Services resources should
+    have key access disabled (disable local authentication)" at subscription or management group
+    scope. The change can take a while to reach every gateway, so confirm an old key is rejected
+    before you rely on it.
+  effort: M
+  licence: []
+  sources: [ms-foundry-disable-local-auth, ms-mdc-ai-posture]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Infrastructure II }

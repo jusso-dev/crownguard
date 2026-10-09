@@ -198,6 +198,32 @@ PROFILES.push(
     delayMs: 10_000,
   },
   {
+    host: "docs.aws.amazon.com",
+    label: "AWS documentation",
+    content: ["#main-content > #main-col-body"],
+    expectRoots: 1,
+    strip: ["awsdocs-language-banner", "awsdocs-page-header", "awsdocs-filter-selector", "awsdocs-copyright", "awsdocs-thumb-feedback"],
+    volatile: [],
+    sectionHeadings: "h2, h3",
+    lang: /^en(?:-US)?$/i,
+    // AWS's site terms don't allow republishing documentation text: hashes and section names only.
+    excerpts: "none",
+    concurrency: 2,
+  },
+  {
+    host: "aws.amazon.com",
+    label: "AWS",
+    // Product and pricing pages, cited for which security services are billed separately.
+    content: ["main#aws-page-content-main"],
+    expectRoots: 1,
+    strip: ["nav", "[role=navigation]", "[hidden]", "[aria-hidden=true]"],
+    volatile: [],
+    sectionHeadings: "h2, h3",
+    lang: /^en(?:-US)?$/i,
+    excerpts: "none",
+    concurrency: 1,
+  },
+  {
     host: "www.microsoft.com",
     label: "Microsoft",
     content: ["main.microsoft-template-layout-container"],

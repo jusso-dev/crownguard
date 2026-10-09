@@ -90,6 +90,8 @@ const TITLE_SUFFIXES = [
   /\s*[|\-–—]\s*Cyber\.gov\.au$/i,
   /\s*[|\-–—]\s*CIS$/i,
   /\s*[|\-–—]\s*Microsoft$/i,
+  // AWS guides append their own name: "Multi-factor authentication for AWS account root user - AWS Identity and Access Management".
+  /\s+-\s+(?:AWS|Amazon)\b[^|\-–—]*$/,
 ];
 
 /** Page title without the site name the page appends to it. */

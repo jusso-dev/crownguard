@@ -1,0 +1,516 @@
+- id: MS-AZ-003
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-key-vault]
+  severity: high
+  question: Do production key vaults have purge protection turned on, so deleted keys and secrets can't be permanently destroyed before the retention period ends?
+  why: >-
+    Without purge protection, an attacker or a mistake can delete a vault and purge it straight away,
+    permanently destroying the keys that encrypt your data and the secrets your applications need to
+    run.
+  yesLooksLike: >-
+    Every production key vault and managed HSM has soft delete and purge protection on, with a
+    retention period long enough to notice a deletion and recover (90 days by default).
+  remediation: >-
+    Turn on purge protection for each production vault (it can't be turned off again, so deleted
+    vault names stay reserved until the retention period ends), and assign the built-in Azure Policy
+    definition that audits key vaults without deletion protection at management group scope.
+  effort: S
+  licence: []
+  sources: [ms-kv-soft-delete, ms-kv-secure]
+  refs:
+    - { framework: cis-azure, ref: "8.3.5" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: DP-8 }
+
+- id: MS-AZ-005
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-workloads]
+  severity: high
+  question: Are Azure Backup vaults protecting crown-jewel workloads set to locked immutability with always-on soft delete, so not even backup administrators can delete recovery points early?
+  why: >-
+    Attackers with subscription access disable backups and delete recovery points before encrypting VMs
+    and databases. Locked immutability stops any one compromised account, even a backup administrator,
+    from destroying your recovery path.
+  yesLooksLike: >-
+    Production Recovery Services and Backup vaults have immutability enabled and locked and enhanced
+    soft delete set to always-on, so no account can delete recovery points or shorten their retention
+    before they expire.
+  remediation: >-
+    Enable and lock vault immutability and turn on always-on soft delete. Also deploy Resource Guard in
+    a separate subscription or tenant with its own administrators, link it to vaults for multi-user
+    authorisation, and configure backup alerts.
+  effort: M
+  licence: []
+  sources: [ms-azure-backup-immutable, ms-azure-backup-mua]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-2 }
+    - { framework: mcsb, ref: BR-3 }
+  e8:
+    - { strategy: regular-backups, level: 3 }
+
+- id: MS-AZ-006
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-key-vault, ms-azure-workloads, ms-azure-subscriptions]
+  severity: high
+  question: Are storage accounts, databases, key vaults and other PaaS data services closed to public network access, reachable only through private endpoints or allow-listed networks?
+  why: >-
+    A database, storage account or key vault that accepts connections from the whole internet is only
+    one leaked key, weak password or unpatched flaw away from a breach, and attackers scan Azure
+    address ranges for exactly these endpoints.
+  yesLooksLike: >-
+    Storage accounts, Azure SQL, Cosmos DB, PostgreSQL and MySQL servers, key vaults, Azure AI Search
+    services and Foundry resources holding sensitive data have public network access disabled and use
+    private endpoints, or allow only named virtual networks and IP addresses with a default action of
+    Deny; no SQL firewall rule allows 0.0.0.0 to 255.255.255.255; and "Allow Azure services and
+    resources to access this server" is off unless documented.
+  remediation: >-
+    Create private endpoints for production data services and disable public network access, or set
+    the networking default action to Deny with only required virtual networks and IP ranges allowed;
+    remove broad SQL firewall rules; and assign the built-in Azure Policy definitions that audit or
+    deny public network access at management group scope.
+  effort: M
+  licence: []
+  sources: [ms-storage-network, ms-private-endpoint, ms-azure-sql-firewall, ms-kv-secure, ms-foundry-vnets]
+  refs:
+    - { framework: cis-azure, ref: "9.3.2.1" }
+    - { framework: cis-azure, ref: "9.3.2.2" }
+    - { framework: cis-azure, ref: "9.3.2.3" }
+    - { framework: cis-azure, ref: "8.3.7" }
+    - { framework: cis-azure, ref: "8.3.8" }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Infrastructure VI }
+
+- id: MS-AZ-012
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: critical
+  question: Is anonymous blob access disallowed on every storage account?
+  why: >-
+    A container set to anonymous access lets anyone on the internet who finds or guesses its address
+    list and download every file in it, with no sign-in and nothing in your identity logs. Public
+    containers are among the most common causes of cloud data breaches.
+  yesLooksLike: >-
+    Every storage account has "Allow Blob anonymous access" set to Disabled, so no container can be
+    made public. Content meant for the public is served through a CDN or web app instead.
+  remediation: >-
+    Use the Azure Resource Graph query or the Defender for Cloud recommendation to find storage
+    accounts that allow anonymous access, check which containers are actually public, move any
+    genuinely public content behind a CDN or web app, set "Allow Blob anonymous access" to Disabled,
+    and assign the built-in policy that denies anonymous blob access at management group scope.
+  effort: S
+  licence: []
+  sources: [ms-storage-anon]
+  refs:
+    - { framework: cis-azure, ref: "9.3.8" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: MS-AZ-013
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: high
+  question: Is Shared Key (account key) authorisation disallowed on storage accounts holding sensitive data, so every request is authorised through Microsoft Entra ID?
+  why: >-
+    A storage account key gives full control of every container, file share, queue and table in the
+    account, and SAS tokens signed with it work for anyone who holds the link. Keys bypass MFA and
+    Conditional Access, and requests made with them aren't tied to a person in the logs.
+  yesLooksLike: >-
+    "Allow storage account key access" is Disabled on every storage account holding sensitive data,
+    and applications, people and partners use Microsoft Entra identities with data-plane roles or user
+    delegation SAS.
+  remediation: >-
+    Use Azure Monitor metrics or storage logs to find clients still using Shared Key or account SAS,
+    move them to managed identities and Storage Blob Data or Storage File Data roles, replace account
+    SAS with user delegation SAS, then set "Allow storage account key access" to Disabled and enforce
+    it with Azure Policy. Turn on "Default to Microsoft Entra authorization in the Azure portal" so the
+    portal stops using keys, and rotate keys regularly on any account that still needs them while you
+    move.
+  effort: M
+  licence: []
+  sources: [ms-storage-shared-key, ms-storage-portal-entra-auth]
+  refs:
+    - { framework: cis-azure, ref: "9.3.1.3" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: MS-AZ-014
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-workloads]
+  severity: low
+  question: Do Azure storage accounts, databases and web apps refuse unencrypted connections, with TLS 1.2 or later as the minimum wherever you can set it?
+  why: >-
+    Data sent over plain HTTP or an old TLS version can be read or altered on the way, including the
+    credentials and tokens in each request. Older resources often still carry permissive settings from
+    before secure defaults existed.
+  yesLooksLike: >-
+    "Secure transfer required" is on for every storage account; App Service and Functions apps have
+    HTTPS Only on; PostgreSQL and MySQL flexible servers require encrypted connections; and wherever a
+    minimum TLS version can be set (storage, Azure SQL, Cosmos DB, MySQL, App Service), it is 1.2 or
+    later.
+  remediation: >-
+    Use Defender for Cloud recommendations or Azure Policy results to find resources that allow
+    HTTP or TLS below 1.2, turn on "Secure transfer required", require secure transport on PostgreSQL
+    and MySQL, set HTTPS Only and the minimum TLS version in each app's configuration, set the minimum
+    TLS version to 1.2 on SQL servers, and assign the matching policies with the Deny effect.
+  effort: S
+  licence: []
+  sources: [ms-storage-secure-transfer, ms-storage-min-tls, ms-azure-sql-connectivity, ms-app-service-configure]
+  refs:
+    - { framework: cis-azure, ref: "9.3.4" }
+    - { framework: cis-azure, ref: "9.3.6" }
+    - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: mcsb, ref: DP-3 }
+    - { framework: idcf, ref: Movement }
+
+- id: MS-AZ-015
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: high
+  question: Can deleted or overwritten data in crown-jewel storage accounts be recovered, with blob soft delete, container soft delete, versioning and file share soft delete turned on?
+  why: >-
+    Ransomware and malicious insiders delete or overwrite storage data directly through the storage
+    APIs. Without soft delete and versioning, anything removed or encrypted that way is gone the moment
+    it happens.
+  yesLooksLike: >-
+    Storage accounts holding crown-jewel data have blob soft delete, container soft delete and blob
+    versioning on, with retention long enough to notice an incident, and Azure Files shares have soft
+    delete on.
+  remediation: >-
+    In each storage account's Data protection settings, turn on soft delete for blobs and containers,
+    versioning for blobs (with a lifecycle rule to control cost) and soft delete for file shares, and
+    set a retention period that suits your detection time (for example 14 days or more). For the most
+    critical data, add a time-based immutability policy or Azure Backup vaulted backup.
+  effort: S
+  licence: []
+  sources: [ms-storage-data-protection, ms-files-soft-delete, ms-storage-immutable]
+  refs:
+    - { framework: cis-azure, ref: "9.1.1" }
+    - { framework: cis-azure, ref: "9.2.1" }
+    - { framework: cis-azure, ref: "9.2.2" }
+    - { framework: cis-azure, ref: "9.2.3" }
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-1 }
+    - { framework: mcsb, ref: BR-2 }
+
+- id: MS-AZ-016
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-key-vault]
+  severity: medium
+  question: Do keys and secrets in production key vaults have expiry dates and a rotation schedule, with alerts before they expire?
+  why: >-
+    A secret that never changes stays useful to whoever copied it, for as long as they like. Expiry
+    dates and rotation shrink that window, and near-expiry alerts stop rotation turning into an outage.
+  yesLooksLike: >-
+    Keys and secrets in production vaults carry expiration dates; keys have a rotation policy (at most
+    every two years, sooner for high-value keys); secrets such as passwords and API keys are rotated on
+    a schedule, automatically where the service supports it; and near-expiry events reach an owner.
+  remediation: >-
+    Set a key rotation policy with automatic rotation and an expiry time on each key, add expiration
+    dates to secrets, automate secret rotation with Event Grid and Azure Functions or the service's own
+    rotation, subscribe owners to near-expiry events, and assign the Key Vault policies that audit keys
+    and secrets without an expiration date.
+  effort: M
+  licence: []
+  sources: [ms-kv-key-rotation, ms-kv-secure]
+  refs:
+    - { framework: cis-azure, ref: "8.3.1" }
+    - { framework: cis-azure, ref: "8.3.2" }
+    - { framework: cis-azure, ref: "8.3.3" }
+    - { framework: cis-azure, ref: "8.3.4" }
+    - { framework: cis-azure, ref: "8.3.9" }
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: mcsb, ref: DP-6 }
+
+- id: MS-AZ-017
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: high
+  question: Do Azure SQL, Cosmos DB and other Azure databases accept only Microsoft Entra authentication, with SQL logins, local passwords and account keys disabled?
+  why: >-
+    SQL logins, local database passwords and Cosmos DB account keys are shared secrets that skip MFA
+    and Conditional Access and often sit in connection strings. Anyone who finds one can connect as a
+    database administrator, and the logs won't show who it was.
+  yesLooksLike: >-
+    Azure SQL servers and managed instances have Microsoft Entra-only authentication turned on;
+    PostgreSQL flexible servers allow Microsoft Entra authentication only and MySQL flexible servers
+    are set to "Microsoft Entra authentication only"; Cosmos DB for NoSQL accounts have key-based
+    authentication disabled (disableLocalAuth) and use data-plane RBAC; and an Entra group, not a
+    person, is the database administrator. Cosmos DB APIs that don't support Entra authentication count
+    as Partial.
+  remediation: >-
+    Set a Microsoft Entra group as administrator on each server, move applications to managed
+    identities and people to Entra accounts, then turn on Microsoft Entra-only authentication for
+    Azure SQL, switch PostgreSQL and MySQL to Microsoft Entra authentication only, disable key-based
+    authentication on Cosmos DB, and enforce these with Azure Policy.
+  effort: L
+  licence: []
+  sources: [ms-azure-sql-entra-only, ms-cosmos-entra-rbac, ms-postgres-entra, ms-mysql-entra]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: mcsb, ref: IM-1 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: MS-AZ-018
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-workloads, ms-backups]
+  severity: high
+  question: Are crown-jewel Azure VMs, databases, file shares and blob data backed up to match business continuity needs, in backups that ordinary users and application identities can't change or delete?
+  why: >-
+    Replication and high availability copy deletions and encryption as faithfully as good data. Only
+    backups kept apart from the systems they protect, for long enough, get a business running again
+    after ransomware, a destructive attacker or a bad change.
+  yesLooksLike: >-
+    Every crown-jewel VM, database, file share and blob store is covered by Azure Backup or the
+    service's own backups (for example Azure SQL point-in-time restore and long-term retention, or
+    Cosmos DB continuous backup), with retention set from business continuity needs; systems that
+    depend on each other are backed up so they can be restored to the same point in time; backups sit
+    in a Recovery Services or Backup vault or the service's own backup storage, separate from the data,
+    with geo-redundancy where continuity plans need it; and ordinary users and application identities
+    hold no role on the vaults, so they can't read, restore, change or delete backups.
+  remediation: >-
+    List crown-jewel workloads and their recovery point and recovery time objectives, protect VMs, SQL
+    in VMs, Azure Files and blobs with Azure Backup policies, configure long-term retention for Azure
+    SQL and continuous backup for Cosmos DB, keep geo-redundant storage on vaults that need it, use
+    Resiliency in the Azure portal to find unprotected resources, and limit vault roles to backup
+    administrators.
+  effort: M
+  licence: []
+  sources: [ms-azure-backup-overview, ms-azure-sql-backups, ms-e8-backups, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: mcsb, ref: BR-1 }
+    - { framework: mcsb, ref: BR-2 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: MS-AZ-019
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: medium
+  question: Does Defender for Cloud's sensitive data discovery scan your storage accounts and databases, so you know which ones hold sensitive data?
+  why: >-
+    You can't prioritise protection for data you don't know you have. Exports, test copies and
+    forgotten storage accounts often hold customer records that nobody has classified, and these are
+    the stores attackers find first.
+  yesLooksLike: >-
+    The sensitive data discovery extension of the Defender CSPM plan is on for production subscriptions
+    (the same extension in Defender for Storage covers storage accounts only, not databases), the Data
+    and AI security dashboard and cloud security explorer show which storage accounts and databases hold
+    sensitive information types or Purview labels, and those resources are recorded as crown jewels or
+    critical assets.
+  remediation: >-
+    Turn on Defender CSPM with the sensitive data discovery extension for production subscriptions,
+    review the Data and AI security dashboard for stores holding sensitive data, mark them as critical
+    assets, and fix exposure on them first. Align sensitive information types with your Microsoft
+    Purview classification.
+  effort: S
+  licence: [defender-cspm]
+  sources: [ms-mdc-dspm, ms-mdc-data-ai-dashboard, ms-mdc-cspm]
+  refs:
+    - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: mcsb, ref: DP-1 }
+    - { framework: ms-zero-trust, ref: Data I }
+    - { framework: idcf, ref: Risk assessment }
+
+- id: MS-AZ-037
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-key-vault]
+  severity: high
+  question: Do production key vaults use the Azure RBAC permission model, with read access to secrets and keys granted only to the workloads and few people that need it?
+  why: >-
+    Whoever can read a vault's secrets can use every database password, API key and certificate in it.
+    Vault access policies are hard to audit and let anyone who can manage the vault grant themselves
+    access, and broad roles assigned high in the hierarchy quietly open every vault at once.
+  yesLooksLike: >-
+    Production vaults use the Azure RBAC permission model rather than vault access policies; each
+    application's managed identity holds Key Vault Secrets User, Crypto User or a similar data-plane role
+    on its own vault or secret; and Key Vault Administrator, Secrets Officer and other broad data-plane
+    roles are held by a few named people, never by everyone with Contributor or at subscription or
+    management group scope.
+  remediation: >-
+    Inventory each vault's access policies, map them to built-in Key Vault data-plane roles, switch the
+    vault to the Azure RBAC permission model, assign roles at vault or secret scope, remove broad
+    data-plane role assignments at subscription and management group scope, and use Azure Policy to
+    audit vaults that still use access policies.
+  effort: M
+  licence: []
+  sources: [ms-kv-rbac, ms-kv-rbac-migration, ms-kv-secure]
+  refs:
+    - { framework: cis-azure, ref: "8.3.6" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: DP-8 }
+    - { framework: mcsb, ref: PA-7 }
+    - { framework: ms-zero-trust, ref: Data III }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: MS-AZ-038
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-key-vault, ms-azure-workloads, ms-azure-data-stores]
+  severity: high
+  question: Are passwords, keys and connection strings kept out of app settings, VM custom data and deployment templates, with applications reading them from Key Vault instead?
+  why: >-
+    Anyone with read access to an app's configuration, a VM's settings or a subscription's deployments
+    can see secrets stored there in plain text, and so can an attacker who compromises one of those
+    accounts. A connection string in an app setting is often the shortest path from a minor foothold
+    to your database.
+  yesLooksLike: >-
+    App Service, Functions and Logic Apps settings and connection strings hold Key Vault references
+    rather than secret values; VM custom data, extension settings and ARM or Bicep templates and their
+    parameters contain no passwords or keys; and, if you run Defender CSPM or Defender for Servers Plan
+    2, its secrets findings for VMs and Azure Resource Manager deployments are resolved.
+  remediation: >-
+    Move secrets into Key Vault and replace app settings with @Microsoft.KeyVault references read
+    through the app's managed identity, pass secrets to templates as secure parameters or Key Vault
+    references, stop putting credentials in VM custom data, rotate every secret that was ever stored in
+    these places, review Defender for Cloud's secrets recommendations, and turn on secret scanning in
+    your source control.
+  effort: M
+  licence: []
+  sources: [ms-app-service-kv-references, ms-vm-custom-data, ms-mdc-secrets-scanning, ms-mdc-secrets-deployments]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: mcsb, ref: DP-6 }
+
+- id: MS-AZ-039
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-workloads, ms-backups]
+  severity: medium
+  question: Have you restored crown-jewel Azure VMs, databases and storage from backup to a common point in time within the last 12 months, as part of a disaster recovery exercise?
+  why: >-
+    Untested backups fail at the worst moment: missing disks, expired keys, databases that don't match
+    the application, or restores that take far longer than the business can wait. A test proves you
+    can meet the recovery time the business expects.
+  yesLooksLike: >-
+    At least annually, a documented exercise restores representative crown-jewel VMs, databases, file
+    shares and blob data, to a separate resource group or subscription, to the same point in time,
+    checks the restored application works, records how long it took against the recovery time
+    objective, and fixes the gaps found.
+  remediation: >-
+    Schedule a disaster recovery exercise that restores a crown-jewel application from Azure Backup and
+    the database's point-in-time restore into an isolated resource group, time it against your recovery
+    objectives, record the result, and add the test to your business continuity plan.
+  effort: S
+  licence: []
+  sources: [ms-azure-backup-overview, ms-azure-sql-backups, ms-e8-backups, asd-e8-maturity-model]
+  refs:
+    - { framework: nist-csf-2, ref: RC.RP-03 }
+    - { framework: mcsb, ref: BR-4 }
+  e8:
+    - { strategy: regular-backups, level: 1 }
+
+- id: MS-AZ-040
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores]
+  severity: medium
+  question: Do storage accounts holding sensitive data have a SAS expiration policy that blocks long-lived shared access signatures?
+  why: >-
+    A shared access signature is a link that works for anyone who has it until it expires. Links
+    created for a partner or a script with an expiry years away end up in emails, tickets and code,
+    and nothing in the request shows who is using them.
+  yesLooksLike: >-
+    Storage accounts holding sensitive data have a SAS expiration policy with the action set to Block
+    and a short maximum interval (hours or days, not months), and links shared with people or partners
+    are user delegation SAS signed with Microsoft Entra credentials.
+  remediation: >-
+    Configure a SAS expiration policy on each storage account, start with the Log action and review
+    the SasExpiryStatus entries in the storage logs to find long-lived links, then switch to Block;
+    replace account and service SAS with user delegation SAS, and keep a plan to revoke links if one
+    leaks.
+  effort: S
+  licence: []
+  sources: [ms-storage-sas-expiration, ms-storage-sas-overview]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ms-zero-trust, ref: Data III }
+
+- id: MS-AZ-041
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-workloads, ms-azure-data-stores]
+  severity: high
+  question: Are managed disks and snapshots blocked from being exported over the public internet, with no VM images shared in community galleries?
+  why: >-
+    A disk or snapshot is a complete copy of a server, including its data, cached credentials and
+    configuration secrets. Anyone with the right role can generate a download link that works from
+    anywhere, and an image shared to a community gallery is visible to every Azure customer.
+  yesLooksLike: >-
+    Managed disks and snapshots have public network access disabled and either a network access policy
+    of DenyAll or exports allowed only through Private Link with a disk access resource; the built-in
+    policy that disables public network access for managed disks is assigned; and no Azure Compute
+    Gallery holding your images is shared as a community gallery.
+  remediation: >-
+    Assign the built-in "Configure managed disks to disable public network access" policy, set the
+    network access policy to DenyAll on existing disks and snapshots (or use Private Link with a disk
+    access resource where exports are needed), limit the roles that can generate disk and snapshot
+    export links with a custom role, and stop community sharing on any gallery that holds internal
+    images.
+  effort: S
+  licence: []
+  sources: [ms-disks-restrict-export, ms-disks-private-link, ms-gallery-community]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Data IV }
+
+- id: MS-AZ-042
+  module: azure
+  domain: azure-data
+  appliesTo: [ms-azure-data-stores, ms-azure-key-vault]
+  severity: medium
+  question: Are your most sensitive storage accounts and key vaults inside a network security perimeter in enforced mode, with cross-tenant object replication disallowed, so their data can't be sent outside your organisation?
+  why: >-
+    Network rules on each resource stop strangers getting in, but not data being pushed out to an
+    attacker's own storage or replicated to another tenant. A perimeter around your most sensitive
+    data services is the cloud equivalent of approving what leaves the building.
+  yesLooksLike: >-
+    Storage accounts and key vaults holding your most sensitive data are associated with a network
+    security perimeter in Enforced mode, with inbound and outbound access rules only for named
+    networks, subscriptions and destinations; "Allow cross-tenant replication" is off on every storage
+    account; and perimeter access logs go to your central workspace.
+  remediation: >-
+    Create a network security perimeter, associate your most sensitive storage accounts and key vaults
+    in Transition mode, review the access logs to build inbound and outbound rules, then switch to
+    Enforced mode. Turn off cross-tenant replication on existing storage accounts (it's off by
+    default for accounts created since December 2023) and use Azure Policy to audit that it stays off.
+  effort: L
+  licence: []
+  sources: [ms-network-security-perimeter, ms-storage-cross-tenant-replication]
+  refs:
+    - { framework: cis-azure, ref: "7.16" }
+    - { framework: cis-azure, ref: "9.3.7" }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: NS-2 }
+    - { framework: ms-zero-trust, ref: Data IV }
+    - { framework: idcf, ref: "DSL-4 Authorised person" }
