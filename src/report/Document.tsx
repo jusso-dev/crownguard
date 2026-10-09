@@ -1,5 +1,5 @@
 import { Circle, Document, Image, Line, Link, Page, Polygon, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { exposures } from "../content/schema";
 import { formatAbn, isValidAbn } from "../engine/abn";
 import { bandOf } from "../engine/risk";
@@ -42,14 +42,22 @@ const makeStyles = (theme: ReportModel["theme"]) =>
     p: { fontSize: 9, marginBottom: 6, lineHeight: 1.4 },
   });
 
-function Section({ s, title, lead, children, breakBefore = true }: { s: Styles; title: string; lead?: string; children: ReactNode; breakBefore?: boolean }) {
+/** The running header and footer, repeated on every page after the cover. */
+const Chrome = createContext<ReactNode>(null);
+
+/**
+ * Each section is its own Page rather than a break inside one long Page: react-pdf lays out everything after each
+ * page break again, so one Page for the whole report made rendering time grow with the square of its length.
+ */
+function Section({ s, title, lead, children }: { s: Styles; title: string; lead?: string; children: ReactNode }) {
   return (
-    <View break={breakBefore}>
+    <Page size="A4" style={s.page}>
+      {useContext(Chrome)}
       <Text style={s.h1} minPresenceAhead={80}>{title}</Text>
       <View style={s.rule} />
       {lead && <Text style={s.lead}>{lead}</Text>}
       {children}
-    </View>
+    </Page>
   );
 }
 
@@ -65,6 +73,20 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   const quickWins = model.roadmap.filter((r) => r.phase === "0–30 days").slice(0, 5);
   const unknownCount = model.questions.filter((q) => (model.answers[q.id] ?? "unknown") === "unknown").length;
   const tableProps = { headerBg: theme.tint, zebra: "#fafbfc" };
+  const chrome = (
+    <>
+      <View fixed style={{ position: "absolute", top: 20, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted }}>
+        <Text>{a.org.name}</Text>
+        <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
+        <Text>Crown-jewel risk assessment</Text>
+      </View>
+      <View fixed style={{ position: "absolute", bottom: 22, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted, borderTopWidth: 0.5, borderColor: line, paddingTop: 6 }}>
+        <Text>Generated {stampText(model.generatedAt)}</Text>
+        <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
+        <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+      </View>
+    </>
+  );
 
   return (
     <Document title={`${a.org.name} – Crown-jewel risk assessment`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="Crown-jewel risk assessment" creationDate={model.generatedAt}>
@@ -99,20 +121,9 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         <Text style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: 1.2 }}>{a.branding.marking}</Text>
       </Page>
 
-      <Page size="A4" style={s.page}>
-        <View fixed style={{ position: "absolute", top: 20, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted }}>
-          <Text>{a.org.name}</Text>
-          <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
-          <Text>Crown-jewel risk assessment</Text>
-        </View>
-        <View fixed style={{ position: "absolute", bottom: 22, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted, borderTopWidth: 0.5, borderColor: line, paddingTop: 6 }}>
-          <Text>Generated {stampText(model.generatedAt)}</Text>
-          <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
-        </View>
-
+      <Chrome.Provider value={chrome}>
         {/* About */}
-        <Section s={s} title="About this report" breakBefore={false}>
+        <Section s={s} title="About this report">
           <Text style={s.p}>
             This report assesses how well {a.org.name} protects its crown jewels in {andList(model.platformNames)}. It was
             prepared with crownguard, a guided self-assessment, from answers given by the organisation. It is not an audit or a
@@ -530,7 +541,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             </View>
           ))}
         </Section>
-      </Page>
+      </Chrome.Provider>
     </Document>
   );
 }
