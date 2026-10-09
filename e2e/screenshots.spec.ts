@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { answerSoc, pdfText } from "./journey";
+import { answerSoc, fillAiRegister, pdfText } from "./journey";
 
 /**
  * Refreshes the README screenshots in docs/screenshots. Not part of the normal suite:
@@ -73,36 +73,55 @@ test("README screenshots", async ({ page }) => {
   await shot(page, "05-soc-maturity");
   await next(page);
 
-  // 6. Review, and its SOC card
+  // 6. AI register (optional): the example entries plus one real use case, shown on the example agent.
+  await fillAiRegister(page);
+  await page.getByRole("navigation", { name: "AI use cases" }).getByRole("button", { name: /Grant application triage agent/ }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await shot(page, "06-ai-register");
+  // Element shots scroll the page, so keep the sticky header from covering them.
+  const unstick = await page.addStyleTag({ content: "header, nav[aria-label=Steps] { position: static !important; }" });
+  const card = (name: string) => page.locator("[data-ai-entry] > div").filter({ has: page.getByRole("heading", { name }) });
+  await card("What it can do and reach").screenshot({ path: join(OUT, "07-ai-reach.png"), animations: "disabled" });
+  await page.getByTestId("ai-gaps").screenshot({ path: join(OUT, "08-ai-readiness.png"), animations: "disabled" });
+  await unstick.evaluate((el) => (el as HTMLElement).remove());
+  await next(page);
+
+  // 7. Review, and its SOC and AI register cards
   await expect(page.getByRole("heading", { name: "Risk heatmap" })).toBeVisible();
-  await shot(page, "06-review");
-  await page.getByTestId("soc-card").screenshot({ path: join(OUT, "07-review-soc.png"), animations: "disabled" });
+  await shot(page, "09-review");
+  await page.getByTestId("soc-card").screenshot({ path: join(OUT, "10-review-soc.png"), animations: "disabled" });
+  await page.getByTestId("ai-card").screenshot({ path: join(OUT, "11-review-ai.png"), animations: "disabled" });
   await next(page);
 
-  // 7. Branding
+  // 8. Branding
   await page.getByLabel("Prepared by").fill("Alex Chen, IT Manager");
-  await shot(page, "08-branding");
+  await shot(page, "12-branding");
   await next(page);
 
-  // 8. Report: download the PDF and render its key pages.
-  await shot(page, "09-report");
+  // 9. Report: download the PDF and render its key pages.
+  await shot(page, "13-report");
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Generate PDF report" }).click();
   const pdfPath = join(OUT, "report.pdf");
   await (await download).saveAs(pdfPath);
   const pages = await pdfText(new Uint8Array(readFileSync(pdfPath)));
   const pageOf = (heading: string) => pages.findIndex((p) => p.includes(heading)) + 1;
+  const aiPage = pageOf("The organisation's AI use cases and agents");
   const wanted: [string, number][] = [
-    ["10-pdf-cover", 1],
-    ["11-pdf-about", pageOf("Standards and guidance assessed against")],
-    ["12-pdf-summary", pageOf("Executive summary")],
-    ["13-pdf-risk-register", pageOf("Risk register")],
-    ["14-pdf-roadmap", pageOf("Remediation roadmap")],
-    ["15-pdf-frameworks", pageOf("Framework alignment")],
+    ["14-pdf-cover", 1],
+    ["15-pdf-about", pageOf("Standards and guidance assessed against")],
+    ["16-pdf-summary", pageOf("Executive summary")],
+    ["17-pdf-risk-register", pageOf("Risk register")],
+    ["18-pdf-roadmap", pageOf("Remediation roadmap")],
+    ["19-pdf-frameworks", pageOf("Framework alignment")],
     // The page with the per-jewel Rule 2 checks, after the DSL tables.
-    ["16-pdf-idcf", pageOf("Under IDCF Rule 2")],
-    ["17-pdf-soc", pageOf("SOC maturity (indicative)")],
-    ["18-pdf-soc-priorities", pageOf("Priorities to reach target")],
+    ["20-pdf-idcf", pageOf("Under IDCF Rule 2")],
+    ["21-pdf-soc", pageOf("SOC maturity (indicative)")],
+    ["22-pdf-soc-priorities", pageOf("Priorities to reach target")],
+    ["23-pdf-ai-register", aiPage],
+    // The example agent's readiness card, on the page after the register table.
+    ["24-pdf-ai-use-case", aiPage + pages.slice(aiPage).findIndex((p) => p.includes("Fix:")) + 1],
+    ["25-pdf-ai-dates", pageOf("Where the sources are unclear")],
   ];
   for (const [name, p] of wanted) {
     if (p < 1) continue;
@@ -110,8 +129,8 @@ test("README screenshots", async ({ page }) => {
   }
   rmSync(pdfPath);
 
-  // 9. Phone
+  // 10. Phone
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /Controls/ }).click();
-  await shot(page, "19-mobile");
+  await shot(page, "26-mobile");
 });
