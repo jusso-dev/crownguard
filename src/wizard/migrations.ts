@@ -31,6 +31,15 @@ export const migrations: Migration[] = [
     // version moves so a build that predates them opens the file read-only instead of stripping them on save.
     up: (raw) => ({ ...raw, schemaVersion: 3 }),
   },
+  {
+    from: 3,
+    to: 4,
+    // Schema 4 records when the AI register was created and last shared with the DTA, who confirmed the worked-out
+    // dates, and which entries are parts of one general-purpose AI. All optional, and the register block is now loose
+    // as well as its entries, so later register fields travel through a re-save untouched and don't need another
+    // version bump: the version moves when a field changes meaning or becomes required, not when one is added.
+    up: (raw) => ({ ...raw, schemaVersion: 4 }),
+  },
 ];
 
 /**

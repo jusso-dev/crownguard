@@ -1,6 +1,7 @@
 import type { Catalogue } from "../content/schema";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns } from "./aiOptions";
-import { aiFieldLabels, aiRegisterSummary, type AiField } from "./aiRegister";
+import { aiFieldLabels, aiRegisterSummary, shareWithDta, type AiField } from "./aiRegister";
+import { isAgentic } from "./aiRegister";
 import { assessAll } from "./risk";
 import type { Assessment } from "./types";
 
@@ -35,6 +36,9 @@ const standardFields: AiField[] = [
 ];
 
 const extraHeaders = [
+  // The Standard has no type for an AI that takes actions, so crownguard adds one rather than hiding it in a note.
+  "Agent (takes actions)",
+  "Grouped under",
   "Example data",
   "Type of AI use",
   "Underpinning product",
@@ -48,9 +52,24 @@ const extraHeaders = [
   "Register fields missing",
 ];
 
+export interface RegisterOptions {
+  asAt?: Date;
+  /**
+   * Write the owner as one `Name <email>` column, which is how the Standard for accountability words it, instead of
+   * the two columns crownguard keeps for sorting.
+   */
+  ownerAsOneColumn?: boolean;
+}
+
+/** Basis label for a readiness question, so a reader can tell a binding requirement from best-practice guidance. */
+export const basisLabel = (basis?: string) =>
+  ({ "policy-must": "Policy: must", "standard-must": "AI technical standard: must", "addendum-must": "Agentic AI addendum: must", "addendum-should": "Agentic AI addendum: should" })[basis ?? ""] ?? "";
+
 /** The register as rows an agency can paste into its own: the Standard's fields first, in its order, then crownguard's. */
-export function registerTable(catalogue: Catalogue, assessment: Assessment, asAt = new Date()): RegisterTable {
+export function registerTable(catalogue: Catalogue, assessment: Assessment, opts: RegisterOptions = {}): RegisterTable {
+  const asAt = opts.asAt ?? new Date();
   const summary = aiRegisterSummary(catalogue, assessment, assessAll(catalogue, assessment), asAt);
+  const ownerFields: AiField[] = opts.ownerAsOneColumn ? ["ownerName"] : ["ownerName", "ownerEmail"];
   const rows = summary.entries.map((r) => {
     const e = r.entry;
     const standard: Record<AiField, string> = {
@@ -62,7 +81,7 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, asAt
       technicalStandard: e.technicalStandard ? aiStandardUse[e.technicalStandard] : "",
       domains: list(e.domains.map((d) => aiDomains[d])),
       usagePatterns: list(e.usagePatterns.map((u) => aiUsagePatterns[u])),
-      ownerName: e.ownerName,
+      ownerName: opts.ownerAsOneColumn ? `${e.ownerName} <${e.ownerEmail}>` : e.ownerName,
       ownerEmail: e.ownerEmail,
       criteria: list(e.criteria.map(criterionLabel)),
       inherentRisk: e.inherentRisk ? aiRiskRatings[e.inherentRisk] : "",
@@ -72,7 +91,9 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, asAt
       nextReview: e.inherentRisk === "high" ? (e.nextReview ?? "") : "",
     };
     return [
-      ...standardFields.map((f) => standard[f]),
+      ...standardFields.filter((f) => ownerFields.includes(f) || !["ownerName", "ownerEmail"].includes(f)).map((f) => standard[f]),
+      isAgentic(e) ? "Yes" : "No",
+      e.groupOf ?? "",
       e.example ? "Yes: example data, not a real use case" : "No",
       r.kind?.name ?? e.kind,
       e.product,
@@ -82,17 +103,21 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, asAt
       list(r.jewels.map((j) => j.jewel.name)),
       pct(r.score),
       `${r.answered} of ${r.questions.length}`,
-      list(r.gaps.map((g) => `${g.question.id} (${g.question.severity})`)),
+      list(r.gaps.map((g) => `${g.question.id} (${g.question.severity}${basisLabel(g.question.basis) ? `, ${basisLabel(g.question.basis)}` : ""})`)),
       list(r.missing.map((f) => aiFieldLabels[f])),
     ];
   });
-  return { headers: [...standardFields.map((f) => aiFieldLabels[f]), ...extraHeaders], rows, standardColumns: standardFields.length };
+  const headers = standardFields
+    .filter((f) => ownerFields.includes(f) || !["ownerName", "ownerEmail"].includes(f))
+    .map((f) => (opts.ownerAsOneColumn && f === "ownerName" ? "Owner (name and email)" : aiFieldLabels[f]));
+  return { headers: [...headers, ...extraHeaders], rows, standardColumns: headers.length };
 }
 
 const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 /** The "About" sheet: what the columns are, any example data, the dates and caveats, and the sources. */
-export function aboutRows(catalogue: Catalogue, assessment: Assessment, asAt = new Date()): string[][] {
+export function aboutRows(catalogue: Catalogue, assessment: Assessment, opts: RegisterOptions = {}): string[][] {
+  const asAt = opts.asAt ?? new Date();
   const module = catalogue.aiRegister;
   if (!module) return [];
   const { model } = module;
@@ -106,8 +131,16 @@ export function aboutRows(catalogue: Catalogue, assessment: Assessment, asAt = n
     ["Exported", `${asAt.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })} from crownguard, in the browser`],
     [
       "Columns",
-      "The first 16 columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording. The owner's name and email address are one field in the Standard and two columns here. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register.",
+      opts.ownerAsOneColumn
+        ? "The first 15 columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording, with the owner's name and email address in one column as the Standard words it. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register."
+        : "The first 16 columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording. The owner's name and email address are one field in the Standard and two columns here. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register.",
     ],
+    ...(assessment.aiRegister?.dateConfirmation
+      ? [["Key date", `The worked-out dates in this register were confirmed by ${assessment.aiRegister.dateConfirmation.by} on ${dayText(assessment.aiRegister.dateConfirmation.on)}.`]]
+      : []),
+    ...(shareWithDta(assessment, asAt).due
+      ? [["Key date", `Next share with the DTA due ${dayText(shareWithDta(assessment, asAt).due!)} (${shareWithDta(assessment, asAt).overdue ? "overdue" : "counted from " + (shareWithDta(assessment, asAt).basis === "shared" ? "the last share" : "the register's creation")}).`]]
+      : []),
     [
       "Example data",
       examples

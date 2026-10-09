@@ -11,7 +11,7 @@
       "const": 1
     },
     "schemaVersion": {
-      "default": 3,
+      "default": 4,
       "type": "integer",
       "minimum": 1,
       "maximum": 100000
@@ -646,6 +646,32 @@
     "aiRegister": {
       "type": "object",
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "lastSharedWithDta": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "dateConfirmation": {
+          "type": "object",
+          "properties": {
+            "by": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "on": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          "required": [
+            "by",
+            "on"
+          ],
+          "additionalProperties": {}
+        },
         "entries": {
           "maxItems": 200,
           "type": "array",
@@ -658,6 +684,10 @@
               },
               "example": {
                 "type": "boolean"
+              },
+              "groupOf": {
+                "type": "string",
+                "maxLength": 200
               },
               "kind": {
                 "type": "string",
@@ -874,7 +904,7 @@
               "answers",
               "notes"
             ],
-            "additionalProperties": false
+            "additionalProperties": {}
           }
         }
       },
@@ -935,7 +965,7 @@
     "updatedAt"
   ],
   "additionalProperties": {},
-  "$id": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v3.json",
+  "$id": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v4.json",
   "title": "crownguard assessment",
   "description": "A .crownguard.json file: one crown-jewel risk assessment saved from https://jusso-dev.github.io/crownguard/. Fields the app does not know about are allowed and are carried through a re-save unchanged."
 }

@@ -90,6 +90,8 @@ interface State {
   setNote: (questionId: string, note: string) => void;
   /** Turn the optional AI use-case register on or off. Turning it off keeps nothing. */
   setAiIncluded: (included: boolean) => void;
+  /** Register-level fields: when it was created, when it was last shared with the DTA, who confirmed the dates. */
+  updateAiRegister: (patch: Partial<NonNullable<Assessment["aiRegister"]>>) => void;
   /** The open AI register entry, so the step resumes on it. */
   setAiSection: (entryId: string) => void;
   /** Add an entry from a preset and open it. Returns its id. */
@@ -152,7 +154,13 @@ export const useStore = create<State>()(
             return { soc: { ...soc(a), targets: { ...a.soc?.targets, [domain]: target } } };
           }),
         setSocProvider: (provider) => update((a) => ({ soc: { ...soc(a), provider } })),
-        setAiIncluded: (included) => update((a) => ({ aiRegister: included ? (a.aiRegister ?? { entries: [] }) : undefined })),
+        setAiIncluded: (included) =>
+          update((a) => ({
+            // Turning the register on starts the DTA's six-monthly sharing clock, so the date it was created is
+            // recorded then and can be edited afterwards if the agency keeps its own.
+            aiRegister: included ? { createdAt: new Date().toISOString().slice(0, 10), ...a.aiRegister, entries: a.aiRegister?.entries ?? [] } : undefined,
+          })),
+        updateAiRegister: (patch) => update((a) => ({ aiRegister: { entries: a.aiRegister?.entries ?? [], ...a.aiRegister, ...patch } })),
         setAiSection: (aiSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection, layout: STEP_LAYOUT } })),
         addAiUseCase: (kind) => {
           const id = crypto.randomUUID();

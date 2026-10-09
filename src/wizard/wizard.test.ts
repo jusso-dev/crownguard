@@ -127,7 +127,9 @@ describe("AI register in the store", () => {
     const s = useStore.getState();
     s.reset();
     s.setAiIncluded(true);
-    expect(useStore.getState().assessment.aiRegister).toEqual({ entries: [] });
+    expect(useStore.getState().assessment.aiRegister).toMatchObject({ entries: [] });
+    // Turning it on starts the DTA six-monthly sharing clock.
+    expect(useStore.getState().assessment.aiRegister?.createdAt).toBe(new Date().toISOString().slice(0, 10));
     const id = s.addAiUseCase(kinds.find((k) => k.id === "m365-copilot")!);
     expect(useStore.getState().assessment.progress?.aiSection).toBe(id);
     s.updateAiUseCase(id, { ownerName: "Jo", criteria: ["c4"] });

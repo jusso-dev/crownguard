@@ -4,6 +4,7 @@ import { assessmentSchema } from "../wizard/assessmentSchema";
 import { fixtureAssessment } from "../report/fixture";
 import { exampleEntries } from "./aiExamples";
 import { aboutRows, registerTable, toCsv } from "./aiExport";
+import { addMonths, groupWarning, highRiskNotification, shareWithDta } from "./aiRegister";
 import { aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
 import { assessAll } from "./risk";
 import type { AiUseCase } from "./types";
@@ -169,22 +170,26 @@ describe("register export", () => {
   a.aiRegister = { entries: exampleEntries(a) };
 
   it("puts the Standard's fields first, in its order", () => {
-    const t = registerTable(catalogue, a, asAt);
+    const t = registerTable(catalogue, a, { asAt });
     expect(t.standardColumns).toBe(16);
     expect(t.headers.slice(0, 3)).toEqual(["Use case name", "Agency identifier (reference number)", "Description"]);
     expect(t.headers.indexOf("Domain")).toBeLessThan(t.headers.indexOf("Usage pattern"));
-    expect(t.headers[16]).toBe("Example data");
+    // The Standard's fields come first and crownguard's additions after them, agent column included.
+    expect(t.standardColumns).toBe(16);
+    expect(t.headers[16]).toBe("Agent (takes actions)");
+    expect(t.headers[17]).toBe("Grouped under");
+    expect(t.headers[18]).toBe("Example data");
     expect(t.rows).toHaveLength(3);
     for (const r of t.rows) expect(r).toHaveLength(t.headers.length);
-    expect(t.rows.every((r) => r[16].startsWith("Yes: example data"))).toBe(true);
+    expect(t.rows.every((r) => r[18].startsWith("Yes: example data"))).toBe(true);
   });
 
   it("only fills review dates for high-risk use cases", () => {
-    const t = registerTable(catalogue, a, asAt);
+    const t = registerTable(catalogue, a, { asAt });
     const last = t.headers.indexOf("Last date of review");
     expect(t.rows[1][last]).toBe("2026-08-14");
     a.aiRegister!.entries[1] = { ...a.aiRegister!.entries[1], inherentRisk: "medium" };
-    expect(registerTable(catalogue, a, asAt).rows[1][last]).toBe("");
+    expect(registerTable(catalogue, a, { asAt }).rows[1][last]).toBe("");
   });
 
   it("writes RFC 4180 CSV with a byte order mark and guards against formulas", () => {
@@ -195,11 +200,62 @@ describe("register export", () => {
   });
 
   it("explains the columns, examples, dates and sources in the About rows", () => {
-    const rows = aboutRows(catalogue, a, asAt);
+    const rows = aboutRows(catalogue, a, { asAt });
     const text = rows.map((r) => r.join(": ")).join("\n");
     expect(text).toContain("Standard for accountability");
     expect(text).toContain("3 example entries");
     expect(rows.filter((r) => r[0] === "Key date")).toHaveLength(module.model.dates.length);
     expect(rows.some((r) => r[0] === "Source" && r[1].includes("digital.gov.au"))).toBe(true);
+  });
+});
+
+const regEntry = (over: Record<string, unknown>) =>
+  ({ id: "e", kind: "ai-connector", name: "", reference: "", description: "", product: "", technology: [], domains: [], usagePatterns: [], ownerName: "", ownerEmail: "", criteria: [], data: [], jewels: [], answers: {}, notes: {}, ...over }) as never;
+
+describe("register dates", () => {
+  it("adds months in UTC, clamping to the last day of the month", () => {
+    expect(addMonths("2026-06-01", 6)).toBe("2026-12-01");
+    expect(addMonths("2027-08-31", 6)).toBe("2028-02-29");
+    expect(addMonths("2026-08-31", 6)).toBe("2027-02-28");
+    expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonths("2026-12-15", 6)).toBe("2027-06-15");
+  });
+
+  it("counts the six-monthly share from the register's creation until one is recorded", () => {
+    const a = { aiRegister: { entries: [], createdAt: "2026-06-01" } } as never;
+    expect(shareWithDta(a, new Date("2026-07-01T00:00:00Z"))).toMatchObject({ due: "2026-12-01", basis: "created", overdue: false, soon: false });
+    expect(shareWithDta(a, new Date("2026-11-20T00:00:00Z"))).toMatchObject({ due: "2026-12-01", soon: true });
+    expect(shareWithDta(a, new Date("2026-12-02T00:00:00Z"))).toMatchObject({ due: "2026-12-01", overdue: true });
+    // Once shared, the clock runs from the share.
+    const shared = { aiRegister: { entries: [], createdAt: "2026-06-01", lastSharedWithDta: "2026-12-01" } } as never;
+    expect(shareWithDta(shared, new Date("2026-12-02T00:00:00Z"))).toMatchObject({ due: "2027-06-01", basis: "shared", overdue: false });
+    // No creation date, no clock.
+    expect(shareWithDta({ aiRegister: { entries: [] } } as never).due).toBeUndefined();
+  });
+
+  it("assembles a high-risk notification from the entry, and sends nothing", () => {
+    const e = {
+      ...regEntry({}),
+      name: "Meeting note-taker",
+      product: "Example Notetaker",
+      description: "Joins Teams meetings and writes summaries.",
+      technology: ["generative-ai"],
+      inherentRisk: "high",
+      impactAssessmentDate: "2026-09-01",
+      data: ["personal", "sensitive"],
+    } as never;
+    const text = highRiskNotification(e);
+    expect(text).toContain("Type of AI: Generative AI — Example Notetaker.");
+    expect(text).toContain("Intended application: Joins Teams meetings and writes summaries.");
+    expect(text).toContain("inherent risk High");
+    expect(text).toContain("impact assessment dated 2026-09-01");
+    expect(text).toContain("Sensitivities: personal information, sensitive information.");
+  });
+
+  it("warns when one product is registered both on its own and as parts", () => {
+    const part = regEntry({ id: "a", name: "Copilot in Word", product: "Microsoft 365 Copilot", groupOf: "Microsoft 365 Copilot" });
+    const whole = regEntry({ id: "b", name: "Microsoft 365 Copilot", product: "Microsoft 365 Copilot" });
+    expect(groupWarning([part])).toBeUndefined();
+    expect(groupWarning([part, whole])).toMatch(/registered both on its own .* and as parts of one/);
   });
 });

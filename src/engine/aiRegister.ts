@@ -1,4 +1,5 @@
 import { severities, type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
+import { aiCriteria, aiRiskRatings, aiTechnologies } from "./aiOptions";
 import { activeQuestions, answerValue, effectiveAnswers, isGap, type JewelRisk } from "./risk";
 import type { AiUseCase, Answer, Assessment, CrownJewel } from "./types";
 
@@ -278,4 +279,82 @@ export function newUseCase(kind: AiKind, id: string): AiUseCase {
     answers: {},
     notes: {},
   };
+}
+
+/**
+ * Add whole months to a `YYYY-MM-DD` date, clamping to the last day of the target month. Computed in UTC so a date
+ * doesn't move when the file travels across time zones: 31 August plus six months is 28 or 29 February, never 2 March.
+ */
+export function addMonths(date: string, months: number): string {
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return date;
+  const first = new Date(Date.UTC(y, m - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${first.getUTCFullYear()}-${String(first.getUTCMonth() + 1).padStart(2, "0")}-${String(Math.min(d, lastDay)).padStart(2, "0")}`;
+}
+
+export interface ShareStatus {
+  /** When the next share with the DTA is due, once the register has a creation date. */
+  due?: string;
+  /** What the due date was counted from: the register's creation, or the last time it was shared. */
+  basis?: "created" | "shared";
+  overdue: boolean;
+  /** Due within 30 days, worth mentioning before it becomes late. */
+  soon: boolean;
+}
+
+/**
+ * When the register next has to go to the DTA. The policy says every six months "starting from when you create it",
+ * so the clock runs from the register's creation date until a share is recorded, and then from that share.
+ */
+export function shareWithDta(a: Assessment, asAt = new Date()): ShareStatus {
+  const r = a.aiRegister;
+  if (!r?.createdAt) return { overdue: false, soon: false };
+  const basis = r.lastSharedWithDta ? "shared" : "created";
+  const due = addMonths(r.lastSharedWithDta ?? r.createdAt, 6);
+  const days = Math.round((Date.parse(`${due}T00:00:00Z`) - Date.UTC(asAt.getUTCFullYear(), asAt.getUTCMonth(), asAt.getUTCDate())) / 86_400_000);
+  return { due, basis, overdue: days < 0, soon: days >= 0 && days <= 30 };
+}
+
+const sensibilities: { key: string; text: string }[] = [
+  { key: "personal", text: "personal information" },
+  { key: "sensitive", text: "sensitive information" },
+  { key: "classified", text: "security classified information" },
+  { key: "indigenous", text: "Indigenous data" },
+];
+
+/**
+ * The four things the Standard for accountability says a high-risk notification should contain, assembled from the
+ * entry's own fields so the accountable official has a draft. crownguard writes the text; it never sends anything.
+ */
+export function highRiskNotification(e: AiUseCase): string {
+  const sensitivities = sensibilities.filter((s) => e.data.includes(s.key as AiUseCase["data"][number])).map((s) => s.text);
+  return [
+    `Type of AI: ${e.technology.map((t) => aiTechnologies[t]).join(", ") || "not recorded"}${e.product ? ` — ${e.product}` : ""}.`,
+    `Intended application: ${e.description || e.name || "not recorded"}.`,
+    `How the risk rating was reached: inherent risk ${e.inherentRisk ? aiRiskRatings[e.inherentRisk] : "not recorded"}${
+      e.impactAssessmentDate ? `, impact assessment dated ${e.impactAssessmentDate}` : ", no impact assessment date recorded"
+    }.${e.criteria.length ? ` Appendix C criteria: ${e.criteria.map((c) => (c === "none" ? "none" : aiCriteria[c].split(":")[0])).join(", ")}.` : ""}`,
+    `Sensitivities: ${sensitivities.length ? sensitivities.join(", ") : "none recorded"}.`,
+  ].join("\n\n");
+}
+
+/**
+ * The DTA's Appendix B lets an agency register general-purpose AI such as Copilot as one use case at its highest risk,
+ * or as several with their own owners. Mixing the two for the same product is what it doesn't intend.
+ */
+export function groupWarning(entries: AiUseCase[]): string | undefined {
+  const byProduct = new Map<string, { parts: string[]; alone: string[] }>();
+  for (const e of entries) {
+    const key = (e.product || e.name).trim().toLowerCase();
+    if (!key) continue;
+    const s = byProduct.get(key) ?? { parts: [], alone: [] };
+    (e.groupOf ? s.parts : s.alone).push(e.name || e.id);
+    byProduct.set(key, s);
+  }
+  for (const [product, s] of byProduct) {
+    if (s.parts.length && s.alone.length)
+      return `${entries.find((e) => (e.product || e.name).trim().toLowerCase() === product)?.product || product} is registered both on its own (${s.alone.join(", ")}) and as parts of one (${s.parts.join(", ")}). The DTA's Appendix B allows either; pick one approach and use it consistently.`;
+  }
+  return undefined;
 }
