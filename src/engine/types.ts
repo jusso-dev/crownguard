@@ -1,5 +1,6 @@
 import type { ExposureId } from "../content/schema";
 import type { SocAnswer, SocProvider, SocTargets } from "./soc";
+import type { AiAccess, AiAutonomy, AiCriterion, AiDataKind, AiDomain, AiLifecycle, AiRiskRating, AiStandardUse, AiTechnology, AiUsagePattern } from "./aiOptions";
 
 export type Answer = "yes" | "partial" | "no" | "unknown" | "na";
 
@@ -105,10 +106,52 @@ export interface Assessment {
   imports?: ImportRecord[];
   /** Optional SOC maturity self-assessment; present when the user includes it. */
   soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
+  /** Optional AI use-case register; present when the user starts one. */
+  aiRegister?: { entries: AiUseCase[] };
   /** Where the user was, so a reload or an opened file resumes in the same place. `layout` is the step list version. */
-  progress?: { step: number; section?: string; socSection?: string; layout?: number };
+  progress?: { step: number; section?: string; socSection?: string; aiSection?: string; layout?: number };
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * One entry in the AI use-case register. The register fields follow the DTA's Standard for accountability; autonomy,
+ * access, data handled and linked crown jewels are crownguard's additions.
+ */
+export interface AiUseCase {
+  id: string;
+  /** Added by "Load example entries": labelled as example data everywhere it appears. */
+  example?: boolean;
+  /** Preset from content/ai-register/model.yaml, e.g. "m365-copilot". */
+  kind: string;
+  name: string;
+  /** Agency identifier (reference number). */
+  reference: string;
+  description: string;
+  /** The underpinning product's name, part of the description field in the Standard. */
+  product: string;
+  technology: AiTechnology[];
+  lifecycle?: AiLifecycle;
+  technicalStandard?: AiStandardUse;
+  domains: AiDomain[];
+  usagePatterns: AiUsagePattern[];
+  ownerName: string;
+  ownerEmail: string;
+  /** Appendix C criteria met. Empty means not yet worked out; ["none"] means none apply. */
+  criteria: AiCriterion[];
+  inherentRisk?: AiRiskRating;
+  residualRisk?: AiRiskRating;
+  /** YYYY-MM-DD dates. Review dates are register fields only for a high inherent risk. */
+  impactAssessmentDate?: string;
+  lastReview?: string;
+  nextReview?: string;
+  autonomy?: AiAutonomy;
+  access?: AiAccess;
+  data: AiDataKind[];
+  /** Crown jewel ids the AI can reach. */
+  jewels: string[];
+  answers: Record<string, Answer>;
+  notes: Record<string, string>;
 }
 
 export interface Branding {
