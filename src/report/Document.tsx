@@ -904,7 +904,7 @@ function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: St
       <Text style={s.h2} minPresenceAhead={80}>Key dates</Text>
       {r.model.dates.map((d) => (
         <View key={d.text} wrap={false} style={{ flexDirection: "row", gap: 8, marginBottom: 3 }}>
-          <Text style={{ width: 92, fontSize: 8.5, fontWeight: 600 }}>{d.date ? `${dayText(d.date)}${d.derived ? "*" : ""}` : "Recurring"}</Text>
+          <Text style={{ width: 92, fontSize: 8.5, fontWeight: 600 }}>{d.date ? `${dayText(d.date)}${d.derived ? "*" : ""}` : "Ongoing"}</Text>
           <Text style={{ flex: 1, fontSize: 8.5, lineHeight: 1.35 }}>{d.text}</Text>
         </View>
       ))}
