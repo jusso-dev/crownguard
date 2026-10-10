@@ -341,6 +341,7 @@ export function App() {
   const mode = modeOf(assessment);
   const steps = stepsFor(mode);
   const fileInput = useRef<HTMLInputElement>(null);
+  const header = useRef<HTMLElement>(null);
   const [notice, setNotice] = useState<Notice | undefined>(undefined);
   const [persisted] = useState(storageAvailable);
   const [ephemeral, setEphemeral] = useState(isEphemeralMode);
@@ -357,6 +358,18 @@ export function App() {
   useEnsurePlatforms(assessment.platforms);
 
   useDocumentTitle(screen, steps[step] ?? "Organisation", assessment.org.name);
+
+  // Focused elements scroll clear of the sticky header (WCAG 2.2 SC 2.4.11): the scroll margin on content (see
+  // index.css) matches the header's height, including when it wraps on a narrow screen.
+  useEffect(() => {
+    const el = header.current;
+    if (!el) return;
+    const set = () => document.documentElement.style.setProperty("--header-height", `${el.offsetHeight + 8}px`);
+    set();
+    const observer = new ResizeObserver(set);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Deep link: start the standalone register only when hydration finds no progress (ResumeCard asks otherwise).
   const linked = useRef(false);
@@ -611,7 +624,7 @@ export function App() {
       </a>
       <div id="step-announce" className="sr-only" aria-live="polite" aria-atomic="true" />
       <LegacyOriginBanner />
-      <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm [overflow-anchor:none]">
+      <header ref={header} className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm [overflow-anchor:none]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="h-7 w-7 shrink-0" />
@@ -650,7 +663,8 @@ export function App() {
           </div>
         </div>
         {notice && (
-          <div role={notice.kind === "error" ? "alert" : "status"} className={`border-t px-4 py-2 text-sm sm:px-6 ${noticeStyle[notice.kind]}`}>
+          // Keyed by kind so a change between error and status remounts the live region with its new role.
+          <div key={notice.kind} role={notice.kind === "error" ? "alert" : "status"} className={`border-t px-4 py-2 text-sm sm:px-6 ${noticeStyle[notice.kind]}`}>
             <div className="mx-auto flex max-w-6xl flex-wrap items-start gap-x-6 gap-y-2">
               <div className="min-w-0 flex-1">
                 <p>{notice.text}</p>

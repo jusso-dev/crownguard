@@ -244,8 +244,8 @@ function ExportHow() {
             <li>
               In PowerShell with the Microsoft Graph module signed in (<span className={mono}>Connect-MgGraph -Scopes &quot;Directory.Read.All&quot;</span>),
               export the consent grants and the apps behind them:
-              <pre className={`${mono} mt-1.5 overflow-x-auto whitespace-pre`}>{GRANTS_CMD}</pre>
-              <pre className={`${mono} mt-1.5 overflow-x-auto whitespace-pre`}>{SERVICE_PRINCIPALS_CMD}</pre>
+              <pre className={`${mono} mt-1.5 overflow-x-auto whitespace-pre`} tabIndex={0}>{GRANTS_CMD}</pre>
+              <pre className={`${mono} mt-1.5 overflow-x-auto whitespace-pre`} tabIndex={0}>{SERVICE_PRINCIPALS_CMD}</pre>
             </li>
             <li>
               Pick both JSON files here together (crownguard joins the grants to their app names). One file containing both arrays works too —

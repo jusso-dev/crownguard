@@ -15,7 +15,7 @@ import {
   type Regulation,
 } from "../../engine/types";
 import { useStore } from "../store";
-import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, StepHeader } from "../ui";
+import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, radioKeys, radioTab, StepHeader } from "../ui";
 
 export const tierLabels: Record<Tier, string> = {
   identity: "Identity plane",
@@ -185,13 +185,19 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
         {(["confidentiality", "integrity", "availability"] as const).map((k) => (
           <fieldset key={k}>
             <legend className="text-sm font-medium capitalize text-ink">{k} impact</legend>
-            <div className="mt-1.5 flex overflow-hidden rounded-[var(--radius-control)] border border-field bg-surface" role="radiogroup">
+            <div
+              className="mt-1.5 flex overflow-hidden rounded-[var(--radius-control)] border border-field bg-surface"
+              role="radiogroup"
+              aria-label={`${k} impact`}
+              onKeyDown={radioKeys}
+            >
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   role="radio"
                   aria-checked={j[k] === n}
+                  tabIndex={radioTab(j[k] === n, n - 1, true)}
                   aria-label={`${k} ${n} ${impactLabels[n - 1]}`}
                   title={impactLabels[n - 1]}
                   onClick={() => set({ [k]: n as ImpactRating })}

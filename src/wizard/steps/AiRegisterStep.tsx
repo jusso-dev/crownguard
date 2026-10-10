@@ -35,7 +35,7 @@ import { NOTE_MAX } from "../assessmentSchema";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore, modeOf } from "../store";
-import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
+import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
 import { buildXlsx } from "../xlsx";
 
 const ADD = "add";
@@ -183,11 +183,11 @@ export function AiRegisterStep() {
           next={entries[index + 1]?.entry}
           onNext={(id) => {
             setActive(id);
-            requestAnimationFrame(() => heading.current?.focus());
+            focusHeading(heading);
           }}
         />
       ) : (
-        <AddPanel kinds={model.kinds} onAdded={() => requestAnimationFrame(() => heading.current?.focus())} />
+        <AddPanel kinds={model.kinds} onAdded={() => focusHeading(heading)} />
       )}
 
       <Exports />
@@ -266,7 +266,7 @@ function KeyDates() {
     <>
       {reg && (
         <Card className="mt-4" data-testid="ai-register-dates">
-          <h3 className="font-sans text-lg font-semibold tracking-normal">Register dates</h3>
+          <h2 className="font-sans text-lg font-semibold tracking-normal">Register dates</h2>
           <p className="mt-1 max-w-[68ch] text-sm text-ink-2">
             The DTA counts the register&apos;s six-monthly sharing from the date it was created. Record that date and when you
             last shared the register, and note who confirmed the dates marked * below: crownguard works those out from the

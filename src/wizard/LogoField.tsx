@@ -72,7 +72,7 @@ export function LogoField({ testId }: { testId: string }) {
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
           data-testid={testId}
           aria-invalid={error ? true : undefined}
-          className="min-w-0 max-w-full text-sm text-ink-2 file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-[var(--radius-control)] file:border file:border-solid file:border-rule-2 file:bg-surface file:px-3.5 file:py-1.5 file:text-sm file:font-medium file:text-ink file:transition-colors [@media(hover:hover)]:file:hover:bg-sunken"
+          className="min-w-0 max-w-full text-sm text-ink-2 file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-[var(--radius-control)] file:border file:border-solid file:border-field file:bg-surface file:px-3.5 file:py-1.5 file:text-sm file:font-medium file:text-ink file:transition-colors [@media(hover:hover)]:file:hover:bg-sunken"
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void onFile(f);

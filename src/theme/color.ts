@@ -8,6 +8,37 @@ export function fromHex(hex: string): RGB {
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as RGB;
 }
 
+/**
+ * Parse "oklch(L C H)" — the form the design tokens in `src/index.css` use — to sRGB 0–255. L can be a percentage
+ * ("98.5%") or a fraction (0.985). Out-of-gamut colours are clipped per channel, as the browser paints them.
+ */
+export function parseOklch(input: string): RGB {
+  const m = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)(deg)?\s*\)$/i.exec(input.trim());
+  if (!m) throw new Error(`not an oklch() colour: ${input}`);
+  const rawL = parseFloat(m[1]);
+  const L = m[2] === "%" || rawL > 1 ? rawL / 100 : rawL;
+  const C = parseFloat(m[3]);
+  const H = parseFloat(m[4]);
+  const rad = (H * Math.PI) / 180;
+  const a = C * Math.cos(rad);
+  const b = C * Math.sin(rad);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m3 = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const encode = (c: number) => {
+    const v = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
+    return Math.round(Math.min(1, Math.max(0, v)) * 255);
+  };
+  return [
+    encode(4.0767416621 * l - 3.3077115913 * m3 + 0.2309699292 * s),
+    encode(-1.2684380046 * l + 2.6097574011 * m3 - 0.3413193965 * s),
+    encode(-0.0041960863 * l - 0.7034186147 * m3 + 1.707614701 * s),
+  ];
+}
+
+/** An oklch() design token as hex, for `contrast` and friends. */
+export const oklchToHex = (input: string) => toHex(parseOklch(input));
+
 function luminance([r, g, b]: RGB): number {
   const lin = (c: number) => {
     const s = c / 255;
