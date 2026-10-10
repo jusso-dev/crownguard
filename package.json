@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "typecheck": "tsc",
     "validate:content": "tsx scripts/validate-content.ts",
+    "cg": "tsx src/cli/index.ts",
     "ism:build": "tsx scripts/ism/build.ts",
     "watch:sources": "tsx scripts/watch/index.ts",
     "watch:apply": "tsx scripts/watch/apply-cli.ts"

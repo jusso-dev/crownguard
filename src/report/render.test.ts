@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
-import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
@@ -9,20 +8,14 @@ import type { SocAnswer } from "../engine/soc";
 import { exampleEntries } from "../engine/aiExamples";
 import { AiRegisterDocument, ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
-import { registerFonts } from "./fonts";
+import { registerFontsFromDisk } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";
 import type { Assessment } from "../engine/types";
 import { emptyAssessment } from "../wizard/store";
 
 beforeAll(() => {
-  // In the browser fonts load by URL; in Node point at the files on disk.
-  const dir = join(import.meta.dirname, "fonts");
-  registerFonts({
-    regular: join(dir, "Inter_400Regular.ttf"),
-    italic: join(dir, "Inter_400Regular_Italic.ttf"),
-    semibold: join(dir, "Inter_600SemiBold.ttf"),
-    bold: join(dir, "Inter_700Bold.ttf"),
-  });
+  // Browser path uses asset URLs in generate.ts; Node/tests share registerFontsFromDisk.
+  registerFontsFromDisk();
 });
 
 const pdfText = async (assessment: ReturnType<typeof fixtureAssessment>) => {

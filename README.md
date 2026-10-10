@@ -282,6 +282,19 @@ because GitHub Pages can't send custom headers; on a host that can, also send th
 Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account,
 so for sensitive assessments prefer **Save file**, a private window, or self-hosting on your own domain.
 
+### Headless use
+
+For consulting workflows, CI, or agents — validate, import scans, score, render PDFs and export the AI register from
+Node with no browser and no network:
+
+```sh
+pnpm cg new --org "Riverbend Health" --platforms microsoft --out a.crownguard.json
+pnpm cg score a.crownguard.json
+pnpm cg render a.crownguard.json report.pdf
+```
+
+See [docs/cli.md](docs/cli.md) for every command, exit codes, and how to replace the old Hermes `cg-bot` helper.
+
 ## The saved file
 
 **Save file** writes one JSON object with the whole assessment. Nothing is sent anywhere: the file is your data, and you

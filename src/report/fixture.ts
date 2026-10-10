@@ -1,6 +1,6 @@
 import type { Catalogue } from "../content/schema";
 import type { Answer, Assessment } from "../engine/types";
-import { emptyAssessment } from "../wizard/store";
+import { emptyAssessment } from "../wizard/empty";
 
 /** A full assessment touching every asset type and a mix of answers, for render tests. */
 export function fixtureAssessment(catalogue: Catalogue, platforms: string[]): Assessment {
