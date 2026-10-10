@@ -1,14 +1,18 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, KeyboardEvent, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, KeyboardEvent, ReactNode, RefObject } from "react";
 import type { Band } from "../engine/risk";
+
+/** Move focus to a step or section heading once a navigation has replaced what was on screen. */
+export const focusHeading = (ref: RefObject<HTMLElement | null>) => requestAnimationFrame(() => ref.current?.focus());
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const variants: Record<Variant, string> = {
   primary:
     "border-accent bg-accent text-accent-ink [@media(hover:hover)]:hover:border-accent-hover [@media(hover:hover)]:hover:bg-accent-hover",
-  secondary: "border-rule-2 bg-surface text-ink [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:bg-sunken",
+  // Control boundaries use `field`, the token that meets WCAG 1.4.11's 3:1 against every background.
+  secondary: "border-field bg-surface text-ink [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:bg-sunken",
   ghost: "border-transparent text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink",
-  danger: "border-rule-2 bg-surface text-danger [@media(hover:hover)]:hover:border-danger/50 [@media(hover:hover)]:hover:bg-danger-soft",
+  danger: "border-field bg-surface text-danger [@media(hover:hover)]:hover:border-danger/50 [@media(hover:hover)]:hover:bg-danger-soft",
 };
 
 /** Button with default, hover, focus, active, disabled and loading states. */
@@ -83,7 +87,7 @@ export function FieldGroup({ label, hint, children }: { label: string; hint?: st
 
 /** Border width never changes between states; focus uses the outline slot so nothing shifts. */
 export const inputClass =
-  "w-full rounded-[var(--radius-control)] border border-field bg-surface px-3 py-2 text-sm text-ink outline-2 outline-offset-1 outline-transparent transition-colors duration-150 placeholder:text-muted/70 [@media(hover:hover)]:hover:border-ink-2 focus-visible:border-accent focus-visible:outline-accent/35 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-[var(--radius-control)] border border-field bg-surface px-3 py-2 text-sm text-ink outline-2 outline-offset-1 outline-transparent transition-colors duration-150 placeholder:text-muted [@media(hover:hover)]:hover:border-ink-2 focus-visible:border-accent focus-visible:outline-accent/35 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Card({ children, className = "", ...props }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
   return (
@@ -110,7 +114,7 @@ export function CheckboxPill({ checked, onChange, children }: { checked: boolean
   return (
     <label
       className={`inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-[var(--radius-control)] border px-3 py-1.5 text-sm transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${
-        checked ? "border-ink bg-ink text-paper" : "border-rule-2 bg-surface text-ink-2 [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:text-ink"
+        checked ? "border-ink bg-ink text-paper" : "border-field bg-surface text-ink-2 [@media(hover:hover)]:hover:border-ink/45 [@media(hover:hover)]:hover:text-ink"
       }`}
     >
       <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />

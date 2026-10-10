@@ -14,8 +14,8 @@
   --color-muted: oklch(49% 0.016 257);
   --color-rule: oklch(91.5% 0.008 255);
   --color-rule-2: oklch(84% 0.01 256);
-  /* Form-control boundaries: >= 3:1 against surface (WCAG 1.4.11). */
-  --color-field: oklch(66% 0.012 256);
+  /* Form-control boundaries: >= 3:1 against paper, surface and sunken (WCAG 1.4.11). */
+  --color-field: oklch(63.5% 0.012 256);
   --color-graphite: oklch(22% 0.016 260);
   --color-graphite-2: oklch(30% 0.016 260);
   --color-on-graphite: oklch(96% 0.006 252);
@@ -62,9 +62,15 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-html {
-  /* Clear the sticky header when focused controls scroll into view (WCAG 2.2 SC 2.4.11). */
-  scroll-padding-top: 4.5rem;
+/*
+ * Focused elements scroll clear of the sticky header (WCAG 2.2 SC 2.4.11). This is `scroll-margin-top` per element
+ * rather than `scroll-padding-top` on the scroller: scroll-padding applies to the sticky header's own buttons too,
+ * which no scroll can move out of the padding strip, and browsers drag the whole page around trying (and would-be
+ * saves jump). App.tsx sets `--header-height` from the measured header, including when it wraps on a narrow screen.
+ */
+main,
+:is(main, nav, footer) * {
+  scroll-margin-top: var(--header-height, 4.5rem);
 }
 
 html,

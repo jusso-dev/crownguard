@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrast, extractPalette, readableOn, textOn } from "./color";
+import { contrast, extractPalette, oklchToHex, parseOklch, readableOn, textOn } from "./color";
 
 const px = (rgba: number[], n: number) => Array.from({ length: n }, () => rgba).flat();
 
@@ -51,6 +51,21 @@ describe("parseHex", () => {
   it("rejects anything else", async () => {
     const { parseHex } = await import("./color");
     for (const bad of ["", "#12", "#12345", "#gggggg", "rgb(0,0,0)", "#1234567"]) expect(parseHex(bad)).toBeNull();
+  });
+});
+
+describe("parseOklch", () => {
+  it("converts the design tokens' oklch() to the hex the browser paints", () => {
+    expect(oklchToHex("oklch(100% 0 0)")).toBe("#ffffff");
+    expect(oklchToHex("oklch(0% 0 0)")).toBe("#000000");
+    expect(oklchToHex("oklch(0.5 0 0)")).toBe(oklchToHex("oklch(50% 0 0)"));
+    // The blue of the cobalt accent: clipped to the sRGB gamut like a browser paints it.
+    const accent = parseOklch("oklch(53% 0.2 257)");
+    expect(accent[2]).toBeGreaterThan(accent[0]);
+  });
+
+  it("rejects anything that isn't oklch()", () => {
+    for (const bad of ["", "#0b5d4b", "oklch(53% 0.2)", "rgb(0,0,0)", "oklch(53 0.2 abc)"]) expect(() => parseOklch(bad)).toThrow();
   });
 });
 

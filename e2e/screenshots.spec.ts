@@ -98,12 +98,21 @@ test("README screenshots", async ({ page }) => {
   await page.getByRole("navigation", { name: "AI use cases" }).getByRole("button", { name: /Grant application triage agent/ }).click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot(page, "06-ai-register");
-  // Element shots scroll the page, so keep the sticky header from covering them.
-  const unstick = await page.addStyleTag({ content: "header, nav[aria-label=Steps] { position: static !important; }" });
+  // Element shots scroll the page, so keep the sticky header from covering them. The CSP allows no injected
+  // stylesheets, so the properties are set through the CSSOM instead of a <style> tag.
+  const stick = (value: string) =>
+    page.evaluate((v) => {
+      for (const el of [document.querySelector("header"), document.querySelector('nav[aria-label="Steps"]')]) {
+        if (!(el instanceof HTMLElement)) continue;
+        if (v) el.style.setProperty("position", v, "important");
+        else el.style.removeProperty("position");
+      }
+    }, value);
+  await stick("static");
   const card = (name: string) => page.locator("[data-ai-entry] > div").filter({ has: page.getByRole("heading", { name }) });
   await card("What it can do and reach").screenshot({ path: join(OUT, "07-ai-reach.png"), animations: "disabled" });
   await page.getByTestId("ai-gaps").screenshot({ path: join(OUT, "08-ai-readiness.png"), animations: "disabled" });
-  await unstick.evaluate((el) => (el as HTMLElement).remove());
+  await stick("");
   await next(page);
 
   // 7. Review, and its SOC and AI register cards

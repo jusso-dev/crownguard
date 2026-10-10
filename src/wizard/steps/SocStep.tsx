@@ -4,7 +4,7 @@ import type { SocQuestion } from "../../content/schema";
 import { isRating, levelFor, socMaturity, socProviders, type SocAnswer, type SocProvider } from "../../engine/soc";
 import { NOTE_MAX } from "../assessmentSchema";
 import { useStore } from "../store";
-import { Button, Card, FieldGroup, Progress, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
+import { Button, Card, FieldGroup, Progress, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
 
 const fmt = (n: number | null) => (n === null ? "–" : n.toFixed(1));
 const halves = (from: number, to: number) => Array.from({ length: (to - from) * 2 + 1 }, (_, i) => from + i / 2);
@@ -148,7 +148,7 @@ export function SocStep() {
               onClick={() => {
                 setActive(model.domains[index + 1].id);
                 // Start the next domain at its heading, for keyboard and screen-reader users too.
-                requestAnimationFrame(() => heading.current?.focus());
+                focusHeading(heading);
               }}
             >
               Next domain: {model.domains[index + 1].name} →

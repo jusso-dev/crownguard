@@ -403,10 +403,12 @@ benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit 
 
 ## Accessibility
 
-crownguard aims for [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA. Automated axe checks cover every wizard step
-in Playwright. Known limitation: the PDF report is not tagged — use the on-screen Review step with assistive
-technology for now. See [docs/accessibility.md](docs/accessibility.md) for the checklist. Report a problem via
-[SECURITY.md](SECURITY.md) or a [GitHub issue](https://github.com/jusso-dev/crownguard/issues).
+crownguard targets [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA. Every step is checked for it automatically:
+axe on every wizard step in Playwright, plus keyboard, focus, target size and reflow tests, and a unit test that keeps
+the palette's contrast above AA. Known limitation: the PDF report is not tagged for screen readers yet — use the
+on-screen Review step with assistive technology. See [docs/accessibility.md](docs/accessibility.md) for the manual
+checklist and results. Report a problem via [SECURITY.md](SECURITY.md) or a
+[GitHub issue](https://github.com/jusso-dev/crownguard/issues).
 
 ## Limitations
 

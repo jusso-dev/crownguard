@@ -2,7 +2,7 @@ import { contrast, readableOn, textOn } from "../../theme/color";
 import { ColorField } from "../ColorField";
 import { LogoField } from "../LogoField";
 import { useStore } from "../store";
-import { Card, Field, inputClass, StepHeader } from "../ui";
+import { Card, Field, inputClass, StepHeader, radioKeys, radioTab } from "../ui";
 
 // PSPF markings for government, IDCF Data Security Levels for everyone else, and plain labels.
 const markings = ["OFFICIAL", "OFFICIAL: Sensitive", "PROTECTED", "DSL-2", "DSL-3", "DSL-3, Confidential", "DSL-4", "Confidential", "Internal use only"];
@@ -26,8 +26,13 @@ export function BrandingStep() {
             <fieldset>
               <legend className="text-sm font-medium text-ink">Logo background on the cover</legend>
               <p className="mt-0.5 text-xs text-muted">Use a white panel only if the logo is hard to see on the cover colour.</p>
-              <div className="mt-2 inline-grid grid-cols-2 overflow-hidden rounded-[var(--radius-control)] border border-field bg-field gap-px" role="radiogroup" aria-label="Logo background on the cover">
-                {(["none", "white"] as const).map((v) => {
+              <div
+                className="mt-2 inline-grid grid-cols-2 overflow-hidden rounded-[var(--radius-control)] border border-field bg-field gap-px"
+                role="radiogroup"
+                aria-label="Logo background on the cover"
+                onKeyDown={radioKeys}
+              >
+                {(["none", "white"] as const).map((v, i) => {
                   const on = (b.logoBackdrop ?? "none") === v;
                   return (
                     <button
@@ -35,6 +40,7 @@ export function BrandingStep() {
                       type="button"
                       role="radio"
                       aria-checked={on}
+                      tabIndex={radioTab(on, i, true)}
                       onClick={() => setBranding({ logoBackdrop: v })}
                       className={`min-h-9 px-4 text-sm transition-colors duration-150 focus-visible:-outline-offset-2 ${on ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken"}`}
                     >
@@ -82,7 +88,7 @@ export function BrandingStep() {
           <div className="overflow-hidden rounded-[var(--radius-card)]">
             <div className="h-2" style={{ background: b.accent }} />
             <div className="aspect-[1/1.414] p-6" style={{ background: b.primary, color: textOn(b.primary) }}>
-              <div className="text-[10px] font-semibold tracking-wider opacity-80">{b.marking}</div>
+              <div className="text-[10px] font-semibold tracking-wider">{b.marking}</div>
               {b.logoDataUrl && (
                 <img
                   src={b.logoDataUrl}
@@ -90,7 +96,7 @@ export function BrandingStep() {
                   className={`mt-6 max-h-16 max-w-[75%] object-contain ${b.logoBackdrop === "white" ? "rounded-[4px] bg-surface p-2" : ""}`}
                 />
               )}
-              <div className="mt-10 text-[10px] uppercase tracking-widest opacity-80">Crown-jewel risk assessment</div>
+              <div className="mt-10 text-[10px] uppercase tracking-widest">Crown-jewel risk assessment</div>
               <div className="mt-1 font-display text-xl font-semibold leading-tight tracking-[-0.02em]">{assessment.org.name || "Your organisation"}</div>
               <div className="mt-3 h-0.5 w-10" style={{ background: b.accent }} />
             </div>

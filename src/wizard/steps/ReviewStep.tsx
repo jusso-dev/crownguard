@@ -61,7 +61,7 @@ export function ReviewStep() {
           <h2 className="mb-4 text-base font-semibold">Risk heatmap</h2>
           <Heatmap risks={risks} />
         </Card>
-        <Card className="overflow-x-auto">
+        <Card className="overflow-x-auto" role="region" aria-label="Crown jewels by risk" tabIndex={0}>
           <h2 className="mb-4 text-base font-semibold">Crown jewels by risk</h2>
           <table className="w-full text-sm">
             <thead className="mono-label text-left text-muted [&_th]:whitespace-nowrap [&_th]:pb-2.5 [&_th]:pr-3 [&_th]:font-medium">
