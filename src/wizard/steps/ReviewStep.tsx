@@ -6,6 +6,7 @@ import { answerLabels } from "../../engine/types";
 import { modeOf, stepsFor, useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";
+import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
 import { ExampleBadge, Tile } from "./AiRegisterStep";
 
@@ -14,6 +15,7 @@ const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%
 export function ReviewStep() {
   const assessment = useStore((s) => s.assessment);
   const setStep = useStore((s) => s.setStep);
+  const ism = useIsmSummary();
   // The standalone register has no crown jewels to review: it gets the register's own summary instead.
   if (modeOf(assessment) === "ai-register") return <AiRegisterReview />;
   const risks = assessAll(catalogue, assessment);
@@ -105,6 +107,7 @@ export function ReviewStep() {
         </Card>
       </div>
 
+      <IsmBaselineCard />
       <SocCard />
       <AiRegisterCard />
 
@@ -117,6 +120,9 @@ export function ReviewStep() {
                 <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                 <span className="text-ink">
                   {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                  {ism?.findings.some((f) => f.question.id === g.question.id) && (
+                    <span className="mono-label ml-2 rounded-[4px] bg-sunken px-1.5 py-0.5 text-muted">ISM {ism.label}</span>
+                  )}
                 </span>
               </li>
             ))}

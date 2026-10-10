@@ -57,6 +57,9 @@
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1815 }
+    - { framework: ism, ref: ISM-1988 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: mfa, level: 2 }
@@ -114,6 +117,8 @@
     - { framework: nist-csf-2, ref: RS.MA-01 }
     - { framework: nist-csf-2, ref: RS.MI-01 }
     - { framework: google-security-guidance, ref: "Checklist: Accounts" }
+    - { framework: ism, ref: ISM-0043 }
+    - { framework: ism, ref: ISM-1784 }
 
 - id: GO-LOG-005
   module: core
@@ -141,6 +146,7 @@
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: nist-csf-2, ref: RS.MA-02 }
     - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+    - { framework: ism, ref: ISM-1228 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -175,6 +181,7 @@
     - { framework: cis-gcp, ref: "2.2" }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: ism, ref: ISM-1815 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -208,6 +215,9 @@
   refs:
     - { framework: nist-csf-2, ref: RS.MA-01 }
     - { framework: nist-csf-2, ref: RS.CO-02 }
+    - { framework: ism, ref: ISM-0123 }
+    - { framework: ism, ref: ISM-0140 }
+    - { framework: ism, ref: ISM-1819 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -243,6 +253,9 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: nist-csf-2, ref: DE.AE-03 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-0109 }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1907 }
   e8:
     - { strategy: mfa, level: 3 }
     - { strategy: restrict-admin-privileges, level: 3 }

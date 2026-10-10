@@ -134,6 +134,8 @@
     - { framework: mcsb, ref: LT-5 }
     - { framework: mcsb, ref: LT-6 }
     - { framework: ms-zero-trust, ref: SecOps I }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1650 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -167,6 +169,7 @@
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: mcsb, ref: LT-3 }
     - { framework: mcsb, ref: LT-5 }
+    - { framework: ism, ref: ISM-1405 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: MS-AZ-033
@@ -196,6 +199,7 @@
     - { framework: cis-azure, ref: "7.8" }
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: mcsb, ref: LT-4 }
+    - { framework: ism, ref: ISM-1405 }
 
 - id: MS-AZ-034
   module: azure
@@ -235,6 +239,8 @@
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: mcsb, ref: LT-1 }
+    - { framework: ism, ref: ISM-1228 }
+    - { framework: ism, ref: ISM-1650 }
 
 - id: MS-AZ-035
   module: azure

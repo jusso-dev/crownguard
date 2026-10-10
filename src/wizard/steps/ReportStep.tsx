@@ -4,11 +4,13 @@ import { buildAiRegisterReport, buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
 import { download, requestOpenFile, slug } from "../download";
 import { modeOf, stepsFor, useStore } from "../store";
+import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
 import { Button, Card, StepHeader } from "../ui";
 
 export function ReportStep() {
   const assessment = useStore((s) => s.assessment);
   const setMode = useStore((s) => s.setMode);
+  const ism = useIsmSummary();
   const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
   const [error, setError] = useState<string>();
   const standalone = modeOf(assessment) === "ai-register";
@@ -82,6 +84,10 @@ export function ReportStep() {
             <dt className="text-muted">Crown jewels</dt><dd>{model!.risks.length}</dd>
             <dt className="text-muted">Questions answered</dt><dd>{model!.questions.filter((q) => model!.answers[q.id]).length} of {model!.questions.length}</dd>
             <dt className="text-muted">Roadmap actions</dt><dd>{model!.roadmap.length}</dd>
+            <dt className="text-muted">ISM baseline</dt>
+            <dd>
+              {ism ? `${ism.label} — ${ism.findings.length} of ${ism.totalFindings} findings annotated` : "Not shown"}
+            </dd>
             {model!.aiRegister && (
               <>
                 <dt className="text-muted">AI use cases</dt>
@@ -96,6 +102,11 @@ export function ReportStep() {
         )}
         </div>
         <div className="border-t border-rule bg-paper p-6">
+        {!standalone && (
+          <div className="mb-5">
+            <IsmBaselinePicker />
+          </div>
+        )}
         <Button className="w-full py-2.5" loading={status === "working"} onClick={() => void generate()}>
           {status === "working" ? "Building PDF…" : "Generate PDF report"}
         </Button>

@@ -177,4 +177,5 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: ism, ref: ISM-1852 }
     - { framework: idcf, ref: "Sharing agreement" }

@@ -27,6 +27,9 @@
     - { framework: aws-fsbp, ref: CloudTrail.1 }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1683 }
+    - { framework: ism, ref: ISM-1650 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: mfa, level: 2 }
@@ -62,6 +65,7 @@
     - { framework: aws-fsbp, ref: CloudTrail.4 }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: PR.DS-10 }
+    - { framework: ism, ref: ISM-1815 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -203,6 +207,8 @@
     - { framework: aws-fsbp, ref: CloudTrail.5 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: nist-csf-2, ref: DE.AE-06 }
+    - { framework: ism, ref: ISM-1228 }
+    - { framework: ism, ref: ISM-1650 }
 
 - id: AWS-LOG-007
   module: core
@@ -227,6 +233,7 @@
     - { framework: aws-fsbp, ref: EC2.6 }
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: nist-csf-2, ref: PR.PS-04 }
+    - { framework: ism, ref: ISM-1405 }
 
 - id: AWS-LOG-008
   module: core
@@ -252,6 +259,7 @@
   refs:
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: nist-csf-2, ref: RS.MA-02 }
+    - { framework: ism, ref: ISM-1228 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -285,6 +293,8 @@
     - { framework: aws-fsbp, ref: CloudFront.5 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1906 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -313,6 +323,9 @@
   refs:
     - { framework: nist-csf-2, ref: RS.MA-01 }
     - { framework: nist-csf-2, ref: RS.CO-02 }
+    - { framework: ism, ref: ISM-0123 }
+    - { framework: ism, ref: ISM-0140 }
+    - { framework: ism, ref: ISM-1819 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -340,6 +353,8 @@
   refs:
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1907 }
   e8:
     - { strategy: mfa, level: 3 }
     - { strategy: restrict-admin-privileges, level: 3 }

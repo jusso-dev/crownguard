@@ -47,6 +47,8 @@
     - { framework: cis-gcp, ref: "1.6" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+    - { framework: ism, ref: ISM-1249 }
+    - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -103,6 +105,7 @@
     - { framework: cis-gcp, ref: "1.8" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: google-security-guidance, ref: "Service account key best practices" }
+    - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -133,6 +136,7 @@
     - { framework: cis-gcp, ref: "4.1" }
     - { framework: cis-gcp, ref: "4.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1249 }
 
 - id: GO-CIAM-006
   module: gcp
@@ -156,6 +160,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+    - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -185,6 +190,7 @@
     - { framework: cis-gcp, ref: "3.7" }
     - { framework: cis-gcp, ref: "3.12" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1387 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -218,6 +224,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
+    - { framework: ism, ref: ISM-1490 }
+    - { framework: ism, ref: ISM-1871 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -248,5 +256,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: cis-gcp, ref: "4.8" }
+    - { framework: ism, ref: ISM-1656 }
+    - { framework: ism, ref: ISM-1658 }
   e8:
     - { strategy: application-control, level: 3 }

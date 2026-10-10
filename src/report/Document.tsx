@@ -162,6 +162,9 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               (imp) =>
                 `${imp.applied} answer${imp.applied === 1 ? "" : "s"} pre-filled from an automated ${imp.source}${imp.toolVersion ? ` ${imp.toolVersion}` : ""} scan of ${imp.tenant} run ${stampText(new Date(imp.scannedAt))}, then reviewed by the assessor`,
             ),
+            ...(model.ismBaseline
+              ? [`ISM baseline shown: ${model.ismBaseline.label} — ${model.ismBaseline.findings.length} of ${model.ismBaseline.totalFindings} findings touch controls it includes`]
+              : []),
           ].map((line) => (
             <View key={line} style={{ flexDirection: "row", gap: 6, marginBottom: 3 }}>
               <Text style={{ width: 8, color: theme.heading }}>•</Text>
@@ -406,6 +409,15 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                       <Text style={{ ...s.small, marginTop: 2 }}>
                         {[...q.refs.map((r) => `${model.frameworkName(r.framework)} ${r.ref}`), ...q.e8.map((t) => `E8 ${t.strategy} ML${t.level}`)].join(" · ")}
                       </Text>
+                      {model.ismBaseline &&
+                        (() => {
+                          const touch = q.refs
+                            .filter((r) => r.framework === "ism" && model.ismBaseline!.findings.some((f) => f.question.id === q.id && f.controls.includes(r.ref)))
+                            .map((r) => r.ref);
+                          return touch.length ? (
+                            <Text style={{ ...s.small, marginTop: 1 }}>Touches the ISM {model.ismBaseline!.label} baseline: {touch.join(", ")}</Text>
+                          ) : null;
+                        })()}
                     </View>
                   );
                 })}
@@ -462,7 +474,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Frameworks */}
-        <Section s={s} title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0, CIS Benchmarks and the Department of Home Affairs Industry Data Classification Framework (IDCF). These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
+        <Section s={s} title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0, CIS Benchmarks, the Australian Government Information Security Manual (ISM) and the Department of Home Affairs Industry Data Classification Framework (IDCF). These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
           <Text style={s.h2}>ASD Essential Eight (indicative maturity)</Text>
           <Table
             {...tableProps}
@@ -500,6 +512,28 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               />
             </>
           )}
+          {model.ism.length > 0 && (
+            <>
+              <Text style={s.h2} minPresenceAhead={80}>{model.frameworkName("ism")} controls</Text>
+              <Text style={{ ...s.small, marginBottom: 6 }}>
+                Control ids and shortened statements generated from ASD&apos;s ISM OSCAL catalogue; the ISM itself has the full
+                guidance. Alignment is indicative: it shows which ISM controls each question relates to, not that the
+                organisation meets them.
+                {model.ismBaseline
+                  ? ` The ${model.ismBaseline.label} baseline covers ${model.ismBaseline.findings.length} of the ${model.ismBaseline.totalFindings} findings in this report, across ${model.ismBaseline.controls} of the ISM controls mapped here.`
+                  : ""}
+              </Text>
+              <Table
+                {...tableProps}
+                rows={model.ism}
+                columns={[
+                  { header: "Control", width: "14%", render: (r) => r.ref },
+                  { header: "What it asks (shortened)", width: "64%", render: (r) => r.title ?? "" },
+                  { header: "Status", width: "22%", render: (r) => r.status },
+                ]}
+              />
+            </>
+          )}
         </Section>
 
         {model.soc && <SocSection model={model} s={s} tableProps={tableProps} />}
@@ -520,6 +554,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               : []),
             "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
             "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
+            ...(model.ism.length
+              ? [
+                  "The ISM mapping is generated from ASD's official ISM OSCAL catalogue and pinned to the release named alongside the ISM in this report. It shows which ISM controls each question relates to, not that the organisation meets them: this is not an IRAP assessment or a statement of applicability. Where an ISM baseline is chosen, findings that touch controls the baseline includes are annotated and counted; choosing a baseline never changes a score. The Essential Eight Maturity Model remains the source of truth for maturity results.",
+                ]
+              : []),
             ...(model.soc
               ? [
                   "The SOC maturity section is an indicative self-assessment structured on the SOC-CMM® v2.4 model (5 domains, 27 aspects). Each aspect has one maturity question rated 0–5 against crownguard's own level descriptions, and each technology and service aspect also has a capability question rated 0–3. Unknown and unanswered questions score 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings; the two are never combined. A domain scores the unweighted mean of its in-scope aspects, and the indicative overall is the mean of the assessed domains (SOC-CMM itself reports no single score). Level names use the whole-number part of the score, so 2.7 is level 2 and 3.0 is level 3. Targets default to SOC-CMM's: maturity 3 and capability 2.",
@@ -542,6 +581,13 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               Contains material adapted from the Industry Data Classification Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and
               Industrial Research Organisation (CSIRO) 2026, licensed under CC BY 4.0 (creativecommons.org/licenses/by/4.0), and from “IDCF: A guide to system
               security”, Australian Government Department of Home Affairs, CC BY 3.0 AU. Summaries are crownguard&apos;s own and do not imply endorsement.
+            </Text>
+          )}
+          {model.ism.length > 0 && (
+            <Text style={{ ...s.small, marginBottom: 8 }}>
+              ISM control titles are shortened statements from the Information Security Manual, © Commonwealth of Australia 2024, generated from ASD&apos;s ISM
+              OSCAL catalogue and used under CC BY 4.0 (creativecommons.org/licenses/by/4.0), Coat of Arms and ASD logo excepted. The shortening is
+              crownguard&apos;s own and does not imply endorsement.
             </Text>
           )}
           {model.sources.map((src) => (

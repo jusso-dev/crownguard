@@ -22,6 +22,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: nist-csf-2, ref: RC.RP-03 }
+    - { framework: ism, ref: ISM-1511 }
+    - { framework: ism, ref: ISM-1515 }
   e8:
     - { strategy: regular-backups, level: 1 }
 
@@ -47,6 +49,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1707 }
+    - { framework: ism, ref: ISM-2152 }
   e8:
     - { strategy: regular-backups, level: 2 }
 
@@ -73,6 +77,9 @@
   sources: [gws-vault-faq, gcp-bucket-lock]
   refs:
     - { framework: nist-csf-2, ref: PR.DS-11 }
+    - { framework: ism, ref: ISM-1706 }
+    - { framework: ism, ref: ISM-1708 }
+    - { framework: ism, ref: ISM-2151 }
   e8:
     - { strategy: regular-backups, level: 3 }
 
@@ -126,4 +133,6 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: google-security-guidance, ref: "Checklist: Vault" }
+    - { framework: ism, ref: ISM-1508 }
+    - { framework: ism, ref: ISM-1509 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }

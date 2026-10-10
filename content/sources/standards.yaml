@@ -92,3 +92,16 @@
   publisher: Australian Signals Directorate
   url: https://www.cyber.gov.au/publication/patching-applications-and-operating-systems
   retrieved: 2026-10-09
+# ISM: the Information Security Manual and the official OSCAL catalog content/frameworks/ism.yaml is generated from
+# (pinned to a release tag). © Commonwealth of Australia 2024, licensed CC BY 4.0 (Coat of Arms and ASD logo
+# excepted). Control titles in the generated file are the catalog's statements, shortened, with attribution there.
+- id: asd-ism
+  title: Information Security Manual (ISM)
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/ism
+  retrieved: 2026-10-10
+- id: asd-ism-oscal
+  title: ISM OSCAL catalog (release v2026.09.4)
+  publisher: Australian Signals Directorate
+  url: https://github.com/AustralianCyberSecurityCentre/ism-oscal/releases/tag/v2026.09.4
+  retrieved: 2026-10-10

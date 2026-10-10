@@ -75,6 +75,7 @@
     - { framework: cis-gcp, ref: "6.6" }
     - { framework: cis-gcp, ref: "6.7" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1271 }
 
 - id: GO-CDAT-004
   module: gcp
@@ -124,6 +125,7 @@
   refs:
     - { framework: cis-gcp, ref: "7.4" }
     - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: ism, ref: ISM-0393 }
     - { framework: idcf, ref: "Risk assessment" }
 
 - id: GO-CDAT-006
@@ -152,6 +154,7 @@
     - { framework: cis-gcp, ref: "6.9" }
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: nist-csf-2, ref: RC.RP-03 }
+    - { framework: ism, ref: ISM-1707 }
   e8:
     - { strategy: regular-backups, level: 2 }
 
@@ -186,5 +189,7 @@
   refs:
     - { framework: cis-gcp, ref: "6.6" }
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1505 }
+    - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }

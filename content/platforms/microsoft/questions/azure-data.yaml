@@ -49,6 +49,8 @@
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: BR-2 }
     - { framework: mcsb, ref: BR-3 }
+    - { framework: ism, ref: ISM-1708 }
+    - { framework: ism, ref: ISM-2151 }
   e8:
     - { strategy: regular-backups, level: 3 }
 
@@ -145,6 +147,7 @@
     - { framework: mcsb, ref: IM-1 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Data III }
+    - { framework: ism, ref: ISM-2141 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: MS-AZ-014
@@ -175,6 +178,8 @@
     - { framework: cis-azure, ref: "9.3.6" }
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: mcsb, ref: DP-3 }
+    - { framework: ism, ref: ISM-1139 }
+    - { framework: ism, ref: ISM-1781 }
     - { framework: idcf, ref: Movement }
 
 - id: MS-AZ-015
@@ -302,6 +307,8 @@
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: BR-1 }
     - { framework: mcsb, ref: BR-2 }
+    - { framework: ism, ref: ISM-1511 }
+    - { framework: ism, ref: ISM-1814 }
   e8:
     - { strategy: regular-backups, level: 1 }
 
@@ -397,6 +404,7 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: mcsb, ref: DP-6 }
+    - { framework: ism, ref: ISM-2142 }
 
 - id: MS-AZ-039
   module: azure
@@ -423,6 +431,7 @@
   refs:
     - { framework: nist-csf-2, ref: RC.RP-03 }
     - { framework: mcsb, ref: BR-4 }
+    - { framework: ism, ref: ISM-1515 }
   e8:
     - { strategy: regular-backups, level: 1 }
 

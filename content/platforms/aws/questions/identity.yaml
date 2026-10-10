@@ -25,6 +25,7 @@
     - { framework: cis-aws, ref: "2.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-2145 }
 
 - id: AWS-IAM-002
   module: core
@@ -54,6 +55,8 @@
     - { framework: cis-aws, ref: "2.7" }
     - { framework: aws-fsbp, ref: IAM.4 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1611 }
+    - { framework: ism, ref: ISM-1685 }
 
 - id: AWS-IAM-003
   module: core
@@ -80,6 +83,7 @@
   refs:
     - { framework: cis-aws, ref: "2.19" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: ism, ref: ISM-0414 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: AWS-IAM-004
@@ -138,6 +142,9 @@
     - { framework: cis-aws, ref: "2.10" }
     - { framework: aws-fsbp, ref: IAM.5 }
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1504 }
+    - { framework: ism, ref: ISM-0974 }
+    - { framework: ism, ref: ISM-1173 }
   e8:
     - { strategy: mfa, level: 1 }
 
@@ -167,6 +174,8 @@
     - { framework: cis-aws, ref: "2.6" }
     - { framework: aws-fsbp, ref: IAM.6 }
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1682 }
+    - { framework: ism, ref: ISM-1872 }
   e8:
     - { strategy: mfa, level: 2 }
 
@@ -194,6 +203,7 @@
   sources: [aws-alb-authenticate, aws-verified-access, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1504 }
   e8:
     - { strategy: mfa, level: 1 }
 
@@ -219,6 +229,7 @@
   refs:
     - { framework: aws-fsbp, ref: Cognito.5 }
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1681 }
   e8:
     - { strategy: mfa, level: 1 }
 
@@ -243,6 +254,7 @@
   sources: [aws-cognito-auth-flows, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1873 }
   e8:
     - { strategy: mfa, level: 2 }
 
@@ -267,6 +279,7 @@
   sources: [aws-cognito-auth-flows, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1874 }
   e8:
     - { strategy: mfa, level: 3 }
 
@@ -294,6 +307,7 @@
   sources: [aws-permission-sets, aws-fedramp-privileged, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-0445 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -323,6 +337,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1380 }
+    - { framework: ism, ref: ISM-1688 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -348,6 +364,7 @@
   sources: [aws-workspaces, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1687 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -375,6 +392,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1898 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -400,6 +418,7 @@
   sources: [aws-temporary-elevated-access, aws-permission-sets]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1507 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
@@ -430,6 +449,8 @@
     - { framework: cis-aws, ref: "2.11" }
     - { framework: aws-fsbp, ref: IAM.8 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1647 }
+    - { framework: ism, ref: ISM-1648 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -457,6 +478,7 @@
   sources: [aws-temporary-elevated-access, aws-team-blog, aws-permission-sets]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1649 }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
@@ -490,6 +512,7 @@
     - { framework: aws-fsbp, ref: IAM.1 }
     - { framework: aws-fsbp, ref: IAM.21 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1508 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
@@ -544,6 +567,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: RC.RP-01 }
+    - { framework: ism, ref: ISM-1610 }
+    - { framework: ism, ref: ISM-1613 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -576,6 +601,7 @@
     - { framework: cis-aws, ref: "2.16" }
     - { framework: aws-fsbp, ref: IAM.3 }
     - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 

@@ -21,6 +21,8 @@
     - { framework: cis-gws, ref: "1.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: ism, ref: ISM-0414 }
+    - { framework: ism, ref: ISM-1883 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-ADM-002
@@ -48,6 +50,8 @@
     - { framework: cis-gws, ref: "1.1.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: ism, ref: ISM-0445 }
+    - { framework: ism, ref: ISM-1175 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -79,6 +83,8 @@
     - { framework: cis-gcp, ref: "1.4" }
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: google-security-guidance, ref: "Admin accounts: Protect" }
+    - { framework: ism, ref: ISM-1173 }
+    - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
 
@@ -105,6 +111,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -131,6 +138,7 @@
     - { framework: cis-gws, ref: "4.1.2.1" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: ism, ref: ISM-1593 }
 
 - id: GO-ADM-006
   module: core
@@ -156,6 +164,7 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: nist-csf-2, ref: RC.RP-01 }
     - { framework: google-security-guidance, ref: "Admin accounts: Recovery" }
+    - { framework: ism, ref: ISM-1610 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -205,6 +214,8 @@
   sources: [gws-admin-roles, gws-admin-best-practices, gcp-role-recommendations]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1647 }
+    - { framework: ism, ref: ISM-1648 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -235,6 +246,7 @@
   sources: [gws-multi-party-approval, gws-assign-admin-roles, gcp-pam]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1507 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -263,6 +275,8 @@
   sources: [chromeos-device-policies, gws-context-aware-access]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1380 }
+    - { framework: ism, ref: ISM-1688 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -289,6 +303,7 @@
   sources: [chromeos-device-policies, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1687 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -317,6 +332,7 @@
   sources: [chromeos-device-policies, gws-context-aware-access, chrome-extensions]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1898 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -345,5 +361,6 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
+    - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }

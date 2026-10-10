@@ -90,6 +90,7 @@
     - { framework: aws-fsbp, ref: RedshiftServerless.3 }
     - { framework: aws-fsbp, ref: Opensearch.2 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1271 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: AWS-DATA-004
@@ -118,6 +119,7 @@
     - { framework: aws-fsbp, ref: Macie.1 }
     - { framework: aws-fsbp, ref: Macie.2 }
     - { framework: nist-csf-2, ref: ID.AM-07 }
+    - { framework: ism, ref: ISM-0393 }
     - { framework: idcf, ref: "Risk assessment" }
 
 - id: AWS-DATA-005
@@ -153,6 +155,7 @@
     - { framework: aws-fsbp, ref: Redshift.10 }
     - { framework: aws-fsbp, ref: Opensearch.1 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: ism, ref: ISM-1080 }
 
 - id: AWS-DATA-006
   module: core
@@ -184,6 +187,7 @@
     - { framework: aws-fsbp, ref: CloudFront.15 }
     - { framework: aws-fsbp, ref: Redshift.2 }
     - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: ism, ref: ISM-1781 }
     - { framework: idcf, ref: Movement }
 
 - id: AWS-DATA-007
@@ -267,6 +271,8 @@
     - { framework: aws-fsbp, ref: CodeBuild.1 }
     - { framework: aws-fsbp, ref: CodeBuild.2 }
     - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: ism, ref: ISM-2142 }
+    - { framework: ism, ref: ISM-1685 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -323,6 +329,8 @@
     - { framework: aws-fsbp, ref: RDS.10 }
     - { framework: aws-fsbp, ref: RDS.12 }
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1505 }
+    - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }
 

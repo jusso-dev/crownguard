@@ -27,6 +27,7 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-1 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+    - { framework: ism, ref: ISM-1182 }
 
 - id: MS-AZ-021
   module: azure
@@ -54,6 +55,7 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-1 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+    - { framework: ism, ref: ISM-2068 }
 
 - id: MS-AZ-022
   module: azure
@@ -255,6 +257,9 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-5 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1698 }
+    - { framework: ism, ref: ISM-1876 }
+    - { framework: ism, ref: ISM-1905 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -286,3 +291,4 @@
     - { framework: mcsb, ref: IM-1 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+    - { framework: ism, ref: ISM-2141 }

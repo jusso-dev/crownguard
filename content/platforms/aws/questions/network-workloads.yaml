@@ -29,6 +29,7 @@
     - { framework: aws-fsbp, ref: EC2.19 }
     - { framework: aws-fsbp, ref: EC2.21 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1182 }
 
 - id: AWS-NET-002
   module: core
@@ -59,6 +60,7 @@
     - { framework: aws-fsbp, ref: ECS.2 }
     - { framework: aws-fsbp, ref: ECS.16 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-2068 }
 
 - id: AWS-NET-003
   module: core
@@ -113,6 +115,7 @@
   sources: [aws-iam-roles-ec2, aws-eks-pod-identity, aws-iam-best-practices, aws-access-analyzer]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-1249 }
 
 - id: AWS-NET-005
   module: core
@@ -170,6 +173,7 @@
     - { framework: aws-fsbp, ref: Cognito.2 }
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1546 }
 
 - id: AWS-NET-007
   module: core
@@ -280,6 +284,7 @@
     - { framework: aws-fsbp, ref: SSM.1 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1387 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -308,6 +313,7 @@
   sources: [aws-session-manager-access, aws-eice, aws-identity-center-mfa-types, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-03 }
+    - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
 
@@ -334,6 +340,7 @@
   sources: [aws-ds-windows-laps, aws-ec2rescue-reset, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-01 }
+    - { framework: ism, ref: ISM-1685 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -361,6 +368,10 @@
   sources: [aws-ec2-credential-guard, ms-lsa-protection, ms-memory-integrity, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1686 }
+    - { framework: ism, ref: ISM-1861 }
+    - { framework: ism, ref: ISM-1896 }
+    - { framework: ism, ref: ISM-1897 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -392,6 +403,9 @@
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: ism, ref: ISM-1700 }
+    - { framework: ism, ref: ISM-1701 }
+    - { framework: ism, ref: ISM-1702 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
     - { strategy: patch-applications, level: 1 }
@@ -422,6 +436,9 @@
     - { framework: aws-fsbp, ref: SSM.2 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: ism, ref: ISM-1501 }
+    - { framework: ism, ref: ISM-1695 }
+    - { framework: ism, ref: ISM-1877 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
 
@@ -459,6 +476,9 @@
     - { framework: aws-fsbp, ref: EKS.9 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: ism, ref: ISM-1698 }
+    - { framework: ism, ref: ISM-1876 }
+    - { framework: ism, ref: ISM-1905 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -484,6 +504,9 @@
   sources: [aws-inspector-ec2, aws-patch-manager, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1691 }
+    - { framework: ism, ref: ISM-1699 }
+    - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -514,6 +537,8 @@
     - { framework: aws-fsbp, ref: RDS.13 }
     - { framework: aws-fsbp, ref: RDS.35 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1693 }
+    - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
 
@@ -539,6 +564,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1692 }
+    - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 3 }
 
@@ -565,6 +592,8 @@
   sources: [aws-patch-manager, aws-ena-windows-driver, aws-shared-responsibility, asd-patching, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1696 }
+    - { framework: ism, ref: ISM-1879 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -591,5 +620,6 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }

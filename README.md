@@ -24,8 +24,9 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **Crown-jewel discovery.** Guided prompts per category: identity plane, privileged access, business data,
   collaboration and email, endpoints, cloud infrastructure and AI assistants.
 - **Vendor-grounded questions.** Each question cites the Microsoft, Google or AWS guidance it comes from and maps to
-  CIS Benchmark recommendations, the ASD Essential Eight, NIST CSF 2.0 and the Department of Home Affairs Industry
-  Data Classification Framework (IDCF).
+  CIS Benchmark recommendations, the ASD Essential Eight, NIST CSF 2.0, the Australian Government Information
+  Security Manual (ISM, September 2026 release) and the Department of Home Affairs Industry Data Classification
+  Framework (IDCF).
 - **Cloud posture for Azure, Google Cloud and AWS.** Optional Azure and Google Cloud modules and an AWS platform ask
   about the misconfigurations a cloud security posture management (CSPM) tool flags first: privileged access to the
   management plane, public storage, databases and snapshots, secrets in configuration, logging and threat detection,
@@ -185,7 +186,7 @@ hex codes, with a contrast check). Then generate the PDF in the browser.
 
 A report leadership will actually read: it opens with scope, the standards it was assessed against and a
 point-in-time statement, then an executive summary, the crown-jewel register, a risk register, findings with fixes, a
-30/60/90-day roadmap, framework alignment (Essential Eight, IDCF, NIST CSF 2.0, CIS) and, when included, the SOC
+30/60/90-day roadmap, framework alignment (Essential Eight, ISM, IDCF, NIST CSF 2.0, CIS) and, when included, the SOC
 maturity and AI use-case register sections. Every page carries your marking and the time it was generated.
 
 <table>
@@ -304,6 +305,7 @@ being dropped.
 | Essential Eight | A maturity level counts only when every question at that level and below is Yes. Indicative only: cloud-platform controls, not a full ASD assessment |
 | Roadmap | Gaps ranked by risk reduced across your crown jewels ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
 | IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes |
+| ISM | Mapping only, generated from ASD's ISM OSCAL catalog (September 2026 release). The optional "Show ISM baseline" picker annotates findings that touch the NON_CLASSIFIED, OFFICIAL: Sensitive or PROTECTED baselines and adds a count; it never changes a score |
 | SOC maturity | Each question rated 0–5 (capability 0–3) against its level descriptions; Unknown scores 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings (never combined); a domain is the unweighted mean of its in-scope aspects. Default targets maturity 3, capability 2. Kept apart from the risk scores |
 | AI readiness | Scored like the controls (Yes 1, Partial 0.5, No, Unknown and unanswered 0, N/A with a reason left out, severity-weighted) over the questions that apply to each use case. Agent questions are asked unless it only gives output. Indicative, not a DTA rating, and kept apart from the risk scores |
 
@@ -345,7 +347,8 @@ Conditional Access, Microsoft 365 Copilot oversharing guidance, Purview, Defende
 (enterprise foundations, organisation policies, Security Command Center), Azure documentation (Azure RBAC and PIM,
 Defender for Cloud, Storage, Key Vault, networking, Azure Backup), AWS documentation (IAM and IAM Identity Center,
 Organizations, S3, CloudTrail, GuardDuty, Security Hub CSPM, AWS Backup), plus the ASD Essential Eight Maturity Model,
-NIST CSF 2.0, the Home Affairs Industry Data Classification Framework, the SOC-CMM® model, the Digital Transformation
+the Australian Government Information Security Manual (from ASD's ISM OSCAL catalog), NIST CSF 2.0, the Home Affairs
+Industry Data Classification Framework, the SOC-CMM® model, the Digital Transformation
 Agency's AI policy, standards, impact assessment guidance and agentic AI addendum, and ASD's guidance on agentic AI.
 
 ### Keeping the sources current
@@ -397,7 +400,10 @@ by Rob van Os ([NOTICE](content/soc/NOTICE.md)). The IDCF content paraphrases th
 Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and Industrial Research Organisation (CSIRO)
 2026, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms excepted), and "IDCF: A
 guide to system security" by the Australian Government Department of Home Affairs, used under the department's website
-terms (CC BY 3.0 AU). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
+terms (CC BY 3.0 AU). The ISM control titles in [`content/frameworks/ism.yaml`](content/frameworks/ism.yaml) are
+shortened statements from the Information Security Manual, © Commonwealth of Australia 2024, generated from ASD's
+ISM OSCAL catalog and licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms and ASD
+logo excepted). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
 © Commonwealth of Australia, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and draws on ASD
 guidance. CIS Benchmarks are referenced by recommendation number and title only, under CC BY-NC-SA 4.0.
 

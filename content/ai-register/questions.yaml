@@ -13,7 +13,7 @@
     Agree an owner with the business area that relies on the use case, record their name and email in the register,
     and have your accountable official note them on the register of owners.
   sources: [dta-ai-policy-strategy, dta-ai-accountability]
-  refs: [{ framework: nist-csf-2, ref: GV.RR-02 }]
+  refs: [{ framework: nist-csf-2, ref: GV.RR-02 }, { framework: ism, ref: ISM-1071 }]
 - id: AIR-ACC-002
   theme: accountability
   basis: policy-must
@@ -42,7 +42,7 @@
     List what the agent is allowed to do, name who answers for each outcome, and keep reviewable records of its
     actions. Include who is accountable for data coming from third-party or external systems.
   sources: [dta-agentic-lifecycle]
-  refs: [{ framework: dta-agentic-ai, ref: AGT.1.1 }, { framework: nist-csf-2, ref: GV.RR-02 }]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.1.1 }, { framework: nist-csf-2, ref: GV.RR-02 }, { framework: ism, ref: ISM-2135 }, { framework: ism, ref: ISM-2159 }]
 - id: AIR-OVR-001
   theme: oversight
   basis: standard-must
@@ -75,7 +75,7 @@
     Decide which actions need approval first and which a supervisor watches, build those checkpoints into the
     workflow, and document who is escalated to and when.
   sources: [dta-agentic-lifecycle, dta-agentic-key-terms, asd-agentic-ai]
-  refs: [{ framework: dta-agentic-ai, ref: AGT.1.2 }, { framework: dta-agentic-ai, ref: AGT.3.6 }]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.1.2 }, { framework: dta-agentic-ai, ref: AGT.3.6 }, { framework: ism, ref: ISM-2113 }]
 - id: AIR-OVR-003
   theme: oversight
   when: agentic
@@ -105,7 +105,7 @@
     Give each agent its own identity, remove broad or inherited permissions, and make sure the agent can't change its
     own roles, consent to new scopes or create credentials.
   sources: [dta-agentic-design, asd-agentic-ai]
-  refs: [{ framework: dta-agentic-ai, ref: AGT.3.3 }, { framework: nist-csf-2, ref: PR.AA-05 }, { framework: nist-csf-2, ref: PR.AA-01 }]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.3 }, { framework: nist-csf-2, ref: PR.AA-05 }, { framework: nist-csf-2, ref: PR.AA-01 }, { framework: ism, ref: ISM-2133 }, { framework: ism, ref: ISM-2156 }]
 - id: AIR-ACS-002
   theme: access
   basis: addendum-should
@@ -121,7 +121,7 @@
     Review the app's consented permissions and connectors in your admin centre, remove what isn't needed, and record
     who approved what remains.
   sources: [dta-agentic-design, dta-agentic-integrate, asd-agentic-ai]
-  refs: [{ framework: dta-agentic-ai, ref: AGT.3.5 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: PR.AA-05 }]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.3.5 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: PR.AA-05 }, { framework: ism, ref: ISM-2138 }, { framework: ism, ref: ISM-2156 }]
 - id: AIR-ACS-003
   theme: access
   when: public-tool
@@ -138,7 +138,7 @@
     Set the rules for the tool in your AI use policy, add a splash screen or banner, and use DLP or upload blocking for
     sensitive and classified content.
   sources: [dta-public-genai-agency]
-  refs: [{ framework: nist-csf-2, ref: PR.DS-01 }, { framework: nist-csf-2, ref: GV.PO-01 }]
+  refs: [{ framework: nist-csf-2, ref: PR.DS-01 }, { framework: nist-csf-2, ref: GV.PO-01 }, { framework: ism, ref: ISM-2074 }]
 - id: AIR-DAT-001
   theme: data
   when: personal-data
@@ -227,7 +227,7 @@
   yesLooksLike: Agent actions, tool calls and human oversight events are logged centrally, and alerts fire when the agent steps outside its scope.
   remediation: Send the agent's action and tool logs to your SIEM, and alert on out-of-scope actions, unusual volumes and injection patterns.
   sources: [dta-agentic-monitor, dta-agentic-integrate]
-  refs: [{ framework: dta-agentic-ai, ref: AGT.8.1 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: DE.CM-09 }, { framework: nist-csf-2, ref: DE.CM-03 }]
+  refs: [{ framework: dta-agentic-ai, ref: AGT.8.1 }, { framework: dta-agentic-ai, ref: AGT.7.1 }, { framework: nist-csf-2, ref: DE.CM-09 }, { framework: nist-csf-2, ref: DE.CM-03 }, { framework: ism, ref: ISM-2114 }, { framework: ism, ref: ISM-2159 }]
 - id: AIR-OFF-001
   theme: switch-off
   when: agentic
@@ -256,7 +256,7 @@
   yesLooksLike: Staff know how to report a concern about the AI, and AI incidents are logged, triaged and escalated like other ICT incidents.
   remediation: Add AI incidents to your incident categories and playbooks, and tell staff how to raise a concern.
   sources: [dta-ai-policy-operations]
-  refs: [{ framework: nist-csf-2, ref: RS.MA-01 }, { framework: nist-csf-2, ref: RS.CO-02 }]
+  refs: [{ framework: nist-csf-2, ref: RS.MA-01 }, { framework: nist-csf-2, ref: RS.CO-02 }, { framework: ism, ref: ISM-0576 }]
 - id: AIR-OFF-003
   theme: switch-off
   basis: standard-must

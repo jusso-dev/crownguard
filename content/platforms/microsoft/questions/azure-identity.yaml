@@ -25,6 +25,7 @@
     - { framework: mcsb, ref: PA-1 }
     - { framework: mcsb, ref: PA-2 }
     - { framework: ms-zero-trust, ref: Infrastructure III }
+    - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -56,6 +57,7 @@
     - { framework: mcsb, ref: IM-3 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+    - { framework: ism, ref: ISM-2141 }
 
 - id: MS-AZ-007
   module: azure
@@ -87,6 +89,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-1 }
     - { framework: mcsb, ref: PA-7 }
+    - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -119,6 +122,7 @@
     - { framework: mcsb, ref: PA-1 }
     - { framework: mcsb, ref: PA-2 }
     - { framework: ms-zero-trust, ref: Infrastructure III }
+    - { framework: ism, ref: ISM-1649 }
 
 - id: MS-AZ-009
   module: azure
@@ -150,6 +154,8 @@
     - { framework: mcsb, ref: IM-6 }
     - { framework: mcsb, ref: IM-7 }
     - { framework: ms-zero-trust, ref: Identity II }
+    - { framework: ism, ref: ISM-1173 }
+    - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
 
@@ -185,6 +191,8 @@
     - { framework: mcsb, ref: IM-3 }
     - { framework: mcsb, ref: PA-7 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+    - { framework: ism, ref: ISM-1249 }
+    - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
 
@@ -253,6 +261,8 @@
     - { framework: mcsb, ref: PA-4 }
     - { framework: mcsb, ref: PA-7 }
     - { framework: ms-zero-trust, ref: Identity IV }
+    - { framework: ism, ref: ISM-1073 }
+    - { framework: ism, ref: ISM-2124 }
 
 - id: MS-AZ-045
   module: azure
@@ -284,3 +294,4 @@
     - { framework: mcsb, ref: PA-7 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+    - { framework: ism, ref: ISM-1249 }

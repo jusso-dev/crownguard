@@ -23,6 +23,7 @@
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: ism, ref: ISM-1537 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
 
 - id: GO-CLOG-002
@@ -49,6 +50,8 @@
     - { framework: cis-gcp, ref: "2.4" }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1815 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -104,6 +107,8 @@
     - { framework: cis-gcp, ref: "2.6" }
     - { framework: cis-gcp, ref: "2.7" }
     - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: ism, ref: ISM-1228 }
+    - { framework: ism, ref: ISM-1650 }
 
 - id: GO-CLOG-005
   module: gcp
@@ -132,6 +137,8 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1906 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -169,6 +176,10 @@
     - { framework: cis-gcp, ref: "4.12" }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1695 }
+    - { framework: ism, ref: ISM-1877 }
+    - { framework: ism, ref: ISM-1701 }
+    - { framework: ism, ref: ISM-1702 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
 
@@ -203,6 +214,9 @@
   refs:
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1876 }
+    - { framework: ism, ref: ISM-1905 }
+    - { framework: ism, ref: ISM-1698 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -234,6 +248,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: ism, ref: ISM-1693 }
+    - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
 
@@ -263,6 +279,7 @@
   refs:
     - { framework: cis-gcp, ref: "4.12" }
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1696 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -290,6 +307,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -319,5 +337,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1692 }
+    - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 3 }

@@ -26,6 +26,7 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: ism, ref: ISM-2137 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-APP-002
@@ -52,6 +53,7 @@
     - { framework: nist-csf-2, ref: ID.AM-04 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-APP-003
@@ -109,6 +111,8 @@
     - { framework: cis-gws, ref: "5.1.1.1" }
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: ism, ref: ISM-2138 }
+    - { framework: ism, ref: ISM-2139 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-APP-005
@@ -136,4 +140,6 @@
     - { framework: cis-gws, ref: "5.1.1.1" }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: ism, ref: ISM-2139 }
+    - { framework: ism, ref: ISM-1228 }
     - { framework: idcf, ref: "Rule 1" }

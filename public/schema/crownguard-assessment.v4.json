@@ -352,6 +352,14 @@
         "additionalProperties": {}
       }
     },
+    "ismBaseline": {
+      "type": "string",
+      "enum": [
+        "NON_CLASSIFIED",
+        "OFFICIAL_SENSITIVE",
+        "PROTECTED"
+      ]
+    },
     "branding": {
       "type": "object",
       "properties": {

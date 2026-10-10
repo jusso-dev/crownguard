@@ -1,4 +1,5 @@
 import type { ExposureId } from "../content/schema";
+import type { IsmBaseline } from "./ism";
 import type { SocAnswer, SocProvider, SocTargets } from "./soc";
 import type { AiAccess, AiAutonomy, AiCriterion, AiDataKind, AiDomain, AiLifecycle, AiRiskRating, AiStandardUse, AiTechnology, AiUsagePattern } from "./aiOptions";
 
@@ -153,6 +154,11 @@ export interface Assessment {
   imports?: ImportRecord[];
   /** Answers and notes whose question is no longer in this build's catalogue. Kept so nothing is lost. */
   orphans?: Record<string, OrphanAnswer>;
+  /**
+   * Optional ISM baseline shown in the report (NON_CLASSIFIED, OFFICIAL_SENSITIVE or PROTECTED). It annotates which
+   * findings touch controls in that baseline and adds a count to the summary; it never changes a score.
+   */
+  ismBaseline?: IsmBaseline;
   /** Optional SOC maturity self-assessment; present when the user includes it. */
   soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
   /**

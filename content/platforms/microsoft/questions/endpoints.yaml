@@ -55,6 +55,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1488 }
+    - { framework: ism, ref: ISM-1489 }
+    - { framework: ism, ref: ISM-1671 }
   e8:
     - { strategy: office-macros, level: 1 }
 
@@ -88,6 +91,10 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: ES-2 }
+    - { framework: ism, ref: ISM-1667 }
+    - { framework: ism, ref: ISM-1668 }
+    - { framework: ism, ref: ISM-1669 }
+    - { framework: ism, ref: ISM-1670 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -120,6 +127,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
+    - { framework: ism, ref: ISM-0843 }
+    - { framework: ism, ref: ISM-1657 }
+    - { framework: ism, ref: ISM-1870 }
   e8:
     - { strategy: application-control, level: 1 }
 
@@ -148,6 +158,7 @@
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1695 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
 
@@ -178,6 +189,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1691 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -206,6 +218,8 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: ES-1 }
     - { framework: ms-zero-trust, ref: Endpoints 4 }
+    - { framework: ism, ref: ISM-1034 }
+    - { framework: ism, ref: ISM-1341 }
 
 - id: MS-END-008
   module: core
@@ -233,6 +247,7 @@
     - { framework: cis-m365, ref: "5.1.4.4" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-7 }
+    - { framework: ism, ref: ISM-0445 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
 
@@ -294,6 +309,9 @@
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: mcsb, ref: AM-1 }
     - { framework: mcsb, ref: PV-5 }
+    - { framework: ism, ref: ISM-1701 }
+    - { framework: ism, ref: ISM-1702 }
+    - { framework: ism, ref: ISM-1807 }
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
@@ -326,6 +344,9 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1694 }
+    - { framework: ism, ref: ISM-1695 }
+    - { framework: ism, ref: ISM-1877 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
 
@@ -359,6 +380,8 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-5 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1693 }
+    - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
 
@@ -396,6 +419,8 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-06 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1692 }
+    - { framework: ism, ref: ISM-1901 }
   e8:
     - { strategy: patch-applications, level: 3 }
 
@@ -426,6 +451,7 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-02 }
     - { framework: mcsb, ref: AM-3 }
+    - { framework: ism, ref: ISM-0304 }
   e8:
     - { strategy: patch-applications, level: 3 }
 
@@ -458,6 +484,8 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-06 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1696 }
+    - { framework: ism, ref: ISM-1902 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -493,6 +521,10 @@
     - { framework: nist-csf-2, ref: PR.PS-03 }
     - { framework: mcsb, ref: PV-5 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1703 }
+    - { framework: ism, ref: ISM-1879 }
+    - { framework: ism, ref: ISM-1900 }
+    - { framework: ism, ref: ISM-1903 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -525,6 +557,7 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
     - { framework: mcsb, ref: PV-6 }
+    - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -557,6 +590,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
+    - { framework: ism, ref: ISM-1490 }
+    - { framework: ism, ref: ISM-1871 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -586,6 +621,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
+    - { framework: ism, ref: ISM-1544 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -614,6 +650,7 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: ID.IM-03 }
     - { framework: mcsb, ref: AM-5 }
+    - { framework: ism, ref: ISM-1582 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -643,6 +680,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
+    - { framework: ism, ref: ISM-1656 }
   e8:
     - { strategy: application-control, level: 3 }
 
@@ -673,6 +711,8 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: AM-5 }
     - { framework: mcsb, ref: ES-2 }
+    - { framework: ism, ref: ISM-1658 }
+    - { framework: ism, ref: ISM-1659 }
   e8:
     - { strategy: application-control, level: 3 }
 
@@ -701,6 +741,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: ES-2 }
+    - { framework: ism, ref: ISM-1673 }
   e8:
     - { strategy: office-macros, level: 2 }
 
@@ -737,6 +778,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1674 }
+    - { framework: ism, ref: ISM-1675 }
+    - { framework: ism, ref: ISM-1891 }
   e8:
     - { strategy: office-macros, level: 3 }
 
@@ -771,6 +815,8 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1487 }
+    - { framework: ism, ref: ISM-1890 }
   e8:
     - { strategy: office-macros, level: 3 }
 
@@ -797,6 +843,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1676 }
   e8:
     - { strategy: office-macros, level: 3 }
 
@@ -825,6 +872,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1654 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -851,6 +899,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1485 }
+    - { framework: ism, ref: ISM-1486 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -877,6 +927,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1585 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -906,6 +957,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1412 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -937,6 +989,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1542 }
+    - { framework: ism, ref: ISM-1823 }
+    - { framework: ism, ref: ISM-1859 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -968,6 +1023,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1824 }
+    - { framework: ism, ref: ISM-1860 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -996,6 +1053,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1621 }
+    - { framework: ism, ref: ISM-1655 }
   e8:
     - { strategy: user-application-hardening, level: 3 }
 
@@ -1027,6 +1086,7 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: mcsb, ref: PV-3 }
+    - { framework: ism, ref: ISM-1622 }
   e8:
     - { strategy: user-application-hardening, level: 3 }
 
@@ -1057,6 +1117,7 @@
     - { framework: cis-m365, ref: "5.1.4.5" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: mcsb, ref: IM-8 }
+    - { framework: ism, ref: ISM-1685 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -1087,5 +1148,9 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
     - { framework: mcsb, ref: IM-8 }
+    - { framework: ism, ref: ISM-1686 }
+    - { framework: ism, ref: ISM-1861 }
+    - { framework: ism, ref: ISM-1896 }
+    - { framework: ism, ref: ISM-1897 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
