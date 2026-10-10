@@ -62,9 +62,49 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+html {
+  /* Clear the sticky header when focused controls scroll into view (WCAG 2.2 SC 2.4.11). */
+  scroll-padding-top: 4.5rem;
+}
+
 html,
 body {
   overflow-x: clip;
+}
+
+/* Clip pattern (not display:none) so screen readers still announce the text. */
+@utility sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* First focusable control: off-screen until focused. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  z-index: 50;
+  transform: translateY(-120%);
+  border-radius: var(--radius-control);
+  background: var(--color-ink);
+  color: var(--color-paper);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: transform 120ms var(--ease-out);
+}
+.skip-link:focus {
+  transform: translateY(0.75rem);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 body {

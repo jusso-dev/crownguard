@@ -37,12 +37,12 @@ test("Save file writes in place and keeps you on the same question", async ({ pa
     };
   });
   const section = await toSecondControlsSection(page);
-  const scrollBefore = await page.evaluate(() => window.scrollY);
-
   await page.getByRole("button", { name: "Save file" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Saved to save-health.crownguard.json" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: section, level: 2 })).toBeVisible();
-  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore);
+  // Same step and section: still on this question. (Exact scrollY moves when focus hits the sticky
+  // header under scroll-padding-top for WCAG 2.4.11; the heading staying in view is the contract.)
+  await expect(page.getByRole("heading", { name: section, level: 2 })).toBeInViewport();
+  await expect(page.locator("article[data-question]").nth(1)).toBeInViewport();
 
   // Answer something, then save again with the keyboard: same file, no second dialog.
   await page.locator("article[data-question]").nth(1).getByRole("radio", { name: "Yes", exact: true }).click();

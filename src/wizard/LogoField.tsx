@@ -96,7 +96,7 @@ export function LogoField({ testId }: { testId: string }) {
           ))}
           <Button
             variant="ghost"
-            className="min-h-7 px-2 py-0.5 text-xs"
+            className="min-h-9 px-2.5 py-1 text-xs"
             onClick={() => {
               setBranding(suggested);
               setSuggested(undefined);
