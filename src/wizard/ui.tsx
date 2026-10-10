@@ -97,7 +97,9 @@ export function StepHeader({ title, step, children }: { title: string; step?: st
   return (
     <header className="mb-8">
       {step && <p className="mono-label mb-2 text-accent">{step}</p>}
-      <h1 className="text-[1.75rem] font-semibold leading-tight sm:text-[2rem]">{title}</h1>
+      <h1 id="step-heading" tabIndex={-1} className="text-[1.75rem] font-semibold leading-tight outline-none sm:text-[2rem]">
+        {title}
+      </h1>
       {children && <p className="mt-3 max-w-[68ch] text-[0.9375rem] leading-relaxed text-ink-2">{children}</p>}
     </header>
   );
@@ -114,7 +116,7 @@ export function CheckboxPill({ checked, onChange, children }: { checked: boolean
       <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span
         aria-hidden
-        className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-[3px] border text-[9px] leading-none ${checked ? "border-paper/60 text-paper" : "border-field"}`}
+        className={`grid h-4 w-4 shrink-0 place-items-center rounded-[3px] border text-[10px] leading-none ${checked ? "border-paper/60 text-paper" : "border-field"}`}
       >
         {checked ? "✓" : ""}
       </span>

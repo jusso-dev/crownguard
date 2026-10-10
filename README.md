@@ -390,6 +390,13 @@ separately rejects sources that nothing cites. See [Source watch](docs/content-g
 CIS Benchmarks are referenced by recommendation number and title only, under CIS's CC BY-NC-SA 4.0 terms. Get the
 benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit and remediation steps.
 
+## Accessibility
+
+crownguard aims for [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA. Automated axe checks cover every wizard step
+in Playwright. Known limitation: the PDF report is not tagged — use the on-screen Review step with assistive
+technology for now. See [docs/accessibility.md](docs/accessibility.md) for the checklist. Report a problem via
+[SECURITY.md](SECURITY.md) or a [GitHub issue](https://github.com/jusso-dev/crownguard/issues).
+
 ## Limitations
 
 This is a self-assessment, not an audit. It doesn't connect to your tenant or verify answers, and it covers your

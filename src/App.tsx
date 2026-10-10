@@ -4,6 +4,7 @@ import { questionIdSet } from "./content/questionIds";
 import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Assessment, Mode } from "./engine/types";
+import { afterStepChange } from "./wizard/a11y";
 import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
 import { parseAssessment } from "./wizard/parseAssessment";
 import { rehydrateNotices } from "./wizard/persistence";
@@ -111,6 +112,16 @@ function SaveStatus({ persisted, fileSave }: { persisted: boolean; fileSave?: { 
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** Keep the tab title in sync with the current screen, step and organisation. */
+function useDocumentTitle(screen: "start" | "resume" | "wizard", stepName: string, orgName: string) {
+  useEffect(() => {
+    const org = orgName.trim() || "New assessment";
+    if (screen === "start") document.title = `Start | ${org} | crownguard`;
+    else if (screen === "resume") document.title = `Welcome back | ${org} | crownguard`;
+    else document.title = `${stepName} | ${org} | crownguard`;
+  }, [screen, stepName, orgName]);
+}
+
 function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue: () => void; onSave: () => void; onNew: () => void; onStartRegister?: () => void }) {
   const a = useStore((s) => s.assessment);
   const now = useNow();
@@ -123,7 +134,9 @@ function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue
     <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
       <div className="p-7">
         <p className="mono-label text-accent">Welcome back</p>
-        <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">{a.org.name || "Your assessment"}</h1>
+        <h1 id="step-heading" tabIndex={-1} className="mt-2 text-[1.75rem] font-semibold leading-tight outline-none">
+          {a.org.name || "Your assessment"}
+        </h1>
         <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-8 gap-y-2 text-sm">
           <dt className="text-muted">You were on</dt>
           <dd className="text-ink">
@@ -173,7 +186,9 @@ function StartCard({ onPick }: { onPick: (mode: Mode) => void }) {
       <div className="overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
         <div className="p-7">
           <p className="mono-label text-accent">Start</p>
-          <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">What would you like to do?</h1>
+          <h1 id="step-heading" tabIndex={-1} className="mt-2 text-[1.75rem] font-semibold leading-tight outline-none">
+            What would you like to do?
+          </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-2">
             Everything runs in this browser, and nothing you enter is sent anywhere. You can switch from the register to
             the full assessment later without losing anything.
@@ -238,6 +253,8 @@ export function App() {
   // Opening a saved assessment (or resuming) preloads the platforms it uses.
   useEnsurePlatforms(assessment.platforms);
 
+  useDocumentTitle(screen, steps[step] ?? "Organisation", assessment.org.name);
+
   // The deep link starts the standalone register on a fresh visit. With a saved assessment it only asks (see ResumeCard).
   const linked = useRef(false);
   useEffect(() => {
@@ -278,8 +295,10 @@ export function App() {
     return () => window.removeEventListener(OPEN_FILE_EVENT, open);
   }, []);
   const go = (i: number) => {
+    if (i > reachable) return;
     setStep(i);
     window.scrollTo({ top: 0 });
+    afterStepChange(i, steps.length, steps[i] ?? "");
   };
 
   /** Show a file this build only partly understands, without any risk of writing it back over the user's work. */
@@ -376,7 +395,11 @@ export function App() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      <div id="step-announce" className="sr-only" aria-live="polite" aria-atomic="true" />
+      <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm [overflow-anchor:none]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="h-7 w-7 shrink-0" />
@@ -442,45 +465,61 @@ export function App() {
       </header>
 
       {screen === "resume" ? (
-        <div className="px-4 py-10 sm:px-6">
+        <main id="main-content" tabIndex={-1} className="px-4 py-10 outline-none sm:px-6">
           <ResumeCard
             onContinue={() => setScreen("wizard")}
             onSave={() => void saveFile()}
             onNew={startNew}
             {...(linkedAiRegister ? { onStartRegister: startLinkedRegister } : {})}
           />
-        </div>
+        </main>
       ) : screen === "start" ? (
-        <div className="px-4 py-10 sm:px-6">
+        <main id="main-content" tabIndex={-1} className="px-4 py-10 outline-none sm:px-6">
           <StartCard
             onPick={(m) => {
               startAssessment(m);
               setScreen("wizard");
             }}
           />
-        </div>
+        </main>
       ) : (
         <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-[208px_minmax(0,1fr)] lg:py-12">
-          <nav aria-label="Steps" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <nav aria-label="Steps" className="relative min-w-0 lg:sticky lg:top-24 lg:self-start">
+            {reachable < steps.length - 1 && (
+              <span id="step-lock-hint" className="sr-only">
+                Complete {steps[reachable]} first
+              </span>
+            )}
             <ol className="-mx-1 flex gap-0.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:gap-0 lg:px-0 lg:pb-0">
               {steps.map((label, i) => {
                 const current = i === step;
                 const done = i < step;
+                const locked = i > reachable;
                 return (
                   <li key={label} className="shrink-0">
                     <button
                       type="button"
-                      disabled={i > reachable}
+                      aria-disabled={locked || undefined}
+                      aria-describedby={locked ? "step-lock-hint" : undefined}
                       aria-current={current ? "step" : undefined}
                       onClick={() => go(i)}
-                      className={`relative flex w-full items-center gap-3 whitespace-nowrap rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 lg:rounded-none lg:border-l-2 lg:pl-4 ${
-                        current
-                          ? "bg-accent-soft font-medium text-ink lg:border-accent lg:bg-transparent"
-                          : "text-ink-2 lg:border-rule [@media(hover:hover)]:enabled:hover:text-ink [@media(hover:hover)]:enabled:hover:bg-sunken lg:[@media(hover:hover)]:enabled:hover:bg-transparent lg:[@media(hover:hover)]:enabled:hover:border-ink-2"
+                      className={`relative flex w-full items-center gap-3 whitespace-nowrap rounded-[var(--radius-control)] px-3 py-2 text-left text-sm transition-colors duration-150 lg:rounded-none lg:border-l-2 lg:pl-4 ${
+                        locked
+                          ? "cursor-not-allowed opacity-40 text-ink-2 lg:border-rule"
+                          : current
+                            ? "bg-accent-soft font-medium text-ink lg:border-accent lg:bg-transparent"
+                            : "text-ink-2 lg:border-rule [@media(hover:hover)]:hover:text-ink [@media(hover:hover)]:hover:bg-sunken lg:[@media(hover:hover)]:hover:bg-transparent lg:[@media(hover:hover)]:hover:border-ink-2"
                       }`}
                     >
                       <span className={`w-4 shrink-0 font-mono text-[0.6875rem] tabular-nums ${current ? "text-accent" : done ? "text-ok" : "text-muted"}`}>
-                        {done ? "✓" : pad(i + 1)}
+                        {done ? (
+                          <>
+                            <span aria-hidden>✓</span>
+                            <span className="sr-only">Completed: </span>
+                          </>
+                        ) : (
+                          pad(i + 1)
+                        )}
                       </span>
                       {label}
                     </button>
@@ -490,7 +529,7 @@ export function App() {
             </ol>
           </nav>
 
-          <main className="min-w-0">
+          <main id="main-content" tabIndex={-1} className="min-w-0 outline-none">
             <p className="mono-label mb-2 text-muted">
               Step {pad(step + 1)} / {pad(steps.length)}
             </p>
@@ -508,6 +547,28 @@ export function App() {
           </main>
         </div>
       )}
+
+      <footer className="border-t border-rule px-4 py-4 text-xs leading-relaxed text-muted sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          crownguard aims for{" "}
+          <a className="text-ink-2 underline underline-offset-2" href="https://www.w3.org/TR/WCAG22/">
+            WCAG 2.2
+          </a>{" "}
+          Level AA. The PDF report is not tagged. See the{" "}
+          <a className="text-ink-2 underline underline-offset-2" href="https://github.com/jusso-dev/crownguard/blob/main/docs/accessibility.md">
+            accessibility notes
+          </a>
+          . Report a problem via{" "}
+          <a className="text-ink-2 underline underline-offset-2" href="https://github.com/jusso-dev/crownguard/blob/main/SECURITY.md">
+            SECURITY.md
+          </a>{" "}
+          or a{" "}
+          <a className="text-ink-2 underline underline-offset-2" href="https://github.com/jusso-dev/crownguard/issues">
+            GitHub issue
+          </a>
+          .
+        </div>
+      </footer>
     </div>
   );
 }
