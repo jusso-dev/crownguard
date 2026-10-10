@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { catalogue, contentHash } from "./content/catalogue";
+import { catalogue, contentHash, ensurePlatforms } from "./content/catalogue";
 import { questionIdSet } from "./content/questionIds";
+import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Assessment, Mode } from "./engine/types";
 import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
@@ -113,7 +114,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
 function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue: () => void; onSave: () => void; onNew: () => void; onStartRegister?: () => void }) {
   const a = useStore((s) => s.assessment);
   const now = useNow();
-  const questions = activeQuestions(catalogue, a);
+  const platformsReady = useEnsurePlatforms(a.platforms);
+  const questions = platformsReady ? activeQuestions(catalogue, a) : [];
   const answers = effectiveAnswers(a);
   const answered = questions.filter((q) => answers[q.id]).length;
   const at = clampStep(a.progress?.step, modeOf(a));
@@ -233,6 +235,8 @@ export function App() {
   const [saver] = useState(createFileSaver);
   const readOnly = useStore((s) => s.readOnly);
   const View = viewsFor(mode)[step] ?? OrgStep;
+  // Opening a saved assessment (or resuming) preloads the platforms it uses.
+  useEnsurePlatforms(assessment.platforms);
 
   // The deep link starts the standalone register on a fresh visit. With a saved assessment it only asks (see ResumeCard).
   const linked = useRef(false);
@@ -280,14 +284,16 @@ export function App() {
 
   /** Show a file this build only partly understands, without any risk of writing it back over the user's work. */
   function openReadOnly(a: Assessment) {
-    useStore.getState().setReadOnly(true);
-    load(a);
-    saver.reset();
-    setFileSave(undefined);
-    setScreen("wizard");
-    setNotice({
-      kind: "warn",
-      text: `Opened ${a.org.name || "assessment"} read-only. Nothing will be saved from here — reload the page to update crownguard before you work on this file.`,
+    void ensurePlatforms(a.platforms).then(() => {
+      useStore.getState().setReadOnly(true);
+      load(a);
+      saver.reset();
+      setFileSave(undefined);
+      setScreen("wizard");
+      setNotice({
+        kind: "warn",
+        text: `Opened ${a.org.name || "assessment"} read-only. Nothing will be saved from here — reload the page to update crownguard before you work on this file.`,
+      });
     });
   }
 
@@ -321,6 +327,7 @@ export function App() {
       return;
     }
 
+    await ensurePlatforms(parsed.assessment.platforms);
     load(parsed.assessment);
     if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
     saver.reset();

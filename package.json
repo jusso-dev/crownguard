@@ -14,7 +14,8 @@
     "validate:content": "tsx scripts/validate-content.ts",
     "ism:build": "tsx scripts/ism/build.ts",
     "watch:sources": "tsx scripts/watch/index.ts",
-    "watch:apply": "tsx scripts/watch/apply-cli.ts"
+    "watch:apply": "tsx scripts/watch/apply-cli.ts",
+    "check:bundle": "tsx scripts/check-bundle-size.ts"
   },
   "author": "Justin Middler",
   "license": "MIT",
@@ -26,7 +27,6 @@
     "@react-pdf/renderer": "^4.9.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "yaml": "^2.9.1",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
@@ -50,7 +50,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "yaml": "^2.9.1"
   },
   "private": true,
   "type": "module"

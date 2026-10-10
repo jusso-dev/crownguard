@@ -1,4 +1,5 @@
 import { catalogue } from "../../content/catalogue";
+import { useEnsurePlatforms } from "../../content/useCatalogue";
 import type { Question } from "../../content/schema";
 import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer, type Evidence } from "../../engine/types";
@@ -12,7 +13,8 @@ const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 
 export function ControlsStep() {
   const assessment = useStore((s) => s.assessment);
-  const questions = activeQuestions(catalogue, assessment);
+  const ready = useEnsurePlatforms(assessment.platforms);
+  const questions = ready ? activeQuestions(catalogue, assessment) : [];
   const groups = assessment.platforms.flatMap((pid) => {
     const bundle = catalogue.platforms.get(pid);
     if (!bundle) return [];
@@ -27,6 +29,7 @@ export function ControlsStep() {
   const answers = effectiveAnswers(assessment);
   const answered = questions.filter((q) => answers[q.id]).length;
 
+  if (!ready) return <StepHeader title="Controls">Loading control questions…</StepHeader>;
   if (!group) return <StepHeader title="Controls">Add at least one crown jewel to see the relevant controls.</StepHeader>;
   const index = groups.indexOf(group);
 

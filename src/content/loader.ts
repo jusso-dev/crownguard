@@ -1,5 +1,6 @@
 import { parse } from "yaml";
 import { z } from "zod";
+import { aiRegisterSources } from "./aiRegisterSources";
 import {
   aiQuestionSchema,
   aiRegisterModelSchema,
@@ -23,6 +24,8 @@ import {
   type SocModel,
   type SocQuestion,
 } from "./schema";
+
+export { aiRegisterSources } from "./aiRegisterSources";
 
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
 export type ContentFiles = Record<string, string>;
@@ -151,17 +154,6 @@ function checkRef(where: string, f: Framework, ref: string, errors: string[], wa
   if (f.withdrawn.includes(ref)) warnings.push(`${where}: ${f.id} ref ${ref} names a control ASD has withdrawn`);
   else if (f.closed) errors.push(`${where}: ${f.id} has no control ${ref}`);
 }
-
-/** Every source the AI register's model, questions, curated AI app list and scope table cite. */
-export const aiRegisterSources = ({ model, questions, knownApps, scopes }: NonNullable<Catalogue["aiRegister"]>) => [
-  ...model.sources,
-  ...model.dates.map((d) => d.source),
-  ...model.caveats.flatMap((c) => c.sources),
-  ...model.kinds.flatMap((k) => k.sources),
-  ...questions.flatMap((q) => q.sources),
-  ...knownApps.map((a) => a.source),
-  ...scopes.map((s) => s.source),
-];
 
 function checkAiRegister(
   model: AiRegisterModel,
