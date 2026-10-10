@@ -9,13 +9,13 @@
 - id: dta-ai-policy-strategy
   title: "Policy for the responsible use of AI in government: strategy and oversight"
   publisher: Digital Transformation Agency
-  url: https://www.digital.gov.au/policy/ai/policy/strategy-and-oversight
-  retrieved: 2026-10-09
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/strategy-and-oversight
+  retrieved: 2026-10-10
 - id: dta-ai-policy-operations
   title: "Policy for the responsible use of AI in government: preparedness and operations"
   publisher: Digital Transformation Agency
-  url: https://www.digital.gov.au/policy/ai/policy/preparedness-and-operations
-  retrieved: 2026-10-09
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/preparedness-and-operations
+  retrieved: 2026-10-10
 - id: dta-ai-policy-appendices
   title: "Policy for the responsible use of AI in government: appendices (including Appendix C, in-scope criteria)"
   publisher: Digital Transformation Agency
@@ -142,5 +142,5 @@
 - id: asd-agentic-ai
   title: Careful adoption of agentic AI services (May 2026)
   publisher: Australian Signals Directorate
-  url: https://www.cyber.gov.au/business-government/secure-design/artificial-intelligence/careful-adoption-of-agentic-ai-services
-  retrieved: 2026-10-09
+  url: https://www.cyber.gov.au/publication/careful-adoption-of-agentic-ai-services
+  retrieved: 2026-10-10
