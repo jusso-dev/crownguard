@@ -39,6 +39,37 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
 
+  # Warn-only on purpose: must not fail CI and block unrelated PRs. GitHub disables scheduled workflows after 60 days
+  # without repository activity; this surfaces a quiet source-watch schedule with the re-enable link.
+  source-watch-heartbeat:
+    name: source-watch heartbeat
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Warn if scheduled source-watch is older than 3 days
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          REPO="${{ github.repository }}"
+          LINK="https://github.com/${REPO}/actions/workflows/source-watch.yml"
+          CREATED=$(gh api "repos/${REPO}/actions/workflows/source-watch.yml/runs?event=schedule&per_page=1" --jq '.workflow_runs[0].created_at // empty' 2>/tmp/sw-heartbeat.err)
+          STATUS=$?
+          if [ "$STATUS" -ne 0 ] || [ -z "$CREATED" ]; then
+            echo "::warning::Could not read the latest scheduled source-watch run (API may be unavailable, or no schedule has run yet). Re-enable if needed: ${LINK}"
+            exit 0
+          fi
+          AGE_SECONDS=$(( $(date -u +%s) - $(date -u -d "$CREATED" +%s) ))
+          if [ "$AGE_SECONDS" -gt $((3 * 24 * 60 * 60)) ]; then
+            echo "::warning::Last scheduled source-watch run was at ${CREATED} (more than 3 days ago). GitHub disables schedules after 60 quiet days — re-enable: ${LINK}"
+          else
+            echo "Last scheduled source-watch run: ${CREATED}"
+          fi
+          exit 0
+
   e2e:
     name: e2e
     runs-on: ubuntu-24.04

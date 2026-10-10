@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { catalogue } from "../../content/catalogue";
+import { SOURCES_LAST_CHECKED } from "../../content/sourcesChecked";
 import { buildAiRegisterReport, buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
 import { download, requestOpenFile, slug } from "../download";
@@ -69,6 +70,12 @@ export function ReportStep() {
               {assessment.aiRegister?.entries.some((e) => e.example) ? `, ${assessment.aiRegister.entries.filter((e) => e.example).length} example` : ""}
             </dd>
             <dt className="text-muted">Marking</dt><dd>{assessment.branding.marking}</dd>
+            {SOURCES_LAST_CHECKED !== "unknown" && (
+              <>
+                <dt className="text-muted">Sources last checked</dt>
+                <dd>{SOURCES_LAST_CHECKED}</dd>
+              </>
+            )}
           </dl>
         ) : (
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-8 gap-y-2.5 text-sm [&_dd]:text-ink [&_dd]:tabular-nums">
@@ -98,6 +105,12 @@ export function ReportStep() {
               </>
             )}
             <dt className="text-muted">Marking</dt><dd>{assessment.branding.marking}</dd>
+            {SOURCES_LAST_CHECKED !== "unknown" && (
+              <>
+                <dt className="text-muted">Sources last checked</dt>
+                <dd>{SOURCES_LAST_CHECKED}</dd>
+              </>
+            )}
           </dl>
         )}
         </div>

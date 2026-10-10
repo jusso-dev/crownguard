@@ -17,6 +17,7 @@ import { createFetcher } from "./fetch";
 import { FEEDS } from "./feeds";
 import { createGitHub } from "./github";
 import { profileFor } from "./hosts";
+import { parseIdList, parseM365ChecksMd, type UpstreamChecks } from "./mappings";
 import { DEFAULT_GUIDE_URL, PR_BODY_LIMIT, prTitle, renderReport, summaryLine } from "./report";
 import { runWatch } from "./run";
 import { triageChanges } from "./triage";
@@ -57,20 +58,45 @@ const github = createGitHub({ token: env.GITHUB_TOKEN || env.GH_TOKEN || undefin
 const apiKey = env.ANTHROPIC_API_KEY || undefined;
 
 const baseline = readState(statePath);
+const fetcher = createFetcher({
+  concurrencyFor: (host) => profileFor(host).concurrency,
+  delayFor: (host) => profileFor(host).delayMs ?? 0,
+  retriesFor: (host) => profileFor(host).retries,
+});
+
+/** Live M365 check catalogue plus the committed Prowler/Scuba pins (tests inject fixtures instead). */
+async function loadUpstreamChecks(): Promise<UpstreamChecks[]> {
+  const out: UpstreamChecks[] = [];
+  const m365 = await fetcher.fetchPage("https://raw.githubusercontent.com/jusso-dev/M365-Secure/main/docs/CHECKS.md", {
+    accept: "text/plain, text/markdown;q=0.9, */*;q=0.5",
+  });
+  if (m365.outcome === "ok" && m365.body) out.push({ mappingId: "m365-secure", ids: parseM365ChecksMd(m365.body) });
+  else console.error(`m365-secure checks: ${m365.error ?? m365.outcome}`);
+  for (const [mappingId, file] of [
+    ["prowler-aws", "e2e/fixtures/prowler-checks-aws.txt"],
+    ["prowler-azure", "e2e/fixtures/prowler-checks-azure.txt"],
+    ["scubagoggles", "e2e/fixtures/scubagoggles-controls.txt"],
+  ] as const) {
+    try {
+      out.push({ mappingId, ids: parseIdList(readFileSync(join(root, file), "utf8")) });
+    } catch (e) {
+      console.error(`${mappingId} checks: ${(e as Error).message}`);
+    }
+  }
+  return out;
+}
+
 let result;
 try {
   result = await runWatch({
     catalogue,
     baseline,
     cache,
-    fetcher: createFetcher({
-      concurrencyFor: (host) => profileFor(host).concurrency,
-      delayFor: (host) => profileFor(host).delayMs ?? 0,
-      retriesFor: (host) => profileFor(host).retries,
-    }),
+    fetcher,
     github,
     date: runDate(),
     feeds: args["no-feeds"] ? [] : FEEDS,
+    upstreamChecks: args.only ? undefined : await loadUpstreamChecks(),
     simulate: args.simulate || env.WATCH_SIMULATE === "true",
     only: args.only ? new Set(args.only.split(",").map((s) => s.trim())) : undefined,
     triage: apiKey ? (inputs) => triageChanges(inputs, { apiKey, max: Number(env.WATCH_TRIAGE_MAX) || 8, log: console.log }) : undefined,

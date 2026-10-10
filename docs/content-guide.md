@@ -327,7 +327,8 @@ items. Small edits don't change the baseline, so they add up until they become a
 | Changed substantially | Sections of 40 or more words added or removed (a reworded heading over the same text doesn't count), at least 8% of the words (or 250 words) changed, a substantial retitle, deprecation wording removed, or licence names appearing or disappearing | Re-read the page against the questions listed under "cited by" |
 | Site template changes | At least 30% of a site's pages (ten or more) changed on the same night with no new Learn commit behind them: usually page furniture, not guidance. The pages are held, not reported one by one, until merged or changed again | Open one or two pages; merging re-baselines the listed pages. If the watch now picks up navigation or boilerplate, fix the selectors in `scripts/watch/hosts.ts` instead |
 | Newer version | The product named in the source title (for example a CIS Benchmark) has a newer version | Update the source title, then review the mapped recommendation numbers |
-| New guidance to consider | A new page in the same Learn section as a cited page, or a matching Workspace Updates post, Cloud release note, ASD, CIS or NIST announcement, or SOC-CMM community post about a release | Decide whether it deserves a question or a citation |
+| New guidance to consider | A new page in the same Learn section as a cited page, or a matching Workspace Updates post, Cloud release note, ASD, CIS, NIST or scanner-release announcement, SOC-CMM community post, or Security Hub CSPM history row | Decide whether it deserves a question or a citation; scanner releases say "mapping may need review" with the pinned version |
+| Scanner mapping drift | A mapped check id disappeared upstream, or a new check appeared in a family crownguard already maps | Update `content/imports/*.yaml` (and the e2e pin file when the pin moves) |
 | Not being monitored | The page couldn't be checked for seven nights running (bot protection, wrong language, changed layout) | Check it by hand; adjust its profile in `scripts/watch/hosts.ts` |
 | Recovered | A source recorded as broken, unmonitored, redirected or retired is fine again | Nothing: merging records it |
 | Baseline updates | A source, feed or Learn section started or stopped being tracked | Nothing: merging records it |
@@ -348,11 +349,11 @@ and runs the tests itself before opening it. A simulated run (`simulate` on a ma
 `bot/source-watch-simulated`, so it never touches the real PR.
 
 **Copyright.** The report quotes short diff excerpts only from openly licensed pages, with attribution: Google
-Workspace Help and Google Cloud docs (CC BY 4.0), cyber.gov.au (CC BY 4.0), NIST publications (public domain), and the
-Microsoft Learn pages whose public GitHub mirror is openly licensed (entra-docs under MIT, azure-docs and
-power-platform under CC BY 4.0). Learn's own terms don't permit republishing the rest, so those pages, the Google Help
-Center, AWS documentation and pricing pages, CIS and Microsoft marketing pages are summarised by section names and
-word counts only. Page text is never committed; the text used for diffs is kept in the Actions cache.
+Workspace Help and Google Cloud docs (CC BY 4.0), cyber.gov.au and digital.gov.au (CC BY 4.0), NIST publications
+(public domain), and the Microsoft Learn pages whose public GitHub mirror is openly licensed (entra-docs under MIT,
+azure-docs and power-platform under CC BY 4.0). Learn's own terms don't permit republishing the rest, so those pages,
+the Google Help Center, AWS documentation and pricing pages, CIS and Microsoft marketing pages are summarised by
+section names and word counts only. Page text is never committed; the text used for diffs is kept in the Actions cache.
 
 **Optional Claude triage.** Add an `ANTHROPIC_API_KEY` repository secret and the workflow asks Claude
 (`claude-opus-5-5`, at most 8 pages a night) whether each substantial change affects the questions that cite the page.
@@ -375,6 +376,34 @@ GITHUB_TOKEN=$(gh auth token) pnpm watch:sources   # also update watch/state.jso
 
 Adding a site the watch doesn't know yet: give it a profile in `scripts/watch/hosts.ts` (main-content selector, chrome
 to strip, licence) so the fingerprint ignores navigation and widgets. Unknown hosts fall back to generic selectors.
+`www.digital.gov.au` has a CivicTheme profile (CC BY 4.0); digital.gov.au may block some non-browser clients, so the
+profile is covered by a saved HTML fixture in `scripts/watch/fixtures/` rather than a live fetch in unit tests.
 
-GitHub disables scheduled workflows after 60 days without repository activity. If the nightly runs stop, re-enable the
-workflow from the Actions tab.
+**Feeds.** Besides Workspace Updates, Cloud release notes, ASD, CIS, NIST and SOC-CMM, the watch follows GitHub
+releases Atom feeds for `AustralianCyberSecurityCentre/ism-oscal`, `prowler-cloud/prowler` and
+`cisagov/ScubaGoggles`. A new release is reported as "mapping may need review" with the pinned version from the
+mapping or ISM header (`checkedAgainst` / ism-oscal tag). AWS Security Hub CSPM's document history page is scraped
+for Bedrock, AgentCore and FSBP rows. M365-Secure does not tag releases yet, so crownguard cannot pin to a tag; the
+drift check reads `docs/CHECKS.md` on `main` instead until upstream tags exist.
+
+**High-attention sources.** Sources with `highAttention: true` in `content/sources/*.yaml` report any content change,
+not only changes that pass the substantial threshold. The DTA AI policy, accountability standard, agentic addendum and
+AI technical standard pages are marked this way because the AI register depends on them.
+
+**Mapping drift.** Each watch run compares import mappings with upstream check lists (`scripts/watch/mappings.ts`):
+M365-Secure `CHECKS.md` is fetched live; Prowler and ScubaGoggles use the pinned id lists under `e2e/fixtures/`.
+Mapped ids that disappeared upstream are actionable; new ids in a family that already has mappings are suggestions.
+Unit tests inject fixtures and never hit the network.
+
+**First sight.** A source with no baseline entry is recorded as a baseline update ("Started tracking"), never as a
+"changed" finding. Merging that PR acknowledges the fingerprint; the next run compares against it.
+
+**Schedule heartbeat.** CI's `source-watch heartbeat` job reads the latest scheduled `source-watch` run via the GitHub
+API and emits a `::warning::` (exit 0) when it is older than 3 days, with the re-enable link. It never fails the check
+job, so unrelated PRs are not blocked. GitHub disables scheduled workflows after 60 days without repository activity;
+if the nightly runs stop, re-enable the workflow from the Actions tab.
+
+**Sources last checked.** The app's report step and the PDF method section show `Sources last checked: <date>`, taken
+at build time from `watch/state.json` (newest feed cursor date, else the git date of the state file) via the tiny
+`SOURCES_LAST_CHECKED` constant in `src/content/sourcesChecked.ts` — the whole state JSON is never shipped in the
+client bundle.

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
+import { SOURCES_LAST_CHECKED } from "../content/sourcesChecked";
 import type { SocAnswer } from "../engine/soc";
 import { exampleEntries } from "../engine/aiExamples";
 import { AiRegisterDocument, ReportDocument } from "./Document";
@@ -99,6 +100,13 @@ describe("PDF report", () => {
     expect(text).toContain("© Commonwealth of Australia 2024");
     expect(text).toContain("ISM OSCAL catalogue");
     expect(text).toContain("not an IRAP assessment or a statement of applicability");
+  }, 120_000);
+
+  it("includes the sources-last-checked date from the watch baseline in the method text", async () => {
+    const model = buildReport(catalogue, fixtureAssessment(catalogue, ["microsoft"]), new Date("2026-10-08"));
+    expect(model.sourcesLastChecked).toBe(SOURCES_LAST_CHECKED);
+    const text = await pdfText(fixtureAssessment(catalogue, ["microsoft"]));
+    expect(text).toContain(`Sources last checked: ${SOURCES_LAST_CHECKED}`);
   }, 120_000);
 
   it("annotates findings with the chosen ISM baseline and adds a count without changing any score", async () => {

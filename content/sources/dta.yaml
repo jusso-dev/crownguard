@@ -5,6 +5,7 @@
   publisher: Digital Transformation Agency
   url: https://www.digital.gov.au/policy/ai/policy
   retrieved: 2026-10-09
+  highAttention: true
 - id: dta-ai-policy-strategy
   title: "Policy for the responsible use of AI in government: strategy and oversight"
   publisher: Digital Transformation Agency
@@ -25,6 +26,7 @@
   publisher: Digital Transformation Agency
   url: https://www.digital.gov.au/ai/ai-in-government-policy/accountability
   retrieved: 2026-10-09
+  highAttention: true
 - id: dta-ai-transparency
   title: Standard for AI transparency statements
   publisher: Digital Transformation Agency
@@ -75,6 +77,7 @@
   publisher: Digital Transformation Agency
   url: https://www.digital.gov.au/policy/ai/AI-technical-standard
   retrieved: 2026-10-09
+  highAttention: true
 - id: dta-ai-technical-standard-s10
   title: "AI technical standard, Statement 10: adopt a human-centred approach (criteria 32 to 37)"
   publisher: Digital Transformation Agency
@@ -85,6 +88,7 @@
   publisher: Digital Transformation Agency
   url: https://www.digital.gov.au/policy/ai/agentic-ai-addendum
   retrieved: 2026-10-09
+  highAttention: true
 - id: dta-agentic-key-terms
   title: "Agentic AI addendum: key terms (human in, on and out of the loop)"
   publisher: Digital Transformation Agency

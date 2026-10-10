@@ -1,10 +1,14 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { extractHtml, lifecycleDates, lifecycleLine } from "./extract";
-import { checkFeeds, parseFeed } from "./feeds";
+import { checkFeeds, parseFeed, parseHtmlHistory } from "./feeds";
 import type { FeedMemo } from "./types";
 import { compareUrl, createGitHub, markdownBody } from "./github";
 import { licenceFor, profileFor } from "./hosts";
 import { parseToc, sectionOf, tocHref, tocUrlFor } from "./learn";
+
+const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");
 
 const learn = profileFor("learn.microsoft.com");
 
@@ -225,6 +229,82 @@ describe("licenceFor", () => {
     expect(licenceFor("https://learn.microsoft.com/en-us/purview/x")).toBeUndefined();
     expect(licenceFor("https://learn.microsoft.com/en-us/entra/x", "MicrosoftDocs/entra-docs")?.label).toMatch(/^MIT/);
     expect(licenceFor("https://learn.microsoft.com/en-us/x", "MicrosoftDocs/defender-docs")).toBeUndefined();
+    expect(licenceFor("https://www.digital.gov.au/ai/ai-in-government-policy/accountability")?.label).toMatch(/^CC BY 4\.0/);
     expect(licenceFor("not a url")).toBeUndefined();
+  });
+});
+
+describe("digital.gov.au profile", () => {
+  const dta = profileFor("www.digital.gov.au");
+  const html = fixture("dta-accountability.html");
+
+  it("reads main text only and keeps a stable hash across two extracts", () => {
+    const a = extractHtml(html, dta);
+    const b = extractHtml(html, dta);
+    expect(a.matchedSelector).toBe(true);
+    expect(a.text).toContain("Agencies must designate accountability");
+    expect(a.text).toContain("Accountable officials");
+    expect(a.text).not.toContain("Site nav");
+    expect(a.text).not.toContain("Side links");
+    expect(a.text).not.toContain("Was this page helpful");
+    expect(a.text).not.toContain("LAST UPDATED");
+    expect(a.contentHash).toBe(b.contentHash);
+    expect(a.sections.map((s) => s.h)).toEqual(["Standard for accountability", "Accountable officials"]);
+  });
+});
+
+describe("GitHub releases Atom and Security Hub history", () => {
+  it("parses a releases Atom feed and reports mapping review with the pinned version", async () => {
+    const xml = fixture("prowler-releases.atom");
+    const entries = parseFeed(xml);
+    expect(entries.map((e) => e.title)).toEqual(["Prowler 5.45.0", "Prowler 5.44.0", "Prowler 5.43.0"]);
+    const fetcher = {
+      fetchPage: async (url: string) => ({ requestedUrl: url, finalUrl: url, redirects: [], elapsedMs: 1, status: 200, outcome: "ok" as const, body: xml }),
+    };
+    const def = {
+      id: "prowler-releases",
+      name: "Prowler releases",
+      url: "https://github.com/prowler-cloud/prowler/releases.atom",
+      kind: "posts" as const,
+      include: [/^\s*Prowler\s+\d+\.\d+/i],
+      reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.44.0" },
+      max: 3,
+    };
+    // Cursor after 5.44.0 so only 5.45.0 is new.
+    const run = await checkFeeds([def], { "prowler-releases": { latest: "2026-09-30T00:00:00.000Z", seen: [] } }, fetcher, new Map());
+    expect(run.findings).toHaveLength(1);
+    expect(run.findings[0].title).toBe("Prowler 5.45.0");
+    expect(run.findings[0].detail).toMatch(/mapping may need review \(pinned 5\.44\.0 in content\/imports\/prowler-aws\.yaml\)/);
+  });
+
+  it("filters Security Hub document-history rows to Bedrock, AgentCore and FSBP", () => {
+    const page = "https://docs.aws.amazon.com/securityhub/latest/userguide/doc-history.html";
+    const entries = parseHtmlHistory(fixture("aws-securityhub-doc-history.html"), page);
+    expect(entries.length).toBeGreaterThanOrEqual(4);
+    const def = {
+      id: "aws-securityhub-doc-history",
+      name: "AWS Security Hub CSPM document history",
+      url: page,
+      kind: "html-history" as const,
+      include: [/\b(?:Bedrock|AgentCore|FSBP|Foundational Security Best Practices)\b/i],
+      max: 5,
+    };
+    const fetcher = {
+      fetchPage: async () => ({
+        requestedUrl: page,
+        finalUrl: page,
+        redirects: [],
+        elapsedMs: 1,
+        status: 200,
+        outcome: "ok" as const,
+        body: fixture("aws-securityhub-doc-history.html"),
+      }),
+    };
+    return checkFeeds([def], { "aws-securityhub-doc-history": { latest: "2026-06-01T00:00:00.000Z", seen: [] } }, fetcher, new Map()).then((run) => {
+      const blob = run.findings.map((f) => `${f.title}\n${f.detail}\n${f.candidate?.summary ?? ""}`).join("\n");
+      expect(blob).toMatch(/Bedrock|AgentCore|FSBP|Foundational/i);
+      expect(run.findings.length).toBeGreaterThanOrEqual(2);
+      expect(run.findings.every((f) => !/Clarified IAM\.1/.test(`${f.title}\n${f.detail}\n${f.candidate?.summary ?? ""}`))).toBe(true);
+    });
   });
 });

@@ -10,6 +10,8 @@ export const sourceSchema = z.object({
   publisher: z.string().min(2),
   url: z.url(),
   retrieved: date,
+  /** Any content change is reported, not only changes that pass the substantial threshold. */
+  highAttention: z.boolean().optional(),
 });
 
 /** Values of the ISM's own `essential-eight-applicability` prop, carried on generated ISM controls. */
