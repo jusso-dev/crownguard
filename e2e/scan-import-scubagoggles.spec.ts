@@ -8,6 +8,7 @@ const BREAK_GLASS = "break.glass.admin@example.com";
 /** A Google assessment with one Gmail crown jewel, on the questions the scan can answer. */
 async function toControls(page: Page) {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Example Co");
   await next(page);
   await page.getByRole("checkbox", { name: /Google Workspace/ }).check();

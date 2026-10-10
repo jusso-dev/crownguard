@@ -3,17 +3,19 @@ import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReaso
 import { essentialEight } from "../../engine/maturity";
 import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../engine/types";
-import { useStore } from "../store";
+import { modeOf, stepsFor, useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";
-import { aiRegisterSummary } from "../../engine/aiRegister";
-import { ExampleBadge } from "./AiRegisterStep";
+import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
+import { ExampleBadge, Tile } from "./AiRegisterStep";
 
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 
 export function ReviewStep() {
   const assessment = useStore((s) => s.assessment);
   const setStep = useStore((s) => s.setStep);
+  // The standalone register has no crown jewels to review: it gets the register's own summary instead.
+  if (modeOf(assessment) === "ai-register") return <AiRegisterReview />;
   const risks = assessAll(catalogue, assessment);
   const posture = overallPosture(catalogue, assessment);
   const domains = domainPosture(catalogue, assessment);
@@ -210,6 +212,78 @@ function AiRegisterCard() {
         </ul>
       )}
     </Card>
+  );
+}
+
+/** The standalone AI register's review step: the register's summary tiles and its open gaps, nothing about crown jewels. */
+function AiRegisterReview() {
+  const assessment = useStore((s) => s.assessment);
+  const setStep = useStore((s) => s.setStep);
+  const module = catalogue.aiRegister;
+  const summary = module ? aiRegisterSummary(catalogue, assessment) : undefined;
+  const registerStep = stepsFor("ai-register").indexOf("AI register");
+  return (
+    <>
+      <StepHeader title="Review your register">
+        Everything you&apos;ve recorded so far, and what&apos;s left to fill in. Readiness is an indicative self-check
+        against the policy, not a DTA assessment. Change anything on the AI register step and this page updates.
+      </StepHeader>
+
+      {summary && (
+        <>
+          <div className="grid overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface sm:grid-cols-4" data-testid="ai-review-summary">
+            <Tile label="Use cases" value={String(summary.entries.length)} hint={summary.undetermined ? `${summary.undetermined} not yet checked for scope` : "all checked for scope"} />
+            <Tile label="In scope of the policy" value={String(summary.inScope)} hint={`${summary.highRisk} with a high inherent risk`} />
+            <Tile label="Open readiness gaps" value={String(summary.openGaps)} hint={`${summary.criticalGaps} critical`} />
+            <Tile label="Register fields missing" value={String(summary.missingFields)} hint="across all use cases" />
+          </div>
+
+          <Card className="mt-4" data-testid="ai-review-gaps">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-base font-semibold">Open gaps</h2>
+              <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(registerStep)}>
+                Edit the register
+              </button>
+            </div>
+            {summary.entries.length === 0 && <p className="mt-3 text-sm text-muted">No use cases recorded yet.</p>}
+            <ul className="mt-4 space-y-5">
+              {summary.entries.map((r) =>
+                r.gaps.length === 0 && r.missing.length === 0 ? null : (
+                  <li key={r.entry.id} className="text-sm">
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                      {r.entry.example && <ExampleBadge />}
+                      <span className="font-medium text-ink">{r.entry.name || "Unnamed use case"}</span>
+                      <span className="font-mono text-xs tabular-nums text-muted">
+                        {r.gaps.length} open {r.gaps.length === 1 ? "gap" : "gaps"}
+                        {r.missing.length ? ` · ${r.missing.length} register field${r.missing.length === 1 ? "" : "s"} missing` : ""}
+                      </span>
+                    </div>
+                    {r.gaps.length > 0 && (
+                      <ul className="mt-2 space-y-1.5">
+                        {r.gaps.map((g) => (
+                          <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
+                            <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
+                            <span className="text-ink">
+                              {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {r.missing.length > 0 && (
+                      <p className="mt-2 text-ink-2">Register fields still to fill in: {r.missing.map((f) => aiFieldLabels[f]).join(" · ")}.</p>
+                    )}
+                  </li>
+                ),
+              )}
+              {summary.entries.every((r) => r.gaps.length === 0 && r.missing.length === 0) && summary.entries.length > 0 && (
+                <li className="text-sm text-ink-2">Nothing open: every readiness question is answered and every register field is filled in.</li>
+              )}
+            </ul>
+          </Card>
+        </>
+      )}
+    </>
   );
 }
 

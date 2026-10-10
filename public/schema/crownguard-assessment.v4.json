@@ -16,6 +16,13 @@
       "minimum": 1,
       "maximum": 100000
     },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "ai-register"
+      ]
+    },
     "savedBy": {
       "type": "object",
       "properties": {

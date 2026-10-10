@@ -4,7 +4,7 @@ import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/ris
 import { answerLabels, type Answer, type Evidence } from "../../engine/types";
 import { NOTE_MAX } from "../assessmentSchema";
 import { scrollToFoundApps } from "../FoundApps";
-import { steps, useStore } from "../store";
+import { stepsFor, useStore } from "../store";
 import { Button, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
 import { ScanImport, stamp, statusStyle } from "../ScanImport";
 
@@ -76,7 +76,7 @@ export function ControlsStep() {
               type="button"
               className="font-medium text-accent underline decoration-accent/30 underline-offset-2"
               onClick={() => {
-                useStore.getState().setStep(steps.indexOf("AI register"));
+                useStore.getState().setStep(stepsFor("full").indexOf("AI register"));
                 scrollToFoundApps();
               }}
             >

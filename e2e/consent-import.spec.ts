@@ -7,6 +7,7 @@ const app = (page: Page, name: string) => page.locator(`[data-testid="found-app"
 /** Organisation, one platform and one crown jewel, then walk to the AI register step. */
 async function toAiStep(page: Page) {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
@@ -124,6 +125,7 @@ test("a Google OAuth log export does the same and flags grants made by an agent"
 
 test("the app-consent section links to the found apps panel on the AI register step", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();

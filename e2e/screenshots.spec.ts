@@ -42,6 +42,7 @@ test("README screenshots", async ({ page }) => {
   await page.goto("./");
 
   // 1. Organisation
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await page.getByLabel(/^ABN/).fill("51824753556");
   await page.getByLabel("Sector").selectOption("Health");
@@ -152,4 +153,49 @@ test("README screenshots", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /Controls/ }).click();
   await shot(page, "26-mobile");
+});
+
+test("standalone AI register screenshots", async ({ page }) => {
+  mkdirSync(OUT, { recursive: true });
+  await page.goto("./");
+
+  // 1. The start screen's choice, then the standalone register.
+  await shot(page, "27-ai-standalone-start");
+  await page.getByRole("button", { name: "AI use-case register only" }).click();
+  await page.getByLabel("Organisation name").fill("Riverbend Health");
+  await page.getByLabel(/^ABN/).fill("51824753556");
+  await page.getByTestId("org-logo-input").setInputFiles("e2e/fixtures/logo.svg");
+  await next(page);
+
+  // 2. The register: example entries plus one real use case.
+  await fillAiRegister(page);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await shot(page, "28-ai-standalone-register");
+  await next(page);
+
+  // 3. The standalone review, and the report step with its upgrade button.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await shot(page, "29-ai-standalone-review");
+  await next(page);
+  await next(page);
+  await shot(page, "30-ai-standalone-report");
+
+  // 4. The register PDF's cover, register table and key dates.
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Generate PDF report" }).click();
+  const pdfPath = join(OUT, "ai-register.pdf");
+  await (await download).saveAs(pdfPath);
+  const pages = await pdfText(new Uint8Array(readFileSync(pdfPath)));
+  const pageOf = (heading: string) => pages.findIndex((p) => p.includes(heading)) + 1;
+  const wanted: [string, number][] = [
+    ["31-pdf-ai-register-cover", 1],
+    ["32-pdf-ai-register-about", pageOf("About this register")],
+    ["33-pdf-ai-register-table", pageOf("The organisation's AI use cases and agents")],
+    ["34-pdf-ai-register-dates", pageOf("Where the sources are unclear")],
+  ];
+  for (const [name, p] of wanted) {
+    if (p < 1) continue;
+    execFileSync("pdftoppm", ["-png", "-r", "110", "-f", String(p), "-l", String(p), "-singlefile", pdfPath, join(OUT, name)]);
+  }
+  rmSync(pdfPath);
 });

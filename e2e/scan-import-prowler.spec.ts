@@ -7,6 +7,7 @@ const card = (page: Page, id: string) => page.locator(`article[data-question="${
 /** An AWS assessment with one crown jewel, on the data-protection questions the scan can answer. */
 async function toControls(page: Page) {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Example Co");
   await next(page);
   await page.getByRole("checkbox", { name: /Amazon Web Services/ }).check();

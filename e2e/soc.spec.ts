@@ -4,6 +4,7 @@ const next = (page: import("@playwright/test").Page) => page.getByRole("button",
 
 test("SOC maturity answers work like radio buttons from the keyboard, and each step keeps its own place", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();

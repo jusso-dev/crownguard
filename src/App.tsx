@@ -2,13 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { catalogue, contentHash } from "./content/catalogue";
 import { questionIdSet } from "./content/questionIds";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
-import type { Assessment } from "./engine/types";
+import type { Assessment, Mode } from "./engine/types";
 import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
 import { parseAssessment } from "./wizard/parseAssessment";
 import { rehydrateNotices } from "./wizard/persistence";
 import { toSaveFile } from "./wizard/saveFile";
-import { clampStep, hasProgress, steps, storageAvailable, useStep, useStore } from "./wizard/store";
-import { Button } from "./wizard/ui";
+import { clampStep, hasProgress, modeOf, stepsFor, storageAvailable, useStep, useStore } from "./wizard/store";
+import { Button, Card } from "./wizard/ui";
 import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
@@ -21,19 +21,43 @@ import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
 
-// One view per entry in `steps` (wizard/store.ts), in the same order.
+// One view per entry in each step list (wizard/store.ts), in the same order.
 const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
+const aiViews = [OrgStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
+const viewsFor = (mode: Mode) => (mode === "ai-register" ? aiViews : views);
 
 /** A step can be entered once the steps before it have their minimum inputs. */
 function useReachable(): number {
   const a = useStore((s) => s.assessment);
+  const mode = modeOf(a);
   if (!a.org.name.trim()) return 0;
-  if (!a.platforms.length) return 1;
-  if (!a.jewels.length) return 2;
-  return steps.length - 1;
+  // The standalone register needs nothing else: no platform, crown jewels or Controls answers.
+  if (mode === "full") {
+    if (!a.platforms.length) return 1;
+    if (!a.jewels.length) return 2;
+  }
+  return stepsFor(mode).length - 1;
 }
 
-const saveFileName = (a: Assessment) => `${slug(a.org.name)}.crownguard.json`;
+const saveFileName = (a: Assessment) =>
+  modeOf(a) === "ai-register" ? `${slug(a.org.name)}-ai-register.crownguard.json` : `${slug(a.org.name)}.crownguard.json`;
+
+/** Start a fresh assessment in the flow given. The register itself is started on its step, as in the full assessment. */
+function startAssessment(mode: Mode) {
+  const s = useStore.getState();
+  s.reset();
+  s.setMode(mode, 0);
+}
+
+/**
+ * The `#/ai-register` link: read once when the app loads, then cleared from the address bar so a refresh doesn't
+ * fight saved progress. `true` means the link wants the standalone AI register flow.
+ */
+const linkedAiRegister = (() => {
+  if (window.location.hash !== "#/ai-register") return false;
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+  return true;
+})();
 
 /** A message in the header bar. `details` are the individual problems; `actions` are what the user can do about it. */
 interface Notice {
@@ -86,13 +110,13 @@ function SaveStatus({ persisted, fileSave }: { persisted: boolean; fileSave?: { 
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onSave: () => void; onNew: () => void }) {
+function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue: () => void; onSave: () => void; onNew: () => void; onStartRegister?: () => void }) {
   const a = useStore((s) => s.assessment);
   const now = useNow();
   const questions = activeQuestions(catalogue, a);
   const answers = effectiveAnswers(a);
   const answered = questions.filter((q) => answers[q.id]).length;
-  const at = clampStep(a.progress?.step);
+  const at = clampStep(a.progress?.step, modeOf(a));
   return (
     <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
       <div className="p-7">
@@ -102,7 +126,7 @@ function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onS
           <dt className="text-muted">You were on</dt>
           <dd className="text-ink">
             <span className="mr-2 font-mono text-xs text-muted">{pad(at + 1)}</span>
-            <span>{steps[at]}</span>
+            <span>{stepsFor(modeOf(a))[at]}</span>
           </dd>
           <dt className="text-muted">Crown jewels</dt>
           <dd className="tabular-nums text-ink">{a.jewels.length}</dd>
@@ -122,9 +146,59 @@ function ResumeCard({ onContinue, onSave, onNew }: { onContinue: () => void; onS
         <Button variant="secondary" onClick={onSave}>Save file</Button>
         <Button variant="ghost" className="sm:ml-auto" onClick={onNew}>Start a new assessment</Button>
       </div>
+      {onStartRegister && (
+        <div className="border-t border-rule bg-paper px-7 py-4 text-sm text-ink-2">
+          <p>
+            You followed a link to the AI use-case register. Starting it gives you a fresh, standalone register and removes
+            this assessment from this browser — use <strong className="font-medium text-ink">Save file</strong> first to keep it.
+          </p>
+          <Button variant="secondary" className="mt-3" onClick={onStartRegister}>
+            Start an AI use-case register instead
+          </Button>
+        </div>
+      )}
       <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
         Progress is kept in this browser only. To continue on another computer, or to keep a copy, use <strong className="font-medium text-ink-2">Save file</strong> and open it later.
       </p>
+    </div>
+  );
+}
+
+/** The first-run choice: the full crown-jewel assessment, or the standalone AI use-case register. */
+function StartCard({ onPick }: { onPick: (mode: Mode) => void }) {
+  return (
+    <div className="mx-auto mt-4 max-w-2xl">
+      <div className="overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
+        <div className="p-7">
+          <p className="mono-label text-accent">Start</p>
+          <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">What would you like to do?</h1>
+          <p className="mt-3 text-sm leading-relaxed text-ink-2">
+            Everything runs in this browser, and nothing you enter is sent anywhere. You can switch from the register to
+            the full assessment later without losing anything.
+          </p>
+        </div>
+        <div className="grid gap-px border-t border-rule bg-rule sm:grid-cols-2">
+          <Card className="flex flex-col rounded-none! border-0!">
+            <p className="flex-1 text-sm leading-relaxed text-ink-2">
+              Name the crown jewels whose loss would hurt most, check how well your Microsoft, Google or AWS environment
+              protects them, and get a risk report. Includes the AI use-case register as an optional step.
+            </p>
+            <Button className="mt-4 self-start" onClick={() => onPick("full")}>Full crown-jewel assessment</Button>
+          </Card>
+          <Card className="flex flex-col rounded-none! border-0!">
+            <p className="flex-1 text-sm leading-relaxed text-ink-2">
+              Record each AI use case against the DTA&apos;s Standard for accountability and get a register PDF, plus CSV
+              and XLSX for your own records. No platform, crown jewels or controls questions needed — only an
+              organisation name.
+            </p>
+            <Button className="mt-4 self-start" onClick={() => onPick("ai-register")}>AI use-case register only</Button>
+          </Card>
+        </div>
+        <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
+          Not sure? Start with the AI use-case register — it&apos;s the shorter flow, and it can become a full
+          crown-jewel assessment later.
+        </p>
+      </div>
     </div>
   );
 }
@@ -149,14 +223,24 @@ export function App() {
   const { assessment, setStep, load, reset } = useStore();
   const step = useStep();
   const reachable = useReachable();
+  const mode = modeOf(assessment);
+  const steps = stepsFor(mode);
   const fileInput = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState<Notice | undefined>(noticeFromRehydrate);
   const [persisted] = useState(storageAvailable);
-  const [resuming, setResuming] = useState(() => hasProgress(useStore.getState().assessment));
+  const [screen, setScreen] = useState<"start" | "resume" | "wizard">(() => (hasProgress(useStore.getState().assessment) ? "resume" : linkedAiRegister ? "wizard" : "start"));
   const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
   const [saver] = useState(createFileSaver);
   const readOnly = useStore((s) => s.readOnly);
-  const View = views[step] ?? OrgStep;
+  const View = viewsFor(mode)[step] ?? OrgStep;
+
+  // The deep link starts the standalone register on a fresh visit. With a saved assessment it only asks (see ResumeCard).
+  const linked = useRef(false);
+  useEffect(() => {
+    if (!linkedAiRegister || linked.current) return;
+    linked.current = true;
+    if (screen !== "resume") startAssessment("ai-register");
+  }, [screen]);
 
   /** Save to a file without leaving the current step, question or scroll position. */
   const saveFile = useCallback(async () => {
@@ -200,7 +284,7 @@ export function App() {
     load(a);
     saver.reset();
     setFileSave(undefined);
-    setResuming(false);
+    setScreen("wizard");
     setNotice({
       kind: "warn",
       text: `Opened ${a.org.name || "assessment"} read-only. Nothing will be saved from here — reload the page to update crownguard before you work on this file.`,
@@ -241,8 +325,9 @@ export function App() {
     if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
     saver.reset();
     setFileSave(undefined);
-    setResuming(false);
-    const stepName = steps[clampStep(useStore.getState().assessment.progress?.step)];
+    setScreen("wizard");
+    const opened = useStore.getState().assessment;
+    const stepName = stepsFor(modeOf(opened))[clampStep(opened.progress?.step, modeOf(opened))];
     setNotice({
       kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
       // Read the step back from the store: load() moves positions saved under an older step list.
@@ -256,7 +341,18 @@ export function App() {
       reset();
       saver.reset();
       setFileSave(undefined);
-      setResuming(false);
+      setScreen("start");
+      setNotice(undefined);
+    }
+  }
+
+  /** The deep link on a resumed assessment: start the standalone register only after the user confirms it. */
+  function startLinkedRegister() {
+    if (confirm("Start a fresh AI use-case register? The assessment saved in this browser will be removed. Choose Cancel, then Save file, if you want to keep it.")) {
+      startAssessment("ai-register");
+      saver.reset();
+      setFileSave(undefined);
+      setScreen("wizard");
       setNotice(undefined);
     }
   }
@@ -266,6 +362,7 @@ export function App() {
       reset();
       saver.reset();
       setFileSave(undefined);
+      setScreen("start");
       setNotice(undefined);
     }
   }
@@ -337,9 +434,23 @@ export function App() {
         )}
       </header>
 
-      {resuming ? (
+      {screen === "resume" ? (
         <div className="px-4 py-10 sm:px-6">
-          <ResumeCard onContinue={() => setResuming(false)} onSave={() => void saveFile()} onNew={startNew} />
+          <ResumeCard
+            onContinue={() => setScreen("wizard")}
+            onSave={() => void saveFile()}
+            onNew={startNew}
+            {...(linkedAiRegister ? { onStartRegister: startLinkedRegister } : {})}
+          />
+        </div>
+      ) : screen === "start" ? (
+        <div className="px-4 py-10 sm:px-6">
+          <StartCard
+            onPick={(m) => {
+              startAssessment(m);
+              setScreen("wizard");
+            }}
+          />
         </div>
       ) : (
         <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-6 px-4 py-8 sm:px-6 lg:grid-cols-[208px_minmax(0,1fr)] lg:py-12">

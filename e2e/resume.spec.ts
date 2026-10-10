@@ -13,6 +13,7 @@ test.beforeEach(async ({ page }) => {
 /** Start an assessment and stop part-way through the controls, in the second section. */
 async function startAndStopMidway(page: Page) {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Resume Health");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
@@ -27,9 +28,12 @@ async function startAndStopMidway(page: Page) {
   return sectionName;
 }
 
-test("a fresh visit goes straight to the first step", async ({ page }) => {
+test("a fresh visit offers the two flows, and the full assessment starts at the first step", async ({ page }) => {
   await page.goto("./");
   await expect(page.getByText("Welcome back")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "What would you like to do?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "AI use-case register only" })).toBeVisible();
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await expect(page.getByLabel("Organisation name")).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Saved in this browser" })).toBeVisible();
 });
@@ -54,6 +58,8 @@ test("starting a new assessment from the welcome screen clears the old one", asy
   await page.reload();
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Start a new assessment" }).click();
+  await expect(page.getByRole("heading", { name: "What would you like to do?" })).toBeVisible();
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await expect(page.getByLabel("Organisation name")).toHaveValue("");
   await page.reload();
   await expect(page.getByText("Welcome back")).toHaveCount(0);
@@ -69,7 +75,7 @@ test("a saved file reopens at the same place, even after clearing the browser", 
 
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Clear data" }).click();
-  await expect(page.getByLabel("Organisation name")).toHaveValue("");
+  await expect(page.getByRole("heading", { name: "What would you like to do?" })).toBeVisible();
 
   await page.getByTestId("import-input").setInputFiles(file);
   await expect(page.getByText(/Opened Resume Health\. Picking up at Controls\./)).toBeVisible();
@@ -79,6 +85,7 @@ test("a saved file reopens at the same place, even after clearing the browser", 
 
 test("a bad file is rejected and the current assessment is untouched", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Keep Me Pty Ltd");
   await page.getByTestId("import-input").setInputFiles({ name: "bad.json", mimeType: "application/json", buffer: Buffer.from('{"version":2}') });
   await expect(page.getByText(/Couldn't open that file/)).toBeVisible();
@@ -88,6 +95,7 @@ test("a bad file is rejected and the current assessment is untouched", async ({ 
 test("a file from a newer crownguard is offered read-only and can't be written over", async ({ page }) => {
   const newer = JSON.parse(await readFile("e2e/fixtures/current.crownguard.json", "utf8"));
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("My Own Work");
   await next(page);
 
@@ -115,6 +123,7 @@ test("progress this browser can't read is kept aside, and the app starts clean",
   await page.goto("./");
 
   await expect(page.getByRole("alert").filter({ hasText: /couldn't be read/ })).toBeVisible();
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await expect(page.getByLabel("Organisation name")).toHaveValue("");
 
   const dl = page.waitForEvent("download");
@@ -125,6 +134,7 @@ test("progress this browser can't read is kept aside, and the app starts clean",
 
 test("answers for questions that are gone are reported and kept", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Orphan Co");
   await page.evaluate(() => {
     const key = "crownguard:v1";

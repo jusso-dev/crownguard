@@ -75,7 +75,8 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   assessment guidance, the [agentic AI addendum](https://www.digital.gov.au/policy/ai/agentic-ai-addendum) and ASD's
   guidance on agentic AI. Link a use case to the crown jewels it can reach to see their risk, the related Controls
   answers and the exposures it usually adds. Export the register as CSV or XLSX, with the DTA's fields first, and the
-  report gets a register section. Example entries are available, and they're labelled as examples everywhere.
+  report gets a register section. Example entries are available, and they're labelled as examples everywhere. The
+  register also runs on its own as a five-step [AI register only](#ai-register-only) flow with its own PDF.
 
 ## A tour
 
@@ -233,6 +234,32 @@ maturity and AI use-case register sections. Every page carries your marking and 
 It works on a phone too: every step fits a 390px screen.
 
 <p align="center"><img src="docs/screenshots/26-mobile.png" alt="The Controls step on a phone" width="320"></p>
+
+## AI register only
+
+If you only need the AI use-case register — the one the
+[Policy for the responsible use of AI in government](https://www.digital.gov.au/policy/ai/policy) asks non-corporate
+Commonwealth entities to create and share with the DTA every six months — you don't need to invent a platform or a
+crown jewel to get it. Choose **AI use-case register only** on the start screen, or open the deep link:
+
+**https://jusso-dev.github.io/crownguard/#/ai-register**
+
+The flow is five steps — organisation, AI register, review, branding, report — and the only thing it needs before the
+register is an organisation name. Crown-jewel links are left out; switching to the full assessment later adds them
+without losing anything.
+
+<p align="center"><img src="docs/screenshots/28-ai-standalone-register.png" alt="The standalone AI register step: example entries labelled, summary tiles and key dates, with no crown jewels to link" width="100%"></p>
+
+You get the same register exports as always — CSV and XLSX with the Standard's minimum fields first — plus a
+standalone **AI use-case register** PDF: a branded cover, an "About this register" page with who the policy applies to
+and a point-in-time statement, the register with readiness for each use case, the key dates, where the sources are
+unclear, and the sources themselves. It carries no risk register, roadmap or framework pages: it's a document your
+agency can file or share.
+
+<p align="center"><img src="docs/screenshots/31-pdf-ai-register-cover.png" alt="The standalone AI use-case register PDF cover: logo, organisation name, ABN and marking" width="60%"></p>
+
+When you're ready for the full assessment, the Report step has **Turn this into a full crown-jewel assessment**. It
+keeps every entry, answer and note, and takes you to the Environment step to name your platforms and crown jewels.
 
 ## Use it
 
