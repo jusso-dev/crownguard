@@ -277,10 +277,21 @@ pnpm build      # static site in dist/, host anywhere
 The build is a static site with no server code. Serve `dist/` from any static host; set `BASE_PATH` when it lives
 under a sub-path (the Pages workflow uses `/crownguard/`). The Content Security Policy ships as a `<meta>` tag
 because GitHub Pages can't send custom headers; on a host that can, also send the headers defined in
-`vite.config.ts` (including `frame-ancestors 'none'`, which only works as a header).
+`vite.config.ts` (including `frame-ancestors 'none'` and `Cross-Origin-Opener-Policy`, which only work as headers).
+Copy-paste snippets: [docs/self-hosting.md](docs/self-hosting.md).
 
-Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account,
-so for sensitive assessments prefer **Save file**, a private window, or self-hosting on your own domain.
+### Privacy in the browser
+
+Nothing you enter is sent anywhere. Progress is kept in this browser under `crownguard:v1` unless you choose otherwise:
+
+- **Optional passphrase** — encrypts the autosaved copy and any file you save while it is set (WebCrypto PBKDF2-SHA-256 + AES-GCM). The passphrase stays in memory only for this visit; there is no recovery if you forget it.
+- **Don't keep this assessment in this browser** — assessment data stays in memory only (not `sessionStorage`). Reloading loses it. A small mode flag may remain so the choice survives a reload.
+- **Remove from this browser** — clears the storage key and drops the in-memory assessment immediately.
+
+Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account.
+A **dedicated origin is recommended but not configured yet** (no custom domain has been chosen); production stays on
+`https://jusso-dev.github.io/crownguard/` for now. For sensitive assessments prefer a passphrase, no-persistence mode,
+**Save file**, a private window, or self-hosting on your own domain. See [docs/threat-model.md](docs/threat-model.md).
 
 ### Headless use
 
