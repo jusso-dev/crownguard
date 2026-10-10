@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 
@@ -134,12 +134,15 @@ test("the file it writes matches the published JSON Schema", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => (window as unknown as { __writes: string[] }).__writes.length)).toBe(1);
 
   const saved = JSON.parse(await page.evaluate(() => (window as unknown as { __writes: string[] }).__writes[0]));
-  const schema = JSON.parse(await readFile(join("public", "schema", "crownguard-assessment.v3.json"), "utf8"));
+  // The published schema is versioned; find it rather than pinning the name, so bumping the format can't break this.
+  const published = (await readdir(join("public", "schema"))).filter((f) => /^crownguard-assessment\.v\d+\.json$/.test(f));
+  expect(published).toHaveLength(1);
+  const schema = JSON.parse(await readFile(join("public", "schema", published[0]), "utf8"));
   const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
   expect(validate(saved), JSON.stringify(validate.errors, null, 2)).toBe(true);
 
-  expect(saved.$schema).toContain("crownguard-assessment.v3.json");
-  expect(saved.schemaVersion).toBe(3);
+  expect(saved.$schema).toContain(published[0]);
+  expect(saved.schemaVersion).toBe(Number(/v(\d+)\.json$/.exec(published[0])![1]));
   expect(saved.savedBy.app).toBe("crownguard");
   expect(saved.savedBy.contentHash).toMatch(/^[0-9a-f]{16}$/);
 });

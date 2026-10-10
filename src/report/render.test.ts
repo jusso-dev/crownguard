@@ -88,3 +88,41 @@ describe("PDF report", () => {
       expect(buf.subarray(0, 5).toString()).toBe("%PDF-");
     }, 60_000);
 });
+
+describe("AI register dates and bases", () => {
+  it("shows who confirmed the dates, when the next DTA share is due, each gap's basis and the switch-off worksheet", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.aiRegister = {
+      createdAt: "2026-06-01",
+      lastSharedWithDta: "2025-12-01",
+      dateConfirmation: { by: "the accountable official", on: "2026-09-15" },
+      entries: exampleEntries(a).map((e, i) =>
+        i === 0
+          ? {
+              ...e,
+              inherentRisk: "high" as const,
+              notes: {
+                ...e.notes,
+                "AIR-OFF-001": "How to stop it (identity, tokens, connectors): Revoke the app registration.\nWho may stop it: The cloud team.\nDate it was last tested: 2026-09-01",
+              },
+            }
+          : e,
+      ),
+    };
+    const text = await pdfText(a);
+
+    // Dates: who confirmed the worked-out ones, and the six-monthly share counted from the last one.
+    expect(text).toContain("confirmed by the accountable official on 15 September 2026");
+    expect(text).toContain("Next share with the DTA due");
+    expect(text).toContain("1 June 2026");
+    expect(text).toMatch(/overdue/);
+
+    // Every open gap says which requirement it comes from, so a binding "must" is never confused with best practice.
+    expect(text).toMatch(/Agentic AI addendum: (must|should)|Policy: must|AI technical standard: must/);
+
+    // The switch-off worksheet prints with the question it belongs to.
+    expect(text).toContain("How to stop it (identity, tokens, connectors): Revoke the app registration.");
+    expect(text).toContain("Who may stop it: The cloud team.");
+    expect(text).toContain("Date it was last tested: 2026-09-01");
+  }, 120_000);
+});

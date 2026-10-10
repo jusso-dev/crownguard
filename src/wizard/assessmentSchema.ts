@@ -52,7 +52,7 @@ const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
  * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
  * are migrated up on open (see `migrations.ts`). A file with a higher number than this build knows is opened read-only.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** Version of the app that wrote the file. Kept in sync with package.json. */
 export const APP_VERSION = "1.0.0";
@@ -172,11 +172,17 @@ export const assessmentSchema = z.looseObject({
     .optional(),
   aiRegister: z
     .looseObject({
+      createdAt: z.string().max(40).optional(),
+      lastSharedWithDta: z.string().max(40).optional(),
+      dateConfirmation: z.looseObject({ by: z.string().max(200), on: z.string().max(40) }).optional(),
       entries: z
         .array(
-          z.object({
+          // Loose like the register itself: register fields follow the DTA's Standard and grow, and an entry must
+          // carry them through a re-save in a build that has never heard of them.
+          z.looseObject({
             id: z.string().max(60),
             example: z.boolean().optional(),
+            groupOf: z.string().max(200).optional(),
             kind: z.string().max(60),
             name: z.string().max(200),
             reference: z.string().max(100),

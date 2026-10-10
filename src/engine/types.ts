@@ -147,8 +147,18 @@ export interface Assessment {
   orphans?: Record<string, OrphanAnswer>;
   /** Optional SOC maturity self-assessment; present when the user includes it. */
   soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
-  /** Optional AI use-case register; present when the user starts one. */
-  aiRegister?: { entries: AiUseCase[] };
+  /**
+   * Optional AI use-case register; present when the user starts one. `createdAt` is when the register itself was
+   * first started, which is what the DTA's six-monthly sharing clock runs from.
+   */
+  aiRegister?: {
+    entries: AiUseCase[];
+    createdAt?: string;
+    /** When the register was last shared with the DTA, so the next share can be calculated. */
+    lastSharedWithDta?: string;
+    /** Who confirmed the worked-out dates in the register, and when. */
+    dateConfirmation?: { by: string; on: string };
+  };
   /** Where the user was, so a reload or an opened file resumes in the same place. `layout` is the step list version. */
   progress?: { step: number; section?: string; socSection?: string; aiSection?: string; layout?: number };
   createdAt: string;
@@ -168,6 +178,11 @@ export interface AiUseCase {
   name: string;
   /** Agency identifier (reference number). */
   reference: string;
+  /**
+   * Set when this entry is one part of a broader general-purpose AI, naming that parent. The DTA's Appendix B lets an
+   * agency register Copilot as one use case or several; this records which approach it took.
+   */
+  groupOf?: string;
   description: string;
   /** The underpinning product's name, part of the description field in the Standard. */
   product: string;
