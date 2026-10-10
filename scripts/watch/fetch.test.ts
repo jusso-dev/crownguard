@@ -31,7 +31,9 @@ const routes: Record<string, (req: IncomingMessage, res: ServerResponse) => void
 };
 
 beforeAll(async () => {
-  server = createServer((req, res) => (routes[req.url!.split("?")[0]] ?? routes["/missing"])(req, res));
+  // Look the handler up in a Map keyed by path, so a request URL can never pick out a property that isn't a handler.
+  const handlers = new Map(Object.entries(routes));
+  server = createServer((req, res) => (handlers.get(req.url!.split("?")[0]) ?? handlers.get("/missing")!)(req, res));
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });

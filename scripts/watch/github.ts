@@ -130,7 +130,9 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
 export function markdownBody(markdown: string): string {
   return markdown
     .replace(/^\uFEFF?---\r?\n[\s\S]*?\r?\n---\r?\n?/, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
+    // A comment is stripped to its close, or to the end of the text when a page leaves one open. Stripping only
+    // complete comments would leave the opening `<!--` behind, which is what an injection would then ride on.
+    .replace(/<!--(?:(?!-->)[\s\S])*(?:-->|$)/g, "")
     .split(/\r?\n/)
     .map((l) => collapse(l))
     .filter(Boolean)

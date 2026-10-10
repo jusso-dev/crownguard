@@ -1,0 +1,37 @@
+{
+  "SyntheticExample": "Made-up example data for crownguard's tests. Not a real tenant. Shaped like CISA's ScubaGear (Microsoft 365) output, which crownguard refuses.",
+  "MetaData": {
+    "TenantId": "00000000-0000-4000-8000-000000000000",
+    "DisplayName": "Example Tenant",
+    "DomainName": "example.onmicrosoft.com",
+    "ProductSuite": "Microsoft 365",
+    "ProductsAssessed": ["teams"],
+    "Tool": "ScubaGear",
+    "ToolVersion": "1.7.1",
+    "TimestampZulu": "2026-10-08T22:00:00.000Z"
+  },
+  "Summary": { "teams": { "Manual": 1, "Passes": 1, "Errors": 0, "Failures": 1, "Warnings": 0, "Omit": 0, "IncorrectResult": 0 } },
+  "Results": {
+    "teams": [
+      {
+        "GroupName": "App Management",
+        "GroupNumber": "5",
+        "GroupReferenceURL": "https://example.com/scubagear-example/teams#5-app-management",
+        "Controls": [
+          {
+            "Control ID": "MS.TEAMS.5.1v1",
+            "Requirement": "Agencies SHOULD only allow installation of Microsoft apps approved by the agency.",
+            "Result": "Warning",
+            "Criticality": "Should",
+            "Details": "1 meeting policy found that does not restrict installation of Microsoft Apps by default: Global",
+            "OriginalResult": "Warning",
+            "OriginalDetails": "1 meeting policy found that does not restrict installation of Microsoft Apps by default: Global",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ]
+  },
+  "Raw": { "report_uuid": "00000000-0000-4000-8000-000000000001" }
+}

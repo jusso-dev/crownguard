@@ -47,7 +47,10 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
   for AWS (52 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
   Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
-  never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources. Every pre-filled
+  never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources.
+  [ScubaGoggles](https://github.com/cisagov/ScubaGoggles) for Google Workspace (`ScubaResults*.json`, 33 questions) is
+  read the same way from its policy results only: the report's `Raw` section, which holds super admin and break-glass
+  accounts and audit log events, is never touched. Every pre-filled
   answer shows its scan evidence, you can change any of them, and the report names the scanner, its version and the
   account it covered. The file is read in your browser only.
 - **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
@@ -108,8 +111,8 @@ crownguard can suggest a level, but never fills it in for you.
 Only the questions relevant to your crown jewels and licences are asked, grouped by domain. Each one explains why it
 matters, what "yes" looks like and how to fix it, names any licence the fix needs, and lists the Microsoft, Google or AWS
 pages it comes from plus its CIS, Essential Eight, NIST CSF 2.0 and IDCF mappings. Unknown counts as a gap; N/A needs a
-reason. Answers can be pre-filled from a scan you have already run: M365-Secure for Microsoft 365, or Prowler for AWS
-and Azure.
+reason. Answers can be pre-filled from a scan you have already run: M365-Secure for Microsoft 365, Prowler for AWS
+and Azure, or ScubaGoggles for Google Workspace.
 
 <p align="center"><img src="docs/screenshots/04-controls.png" alt="Controls step showing a Conditional Access question with its explanation, recommendation, licence note and references" width="100%"></p>
 

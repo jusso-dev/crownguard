@@ -76,3 +76,114 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: idcf, ref: "Rule 1" }
+
+- id: GO-GEM-004
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini]
+  severity: medium
+  question: Are the Gemini app and Gemini in Workspace turned on only for the organisational units or groups you approved?
+  why: >-
+    Gemini answers from whatever its users can already open, so turning it on for everyone widens
+    who can surface what in seconds. Only users with a Gemini licence are covered by the Google
+    Workspace terms that keep their conversations out of Google's AI training, so everyone else
+    should be kept off the Gemini app.
+  yesLooksLike: >-
+    The Gemini app and the Gemini features in Gmail, Docs, Drive and Meet are on only for the
+    organisational units or groups that need them, "Allow all users to access the Gemini app,
+    regardless of licence" is unchecked, and each new team's access follows a look at what its
+    people can already reach.
+  remediation: >-
+    In the Admin console under Generative AI, turn the Gemini app and Gemini in Workspace features
+    on per organisational unit or configuration group instead of for everyone, keep users without a
+    Gemini licence off the Gemini app, and review the list whenever a Gemini feature is added.
+    Switching Gemini on per organisational unit or group depends on your edition; where your
+    edition can't do it, assign Gemini licences deliberately to decide who gets it.
+  effort: S
+  sources: [gws-gemini-app-toggle, gws-gemini-workspace-features]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: GO-GEM-005
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini, gw-vault-retention]
+  severity: medium
+  question: Is Gemini conversation history turned on and its retention set deliberately?
+  why: >-
+    Staff can paste sensitive material into Gemini without thinking. Conversation history leaves a
+    record an admin can review when something goes wrong, and a deliberate retention period keeps
+    that record long enough for an investigation or a records request. With history off, Gemini use
+    leaves almost no trace.
+  yesLooksLike: >-
+    Gemini conversation history is turned on, conversation retention is set to at least 18 months
+    or whatever your record-keeping requires, users cannot switch their own history off, and Gemini
+    conversations fall under your Vault retention rules.
+  remediation: >-
+    In the Admin console under Generative AI > Gemini app > Gemini conversation history and
+    management, turn on Gemini conversation history and set conversation retention to at least 18
+    months or your records period, then confirm in Vault that Gemini conversations are covered by a
+    retention rule. Conversation history and retention are Gemini app settings; keeping the
+    conversations in Vault needs the Vault feature (Business Plus and above).
+  effort: S
+  licence: [vault]
+  sources: [gws-gemini-conversation-history, gws-vault-retention]
+  refs:
+    - { framework: nist-csf-2, ref: GV.OC-03 }
+    - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: idcf, ref: "DSL-3 Authorised person" }
+
+- id: GO-GEM-006
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini, gw-gmail, gw-drive]
+  severity: high
+  question: Is Gemini's access to Gmail, Drive and other Google apps limited to the ones you chose?
+  why: >-
+    Gemini pulls context from the connected apps to answer prompts, so every connected app widens
+    what an answer can quote. A Gemini that reads all of Gmail and Drive can summarise a mailbox or
+    a project folder for anyone who can ask it.
+  yesLooksLike: >-
+    Under Generative AI > Gemini app > Apps, only the Workspace apps you decided on are connected
+    to Gemini, the choice is applied per organisational unit or group where the risk differs, and
+    the list is reviewed when new Gemini features are turned on.
+  remediation: >-
+    In the Admin console under Generative AI > Gemini app, under "Apps" set "Allow access to
+    Workspace apps" and "Allow access to other Google apps" to cover only the apps you decided on,
+    apply the choice per organisational unit or group where it matters, and treat the separate
+    switch for uploading Drive files to Gemini the same way.
+  effort: S
+  sources: [gws-google-apps-in-gemini, gws-gemini-privacy-hub]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: idcf, ref: "DSL-2 Authorised person" }
+
+- id: GO-GEM-007
+  module: core
+  domain: gemini-ai
+  appliesTo: [gw-gemini]
+  severity: medium
+  question: Are Gemini extensions, shared Gems and early or agent features restricted to what you have reviewed?
+  why: >-
+    Extensions and Workspace integrations let Gemini read third-party services, shared Gems spread
+    prompts and the files attached to them across teams, early (alpha) features skip full testing,
+    and a shared conversation link can show a whole chat to whoever receives it.
+  yesLooksLike: >-
+    Gemini Alpha features are off, sharing conversations by link is off, Gem sharing is off or
+    limited to the teams that need it, and the integrations and extensions Gemini can use are only
+    ones you have reviewed. They install from the Marketplace, so your allowlist covers them.
+  remediation: >-
+    In the Admin console under Generative AI, turn off Alpha Gemini features and conversation
+    sharing by link, control Gem sharing, and allow only reviewed Workspace integrations. Keep the
+    Marketplace app allowlist in place so no new extension or agent feature can be installed
+    without review.
+  effort: S
+  sources: [gws-gemini-gem-sharing, gws-gemini-integrations, gws-gemini-conversation-sharing, gws-gemini-alpha]
+  refs:
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: idcf, ref: "Rule 1" }
