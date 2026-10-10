@@ -157,3 +157,12 @@ describe("the ScubaGoggles importer crownguard registers", () => {
     expect(catalogue.imports.has(scubagogglesImporter.id)).toBe(true);
   });
 });
+
+describe("stripping HTML out of Details", () => {
+  it("takes out tags, entities and tags left open", () => {
+    expect(stripHtml("Passes <span class='x'>for all</span> OUs<br>today")).toBe("Passes for all OUs today");
+    expect(stripHtml("&lt;b&gt;literal&lt;/b&gt; stays as text")).toBe("b>literal/b> stays as text");
+    expect(stripHtml("half a tag <script")).toBe("half a tag");
+    expect(stripHtml("3 < 4 and a > b")).toBe("3 < 4 and a > b");
+  });
+});
