@@ -2,6 +2,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { crownguardContent } from "./scripts/vite-content";
 
 // Everything is served from our own origin. 'wasm-unsafe-eval' is needed by the PDF layout engine (yoga wasm).
 const cspDirectives = [
@@ -43,9 +44,15 @@ const securityMeta = (): Plugin => ({
 export default defineConfig({
   // Served from /crownguard/ on GitHub Pages; BASE_PATH is set by the Pages workflow.
   base: process.env.BASE_PATH ?? "/",
-  plugins: [react(), tailwindcss(), securityMeta()],
+  plugins: [crownguardContent(), react(), tailwindcss(), securityMeta()],
   preview: { headers: securityHeaders },
+  worker: {
+    format: "es",
+    // Worker bundles are a separate environment; they need the same content virtual modules.
+    plugins: () => [crownguardContent()],
+  },
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    setupFiles: ["src/content/catalogue.setup.ts"],
   },
 });

@@ -1,6 +1,6 @@
 import type { AiRegisterModel, Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
 import { aiRegisterSummary, shareWithDta, type AiRegisterSummary, type ShareStatus } from "../engine/aiRegister";
-import { aiRegisterSources } from "../content/loader";
+import { aiRegisterSources } from "../content/aiRegisterSources";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
+import { useEnsurePlatforms } from "../../content/useCatalogue";
 import { exposures, tiers, type AssetType, type Tier } from "../../content/schema";
 import { suggestDsl } from "../../engine/idcf";
 import { impactOf } from "../../engine/risk";
@@ -41,6 +42,14 @@ const dslHelp: Record<Dsl | "none", string> = {
 
 export function JewelsStep() {
   const { assessment } = useStore();
+  const ready = useEnsurePlatforms(assessment.platforms);
+  if (!ready) {
+    return (
+      <StepHeader title="Identify your crown jewels">
+        Loading platform asset types…
+      </StepHeader>
+    );
+  }
   return (
     <>
       <StepHeader title="Identify your crown jewels">

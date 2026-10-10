@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { catalogue } from "../../content/catalogue";
-import { buildAiRegisterReport, buildReport } from "../../report/model";
+import { catalogue, ensurePlatforms, ensureReportContent } from "../../content/catalogue";
+import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
+import { buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
 import { download, requestOpenFile, slug } from "../download";
 import { modeOf, stepsFor, useStore } from "../store";
@@ -14,20 +15,25 @@ export function ReportStep() {
   const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
   const [error, setError] = useState<string>();
   const standalone = modeOf(assessment) === "ai-register";
-  const model = standalone ? undefined : buildReport(catalogue, assessment);
+  const platformsReady = useEnsurePlatforms(assessment.platforms);
+  const reportReady = useEnsureReportContent();
+  const model = standalone || !platformsReady || !reportReady ? undefined : buildReport(catalogue, assessment);
 
   async function generate() {
     setStatus("working");
     setError(undefined);
     try {
-      // The PDF renderer is large, so load it only when needed.
-      const { renderPdf, renderAiRegisterPdf } = await import("../../report/generate");
+      await Promise.all([ensurePlatforms(assessment.platforms), ensureReportContent()]);
+      // PDF render runs in a worker when possible (see renderPdfInWorker).
+      const { renderPdfInWorker } = await import("../../report/pdfClient");
       const now = new Date();
       const p2 = (n: number) => String(n).padStart(2, "0");
       const date = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
-      const blob = standalone
-        ? await renderAiRegisterPdf(buildAiRegisterReport(catalogue, assessment, now))
-        : await renderPdf(buildReport(catalogue, assessment, now));
+      const blob = await renderPdfInWorker({
+        kind: standalone ? "ai-register" : "report",
+        assessment,
+        generatedAt: now,
+      });
       download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
       setStatus("done");
     } catch (e) {
@@ -80,20 +86,25 @@ export function ReportStep() {
               </>
             )}
             <dt className="text-muted">Logo</dt><dd>{assessment.branding.logoDataUrl ? "Added" : "None (add one on the Organisation or Branding step)"}</dd>
-            <dt className="text-muted">Platforms</dt><dd>{model!.platformNames.join(", ")}</dd>
-            <dt className="text-muted">Crown jewels</dt><dd>{model!.risks.length}</dd>
-            <dt className="text-muted">Questions answered</dt><dd>{model!.questions.filter((q) => model!.answers[q.id]).length} of {model!.questions.length}</dd>
-            <dt className="text-muted">Roadmap actions</dt><dd>{model!.roadmap.length}</dd>
+            <dt className="text-muted">Platforms</dt><dd>{model ? model.platformNames.join(", ") : "Loading…"}</dd>
+            <dt className="text-muted">Crown jewels</dt><dd>{model ? model.risks.length : "…"}</dd>
+            <dt className="text-muted">Questions answered</dt>
+            <dd>
+              {model
+                ? `${model.questions.filter((q) => model.answers[q.id]).length} of ${model.questions.length}`
+                : "…"}
+            </dd>
+            <dt className="text-muted">Roadmap actions</dt><dd>{model ? model.roadmap.length : "…"}</dd>
             <dt className="text-muted">ISM baseline</dt>
             <dd>
               {ism ? `${ism.label} — ${ism.findings.length} of ${ism.totalFindings} findings annotated` : "Not shown"}
             </dd>
-            {model!.aiRegister && (
+            {model?.aiRegister && (
               <>
                 <dt className="text-muted">AI use cases</dt>
                 <dd>
-                  {model!.aiRegister.entries.length}, {model!.aiRegister.openGaps} readiness gap{model!.aiRegister.openGaps === 1 ? "" : "s"} open
-                  {model!.aiRegister.examples ? ` (${model!.aiRegister.examples} example)` : ""}
+                  {model.aiRegister.entries.length}, {model.aiRegister.openGaps} readiness gap{model.aiRegister.openGaps === 1 ? "" : "s"} open
+                  {model.aiRegister.examples ? ` (${model.aiRegister.examples} example)` : ""}
                 </dd>
               </>
             )}
@@ -107,7 +118,12 @@ export function ReportStep() {
             <IsmBaselinePicker />
           </div>
         )}
-        <Button className="w-full py-2.5" loading={status === "working"} onClick={() => void generate()}>
+        <Button
+          className="w-full py-2.5"
+          loading={status === "working"}
+          disabled={!standalone && !model}
+          onClick={() => void generate()}
+        >
           {status === "working" ? "Building PDF…" : "Generate PDF report"}
         </Button>
         {status === "done" && <p className="mt-3 text-sm text-ok" role="status">Report downloaded. Check your downloads folder.</p>}

@@ -1,4 +1,5 @@
 import { catalogue } from "../../content/catalogue";
+import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
 import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
 import { essentialEight } from "../../engine/maturity";
 import { levelFor, socMaturity } from "../../engine/soc";
@@ -16,8 +17,11 @@ export function ReviewStep() {
   const assessment = useStore((s) => s.assessment);
   const setStep = useStore((s) => s.setStep);
   const ism = useIsmSummary();
+  const ready = useEnsurePlatforms(assessment.platforms);
+  useEnsureReportContent();
   // The standalone register has no crown jewels to review: it gets the register's own summary instead.
   if (modeOf(assessment) === "ai-register") return <AiRegisterReview />;
+  if (!ready) return <StepHeader title="Review your risk">Loading assessment data…</StepHeader>;
   const risks = assessAll(catalogue, assessment);
   const posture = overallPosture(catalogue, assessment);
   const domains = domainPosture(catalogue, assessment);

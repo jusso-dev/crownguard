@@ -1,16 +1,21 @@
-import { catalogue } from "../../content/catalogue";
+import { catalogue, ensurePlatforms } from "../../content/catalogue";
+import { useEnsurePlatforms } from "../../content/useCatalogue";
 import { useStore } from "../store";
 import { Card, Field, inputClass, StepHeader } from "../ui";
 
 export function EnvironmentStep() {
   const { assessment, update } = useStore();
   const bundles = [...catalogue.platforms.values()];
+  // Keep selected platforms' question chunks warm while on this step.
+  useEnsurePlatforms(assessment.platforms);
 
-  const togglePlatform = (id: string, on: boolean) =>
+  const togglePlatform = (id: string, on: boolean) => {
+    if (on) void ensurePlatforms([id]);
     update((a) => ({
       platforms: on ? [...a.platforms, id] : a.platforms.filter((p) => p !== id),
       licence: on && !a.licence[id] ? { ...a.licence, [id]: catalogue.platforms.get(id)!.platform.licenceTiers[0].id } : a.licence,
     }));
+  };
   const toggleModule = (pid: string, mid: string, on: boolean) =>
     update((a) => {
       const current = a.modules[pid] ?? [];
