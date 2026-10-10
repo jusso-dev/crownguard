@@ -74,6 +74,11 @@ const GROUPS: { kind: FindingKind; heading: string; lead?: string; info?: boolea
   },
   { kind: "version", heading: "Newer version available", lead: "The publisher has a newer version than the one cited." },
   { kind: "candidate", heading: "New guidance to consider", lead: "New pages and announcements that may deserve a question or a citation." },
+  {
+    kind: "mapping",
+    heading: "Scanner mapping drift",
+    lead: "Upstream scanner check lists no longer match content/imports. Missing mapped ids drop evidence; new checks in a mapped family are suggestions.",
+  },
   { kind: "unmonitored", heading: "Not being monitored", lead: "These couldn't be checked for a week of nights in a row. Check them by hand, or adjust their host profile." },
   { kind: "recovered", heading: "Recovered", lead: "Sources recorded as broken, unmonitored, redirected or retired that are fine again." },
   { kind: "baseline", heading: "Baseline updates", lead: "Bookkeeping: sources, feeds and Learn sections that started or stopped being tracked." },

@@ -223,6 +223,8 @@ export type FindingKind =
   | "version"
   /** New guidance worth considering as a source. */
   | "candidate"
+  /** An import mapping's check id drifted from the upstream scanner list. */
+  | "mapping"
   /** Couldn't be checked this run (bot protection, transient failure). Informational. */
   | "unverifiable"
   /** Bookkeeping: a source, feed or Learn section started or stopped being tracked. */

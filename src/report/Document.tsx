@@ -631,10 +631,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               : []),
             "This PDF is not tagged for accessibility; until react-pdf can emit a structure tree, use the crownguard app and the CSV/XLSX risk register as the accessible alternatives.",
             `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.aiRegister ? ", the Digital Transformation Agency" : ""}${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
+            ...(model.sourcesLastChecked ? [`Sources last checked: ${model.sourcesLastChecked}.`] : []),
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
         </Section>
 
-        <Section s={s} id="references" title="References" lead="Guidance consulted for the questions in this report. Retrieved dates show when each source was last checked.">
+        <Section s={s} id="references" title="References" lead={`Guidance consulted for the questions in this report. Retrieved dates show when each source was last checked${model.sourcesLastChecked ? `; the watch last ran on ${model.sourcesLastChecked}` : ""}.`}>
           {model.idcf && (
             <Text style={{ ...s.small, marginBottom: 8 }}>
               Contains material adapted from the Industry Data Classification Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and

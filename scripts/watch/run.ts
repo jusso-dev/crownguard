@@ -5,6 +5,7 @@ import { checkFeeds, type FeedDef } from "./feeds";
 import { compareUrl, markdownBody, type GitHub } from "./github";
 import { hasProfile, licenceFor, profileFor } from "./hosts";
 import { parseToc, sectionOf, tocPaths, tocUrlFor, withoutQuery } from "./learn";
+import { checkMappingDrift, type UpstreamChecks } from "./mappings";
 import type { TriageInput, TriageRun } from "./triage";
 import type { Commit, Extracted, FetchResult, Fetcher, Finding, RunResult, RunStats, SourceState, WatchCache, WatchState } from "./types";
 import { cleanTitle, findTerms, hostOf, limiter, normalizeUrl, sameUrl, stableStringify, TRACKED_TERMS, truncate } from "./util";
@@ -19,6 +20,8 @@ export interface WatchDeps {
   /** YYYY-MM-DD the run is stamped with. */
   date: string;
   feeds?: FeedDef[];
+  /** Upstream scanner check lists for mapping drift (tests inject fixtures; the CLI fetches). */
+  upstreamChecks?: UpstreamChecks[];
   triage?: (inputs: TriageInput[]) => Promise<TriageRun>;
   /** Inject a fake substantial change so the pull request path can be tested end to end. */
   simulate?: boolean;
@@ -372,7 +375,16 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
     stats.skipped.push(...feedRun.skipped);
   } else proposed.feeds = { ...baseline.feeds };
 
-  // 6. Optional Claude triage of substantial changes.
+  // 6. Scanner mapping drift against injected upstream check lists (no network here).
+  if (deps.upstreamChecks?.length && !deps.only) {
+    findings.push(
+      ...checkMappingDrift(catalogue, deps.upstreamChecks, {
+        baseId: (mappingId, id) => (mappingId === "scubagoggles" ? id.replace(/v\d+$/i, "") : id),
+      }),
+    );
+  }
+
+  // 7. Optional Claude triage of substantial changes.
   if (deps.triage) {
     const inputs: TriageInput[] = findings
       .filter((f) => f.actionable && (f.kind === "changed" || f.kind === "retired") && f.sourceId && f.change)
@@ -577,17 +589,19 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
       );
     }
     const major = cls.severity === "major";
+    // High-attention sources (AI register pillars) report any change, not only substantial ones.
+    const report = major || !!s.highAttention;
     findings.push(
       finding(s, {
         kind: major && cls.lifecycle.length && !current.retired ? "retired" : "changed",
         severity: cls.severity,
-        actionable: major,
+        actionable: report,
         detail: cls.reasons.join("; ") || "content changed",
         change,
         ...(redirect === "moved" ? { newUrl: current.url } : {}),
       }),
     );
-    return major;
+    return report;
   }
 
   async function scanTocs() {

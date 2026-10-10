@@ -155,6 +155,8 @@ describe("runWatch", () => {
     const dir = mkdtempSync(join(tmpdir(), "watch-run-"));
     const first = await run(routes(), emptyState(), dir);
     expect(first.findings.filter((f) => f.kind === "baseline" && f.sourceId)).toHaveLength(SOURCES.length);
+    // First sight is a baseline, never a false "changed" item.
+    expect(first.findings.filter((f) => f.kind === "changed")).toEqual([]);
     expect(first.findings.filter((f) => f.kind === "baseline" && !f.sourceId).map((f) => f.title)).toEqual(["Learn sections", "Test feed"]);
     expect(first.actionable).toBe(true);
     expect(first.state.sources["ms-plan"].learn?.documentId).toBe("doc-1");
@@ -165,6 +167,78 @@ describe("runWatch", () => {
     const second = await run(routes(), first.state, dir);
     expect(second.findings).toEqual([]);
     expect(stableStringify(second.state)).toBe(stableStringify(first.state));
+  });
+
+  it("reports any change on a high-attention source, even when the edit is below the substantial threshold", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "watch-hi-"));
+    const sources: Source[] = [
+      {
+        id: "dta-ai-policy",
+        title: "Policy for the responsible use of AI in government",
+        publisher: "DTA",
+        url: "https://www.digital.gov.au/policy/ai/policy",
+        retrieved: "2026-01-01",
+        highAttention: true,
+      },
+    ];
+    const page = (extra: string) =>
+      `<html lang="en"><body><main id="main-content"><div id="block-bdga-content"><article><div class="ct-basic-content"><h2>Policy</h2><p>${"Agencies must keep a register of AI use cases and share it with the DTA. ".repeat(40)}${extra}</p><h3>Officials</h3><p>${"Accountable officials notify the DTA of high-risk use cases by email. ".repeat(20)}</p></div></article></div></main></body></html>`;
+    const cat: Catalogue = {
+      sources: new Map(sources.map((s) => [s.id, s])),
+      frameworks: new Map(),
+      imports: new Map(),
+      platforms: new Map([
+        [
+          "microsoft",
+          {
+            platform: { id: "microsoft", sources: [] } as never,
+            assetTypes: [],
+            questions: [{ id: "AIR-001", sources: ["dta-ai-policy"], question: "Q?", yesLooksLike: "Y", remediation: "R".repeat(20), why: "W".repeat(20), effort: "S", severity: "high", domain: "ai", licence: [] } as unknown as Question],
+          },
+        ],
+      ]),
+    };
+    const url = sources[0].url;
+    const cache = openCache(dir);
+    const first = await runWatch({
+      catalogue: cat,
+      baseline: emptyState(),
+      cache,
+      fetcher: fakeWeb({ [url]: { body: page("") } }),
+      github: noGitHub,
+      date: "2026-10-09",
+      feeds: [],
+    });
+    cache.save();
+    expect(first.findings.filter((f) => f.kind === "changed")).toEqual([]);
+    const minor = await runWatch({
+      catalogue: cat,
+      baseline: first.state,
+      cache: openCache(dir),
+      fetcher: fakeWeb({ [url]: { body: page("One small extra sentence.") } }),
+      github: noGitHub,
+      date: "2026-10-10",
+      feeds: [],
+    });
+    const changed = minor.findings.filter((f) => f.kind === "changed");
+    expect(changed).toHaveLength(1);
+    expect(changed[0].actionable).toBe(true);
+    expect(changed[0].severity).toBe("minor");
+    // Without highAttention the same edit would not be actionable.
+    const ordinary: Catalogue = {
+      ...cat,
+      sources: new Map([["dta-ai-policy", { ...sources[0], highAttention: undefined }]]),
+    };
+    const ignored = await runWatch({
+      catalogue: ordinary,
+      baseline: first.state,
+      cache: openCache(dir),
+      fetcher: fakeWeb({ [url]: { body: page("One small extra sentence.") } }),
+      github: noGitHub,
+      date: "2026-10-10",
+      feeds: [],
+    });
+    expect(ignored.findings.filter((f) => f.kind === "changed" && f.actionable)).toEqual([]);
   });
 
   it("reports breaks, moves, redirects, changes, versions, new pages and feed entries", async () => {
