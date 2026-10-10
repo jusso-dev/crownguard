@@ -1,11 +1,13 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Assessment } from "../engine/types";
 import { assessmentSchema, formatIssues, SCHEMA_VERSION } from "./assessmentSchema";
+import * as crypto from "./crypto";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
 import { parseAssessment } from "./parseAssessment";
-import { checkedStorage, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "./persistence";
+import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "./persistence";
 import { toSaveFile } from "./saveFile";
+import { setSessionPassphrase } from "./sessionSecrets";
 import { emptyAssessment } from "./store";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8")) as Record<string, unknown>;
@@ -205,6 +207,33 @@ describe("progress saved in this browser", () => {
     writeProgress(STORAGE_KEY, "{not json");
     expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toBe("{not json");
+  });
+
+  it("does not let a slower passphrase save overwrite a newer one", async () => {
+    const actual = crypto.encrypt;
+    let calls = 0;
+    let releaseFirst: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const spy = vi.spyOn(crypto, "encrypt").mockImplementation(async (plaintext, pass) => {
+      calls += 1;
+      if (calls === 1) await gate;
+      return actual(plaintext, pass);
+    });
+    setSessionPassphrase("race-pass-1234");
+    const stale = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stale Co" } };
+    const fresh = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Fresh Co" } };
+    const first = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: stale }, version: 3 });
+    const second = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: fresh }, version: 3 });
+    await second;
+    releaseFirst();
+    await first;
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
+    expect(stored?.state.assessment?.org.name).toBe("Fresh Co");
+    setSessionPassphrase(null);
+    dropProgress(STORAGE_KEY);
+    spy.mockRestore();
   });
 
   it("writes nothing while a newer file is open read-only", async () => {

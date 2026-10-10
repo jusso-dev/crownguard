@@ -20,6 +20,9 @@ export const setStorageReadOnly = (value: boolean) => {
   readOnly = value;
 };
 
+/** Bumps on every encrypted save so a slower, older PBKDF2 cannot overwrite a newer one. */
+let encryptGeneration = 0;
+
 export interface RehydrateNotice {
   kind: "error" | "warn" | "info";
   text: string;
@@ -232,7 +235,11 @@ export const checkedStorage: CheckedStorage = {
     // Plain writes stay synchronous so a later tab/load cannot race an in-flight Promise.
     // Encrypted writes must await WebCrypto; callers that need durability should wait on the returned Promise.
     if (hasSessionPassphrase()) {
-      return encrypt(json, getSessionPassphrase()!).then((envelope) => {
+      const generation = ++encryptGeneration;
+      const pass = getSessionPassphrase()!;
+      return encrypt(json, pass).then((envelope) => {
+        // A later save already started. Its ciphertext is the one that must land.
+        if (generation !== encryptGeneration) return;
         write(name, JSON.stringify(envelope));
       });
     }
