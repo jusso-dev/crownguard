@@ -1,0 +1,491 @@
+{
+  "SyntheticExample": "Made-up example data for crownguard's tests and screenshots. Not a real tenant, not real people.",
+  "MetaData": {
+    "TenantId": "SYNTHETIC-EXAMPLE-0000",
+    "DisplayName": "Example Co",
+    "DomainName": "example.com",
+    "ProductSuite": "Google Workspace",
+    "ProductsAssessed": ["Common Controls", "Google Drive and Docs", "Gemini", "Gmail", "Google Meet"],
+    "ProductAbbreviationMapping": {
+      "Common Controls": "commoncontrols",
+      "Google Drive and Docs": "drive",
+      "Gemini": "gemini",
+      "Gmail": "gmail",
+      "Google Meet": "meet"
+    },
+    "Tool": "ScubaGoggles",
+    "ToolVersion": "1.0.1",
+    "TimestampZulu": "2026-10-08T22:00:00.000Z",
+    "ReportUUID": "00000000-0000-4000-8000-000000000000"
+  },
+  "Summary": {
+    "commoncontrols": { "Manual": 0, "Passes": 2, "Errors": 0, "Failures": 1, "Warnings": 0, "Omit": 1, "IncorrectResult": 0 },
+    "drive": { "Manual": 0, "Passes": 1, "Errors": 1, "Failures": 1, "Warnings": 1, "Omit": 0, "IncorrectResult": 0 },
+    "gemini": { "Manual": 0, "Passes": 3, "Errors": 0, "Failures": 1, "Warnings": 0, "Omit": 0, "IncorrectResult": 0 },
+    "gmail": { "Manual": 1, "Passes": 2, "Errors": 0, "Failures": 2, "Warnings": 2, "Omit": 0, "IncorrectResult": 0 },
+    "meet": { "Manual": 0, "Passes": 2, "Errors": 0, "Failures": 1, "Warnings": 0, "Omit": 0, "IncorrectResult": 1 }
+  },
+  "Results": {
+    "gmail": [
+      {
+        "GroupName": "Mail Delegation",
+        "GroupNumber": "1",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#1-mail-delegation",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.1.1v1",
+            "Requirement": "Mail delegation SHOULD be disabled.",
+            "Result": "Pass",
+            "Criticality": "Should",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Mail Authentication",
+        "GroupNumber": "4",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#4-mail-authentication",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.4.2v1",
+            "Requirement": "The DMARC message rejection option SHALL be p=reject.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "The DMARC policy for example.com is p=none, not p=reject.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "The DMARC policy for example.com is p=none, not p=reject.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Attachments",
+        "GroupNumber": "5",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#5-attachments",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.5.4v1",
+            "Requirement": "Google SHOULD be allowed to automatically apply future recommended settings for attachments.",
+            "Result": "Warning",
+            "Criticality": "Should",
+            "Details": "Automatic application of future recommended settings is <b>off</b>.<br><br>",
+            "OriginalResult": "Warning",
+            "OriginalDetails": "Automatic application of future recommended settings is off.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Mail Forwarding",
+        "GroupNumber": "11",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#11-mail-forwarding",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.11.1v1",
+            "Requirement": "Automatic forwarding SHOULD be disabled, especially to external domains.",
+            "Result": "Warning",
+            "Criticality": "Should",
+            "Details": "The following OUs are non-compliant: <div class=\"details\">- All Users: automatic forwarding is <span class=\"value\">on</span> &amp; allowed to any address</div>",
+            "OriginalResult": "Warning",
+            "OriginalDetails": "The following OUs are non-compliant: \n- All Users: automatic forwarding is on & allowed to any address",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Per-user Outbound Gateway",
+        "GroupNumber": "12",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#12-per-user-outbound-gateway",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.12.1v1",
+            "Requirement": "The option to use a per-user outbound gateway SHALL be disabled.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "Per-user outbound gateway is enabled for the All Users OU.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "Per-user outbound gateway is enabled for the All Users OU.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Security Sandbox",
+        "GroupNumber": "16",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#16-security-sandbox",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.16.1v1",
+            "Requirement": "Security sandbox SHOULD be enabled to provide additional email protections.",
+            "Result": "N/A",
+            "Criticality": "Should",
+            "Details": "Security sandbox is not included in this tenant's licence.",
+            "OriginalResult": "N/A",
+            "OriginalDetails": "Security sandbox is not included in this tenant's licence.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Email Allowlist",
+        "GroupNumber": "14",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gmail#14-email-allowlist",
+        "Controls": [
+          {
+            "Control ID": "GWS.GMAIL.14.1v1",
+            "Requirement": "An email allowlist SHOULD NOT be implemented.",
+            "Result": "Warning",
+            "Criticality": "Should",
+            "Details": "An allowlist of senders that bypass spam filtering is in place.",
+            "OriginalResult": "Warning",
+            "OriginalDetails": "An allowlist of senders that bypass spam filtering is in place.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ],
+    "drive": [
+      {
+        "GroupName": "Sharing Outside the Organization",
+        "GroupNumber": "1",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/drive#1-sharing-outside-the-organization",
+        "Controls": [
+          {
+            "Control ID": "GWS.DRIVEDOCS.1.1v1",
+            "Requirement": "External sharing SHALL be restricted to allowlisted domains.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "The following OUs are non-compliant: - All Users: sharing outside the domain is allowed to anyone.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "The following OUs are non-compliant: - All Users: sharing outside the domain is allowed to anyone.",
+            "Comments": [],
+            "ResolutionDate": null
+          },
+          {
+            "Control ID": "GWS.DRIVEDOCS.1.2v1",
+            "Requirement": "Receiving files from non-allowlisted domains SHOULD be disabled.",
+            "Result": "Warning",
+            "Criticality": "Should",
+            "Details": "Users can receive files from any external domain.",
+            "OriginalResult": "Warning",
+            "OriginalDetails": "Users can receive files from any external domain.",
+            "Comments": [],
+            "ResolutionDate": null
+          },
+          {
+            "Control ID": "GWS.DRIVEDOCS.1.8v1",
+            "Requirement": "\"Private to owner\" SHALL be the default access level for newly created items.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Shared Drive Creation",
+        "GroupNumber": "2",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/drive#2-shared-drive-creation",
+        "Controls": [
+          {
+            "Control ID": "GWS.DRIVEDOCS.2.1v1",
+            "Requirement": "Agencies SHOULD NOT allow members with manager access to override shared Google Drive creation settings.",
+            "Result": "Error - Test results missing",
+            "Criticality": "Should",
+            "Details": "Error evaluating control: the Drive settings API call failed.",
+            "OriginalResult": "Error - Test results missing",
+            "OriginalDetails": "Error evaluating control: the Drive settings API call failed.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ],
+    "commoncontrols": [
+      {
+        "GroupName": "Privileged Accounts",
+        "GroupNumber": "6",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/commoncontrols#6-privileged-accounts",
+        "Controls": [
+          {
+            "Control ID": "GWS.COMMONCONTROLS.6.2v1",
+            "Requirement": "A minimum of two and a maximum of eight separate and distinct super admin users SHALL be configured.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "App Access to Google APIs",
+        "GroupNumber": "10",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/commoncontrols#10-app-access-to-google-apis",
+        "Controls": [
+          {
+            "Control ID": "GWS.COMMONCONTROLS.10.4v1",
+            "Requirement": "Agencies SHALL NOT allow users to access unconfigured third-party applications.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "Users can access any third-party app that asks for sign-in.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "Users can access any third-party app that asks for sign-in.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Authorized Google Marketplace Apps",
+        "GroupNumber": "11",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/commoncontrols#11-authorized-google-marketplace-apps",
+        "Controls": [
+          {
+            "Control ID": "GWS.COMMONCONTROLS.11.1v1",
+            "Requirement": "Only approved Google Workspace Marketplace applications SHALL be allowed for installation.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Google Takeout Services for Users",
+        "GroupNumber": "12",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/commoncontrols#12-google-takeout-services-for-users",
+        "Controls": [
+          {
+            "Control ID": "GWS.COMMONCONTROLS.12.1v1",
+            "Requirement": "Google Takeout services SHALL be disabled.",
+            "Result": "Omitted",
+            "Criticality": "Shall",
+            "Details": "Omitted from this run by request of the assessor.",
+            "OriginalResult": "Omitted",
+            "OriginalDetails": "Omitted from this run by request of the assessor.",
+            "Comments": ["Kept on for the data team until March"],
+            "ResolutionDate": "2027-03-01"
+          }
+        ]
+      },
+      {
+        "GroupName": "Multi-Party Approval",
+        "GroupNumber": "17",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/commoncontrols#17-multi-party-approval",
+        "Controls": [
+          {
+            "Control ID": "GWS.COMMONCONTROLS.17.1v1",
+            "Requirement": "Require multi-party approval for sensitive admin actions SHOULD be enabled.",
+            "Result": "Pass",
+            "Criticality": "Should",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ],
+    "gemini": [
+      {
+        "GroupName": "Gemini App Access",
+        "GroupNumber": "1",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gemini#1-gemini-app-access",
+        "Controls": [
+          {
+            "Control ID": "GWS.GEMINI.1.1v1",
+            "Requirement": "Gemini app user access SHALL be set to OFF for everyone without a license.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Gemini Alpha features",
+        "GroupNumber": "2",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gemini#2-gemini-alpha-features",
+        "Controls": [
+          {
+            "Control ID": "GWS.GEMINI.2.1v1",
+            "Requirement": "Gemini Alpha features SHALL be disabled.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Gemini Conversation History",
+        "GroupNumber": "3",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gemini#3-gemini-conversation-history",
+        "Controls": [
+          {
+            "Control ID": "GWS.GEMINI.3.1v1",
+            "Requirement": "Gemini conversation history SHALL be enabled.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          },
+          {
+            "Control ID": "GWS.GEMINI.3.2v1",
+            "Requirement": "Gemini conversation retention SHALL be set to minimum of 18 months.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Gemini Conversation Sharing",
+        "GroupNumber": "4",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/gemini#4-gemini-conversation-sharing",
+        "Controls": [
+          {
+            "Control ID": "GWS.GEMINI.4.1v1",
+            "Requirement": "Conversation sharing SHALL be set to OFF.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "Sharing Gemini conversations via link is on.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "Sharing Gemini conversations via link is on.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ],
+    "meet": [
+      {
+        "GroupName": "Meeting Access",
+        "GroupNumber": "1",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/meet#1-meeting-access",
+        "Controls": [
+          {
+            "Control ID": "GWS.MEET.1.1v1",
+            "Requirement": "External users who were not explicitly invited to a Google Meet meeting SHALL be required to ask to join.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Meeting Recording and Transcription",
+        "GroupNumber": "5",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/meet#5-meeting-recording-and-transcription",
+        "Controls": [
+          {
+            "Control ID": "GWS.MEET.5.1v1",
+            "Requirement": "Automatic recordings for Google Meet SHALL be disabled.",
+            "Result": "Pass",
+            "Criticality": "Shall",
+            "Details": "Requirement met.",
+            "OriginalResult": "Pass",
+            "OriginalDetails": "Requirement met.",
+            "Comments": [],
+            "ResolutionDate": null
+          },
+          {
+            "Control ID": "GWS.MEET.5.2v1",
+            "Requirement": "Automatic transcripts for Google Meet SHALL be disabled.",
+            "Result": "Fail",
+            "Criticality": "Shall",
+            "Details": "Automatic transcription is on for the All Users OU.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "Automatic transcription is on for the All Users OU.",
+            "Comments": [],
+            "ResolutionDate": null
+          }
+        ]
+      },
+      {
+        "GroupName": "Meeting Notes Sharing",
+        "GroupNumber": "6",
+        "GroupReferenceURL": "https://example.com/scubagoggles-example/meet#6-meeting-notes-sharing",
+        "Controls": [
+          {
+            "Control ID": "GWS.MEET.6.1v1",
+            "Requirement": "Administrators SHOULD NOT be allowed to override the default sharing level for meeting notes set by the organization.",
+            "Result": "No events found",
+            "Criticality": "Should",
+            "Details": "No relevant event in the current logs for the top-level OU.",
+            "OriginalResult": "No events found",
+            "OriginalDetails": "No relevant event in the current logs for the top-level OU.",
+            "Comments": [],
+            "ResolutionDate": null
+          },
+          {
+            "Control ID": "GWS.MEET.6.2v1",
+            "Requirement": "Default sharing setting for Google AI notes SHALL be restricted to \"Guests in your organization.\"",
+            "Result": "Incorrect Result",
+            "Criticality": "Shall",
+            "Details": "Marked incorrect in the ScubaGoggles config file; the result is disputed.",
+            "OriginalResult": "Fail",
+            "OriginalDetails": "Default sharing for AI notes allows anyone with the link.",
+            "Comments": ["Vendor ticket open; setting keeps reverting"],
+            "ResolutionDate": null
+          }
+        ]
+      }
+    ]
+  },
+  "Raw": {
+    "tenant_info": { "ID": "SYNTHETIC-EXAMPLE-0000", "domain": "example.com", "topLevelOU": "Example Co" },
+    "organizational_unit_names": ["Example Co", "Break Glass", "Finance"],
+    "super_admins": [
+      { "primaryEmail": "break.glass.admin@example.com", "orgUnitPath": "/Break Glass" },
+      { "primaryEmail": "kim.taylor@example.com", "orgUnitPath": "" }
+    ],
+    "break_glass_accounts": ["break.glass.admin@example.com"],
+    "gmail_logs": {
+      "example-events": [
+        { "id": { "time": "2026-10-08T21:00:00Z" }, "actor": { "email": "break.glass.admin@example.com" }, "events": [{ "name": "email_forwarding_change", "type": "EMAIL_SETTINGS" }] }
+      ]
+    },
+    "domains": ["example.com"],
+    "successful_calls": ["directory/v1/orgunits/list"],
+    "unsuccessful_calls": [],
+    "scuba_config": { "OrgName": "Example Co", "BreakGlassAccounts": ["break.glass.admin@example.com"] }
+  }
+}

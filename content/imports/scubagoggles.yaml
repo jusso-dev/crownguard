@@ -1,0 +1,180 @@
+# CISA ScubaGoggles control ids mapped to crownguard questions, for importing a ScubaGoggles
+# ScubaResults*.json report of a Google Workspace tenant.
+# Control ids were checked against ScubaGoggles release v1.0.1 (the SCuBA Google Workspace
+# baselines in scubagoggles/baselines at that tag); `checkedAgainst` records that. Policy ids carry
+# a version suffix (v1 here, v0.x on older runs), and the importer matches on the id without the
+# suffix, warning when the suffix in the report differs.
+# Privacy: the importer reads only MetaData and Results. It never touches the `Raw` section, which
+# holds super admin and break-glass accounts, organisational unit names and audit log events.
+#
+# Coverage (of the SCuBA policies at v1.0.1): Gmail 26 of 36, Drive and Docs 13 of 17,
+# Common Controls 27 of 42, Gemini 5 of 5. Everything not mapped is listed here with the reason.
+#
+# Gmail not mapped:
+#   GWS.GMAIL.4.3v1, GWS.GMAIL.4.4v1  DMARC aggregate/failure report contacts (a US federal
+#     reporting address and an agency contact). No question asks who receives DMARC reports.
+#   GWS.GMAIL.8.1v1   User email uploads (POP/IMAP mail imported into Gmail). No question covers
+#     bringing outside mail in.
+#   GWS.GMAIL.9.1v1   POP and IMAP access. No question covers legacy mail protocols.
+#   GWS.GMAIL.10.1v1  Google Workspace Sync for Outlook. No question covers it.
+#   GWS.GMAIL.14.1v1  Email allowlists. GO-GML-003 asks that the protections are on, not whether a
+#     spam allowlist quietly weakens them.
+#   GWS.GMAIL.17.1v1  Comprehensive mail storage. It is an archiving completeness detail for Vault,
+#     which the backup and retention questions don't ask for in those terms.
+#   GWS.GMAIL.18.1v1, GWS.GMAIL.18.2v1, GWS.GMAIL.18.3v1  Spam filter bypass lists. Same as 14.1:
+#     weakening spam filtering is not one of the settings GO-GML-003 asks about.
+#
+# Drive and Docs not mapped:
+#   GWS.DRIVEDOCS.1.10v1, GWS.DRIVEDOCS.1.11v1  Google Forms responses from and to outsiders.
+#     Narrow to Forms; no question reaches it.
+#   GWS.DRIVEDOCS.2.2v1  Allowing non-members to be added to individual files. The SCuBA baseline
+#     wants this allowed (so people aren't made full shared-drive members), where GO-DRV-003 follows
+#     the CIS recommendation for members-only access. It can't land on crownguard either way.
+#   GWS.DRIVEDOCS.5.2v1  Ransomware monitoring for Drive for desktop. It is about detection, not the
+#     bulk-copy limits GO-DRV-006 asks about.
+#
+# Common Controls not mapped:
+#   GWS.COMMONCONTROLS.5.1v1 to 5.6v1  Password strength, length, reuse and expiry. crownguard
+#     steers to passkeys and phishing-resistant MFA (GO-ID-002) and has no password policy question.
+#   GWS.COMMONCONTROLS.8.2v1, GWS.COMMONCONTROLS.8.3v1  Self-recovery for all users and adding
+#     recovery information. Wider than GO-ADM-005, which asks about super admin accounts.
+#   GWS.COMMONCONTROLS.9.2v1  Advanced Protection for all sensitive users. Wider than GO-ADM-003,
+#     which asks about administrators.
+#   GWS.COMMONCONTROLS.15.1v1, GWS.COMMONCONTROLS.15.2v1  Data storage and processing regions. No
+#     question asks where Workspace data lives; the answer depends on each organisation's rules.
+#   GWS.COMMONCONTROLS.16.1v1 to 16.4v1  Additional Google services, Early Access apps, Looker
+#     Studio sharing and Pinpoint. No question asks whether unused Google services are turned off.
+#
+# Gemini: all five policies map.
+# Meet: all eight policies map.
+# Other products:
+#   GWS.CHAT.5.1v1, GWS.CHAT.5.2v1  Chat content reporting (user moderation). Not a crown-jewel
+#     control.
+#   GWS.GROUPS.4.1v1  Hiding groups from the directory. Internal visibility only.
+#   GWS.CALENDAR.3.1v1, GWS.CALENDAR.3.2v1  Calendar Interop with Exchange; GWS.CALENDAR.4.1v1 paid
+#     appointment schedules. No questions reach these.
+#   GWS.SITES.1.1v1 and the Google Classroom policies  Sites and Classroom don't hold crown-jewel
+#     data in the assessments crownguard runs, and Classroom is education-specific, so they are
+#     deliberately left out.
+#   GWS.ASSUREDCONTROLS.*  The Assured Controls add-on. No question covers Google support staff
+#     access approvals or data regions add-ons.
+id: scubagoggles
+name: ScubaGoggles
+platform: google
+url: https://github.com/cisagov/ScubaGoggles
+checkedAgainst: v1.0.1
+mappings:
+  - question: GO-GML-001
+    checks: [GWS.GMAIL.2.1v1, GWS.GMAIL.3.1v1, GWS.GMAIL.4.1v1, GWS.GMAIL.4.2v1]
+    rationale: DKIM for all domains, an SPF policy that fails non-approved senders and DMARC at reject is the question's Yes state; monitoring the aggregate reports isn't checked.
+  - question: GO-GML-002
+    checks: [GWS.GMAIL.11.1v1, GWS.GMAIL.12.1v1]
+    rationale: Automatic forwarding off and per-user outbound gateways disabled are exactly the two ways mail leaves the tenant that the question names.
+  - question: GO-GML-003
+    checks: [GWS.GMAIL.5.1v1, GWS.GMAIL.5.2v1, GWS.GMAIL.5.3v1, GWS.GMAIL.5.4v1, GWS.GMAIL.5.5v1, GWS.GMAIL.6.1v1, GWS.GMAIL.6.2v1, GWS.GMAIL.6.3v1, GWS.GMAIL.6.4v1, GWS.GMAIL.7.1v1, GWS.GMAIL.7.2v1, GWS.GMAIL.7.3v1, GWS.GMAIL.7.4v1, GWS.GMAIL.7.5v1, GWS.GMAIL.7.6v1, GWS.GMAIL.7.7v1, GWS.GMAIL.13.1v1, GWS.GMAIL.15.1v1]
+    rationale: Every attachment, link and spoofing protection the question names, the action on flagged mail, Google's future recommended settings, external reply warnings and enhanced pre-delivery scanning.
+  - question: GO-GML-004
+    checks: [GWS.GMAIL.16.1v1]
+    rationale: Security sandbox enabled is the whole question; the check passes on editions without the sandbox too, so trust the wording of its Details.
+  - question: GO-GML-005
+    checks: [GWS.GMAIL.1.1v1]
+    rationale: Mail delegation disabled; the periodic review of delegates on executive and finance mailboxes the question also asks about isn't checked.
+    cap: partial
+  - question: GO-DRV-001
+    checks: [GWS.DRIVEDOCS.1.1v1, GWS.DRIVEDOCS.1.2v1, GWS.DRIVEDOCS.1.3v1, GWS.DRIVEDOCS.1.4v1, GWS.DRIVEDOCS.1.6v1, GWS.DRIVEDOCS.1.7v1, GWS.DRIVEDOCS.1.9v1]
+    rationale: External sharing limited to allowlisted domains, no receiving from other domains, warnings on, no sharing with people who aren't using a Google account, recipients-only access checking, out-of-domain warnings and no moving content into other organisations' shared drives.
+  - question: GO-DRV-002
+    checks: [GWS.DRIVEDOCS.1.5v1, GWS.DRIVEDOCS.1.8v1, GWS.DRIVEDOCS.3.1v1]
+    rationale: No content visible to anyone with the link, private-by-default new files and the link security update applied; hunting down files already shared publicly is left to the assessor.
+  - question: GO-DRV-003
+    checks: [GWS.DRIVEDOCS.2.1v1]
+    rationale: Managers can't loosen shared drive settings; which files live in shared drives and how often membership is reviewed aren't checked.
+    cap: partial
+  - question: GO-DRV-004
+    checks: [GWS.COMMONCONTROLS.18.1v1, GWS.COMMONCONTROLS.18.2v1]
+    rationale: A custom DLP policy covering Drive, Gmail, Chat and Calendar with block as its action; which detectors and labels it uses aren't checked.
+  - question: GO-DRV-006
+    checks: [GWS.DRIVEDOCS.5.1v1, GWS.COMMONCONTROLS.12.1v1]
+    rationale: Drive for desktop limited to authorised devices and Google Takeout disabled; offline access, the third route the question names, isn't checked.
+    cap: partial
+  - question: GO-APP-001
+    checks: [GWS.COMMONCONTROLS.10.1v1, GWS.COMMONCONTROLS.10.2v1, GWS.COMMONCONTROLS.10.3v1, GWS.COMMONCONTROLS.10.4v1, GWS.COMMONCONTROLS.10.5v1, GWS.COMMONCONTROLS.11.1v1, GWS.DRIVEDOCS.4.1v1]
+    rationale: App access restricted across all services, no user consent to low-risk scopes, unconfigured internal and third-party apps blocked, less secure apps blocked, the Marketplace allowlist in place and the Drive SDK off; how deliberately each configured app was reviewed isn't checked.
+  - question: GO-ADM-001
+    checks: [GWS.COMMONCONTROLS.6.2v1]
+    rationale: The SCuBA policy passes two to eight super admins where the question asks for two to four, so a pass can only ever be Partial.
+    cap: partial
+  - question: GO-ADM-002
+    checks: [GWS.COMMONCONTROLS.6.1v1]
+    rationale: Admin accounts provisioned cloud-only and separate from the directory; that they are never used for email or browsing isn't checked.
+    cap: partial
+  - question: GO-ADM-003
+    checks: [GWS.COMMONCONTROLS.9.1v1]
+    rationale: Advanced Protection enrolment for privileged accounts enforces security keys, but the question asks about the sign-in policy for every admin account, which isn't checked directly.
+    cap: partial
+  - question: GO-ADM-005
+    checks: [GWS.COMMONCONTROLS.8.1v1]
+    rationale: Self-service account recovery disabled for super admins is the question's Yes state.
+  - question: GO-ADM-007
+    checks: [GWS.COMMONCONTROLS.17.1v1]
+    rationale: Multi-party approval for sensitive admin actions on is the whole question.
+  - question: GO-ID-001
+    checks: [GWS.COMMONCONTROLS.1.2v1, GWS.COMMONCONTROLS.1.4v1, GWS.COMMONCONTROLS.1.5v1, GWS.COMMONCONTROLS.3.1v1, GWS.COMMONCONTROLS.3.2v1]
+    rationale: A second factor enforced for every user, a bounded enrolment window, no trusted-device bypass and post-SSO verification wherever the sign-in came from.
+  - question: GO-ID-002
+    checks: [GWS.COMMONCONTROLS.1.1v1, GWS.COMMONCONTROLS.1.3v1]
+    rationale: Phishing-resistant MFA required for all users with SMS and voice banned as methods; how far passkey adoption has got isn't checked.
+  - question: GO-ID-003
+    checks: [GWS.COMMONCONTROLS.2.1v1]
+    rationale: Access policies based on enterprise device signals; the location side of the question isn't checked.
+    cap: partial
+  - question: GO-ID-004
+    checks: [GWS.COMMONCONTROLS.4.1v1]
+    rationale: The Workspace login session expires and forces re-authentication after 12 hours; Google Cloud console sessions aren't checked.
+    cap: partial
+  - question: GO-ID-006
+    checks: [GWS.COMMONCONTROLS.7.1v1]
+    rationale: Account conflict management replaces unmanaged accounts with managed ones; finding every personal account on the company domain isn't checked.
+    cap: partial
+  - question: GO-LOG-001
+    checks: [GWS.COMMONCONTROLS.13.1v1]
+    rationale: The required system-defined alerting rules enabled with alerts attached; where those alerts land and who watches them isn't checked.
+    cap: partial
+  - question: GO-LOG-002
+    checks: [GWS.COMMONCONTROLS.14.1v1, GWS.COMMONCONTROLS.14.2v1]
+    rationale: Critical logs sent to a central SIEM and retained, searchable for 3 months and retrievable for 12; that the exported copies are protected from deletion isn't checked.
+    cap: partial
+  - question: GO-BAK-004
+    checks: [GWS.CHAT.1.1v1, GWS.CHAT.1.2v1, GWS.CHAT.3.1v1]
+    rationale: Chat and space history kept and not changeable by users, so Vault has messages to retain; the retention rules themselves are not checked.
+    cap: partial
+  - question: GO-COL-001
+    checks: [GWS.CHAT.2.1v1, GWS.CHAT.4.1v1]
+    rationale: External chat limited to allowlisted domains and external file sharing in Chat off is the question's Yes state.
+  - question: GO-COL-003
+    checks: [GWS.GROUPS.1.1v1, GWS.GROUPS.1.2v1, GWS.GROUPS.1.3v1, GWS.GROUPS.2.1v1, GWS.GROUPS.3.1v1]
+    rationale: Group access from outside the organisation private, owners unable to add external members or let them post, group creation restricted and conversations members-only by default; labelling access groups as security groups isn't checked.
+  - question: GO-COL-004
+    checks: [GWS.CALENDAR.1.1v1, GWS.CALENDAR.1.2v1, GWS.CALENDAR.2.1v1]
+    rationale: Primary and secondary calendars show free/busy only to people outside, and users are warned before inviting external guests.
+  - question: GO-GEM-004
+    checks: [GWS.GEMINI.1.1v1]
+    rationale: Gemini access off for users without a licence; switching Gemini on per organisational unit or group, the scoping the question also asks about, isn't checked.
+    cap: partial
+  - question: GO-GEM-005
+    checks: [GWS.GEMINI.3.1v1, GWS.GEMINI.3.2v1]
+    rationale: Conversation history enabled and conversation retention set to at least 18 months is the question's Yes state; whether Vault then retains them is GO-BAK-004's business.
+  - question: GO-GEM-007
+    checks: [GWS.GEMINI.2.1v1, GWS.GEMINI.4.1v1]
+    rationale: Gemini Alpha features disabled and conversation sharing by link off; the extension, integration and Gems sharing settings the question names aren't checked.
+    cap: partial
+  - question: GO-MEET-001
+    checks: [GWS.MEET.1.1v1, GWS.MEET.2.1v1, GWS.MEET.3.1v1, GWS.MEET.4.1v1]
+    rationale: Uninvited guests must ask to join, meetings created outside a Workspace tenant are closed to your users, host management is on and external participants trigger a warning.
+  - question: GO-MEET-002
+    checks: [GWS.MEET.5.1v1, GWS.MEET.5.2v1]
+    rationale: Automatic recording and automatic transcription off is the question's Yes state.
+  - question: GO-MEET-003
+    checks: [GWS.MEET.6.1v1, GWS.MEET.6.2v1]
+    rationale: Default sharing for AI meeting notes restricted to people in the organisation and admins unable to loosen it; who can open recordings and transcripts themselves isn't checked.
+    cap: partial

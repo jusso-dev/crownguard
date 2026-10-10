@@ -91,7 +91,7 @@ kinds:
     product: Gemini for Google Workspace
     defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: assists, access: delegated }
     exposures: [ai-grounding]
-    relatedQuestions: [GO-AI-001, GO-AI-002]
+    relatedQuestions: [GO-AI-001, GO-AI-002, GO-GEM-004, GO-GEM-005, GO-GEM-006, GO-GEM-007]
     sources: [dta-ai-policy-appendices]
   - id: public-genai
     name: ChatGPT, Claude or another public generative AI tool

@@ -229,7 +229,7 @@ a question (review, info, unknown, not licensed) leave it for the assessor. `cap
 Partial when the checks cover only part of the question; `failIsInconclusive: true` sends a fail to review instead of
 No when a check also fails for reasons the question doesn't ask about.
 
-Each mapping goes with an importer in `src/imports/`: `m365-secure`, `prowler-aws` and `prowler-azure`. Adding a
+Each mapping goes with an importer in `src/imports/`: `m365-secure`, `prowler-aws`, `prowler-azure` and `scubagoggles`. Adding a
 scanner is a new importer plus a mapping file, not a new panel: the Controls step lists whatever has both.
 
 ### Importing a Prowler scan
@@ -254,6 +254,22 @@ combined, and the panel lists the accounts it found.
 is flagged, because Prowler renames checks between versions. `e2e/fixtures/prowler-checks-<provider>.txt` pins the ids
 of that release, so a mapping that drifts away from Prowler fails `pnpm test`. Regenerate both together when
 `checkedAgainst` moves.
+
+### Importing a ScubaGoggles scan
+
+[scubagoggles.yaml](../content/imports/scubagoggles.yaml) maps CISA's [ScubaGoggles](https://github.com/cisagov/ScubaGoggles)
+policy ids (`GWS.GMAIL.7.3v1` and friends) to the Google questions. Import the `ScubaResults*.json` file from a run of
+ScubaGoggles against the Google Workspace tenant. The importer reads only `MetaData` and
+`Results.<product>[].Controls[]` — the `Raw` section of a ScubaGoggles report holds super admin and break-glass
+accounts, organisational unit names and audit log events, and none of it is read. A `Pass` passes and a `Fail` fails; a
+`Warning` (a failed SHOULD) is a failure that can only ever cap a question at Partial; `N/A`, `Omitted`,
+`Incorrect Result`, `Error` and `No events found` are left for the assessor. The HTML ScubaGoggles writes into `Details`
+is stripped before the text becomes evidence. A ScubaGear (Microsoft 365) report is refused with a message saying so.
+
+Policy ids carry a version suffix, so the importer matches on the id without it and flags a report whose suffix differs
+from the one crownguard checked against. `checkedAgainst` records the ScubaGoggles release the ids came from, and
+`e2e/fixtures/scubagoggles-controls.txt` pins the policy ids of that release, so a mapping that drifts away from the
+SCuBA baselines fails `pnpm test`. Regenerate both together when `checkedAgainst` moves.
 
 ## Source watch
 

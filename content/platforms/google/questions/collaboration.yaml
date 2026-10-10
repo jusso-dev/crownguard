@@ -101,3 +101,80 @@
     - { framework: cis-gws, ref: "3.1.1.2.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Calendar" }
+
+- id: GO-MEET-001
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration]
+  severity: medium
+  question: Are people outside your organisation kept out of Google Meet meetings unless an organiser invites them?
+  why: >-
+    An uninvited guest can listen in on discussions about deals, incidents or staff. Attackers join
+    open meetings to harvest names and topics for later phishing, and guessing or forwarding a
+    meeting link is often all it takes.
+  yesLooksLike: >-
+    Guests who were not invited must ask to join and be admitted by the host, your users cannot join
+    meetings created outside a Google Workspace tenant, host management is on so hosts control who
+    joins and can mute or remove people, and users are warned when an external participant is in a
+    meeting.
+  remediation: >-
+    In Apps > Google Workspace > Google Meet > Meeting settings, turn on host management, require
+    people outside your organisation to ask to join or be invited, turn on the warning for external
+    participants, and stop users joining meetings created outside a Google Workspace tenant.
+  effort: S
+  sources: [gws-meet-settings, gws-meet-access]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: idcf, ref: "Sharing agreement" }
+
+- id: GO-MEET-002
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration]
+  severity: medium
+  question: Are automatic recording and transcription of Google Meet meetings turned off by default?
+  why: >-
+    A recording or transcript captures what people actually say, including salary talks, incident
+    calls and client matters. When one starts automatically, nobody decides whether it should
+    exist, who will keep it, or who it might reach.
+  yesLooksLike: >-
+    Automatic recording and automatic transcription are off organisation-wide, hosts start
+    recording or transcribing deliberately when it is needed, and participants are told when it
+    happens.
+  remediation: >-
+    In Apps > Google Workspace > Google Meet, under Recording & transcription and the automatic
+    meeting artifact settings, turn off automatic recording and automatic transcription for the
+    organisational units that don't need them, and brief hosts to record deliberately.
+  effort: S
+  sources: [gws-meet-recording, gws-meet-transcription, gws-meet-artifacts]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: idcf, ref: "Sharing agreement" }
+
+- id: GO-MEET-003
+  module: core
+  domain: collaboration
+  appliesTo: [gw-collaboration]
+  severity: high
+  question: Is access to Google Meet recordings, transcripts and AI meeting notes limited to the people who need them?
+  why: >-
+    Recordings and transcripts are full records of sensitive conversations, saved in Drive where
+    normal sharing rules apply. A loosely shared link to last month's board call is a crown-jewel
+    leak with no sign of who has opened it.
+  yesLooksLike: >-
+    Recordings and transcripts land in a place your Drive sharing rules cover, the default sharing
+    for AI meeting notes is restricted to people in your organisation, administrators cannot
+    override a stricter default with a looser one, and sharing of individual recordings is
+    reviewed.
+  remediation: >-
+    In Apps > Google Workspace > Google Meet, restrict the default sharing level for meeting notes
+    and AI notes to your organisation, stop administrators overriding it, keep recordings in shared
+    drives with reviewed membership rather than personal Drive, and review who has access to
+    sensitive recordings. Access to recordings and transcripts themselves is set through Drive
+    sharing, so your Drive rules do the work.
+  effort: M
+  sources: [gws-meet-artifacts, gws-meet-recording]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: idcf, ref: "Sharing agreement" }
