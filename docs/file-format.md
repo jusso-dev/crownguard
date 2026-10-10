@@ -37,6 +37,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | --- | --- | --- |
 | `$schema` | string | Written on save. Points at the published JSON Schema for this format. |
 | `schemaVersion` | integer | File format version. **4** is current. |
+| `mode` | string | `"ai-register"` for the standalone AI use-case register flow. Omitted, and meaning the full crown-jewel assessment, otherwise. |
 | `savedBy` | object | `{ app, appVersion, contentHash?, savedAt }`. Who wrote the file, and the digest of the questions they saved against. For support and debugging. |
 | `org` | object | Organisation profile: `name`, `abn?`, `sector`, `size`, `jurisdiction`, `regulations`. |
 | `platforms` | string[] | Platform ids in scope, e.g. `["microsoft"]`. |
@@ -60,6 +61,10 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ### 4 — current
 
+- `mode` records which flow the assessment runs in: `"ai-register"` for the standalone AI use-case register with its
+  own step list and its own PDF, absent and meaning the full crown-jewel assessment otherwise. Optional and on the
+  loose top-level object, so no version move: older builds open a register file in the full assessment and carry the
+  field through a re-save untouched.
 - AI register dates: `aiRegister.createdAt`, `lastSharedWithDta` and `dateConfirmation`, and `groupOf` on an entry for
   use cases that are parts of one general-purpose AI. All optional.
 - The register block and its entries are now loose objects like the top level. From here on the version moves when a

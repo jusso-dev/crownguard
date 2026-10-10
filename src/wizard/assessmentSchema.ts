@@ -71,6 +71,8 @@ export const assessmentSchema = z.looseObject({
   // Legacy marker only. `schemaVersion` replaced it; the migration drops it.
   version: z.literal(1).optional(),
   schemaVersion: z.number().int().min(1).max(100_000).default(SCHEMA_VERSION),
+  // "ai-register" for the standalone AI use-case register flow. Absent, and meaning "full", in every older file.
+  mode: z.enum(["full", "ai-register"]).optional(),
   savedBy: z
     .looseObject({
       app: z.string().max(40),

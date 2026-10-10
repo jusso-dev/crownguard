@@ -34,7 +34,7 @@ import { answerLabels, type AiUseCase, type Answer } from "../../engine/types";
 import { NOTE_MAX } from "../assessmentSchema";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
-import { useStore } from "../store";
+import { useStore, modeOf } from "../store";
 import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
 import { buildXlsx } from "../xlsx";
 
@@ -62,16 +62,29 @@ export function AiRegisterStep() {
   const [found, setFound] = useState<FoundAppsState>({});
   const heading = useRef<HTMLHeadingElement>(null);
   const module = catalogue.aiRegister;
+  // In the standalone flow this step is the assessment itself: no crown jewels, no Controls, nothing to remove it from.
+  const standalone = modeOf(assessment) === "ai-register";
 
   if (!module) return <StepHeader title="Which AI tools and agents do you use?">This build of crownguard doesn&apos;t include the AI use-case register.</StepHeader>;
   const { model, questions } = module;
 
   const intro = (
-    <StepHeader title="Which AI tools and agents do you use?" step="Optional">
-      Record each AI use case your organisation runs, from Copilot, Gemini and ChatGPT to third-party AI apps and your own
-      agents, and check it against the Australian Government&apos;s policy for the responsible use of AI and the DTA&apos;s
-      agentic AI addendum. You get a register with the fields the DTA&apos;s Standard for accountability sets out, a
-      readiness check for each use case, and a section in the report.
+    <StepHeader title="Which AI tools and agents do you use?" {...(standalone ? {} : { step: "Optional" })}>
+      {standalone ? (
+        <>
+          Record each AI use case your organisation runs, from Copilot, Gemini and ChatGPT to third-party AI apps and your
+          own agents, and check it against the Australian Government&apos;s policy for the responsible use of AI and the
+          DTA&apos;s agentic AI addendum. You get a register with the fields the DTA&apos;s Standard for accountability
+          sets out, a readiness check for each use case, and a PDF you can file or share.
+        </>
+      ) : (
+        <>
+          Record each AI use case your organisation runs, from Copilot, Gemini and ChatGPT to third-party AI apps and your own
+          agents, and check it against the Australian Government&apos;s policy for the responsible use of AI and the DTA&apos;s
+          agentic AI addendum. You get a register with the fields the DTA&apos;s Standard for accountability sets out, a
+          readiness check for each use case, and a section in the report.
+        </>
+      )}
     </StepHeader>
   );
 
@@ -83,8 +96,8 @@ export function AiRegisterStep() {
           <p className="max-w-[68ch] text-sm leading-relaxed text-ink-2">
             Add each use case from a preset, fill in the register fields, then answer up to {questions.length} readiness questions on{" "}
             {model.themes.map((t) => t.name.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}. Only the questions that fit the use
-            case are asked: agent questions only for AI that can take actions, for example. The register doesn&apos;t change your crown-jewel
-            risk ratings unless you tick the exposures it suggests.
+            case are asked: agent questions only for AI that can take actions, for example.
+            {standalone ? "" : " The register doesn't change your crown-jewel risk ratings unless you tick the exposures it suggests."}
           </p>
           <p className="mt-3 max-w-[68ch] text-sm leading-relaxed text-ink-2">{model.appliesTo}</p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -163,6 +176,7 @@ export function AiRegisterStep() {
         <Entry
           key={current.entry.id}
           r={current}
+          standalone={standalone}
           headingRef={heading}
           gapBasis={gapBasis}
           onGapBasis={setGapBasis}
@@ -177,22 +191,24 @@ export function AiRegisterStep() {
       )}
 
       <Exports />
-      <div className="mt-6">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            if (confirm("Remove the AI use-case register, and every entry in it, from this assessment?")) setAiIncluded(false);
-          }}
-        >
-          Remove the AI register
-        </Button>
-      </div>
+      {!standalone && (
+        <div className="mt-6">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (confirm("Remove the AI use-case register, and every entry in it, from this assessment?")) setAiIncluded(false);
+            }}
+          >
+            Remove the AI register
+          </Button>
+        </div>
+      )}
       <Footer />
     </>
   );
 }
 
-function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
+export function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
     <div className="border-rule p-4 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l">
       <div className="mono-label text-muted">{label}</div>
@@ -417,6 +433,7 @@ function SubHeading({ children, sources }: { children: ReactNode; sources?: read
 
 function Entry({
   r,
+  standalone,
   headingRef,
   gapBasis,
   onGapBasis,
@@ -424,6 +441,8 @@ function Entry({
   onNext,
 }: {
   r: AiReadiness;
+  /** Standalone AI register flow: no crown jewels or Controls answers to relate this use case to. */
+  standalone: boolean;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
   gapBasis: GapFilter;
   onGapBasis: (b: GapFilter) => void;
@@ -570,7 +589,8 @@ function Entry({
       <Card className="mt-4">
         <SubHeading sources={[...aiFieldSources.autonomy, ...aiFieldSources.access]}>What it can do and reach</SubHeading>
         <p className="-mt-2 mb-4 max-w-[68ch] text-sm text-ink-2">
-          These aren&apos;t DTA register fields. They decide which readiness questions apply, and link the use case to your crown jewels.
+          These aren&apos;t DTA register fields. They decide which readiness questions apply
+          {standalone ? "." : ", and link the use case to your crown jewels."}
         </p>
         <div className="space-y-6">
           <FieldGroup label="Oversight model" hint="Using the agentic AI addendum's key terms">
@@ -582,69 +602,78 @@ function Entry({
           <FieldGroup label="Data it handles" hint="Tick all that apply">
             <Pills options={aiData} value={e.data} onChange={(data) => set({ data })} />
           </FieldGroup>
-          <FieldGroup label="Crown jewels it can reach" hint="Tick the crown jewels this AI can read from or act on">
-            {jewels.length === 0 ? (
-              <p className="text-sm text-muted">No crown jewels recorded yet.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {jewels.map((j) => (
-                  <CheckboxPill key={j.id} checked={e.jewels.includes(j.id)} onChange={(on) => set({ jewels: toggle(e.jewels, j.id, on) })}>
-                    {j.name}
-                  </CheckboxPill>
-                ))}
-              </div>
-            )}
-          </FieldGroup>
-          {r.jewels.some((j) => j.risk) && (
-            <ul className="space-y-1.5 text-sm" aria-label="Risk of linked crown jewels">
-              {r.jewels.map(({ jewel, risk }) =>
-                risk ? (
-                  <li key={jewel.id} className="flex flex-wrap items-center gap-2">
-                    <BandBadge band={risk.band} />
-                    <span className="text-ink">{jewel.name}</span>
-                    <span className="font-mono text-xs text-muted">{risk.score}/25 · {risk.gaps.length} open control gaps</span>
-                  </li>
-                ) : null,
+          {standalone ? (
+            <p className="text-sm text-muted" data-testid="ai-no-jewels">
+              The full crown-jewel assessment links each use case to the crown jewels it can reach. Switch this register to
+              a full assessment on the Report step when you&apos;re ready, and nothing here is lost.
+            </p>
+          ) : (
+            <>
+              <FieldGroup label="Crown jewels it can reach" hint="Tick the crown jewels this AI can read from or act on">
+                {jewels.length === 0 ? (
+                  <p className="text-sm text-muted">No crown jewels recorded yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {jewels.map((j) => (
+                      <CheckboxPill key={j.id} checked={e.jewels.includes(j.id)} onChange={(on) => set({ jewels: toggle(e.jewels, j.id, on) })}>
+                        {j.name}
+                      </CheckboxPill>
+                    ))}
+                  </div>
+                )}
+              </FieldGroup>
+              {r.jewels.some((j) => j.risk) && (
+                <ul className="space-y-1.5 text-sm" aria-label="Risk of linked crown jewels">
+                  {r.jewels.map(({ jewel, risk }) =>
+                    risk ? (
+                      <li key={jewel.id} className="flex flex-wrap items-center gap-2">
+                        <BandBadge band={risk.band} />
+                        <span className="text-ink">{jewel.name}</span>
+                        <span className="font-mono text-xs text-muted">{risk.score}/25 · {risk.gaps.length} open control gaps</span>
+                      </li>
+                    ) : null,
+                  )}
+                </ul>
               )}
-            </ul>
-          )}
-          {r.exposures.length > 0 && (
-            <div className="rounded-[var(--radius-control)] border border-rule bg-paper px-4 py-3 text-sm" data-testid="ai-exposures">
-              <p className="text-ink-2">
-                This kind of AI usually adds an exposure to the crown jewels it reaches. Ticking one raises that crown jewel&apos;s likelihood on the Review step.
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {r.exposures.map(({ jewel, exposure }) => (
-                  <li key={`${jewel.id}:${exposure}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="text-ink">
-                      {jewel.name}: {exposures[exposure].toLowerCase()}
-                    </span>
-                    <button
-                      type="button"
-                      className="font-medium text-accent underline underline-offset-2"
-                      aria-label={`Tick exposure on ${jewel.name}: ${exposures[exposure]}`}
-                      onClick={() => upsertJewel({ ...jewel, exposures: [...jewel.exposures, exposure] })}
-                    >
-                      Tick it
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {r.related.length > 0 && (
-            <div className="text-sm">
-              <p className="font-medium text-ink">Your Controls answers on the same tool</p>
-              <ul className="mt-2 space-y-1.5">
-                {r.related.map(({ question, answer }) => (
-                  <li key={question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-3">
-                    <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{question.id}</span>
-                    <span className="text-ink-2">{question.question}</span>
-                    <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answer ? answerLabels[answer] : "Unanswered"}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {r.exposures.length > 0 && (
+                <div className="rounded-[var(--radius-control)] border border-rule bg-paper px-4 py-3 text-sm" data-testid="ai-exposures">
+                  <p className="text-ink-2">
+                    This kind of AI usually adds an exposure to the crown jewels it reaches. Ticking one raises that crown jewel&apos;s likelihood on the Review step.
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {r.exposures.map(({ jewel, exposure }) => (
+                      <li key={`${jewel.id}:${exposure}`} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-ink">
+                          {jewel.name}: {exposures[exposure].toLowerCase()}
+                        </span>
+                        <button
+                          type="button"
+                          className="font-medium text-accent underline underline-offset-2"
+                          aria-label={`Tick exposure on ${jewel.name}: ${exposures[exposure]}`}
+                          onClick={() => upsertJewel({ ...jewel, exposures: [...jewel.exposures, exposure] })}
+                        >
+                          Tick it
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {r.related.length > 0 && (
+                <div className="text-sm">
+                  <p className="font-medium text-ink">Your Controls answers on the same tool</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {r.related.map(({ question, answer }) => (
+                      <li key={question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-3">
+                        <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{question.id}</span>
+                        <span className="text-ink-2">{question.question}</span>
+                        <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answer ? answerLabels[answer] : "Unanswered"}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       </Card>

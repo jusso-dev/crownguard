@@ -4,6 +4,12 @@ import type { AiAccess, AiAutonomy, AiCriterion, AiDataKind, AiDomain, AiLifecyc
 
 export type Answer = "yes" | "partial" | "no" | "unknown" | "na";
 
+/**
+ * Which flow an assessment runs in: the full crown-jewel assessment, or the standalone AI use-case register with its
+ * own short wizard and its own PDF. Saved files from before this existed carry no `mode` and mean "full".
+ */
+export type Mode = "full" | "ai-register";
+
 export const answerLabels: Record<Answer, string> = {
   yes: "Yes",
   partial: "Partial",
@@ -126,6 +132,8 @@ export interface Assessment {
   $schema?: string;
   /** File format version, from 2. Files written before that only carried `version: 1`. */
   schemaVersion: number;
+  /** "ai-register" for the standalone AI use-case register flow. Omitted (and meaning "full") otherwise. */
+  mode?: Mode;
   /** Present in files written before schema 2, where it was the only version marker. */
   version?: 1;
   savedBy?: SavedBy;

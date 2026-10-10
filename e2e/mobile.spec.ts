@@ -7,6 +7,8 @@ test("every step fits a 390px phone screen without horizontal scroll", async ({ 
     expect(w, name).toBeLessThanOrEqual(390);
   };
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+  await noOverflow("start");
   await page.getByLabel("Organisation name").fill("Riverbend Health");
   await noOverflow("org");
   await page.getByRole("button", { name: /^Next:/ }).click();

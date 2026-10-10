@@ -92,6 +92,26 @@ export interface ReportModel {
   platformOf: (q: Question) => string | undefined;
 }
 
+/**
+ * The standalone AI use-case register report: the register itself and the sources behind it, with none of the
+ * crown-jewel scoring — `buildAiRegisterReport` never calls the crown-jewel engine.
+ */
+export interface AiRegisterReportModel {
+  assessment: Assessment;
+  generatedAt: Date;
+  theme: ReportTheme;
+  aiRegister: NonNullable<ReportModel["aiRegister"]>;
+  sources: Source[];
+}
+
+const themeOf = (b: Assessment["branding"]): ReportTheme => ({
+  primary: b.primary,
+  heading: readableOn(b.primary),
+  onPrimary: textOn(b.primary),
+  accent: b.accent,
+  tint: tint(b.primary, 0.9),
+});
+
 const statusOf = (values: (number | null)[]): FrameworkRow["status"] => {
   const v = values.filter((x): x is number => x !== null);
   if (!v.length) return "Not applicable";
@@ -237,13 +257,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     }),
     notApplicable: questions.filter((q) => answers[q.id] === "na").map((question) => ({ question, reason: assessment.notes[question.id].trim() })),
     generatedAt,
-    theme: {
-      primary: b.primary,
-      heading: readableOn(b.primary),
-      onPrimary: textOn(b.primary),
-      accent: b.accent,
-      tint: tint(b.primary, 0.9),
-    },
+    theme: themeOf(b),
     platformNames: bundles.map((x) => x.platform.name),
     posture: overallPosture(catalogue, assessment),
     idcf,
@@ -266,5 +280,28 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
       const have = new Set(bundle.platform.licenceTiers.find((t) => t.id === assessment.licence[bundle.platform.id])?.features ?? []);
       return q.licence.filter((l) => !have.has(l)).map((l) => bundle.platform.licenceFeatures.find((f) => f.id === l)?.name ?? l);
     },
+  };
+}
+
+/**
+ * The model behind the standalone `AiRegisterDocument`: the register, its dates and caveats, and the sources behind
+ * them. It reads nothing about platforms or crown jewels and never calls the crown-jewel engine.
+ */
+export function buildAiRegisterReport(catalogue: Catalogue, assessment: Assessment, generatedAt = new Date()): AiRegisterReportModel {
+  const aiModule = catalogue.aiRegister;
+  if (!aiModule) throw new Error("this build of crownguard doesn't include the AI use-case register content");
+  return {
+    assessment,
+    generatedAt,
+    theme: themeOf(assessment.branding),
+    aiRegister: {
+      ...aiRegisterSummary(catalogue, assessment, [], generatedAt),
+      model: aiModule.model,
+      share: shareWithDta(assessment, generatedAt),
+    },
+    sources: [...new Set(aiRegisterSources(aiModule))]
+      .map((id) => catalogue.sources.get(id))
+      .filter((s): s is Source => !!s)
+      .sort((a, b) => a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title)),
   };
 }

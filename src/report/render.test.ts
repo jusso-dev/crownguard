@@ -7,10 +7,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { SocAnswer } from "../engine/soc";
 import { exampleEntries } from "../engine/aiExamples";
-import { ReportDocument } from "./Document";
+import { AiRegisterDocument, ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
 import { registerFonts } from "./fonts";
-import { buildReport } from "./model";
+import { buildAiRegisterReport, buildReport } from "./model";
+import type { Assessment } from "../engine/types";
+import { emptyAssessment } from "../wizard/store";
 
 beforeAll(() => {
   // In the browser fonts load by URL; in Node point at the files on disk.
@@ -124,5 +126,87 @@ describe("AI register dates and bases", () => {
     expect(text).toContain("How to stop it (identity, tokens, connectors): Revoke the app registration.");
     expect(text).toContain("Who may stop it: The cloud team.");
     expect(text).toContain("Date it was last tested: 2026-09-01");
+  }, 120_000);
+});
+
+/** A standalone AI register assessment: no platforms, no crown jewels, just the register. */
+function standaloneAssessment(withExamples: boolean): Assessment {
+  const a = emptyAssessment();
+  a.org = { name: "Riverbend Health", abn: "51824753556", sector: "Health", size: "200–999 staff", jurisdiction: "Australia", regulations: ["privacy-act"] };
+  a.branding = { ...a.branding, preparedBy: "Alex Chen, IT Manager", preparedFor: "Executive Leadership Team" };
+  a.mode = "ai-register";
+  a.aiRegister = {
+    createdAt: "2026-06-01",
+    lastSharedWithDta: "2026-09-01",
+    dateConfirmation: { by: "the accountable official", on: "2026-09-15" },
+    entries: exampleEntries(a).map((e) =>
+      withExamples
+        ? e
+        : { ...e, example: undefined, name: e.name.replace(/^Example: /, ""), description: e.description.replace(/^EXAMPLE DATA\. /, "") },
+    ),
+  };
+  return a;
+}
+
+const aiPdfText = async (assessment: Assessment) => {
+  const model = buildAiRegisterReport(catalogue, assessment, new Date("2026-10-08"));
+  const buf = await renderToBuffer(createElement(AiRegisterDocument, { model }) as Parameters<typeof renderToBuffer>[0]);
+  const doc = await getDocument({ data: new Uint8Array(buf) }).promise;
+  const pages: string[] = [];
+  for (let i = 1; i <= doc.numPages; i++) pages.push((await (await doc.getPage(i)).getTextContent()).items.map((it) => ("str" in it ? it.str : "")).join(" "));
+  return pages.join("\n").replace(/\s+/g, " ");
+};
+
+describe("standalone AI register report", () => {
+  it("builds the register model with and without examples, and never calls the crown-jewel engine", () => {
+    const withExamples = buildAiRegisterReport(catalogue, standaloneAssessment(true), new Date("2026-10-08"));
+    expect(withExamples.aiRegister.entries).toHaveLength(3);
+    expect(withExamples.aiRegister.examples).toBe(3);
+    expect(withExamples.aiRegister.share).toMatchObject({ basis: "shared", due: "2027-03-01", overdue: false });
+    expect(withExamples.sources.map((s) => s.id)).toContain("dta-ai-accountability");
+    // Nothing here is scored for crown-jewel risk: the model carries no risks, domains or roadmap at all.
+    expect(withExamples).not.toHaveProperty("risks");
+    expect(withExamples).not.toHaveProperty("roadmap");
+    expect(withExamples.assessment.jewels).toEqual([]);
+    const without = buildAiRegisterReport(catalogue, standaloneAssessment(false), new Date("2026-10-08"));
+    expect(without.aiRegister.entries).toHaveLength(3);
+    expect(without.aiRegister.examples).toBe(0);
+    expect(without.aiRegister.share.due).toBe("2027-03-01");
+  });
+
+  it("renders the register, readiness, dates, caveats and attribution, with none of the crown-jewel sections", async () => {
+    const text = await aiPdfText(standaloneAssessment(true));
+    for (const phrase of [
+      "AI use-case register",
+      "About this register",
+      "Who the policy applies to",
+      "A point-in-time register",
+      "Readiness is an indicative self-check",
+      "not an assessment by the DTA",
+      "3 use cases in the register",
+      "Microsoft 365 Copilot",
+      "EXAMPLE",
+      "3 of these entries are example data",
+      "Readiness",
+      "Key dates",
+      "15 December 2025",
+      "Next share with the DTA due",
+      "confirmed by the accountable official on 15 September 2026",
+      "Where the sources are unclear",
+      "licensed CC BY 4.0",
+      "digital.gov.au",
+      "Answers as at:",
+    ])
+      expect(text, phrase).toContain(phrase);
+    // The generation stamp carries the local time, so only its shape is asserted here.
+    expect(text).toMatch(/Generated: \d{1,2} \w+ \d{4}/);
+    for (const absent of ["Risk register", "Remediation roadmap", "Essential Eight", "Crown-jewel register", "Executive summary", "Framework alignment", "SOC maturity"])
+      expect(text, `should not contain ${absent}`).not.toContain(absent);
+  }, 120_000);
+
+  it("labels example entries as examples only while any are loaded", async () => {
+    const text = await aiPdfText(standaloneAssessment(false));
+    expect(text).not.toContain("example data loaded to show how the register works");
+    expect(text).toContain("About this register");
   }, 120_000);
 });

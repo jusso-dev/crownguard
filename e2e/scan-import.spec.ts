@@ -6,6 +6,7 @@ const card = (page: Page, id: string) => page.locator(`article[data-question="${
 
 test("an M365-Secure scan pre-fills decisive answers with evidence, and the report says so", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Contoso Example");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
@@ -45,6 +46,7 @@ test("an M365-Secure scan pre-fills decisive answers with evidence, and the repo
 
 test("a file that isn't M365-Secure output is rejected", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("X");
   await next(page);
   await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();

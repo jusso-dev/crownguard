@@ -4,21 +4,36 @@ import type { SocAnswer, SocProvider } from "../engine/soc";
 import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
-import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, OrgProfile } from "../engine/types";
+import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
 import type { ScanResult } from "../imports/types";
 import { NOTE_MAX, SCHEMA_VERSION } from "./assessmentSchema";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
 export { STORAGE_KEY };
 
-export const steps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
+export const fullSteps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
+
+/** The standalone AI register flow: no platforms, crown jewels or Controls, and the register is the point of it. */
+export const aiSteps = ["Organisation", "AI register", "Review", "Branding", "Report"] as const;
+
+/** The step list for a flow. Every step number in a saved file is an index into the list its mode was saved with. */
+export const stepsFor = (mode: Mode = "full"): readonly string[] => (mode === "ai-register" ? aiSteps : fullSteps);
+
+/** Which flow this assessment runs in. Files saved before the standalone flow existed carry no mode and are full. */
+export const modeOf = (a: Assessment): Mode => a.mode ?? "full";
 
 /** Version of the step list. Layout 2 added "SOC maturity" after Controls; layout 3 added "AI register" after it. */
 export const STEP_LAYOUT = 3;
 
-/** Move a saved position onto the current step list: each added step moves positions saved after it on by one. */
-export function migrateProgress(p: Assessment["progress"]): Assessment["progress"] {
+/**
+ * Move a saved position onto the current step list: each added step moves positions saved after it on by one.
+ *
+ * The standalone list was introduced with layout 3 and has never changed, so its positions move nowhere yet; when it
+ * does, the `ai-register` branch maps them here, the way the full list does below.
+ */
+export function migrateProgress(p: Assessment["progress"], mode: Mode = "full"): Assessment["progress"] {
   if (!p) return p;
+  if (mode === "ai-register") return { ...p, layout: STEP_LAYOUT };
   const layout = p.layout ?? 1;
   let step = p.step;
   if (layout < 2 && step >= 4) step++;
@@ -57,9 +72,10 @@ export function storageAvailable(): boolean {
 }
 
 /** Whether there's a started assessment worth offering to resume. */
-export const hasProgress = (a: Assessment) => a.org.name.trim() !== "" || a.jewels.length > 0 || Object.keys(a.answers).length > 0;
+export const hasProgress = (a: Assessment) =>
+  a.org.name.trim() !== "" || a.jewels.length > 0 || Object.keys(a.answers).length > 0 || (a.aiRegister?.entries.length ?? 0) > 0;
 
-export const clampStep = (n: number | undefined) => Math.min(steps.length - 1, Math.max(0, Math.trunc(n ?? 0)));
+export const clampStep = (n: number | undefined, mode: Mode = "full") => Math.min(stepsFor(mode).length - 1, Math.max(0, Math.trunc(n ?? 0)));
 
 /** The SOC block, or an empty one to change. */
 const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
@@ -72,6 +88,11 @@ const editEntry = (a: Assessment, id: string, fn: (e: AiUseCase) => AiUseCase): 
 interface State {
   assessment: Assessment;
   setStep: (step: number) => void;
+  /**
+   * Switch between the full assessment and the standalone AI register, at the step given (default: the start).
+   * Everything already recorded is kept, so a standalone register can become a full assessment later.
+   */
+  setMode: (mode: Mode, step?: number) => void;
   setSection: (section: string) => void;
   /** The open SOC maturity domain, kept apart from the Controls section so each step resumes where it was left. */
   setSocSection: (domain: string) => void;
@@ -134,7 +155,13 @@ export const useStore = create<State>()(
           setStorageReadOnly(readOnly);
           set({ readOnly });
         },
-        setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step), layout: STEP_LAYOUT } })),
+        setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step, modeOf(a)), layout: STEP_LAYOUT } })),
+        setMode: (mode, step) =>
+          update((a) => ({
+            // "full" is the default and is left out of saved files, so older crownguards open them without a warning.
+            ...(mode === "ai-register" ? { mode } : { mode: undefined }),
+            progress: { ...a.progress, step: clampStep(step ?? 0, mode), layout: STEP_LAYOUT },
+          })),
         setSection: (section) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, section, layout: STEP_LAYOUT } })),
         setSocSection: (socSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, socSection, layout: STEP_LAYOUT } })),
         update,
@@ -221,8 +248,9 @@ export const useStore = create<State>()(
           return applied;
         },
         load: (assessment) => {
-          const progress = migrateProgress(assessment.progress ?? { step: 0 })!;
-          set({ assessment: { ...assessment, progress: { ...progress, step: clampStep(progress.step) } } });
+          const mode = modeOf(assessment);
+          const progress = migrateProgress(assessment.progress ?? { step: 0 }, mode)!;
+          set({ assessment: { ...assessment, progress: { ...progress, step: clampStep(progress.step, mode) } } });
         },
         reset: () => set({ assessment: emptyAssessment() }),
       };
@@ -235,13 +263,14 @@ export const useStore = create<State>()(
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {
         const p = persisted as { assessment: Assessment; step?: number };
-        if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step) };
+        const mode = p.assessment ? modeOf(p.assessment) : "full";
+        if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step, mode) };
         // migrateProgress reads the saved layout, so running it again on newer saves is harmless.
-        if (version < 3 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress);
+        if (version < 3 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress, mode);
         return { assessment: p.assessment } as State;
       },
     },
   ),
 );
 
-export const useStep = () => useStore((s) => clampStep(s.assessment.progress?.step));
+export const useStep = () => useStore((s) => clampStep(s.assessment.progress?.step, modeOf(s.assessment)));

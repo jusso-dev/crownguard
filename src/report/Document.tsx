@@ -9,7 +9,7 @@ import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../engine/aiOptions";
 import { aiFieldLabels } from "../engine/aiRegister";
 import { basisLabel } from "../engine/aiExport";
-import type { ReportModel } from "./model";
+import type { AiRegisterReportModel, ReportModel } from "./model";
 
 const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
 import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
@@ -558,6 +558,105 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   );
 }
 
+/**
+ * The standalone AI use-case register: its own cover and "About this register" page, then the same register section
+ * the full report uses. It carries no crown-jewel risk, Essential Eight, IDCF, CIS or NIST pages.
+ */
+export function AiRegisterDocument({ model }: { model: AiRegisterReportModel }) {
+  const { assessment: a, theme } = model;
+  const s = makeStyles(theme);
+  const r = model.aiRegister;
+  const tableProps = { headerBg: theme.tint, zebra: "#fafbfc" };
+  const chrome = (
+    <>
+      <View fixed style={{ position: "absolute", top: 20, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted }}>
+        <Text>{a.org.name}</Text>
+        <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
+        <Text>AI use-case register</Text>
+      </View>
+      <View fixed style={{ position: "absolute", bottom: 22, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted, borderTopWidth: 0.5, borderColor: line, paddingTop: 6 }}>
+        <Text>Generated {stampText(model.generatedAt)}</Text>
+        <Text style={{ fontWeight: 700, color: ink }}>{a.branding.marking}</Text>
+        <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+      </View>
+    </>
+  );
+
+  return (
+    <Document title={`${a.org.name} – AI use-case register`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="AI use-case register" creationDate={model.generatedAt}>
+      {/* Cover */}
+      <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }}>
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, backgroundColor: theme.accent }} />
+        <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, textAlign: "center", marginTop: 4 }}>{a.branding.marking}</Text>
+        {a.branding.logoDataUrl && (
+          <View
+            style={
+              a.branding.logoBackdrop === "white"
+                ? { marginTop: 70, alignSelf: "flex-start", backgroundColor: "#ffffff", padding: 12, borderRadius: 4 }
+                : { marginTop: 70, alignSelf: "flex-start" }
+            }
+          >
+            <Image src={a.branding.logoDataUrl} style={{ maxHeight: 72, maxWidth: 240, objectFit: "contain" }} />
+          </View>
+        )}
+        <View style={{ marginTop: a.branding.logoDataUrl ? 120 : 220 }}>
+          <Text style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", opacity: 0.85 }}>AI use-case register</Text>
+          <Text style={{ fontSize: 32, fontWeight: 700, marginTop: 8, lineHeight: 1.15 }}>{a.org.name}</Text>
+          {a.org.abn && isValidAbn(a.org.abn) && <Text style={{ fontSize: 11, marginTop: 6, opacity: 0.9 }}>ABN {formatAbn(a.org.abn)}</Text>}
+          <View style={{ height: 3, width: 56, backgroundColor: theme.accent, marginTop: 18, marginBottom: 18 }} />
+          <Text style={{ fontSize: 12 }}>
+            {r.entries.length} use case{r.entries.length === 1 ? "" : "s"} in the register
+          </Text>
+        </View>
+        <View style={{ position: "absolute", bottom: 72, left: 56, right: 56, fontSize: 9.5, lineHeight: 1.6 }}>
+          {a.branding.preparedFor && <Text>Prepared for: {a.branding.preparedFor}</Text>}
+          {a.branding.preparedBy && <Text>Prepared by: {a.branding.preparedBy}</Text>}
+          <Text>Generated: {stampText(model.generatedAt)}</Text>
+          <Text>Answers as at: {stampText(new Date(a.updatedAt))}</Text>
+        </View>
+        <Text style={{ position: "absolute", bottom: 30, left: 0, right: 0, textAlign: "center", fontSize: 9, fontWeight: 700, letterSpacing: 1.2 }}>{a.branding.marking}</Text>
+      </Page>
+
+      <Chrome.Provider value={chrome}>
+        <Section s={s} title="About this register">
+          <Text style={s.p}>
+            This is the register of AI use cases kept by {a.org.name}, recorded with the minimum fields in the Digital
+            Transformation Agency&apos;s Standard for accountability. It was prepared with crownguard, a guided
+            self-assessment, from entries the organisation recorded itself. It is not an audit or a certification.
+          </Text>
+          <Text style={s.h2}>Who the policy applies to</Text>
+          <Text style={s.p}>{r.model.appliesTo}</Text>
+          <Text style={s.h2}>A point-in-time register</Text>
+          <Text style={s.p}>
+            It reflects the entries and answers recorded as at {stampText(new Date(a.updatedAt))} and was generated on{" "}
+            {stampText(model.generatedAt)}. Use cases, owners, dates and policy guidance all change, so update the
+            register after any significant change and review it at least once a year.
+          </Text>
+          <Text style={s.h2}>Readiness is an indicative self-check</Text>
+          <Text style={s.p}>
+            Each use case&apos;s readiness is crownguard&apos;s severity-weighted summary of the requirements in the
+            policy for the responsible use of AI in government, its standards and guidance, and the agentic AI addendum.
+            It is an indicative self-check, not a policy compliance finding and not an assessment by the DTA. The risk
+            ratings are copied from the organisation&apos;s own AI impact assessment; crownguard records them and
+            doesn&apos;t work them out.
+          </Text>
+          <Text style={s.h2}>Sources</Text>
+          {model.sources.map((src) => (
+            <View key={src.id} wrap={false} style={{ marginBottom: 5 }}>
+              <Text style={{ fontSize: 8.5 }}>
+                <Text style={{ fontWeight: 600 }}>{src.publisher}.</Text> {sentence(src.title)} Retrieved {src.retrieved}.
+              </Text>
+              <Link src={src.url} style={{ fontSize: 7.5, color: theme.heading }}>{src.url.length > 110 ? `${src.url.slice(0, 108)}…` : src.url}</Link>
+            </View>
+          ))}
+        </Section>
+
+        <AiRegisterSection model={model} s={s} tableProps={tableProps} />
+      </Chrome.Provider>
+    </Document>
+  );
+}
+
 function Heatmap({ model }: { model: ReportModel }) {
   const size = 26;
   return (
@@ -810,7 +909,7 @@ const themeColors: Record<string, { color: string; backgroundColor: string }> = 
 };
 
 /** Optional AI use-case register: the register table, then each use case's readiness, with the key dates and caveats. */
-function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
+function AiRegisterSection({ model, s, tableProps }: { model: Pick<ReportModel, "assessment" | "theme" | "aiRegister">; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
   const r = model.aiRegister!;
   const theme = model.theme;
   const jewelName = (id: string) => model.assessment.jewels.find((j) => j.id === id)?.name;

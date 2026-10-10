@@ -34,6 +34,7 @@ test("reopening a saved file restores its colours, and a new logo doesn't overwr
 
 test("on a new assessment the logo sets the colours automatically", async ({ page }) => {
   await page.goto("./");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Fresh Co");
   await page.getByTestId("org-logo-input").setInputFiles("e2e/fixtures/logo.svg");
   await expect(page.getByAltText("Current logo")).toBeVisible();
