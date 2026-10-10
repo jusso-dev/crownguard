@@ -340,6 +340,62 @@ export function highRiskNotification(e: AiUseCase): string {
 }
 
 /**
+ * The kill-switch worksheet the switch-off question's note carries. It's stored as plain labelled lines in
+ * `notes["AIR-OFF-001"]` so older files and any hand-edited note still read, and it needs no schema change.
+ */
+export interface KillSwitchNote {
+  stop: string;
+  who: string;
+  targetTime: string;
+  /** YYYY-MM-DD. */
+  tested: string;
+  rollback: string;
+  /** Why the question doesn't apply, when it's answered N/A: the reason the note slot is shared with. */
+  reason: string;
+  /** Anything else recorded on the question, kept as written. */
+  other: string;
+}
+
+const killSwitchLabels: [keyof KillSwitchNote, string][] = [
+  ["stop", "How to stop it (identity, tokens, connectors)"],
+  ["who", "Who may stop it"],
+  ["targetTime", "Target time to stop"],
+  ["tested", "Date it was last tested"],
+  ["rollback", "Rollback approach"],
+  ["reason", "Why it doesn't apply"],
+];
+
+export const emptyKillSwitchNote = (): KillSwitchNote => ({ stop: "", who: "", targetTime: "", tested: "", rollback: "", reason: "", other: "" });
+
+/** Read a worksheet back out of the note's labelled lines. Unlabelled lines continue the field above them. */
+export function parseKillSwitchNote(text: string | undefined): KillSwitchNote {
+  const out = emptyKillSwitchNote();
+  let current: keyof KillSwitchNote | undefined;
+  for (const line of (text ?? "").split("\n")) {
+    const labelled = killSwitchLabels.find(([, label]) => line.startsWith(`${label}: `));
+    if (labelled) {
+      current = labelled[0];
+      out[current] = line.slice(labelled[1].length + 2);
+    } else if (current) {
+      out[current] += `\n${line}`;
+    } else if (line.trim()) {
+      out.other += (out.other ? "\n" : "") + line;
+    }
+  }
+  return out;
+}
+
+/** The note text to save. Only the labels above are recognised when it's read back. */
+export function composeKillSwitchNote(n: KillSwitchNote): string {
+  return [
+    ...killSwitchLabels.filter(([key]) => n[key].trim()).map(([key, label]) => `${label}: ${n[key]}`),
+    n.other.trim(),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
  * The DTA's Appendix B lets an agency register general-purpose AI such as Copilot as one use case at its highest risk,
  * or as several with their own owners. Mixing the two for the same product is what it doesn't intend.
  */

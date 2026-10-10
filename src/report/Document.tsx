@@ -8,6 +8,7 @@ import { answerLabels, classifications, dsls, regulations, type Answer, type Evi
 import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../engine/aiOptions";
 import { aiFieldLabels } from "../engine/aiRegister";
+import { basisLabel } from "../engine/aiExport";
 import type { ReportModel } from "./model";
 
 const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
@@ -821,6 +822,18 @@ function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: St
       lead="The organisation's AI use cases and agents, recorded with the minimum fields in the DTA's Standard for accountability, and an indicative readiness check against the Policy for the responsible use of AI in government and the agentic AI addendum. It's separate from the crown-jewel risk ratings and doesn't change them."
     >
       <Text style={s.p}>{r.model.appliesTo}</Text>
+      {model.assessment.aiRegister?.dateConfirmation?.by && (
+        <Text style={s.p}>
+          Worked-out dates confirmed by {model.assessment.aiRegister.dateConfirmation.by}
+          {model.assessment.aiRegister.dateConfirmation.on ? ` on ${dayText(model.assessment.aiRegister.dateConfirmation.on)}` : ""}.
+        </Text>
+      )}
+      {r.share.due && (
+        <Text style={{ ...s.p, fontWeight: r.share.overdue ? 600 : undefined, color: r.share.overdue ? "#8a3200" : undefined }}>
+          Next share with the DTA due {dayText(r.share.due)}, counted from {r.share.basis === "shared" ? "the last share" : "the register&apos;s creation"}
+          {r.share.overdue ? " — overdue" : r.share.soon ? " (due within 30 days)" : ""}.
+        </Text>
+      )}
       {r.examples > 0 && (
         <View wrap={false} style={{ backgroundColor: exampleColors.bg, borderRadius: 3, padding: 8, marginBottom: 8 }}>
           <Text style={{ fontSize: 8.5, color: exampleColors.fg, fontWeight: 600 }}>
@@ -905,7 +918,7 @@ function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: St
                 <View key={g.question.id} wrap={false} style={{ flexDirection: "row", gap: 5, marginBottom: 2 }}>
                   <Text style={{ width: 44, fontSize: 7, color: severityColors[g.question.severity], fontWeight: 600, textTransform: "uppercase", paddingTop: 1 }}>{g.question.severity}</Text>
                   <Text style={{ flex: 1, fontSize: 8.5 }}>
-                    {g.question.question} <Text style={{ color: muted }}>({answerText(g.answer)}) </Text>
+                    {g.question.question} <Text style={{ color: muted }}>({answerText(g.answer)} · {basisLabel(g.question.basis)}) </Text>
                     <Text style={{ fontWeight: 600 }}>Fix: </Text>
                     {firstSentence(g.question.remediation)}
                   </Text>
@@ -923,7 +936,9 @@ function AiRegisterSection({ model, s, tableProps }: { model: ReportModel; s: St
           {Object.entries(x.entry.notes)
             .filter(([, n]) => n.trim())
             .map(([id, n]) => (
-              <Text key={id} style={{ fontSize: 8, marginTop: 2, fontStyle: "italic", lineHeight: 1.35 }}>Note ({id}): {n.trim()}</Text>
+              <Text key={id} style={{ fontSize: 8, marginTop: 2, fontStyle: "italic", lineHeight: 1.35 }}>
+                {id === "AIR-OFF-001" ? "Kill-switch worksheet (AIR-OFF-001)" : `Note (${id})`}: {n.trim()}
+              </Text>
             ))}
           {x.entry.jewels.some((id) => !jewelName(id)) && <Text style={s.small}>Some linked crown jewels have since been removed.</Text>}
         </View>

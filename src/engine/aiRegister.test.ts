@@ -210,7 +210,7 @@ describe("register export", () => {
 });
 
 const regEntry = (over: Record<string, unknown>) =>
-  ({ id: "e", kind: "ai-connector", name: "", reference: "", description: "", product: "", technology: [], domains: [], usagePatterns: [], ownerName: "", ownerEmail: "", criteria: [], data: [], jewels: [], answers: {}, notes: {}, ...over }) as never;
+  ({ id: "e", kind: "ai-connector", name: "", reference: "", description: "", product: "", technology: [], domains: [], usagePatterns: [], ownerName: "", ownerEmail: "", criteria: [], data: [], jewels: [], answers: {}, notes: {}, ...over }) as Record<string, unknown>;
 
 describe("register dates", () => {
   it("adds months in UTC, clamping to the last day of the month", () => {
@@ -244,7 +244,7 @@ describe("register dates", () => {
       impactAssessmentDate: "2026-09-01",
       data: ["personal", "sensitive"],
     } as never;
-    const text = highRiskNotification(e);
+    const text = highRiskNotification(e as never);
     expect(text).toContain("Type of AI: Generative AI — Example Notetaker.");
     expect(text).toContain("Intended application: Joins Teams meetings and writes summaries.");
     expect(text).toContain("inherent risk High");
@@ -253,8 +253,8 @@ describe("register dates", () => {
   });
 
   it("warns when one product is registered both on its own and as parts", () => {
-    const part = regEntry({ id: "a", name: "Copilot in Word", product: "Microsoft 365 Copilot", groupOf: "Microsoft 365 Copilot" });
-    const whole = regEntry({ id: "b", name: "Microsoft 365 Copilot", product: "Microsoft 365 Copilot" });
+    const part = regEntry({ id: "a", name: "Copilot in Word", product: "Microsoft 365 Copilot", groupOf: "Microsoft 365 Copilot" }) as never;
+    const whole = regEntry({ id: "b", name: "Microsoft 365 Copilot", product: "Microsoft 365 Copilot" }) as never;
     expect(groupWarning([part])).toBeUndefined();
     expect(groupWarning([part, whole])).toMatch(/registered both on its own .* and as parts of one/);
   });

@@ -24,6 +24,8 @@ dates:
       Internal register of in-scope AI use cases, and an accountable use case owner for each, due. The policy says
       "within 12 months" of taking effect; the date is that arithmetic, so confirm it with your accountable official.
   - { source: dta-ai-accountability, text: "Share the register with the DTA every 6 months, starting from when you create it." }
+  # crownguard records when the register was created and when you last shared it, and works out the next share date
+  # from those. The date itself is the policy's; the arithmetic is crownguard's, so confirm it with your official.
   - { source: dta-ai-accountability, text: "Notify the DTA (ai@dta.gov.au) of each new high-risk use case." }
   - date: 2027-04-30
     source: dta-ai-impact-assessment
@@ -38,8 +40,9 @@ caveats:
   - sources: [dta-agentic-design]
     text: >-
       The addendum asks agencies to set minimum technical requirements for kill switches and map them to operational
-      controls, but doesn't say what those requirements are. The switch-off question asks whether you've set and tested
-      your own.
+      controls, but doesn't say what those requirements are. The switch-off question has a worksheet for writing your
+      own: how to stop it, who may, the target time, when you last tested it, and how you roll back. It prints with the
+      question in the report.
   - sources: [dta-ai-accountability]
     text: >-
       The register's AI technology types don't include agentic AI. Record an agent under the technology it uses
@@ -55,7 +58,8 @@ caveats:
   - sources: [dta-ai-accountability]
     text: >-
       The Standard lists the accountable use case owner as one field, "name and email address". The export splits it
-      into two columns so it's easier to sort and check. Join them if your register needs a single field.
+      into two columns so it's easier to sort and check, or writes it as one column matching the Standard's wording:
+      tick "Owner as one column (name and email)" when you export.
 themes:
   - { id: accountability, name: Accountability, description: "A named person owns the use case and answers for what the AI decides and does." }
   - { id: oversight, name: Human oversight, description: "People review outputs and can approve, stop or override actions." }

@@ -1,5 +1,5 @@
 import type { AiRegisterModel, Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
-import { aiRegisterSummary, type AiRegisterSummary } from "../engine/aiRegister";
+import { aiRegisterSummary, shareWithDta, type AiRegisterSummary, type ShareStatus } from "../engine/aiRegister";
 import { aiRegisterSources } from "../content/loader";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
@@ -77,7 +77,7 @@ export interface ReportModel {
     licence?: Source;
   };
   /** The optional AI use-case register, when included and the module's content is present. */
-  aiRegister?: AiRegisterSummary & { model: AiRegisterModel };
+  aiRegister?: AiRegisterSummary & { model: AiRegisterModel; share: ShareStatus };
   risks: JewelRisk[];
   domains: DomainPosture[];
   e8: (E8Result & { title: string })[];
@@ -162,7 +162,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
 
   const risks = assessAll(catalogue, assessment);
   const aiModule = assessment.aiRegister && catalogue.aiRegister;
-  const aiRegister = aiModule ? { ...aiRegisterSummary(catalogue, assessment, risks, generatedAt), model: aiModule.model } : undefined;
+  const aiRegister = aiModule ? { ...aiRegisterSummary(catalogue, assessment, risks, generatedAt), model: aiModule.model, share: shareWithDta(assessment, generatedAt) } : undefined;
   if (aiModule) for (const id of aiRegisterSources(aiModule)) sourceIds.add(id);
 
   const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));

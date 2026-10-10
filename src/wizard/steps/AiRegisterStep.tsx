@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { catalogue } from "../../content/catalogue";
 import { exposures, type AiKind, type AiQuestion } from "../../content/schema";
 import {
@@ -13,10 +13,22 @@ import {
   aiStandardUse,
   aiTechnologies,
   aiUsagePatterns,
+  type AiBasis,
   type AiCriterion,
 } from "../../engine/aiOptions";
-import { aiFieldLabels, aiFieldSources, aiNeedsReason, aiRegisterSummary, type AiReadiness } from "../../engine/aiRegister";
-import { aboutRows, registerTable, toCsv } from "../../engine/aiExport";
+import {
+  aiFieldLabels,
+  aiFieldSources,
+  aiNeedsReason,
+  aiRegisterSummary,
+  composeKillSwitchNote,
+  highRiskNotification,
+  parseKillSwitchNote,
+  shareWithDta,
+  type AiReadiness,
+  type KillSwitchNote,
+} from "../../engine/aiRegister";
+import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll } from "../../engine/risk";
 import { answerLabels, type AiUseCase, type Answer } from "../../engine/types";
 import { NOTE_MAX } from "../assessmentSchema";
@@ -27,6 +39,8 @@ import { buildXlsx } from "../xlsx";
 
 const ADD = "add";
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
+/** The open-gaps filter: one basis of readiness question, or all of them. */
+type GapFilter = "all" | AiBasis;
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
@@ -42,6 +56,7 @@ export function AiRegisterStep() {
   const loadAiExamples = useStore((s) => s.loadAiExamples);
   const active = useStore((s) => s.assessment.progress?.aiSection);
   const setActive = useStore((s) => s.setAiSection);
+  const [gapBasis, setGapBasis] = useState<GapFilter>("all");
   const heading = useRef<HTMLHeadingElement>(null);
   const module = catalogue.aiRegister;
 
@@ -144,6 +159,8 @@ export function AiRegisterStep() {
           key={current.entry.id}
           r={current}
           headingRef={heading}
+          gapBasis={gapBasis}
+          onGapBasis={setGapBasis}
           next={entries[index + 1]?.entry}
           onNext={(id) => {
             setActive(id);
@@ -215,30 +232,77 @@ function Cite({ ids, label = "Source" }: { ids: readonly string[]; label?: strin
 
 function KeyDates() {
   const model = catalogue.aiRegister!.model;
+  const assessment = useStore((s) => s.assessment);
+  const updateAiRegister = useStore((s) => s.updateAiRegister);
+  const reg = assessment.aiRegister;
+  const share = reg ? shareWithDta(assessment) : undefined;
+  const confirmation = reg?.dateConfirmation;
+  const setConfirmation = (patch: { by?: string; on?: string }) => {
+    const c = { by: confirmation?.by ?? "", on: confirmation?.on ?? "", ...patch };
+    updateAiRegister({ dateConfirmation: c.by.trim() || c.on ? c : undefined });
+  };
   return (
-    <details className="mt-4 rounded-[var(--radius-card)] border border-rule bg-surface px-5 py-3 text-sm" data-testid="ai-dates">
-      <summary className="text-ink-2 transition-colors [@media(hover:hover)]:hover:text-ink">Key dates and recurring requirements for Commonwealth agencies</summary>
-      <ul className="mt-3 max-w-[72ch] space-y-3">
-        {model.dates.map((d) => {
-          const src = catalogue.sources.get(d.source);
-          return (
-            <li key={d.text} className="grid gap-x-4 sm:grid-cols-[9.5rem_minmax(0,1fr)]">
-              <span className="font-mono text-xs leading-5 text-ink">{d.date ? dayText(d.date) : "Ongoing"}{d.derived ? " *" : ""}</span>
-              <span className="text-ink-2">
-                {d.text}{" "}
-                {src && (
-                  <a className={`${link} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
-                    {src.title}
-                  </a>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      {model.dates.some((d) => d.derived) && <p className="mt-3 text-xs text-muted">* Worked out from the source&apos;s wording, not a date it prints.</p>}
-      <p className="mt-2 max-w-[72ch] text-xs text-muted">{model.appliesTo}</p>
-    </details>
+    <>
+      {reg && (
+        <Card className="mt-4" data-testid="ai-register-dates">
+          <h3 className="font-sans text-lg font-semibold tracking-normal">Register dates</h3>
+          <p className="mt-1 max-w-[68ch] text-sm text-ink-2">
+            The DTA counts the register&apos;s six-monthly sharing from the date it was created. Record that date and when you
+            last shared the register, and note who confirmed the dates marked * below: crownguard works those out from the
+            sources&apos; wording rather than reading them off a page.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Field label="Register created" hint="Starts the six-monthly sharing clock">
+              <input className={`${inputClass} max-w-48`} type="date" value={reg.createdAt ?? ""} onChange={(x) => updateAiRegister({ createdAt: x.target.value || undefined })} />
+            </Field>
+            <Field label="Last shared with the DTA" hint="Once you've shared it, the clock runs from this date">
+              <input className={`${inputClass} max-w-48`} type="date" value={reg.lastSharedWithDta ?? ""} onChange={(x) => updateAiRegister({ lastSharedWithDta: x.target.value || undefined })} />
+            </Field>
+            <Field label="Worked-out dates confirmed by" hint="The person who confirmed the dates marked * below">
+              <input className={inputClass} maxLength={200} autoComplete="off" value={confirmation?.by ?? ""} onChange={(x) => setConfirmation({ by: x.target.value })} />
+            </Field>
+            <Field label="and confirmed on">
+              <input className={`${inputClass} max-w-48`} type="date" value={confirmation?.on ?? ""} onChange={(x) => setConfirmation({ on: x.target.value })} />
+            </Field>
+          </div>
+          <p
+            className={`mt-4 rounded-[var(--radius-control)] border px-3 py-2 text-sm ${
+              share?.overdue ? "border-danger/20 bg-danger-soft text-danger" : share?.soon ? "border-warn/20 bg-warn-soft text-warn" : "border-rule bg-paper text-ink-2"
+            }`}
+            data-testid="ai-share"
+          >
+            {share?.due
+              ? `Next share with the DTA due ${dayText(share.due)}, counted from ${
+                  share.basis === "shared" ? "the last share" : "the register's creation"
+                }${share.overdue ? " — overdue" : share.soon ? " — due within 30 days" : ""}.`
+              : "Record the date the register was created and crownguard works out when the next share with the DTA is due."}
+          </p>
+        </Card>
+      )}
+      <details className="mt-4 rounded-[var(--radius-card)] border border-rule bg-surface px-5 py-3 text-sm" data-testid="ai-dates">
+        <summary className="text-ink-2 transition-colors [@media(hover:hover)]:hover:text-ink">Key dates and recurring requirements for Commonwealth agencies</summary>
+        <ul className="mt-3 max-w-[72ch] space-y-3">
+          {model.dates.map((d) => {
+            const src = catalogue.sources.get(d.source);
+            return (
+              <li key={d.text} className="grid gap-x-4 sm:grid-cols-[9.5rem_minmax(0,1fr)]">
+                <span className="font-mono text-xs leading-5 text-ink">{d.date ? dayText(d.date) : "Ongoing"}{d.derived ? " *" : ""}</span>
+                <span className="text-ink-2">
+                  {d.text}{" "}
+                  {src && (
+                    <a className={`${link} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
+                      {src.title}
+                    </a>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        {model.dates.some((d) => d.derived) && <p className="mt-3 text-xs text-muted">* Worked out from the source&apos;s wording, not a date it prints.</p>}
+        <p className="mt-2 max-w-[72ch] text-xs text-muted">{model.appliesTo}</p>
+      </details>
+    </>
   );
 }
 
@@ -346,7 +410,21 @@ function SubHeading({ children, sources }: { children: ReactNode; sources?: read
   );
 }
 
-function Entry({ r, headingRef, next, onNext }: { r: AiReadiness; headingRef: React.RefObject<HTMLHeadingElement | null>; next?: AiUseCase; onNext: (id: string) => void }) {
+function Entry({
+  r,
+  headingRef,
+  gapBasis,
+  onGapBasis,
+  next,
+  onNext,
+}: {
+  r: AiReadiness;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+  gapBasis: GapFilter;
+  onGapBasis: (b: GapFilter) => void;
+  next?: AiUseCase;
+  onNext: (id: string) => void;
+}) {
   const update = useStore((s) => s.updateAiUseCase);
   const removeAiUseCase = useStore((s) => s.removeAiUseCase);
   const jewels = useStore((s) => s.assessment.jewels);
@@ -476,6 +554,7 @@ function Entry({ r, headingRef, next, onNext }: { r: AiReadiness; headingRef: Re
         {e.inherentRisk === "medium" && (
           <p className="mt-3 max-w-[68ch] text-sm text-ink-2">For a medium inherent risk, the policy says to consider governing the use case through a designated board or senior executive.</p>
         )}
+        {e.inherentRisk === "high" && <NotificationDraft entry={e} />}
       </Card>
 
       <Card className="mt-4">
@@ -583,7 +662,7 @@ function Entry({ r, headingRef, next, onNext }: { r: AiReadiness; headingRef: Re
         })}
       </div>
 
-      <Gaps r={r} />
+      <Gaps r={r} basis={gapBasis} onBasis={onGapBasis} />
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
         {next && (
@@ -604,12 +683,81 @@ function Entry({ r, headingRef, next, onNext }: { r: AiReadiness; headingRef: Re
   );
 }
 
+/**
+ * The draft high-risk notification the Standard for accountability describes, assembled from the entry. It's text for
+ * the accountable official to edit and paste into their own email to the DTA: crownguard never sends anything.
+ */
+function NotificationDraft({ entry }: { entry: AiUseCase }) {
+  const derived = highRiskNotification(entry);
+  // null means "follow the entry"; once the user edits it, the draft is theirs until they rebuild it.
+  const [draft, setDraft] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  const text = draft ?? derived;
+  const src = catalogue.sources.get("dta-ai-accountability");
+  return (
+    <div className="mt-5 rounded-[var(--radius-control)] border border-rule bg-paper px-4 py-3 text-sm" data-testid="ai-notification">
+      <p className="max-w-[68ch] text-ink-2">
+        <strong className="font-medium text-ink">Draft notification for the DTA.</strong> For a high inherent risk the Standard for
+        accountability says to notify the DTA of the type of AI, its intended application, how the risk rating was reached and
+        its sensitivities. The draft below is assembled from this entry so you can read it, edit it and paste it into your own
+        email. crownguard doesn&apos;t send it or open a mail client.
+      </p>
+      <textarea
+        className={`${inputClass} mt-3 font-mono text-xs leading-relaxed`}
+        rows={6}
+        aria-label="Draft high-risk notification text"
+        value={text}
+        onChange={(x) => {
+          setDraft(x.target.value);
+          setCopied(false);
+        }}
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Button variant="secondary" onClick={() => void copyText(text, setCopied, setCopyError)}>
+          Copy notification text
+        </Button>
+        {draft !== null && draft !== derived && (
+          <Button variant="ghost" onClick={() => setDraft(null)}>
+            Rebuild from the entry
+          </Button>
+        )}
+        {copied && <span role="status" className="font-mono text-xs text-ok">Copied</span>}
+      </div>
+      {copyError && <p role="alert" className="mt-1.5 text-xs text-danger">Couldn&apos;t copy: {copyError}. Select the text and copy it.</p>}
+      <p className="mt-2 max-w-[68ch] text-xs text-muted">
+        Send it to ai@dta.gov.au by typing that address into your own email.{" "}
+        {src && (
+          <a className={link} href={src.url} target="_blank" rel="noreferrer noopener">
+            {src.title}
+          </a>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** Copy the draft to the clipboard, reporting success inline and any failure without losing the caught error. */
+async function copyText(text: string, setCopied: (v: boolean) => void, setCopyError: (v: string) => void) {
+  try {
+    await navigator.clipboard.writeText(text);
+    setCopyError("");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  } catch (e) {
+    setCopied(false);
+    setCopyError((e as Error).message || "the clipboard isn't available");
+  }
+}
+
 function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
   const setAiAnswer = useStore((s) => s.setAiAnswer);
   const setAiNote = useStore((s) => s.setAiNote);
   const answer = entry.answers[q.id];
   const missingReason = aiNeedsReason(entry, q.id);
   const reasonId = `${entry.id}-${q.id}-na-reason`;
+  // The switch-off question carries the kill-switch worksheet in its note, instead of the free-text note below.
+  const isKillSwitch = q.id === "AIR-OFF-001";
   return (
     <article className="rounded-[var(--radius-card)] border border-rule bg-surface p-5 sm:p-6" data-ai-question={q.id}>
       <div className="flex flex-wrap items-center gap-2.5">
@@ -637,7 +785,8 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
           </button>
         ))}
       </div>
-      {answer === "na" && (
+      {isKillSwitch && <KillSwitchWorksheet entry={entry} showReason={answer === "na"} missingReason={missingReason} />}
+      {!isKillSwitch && answer === "na" && (
         <div className="mt-4 max-w-[72ch]">
           <label htmlFor={reasonId} className="text-sm font-medium text-ink">
             Why doesn&apos;t this apply? <span className="font-normal text-muted">(required)</span>
@@ -683,7 +832,7 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
               })}
             </ul>
           </div>
-          {answer !== "na" && (
+          {!isKillSwitch && answer !== "na" && (
             <textarea
               className={inputClass}
               rows={2}
@@ -700,7 +849,56 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
   );
 }
 
-function Gaps({ r }: { r: AiReadiness }) {
+/**
+ * Optional structured note for the kill-switch question. It's written into that question's note as labelled lines, so
+ * it travels with the answer and prints with it in the report; nothing about it needs a field of its own.
+ */
+function KillSwitchWorksheet({ entry, showReason, missingReason }: { entry: AiUseCase; showReason: boolean; missingReason: boolean }) {
+  const updateAiUseCase = useStore((s) => s.updateAiUseCase);
+  const n = parseKillSwitchNote(entry.notes?.["AIR-OFF-001"]);
+  const set = (key: keyof KillSwitchNote, value: string) =>
+    updateAiUseCase(entry.id, { notes: { ...entry.notes, "AIR-OFF-001": composeKillSwitchNote({ ...n, [key]: value }) } });
+  const fields: [keyof KillSwitchNote, string][] = [
+    ["stop", "How to stop it (identity, tokens, connectors)"],
+    ["who", "Who may stop it"],
+    ["targetTime", "Target time to stop"],
+    ["tested", "Date it was last tested"],
+    ["rollback", "Rollback approach"],
+    ...(showReason ? ([["reason", "Why it doesn't apply"]] as [keyof KillSwitchNote, string][]) : []),
+  ];
+  return (
+    <fieldset className="mt-4 rounded-[var(--radius-control)] border border-rule bg-sunken p-4">
+      <legend className="px-1 text-sm font-medium text-ink">Switch-off worksheet (optional)</legend>
+      <p className="max-w-[72ch] text-xs text-muted">
+        The agentic AI addendum asks agencies to set and test their own minimum requirements for stopping an agent. The
+        addendum doesn&apos;t say what they are, so write yours here. It saves against this question and prints with it in the
+        report. Nothing is sent anywhere.
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {fields.map(([key, label]) => (
+          <label key={key} className={`block text-sm ${key === "reason" || key === "rollback" ? "sm:col-span-2" : ""}`}>
+            <span className="font-medium text-ink">
+              {label}
+              {key === "reason" && missingReason ? <span className="ml-1 font-normal text-danger">(required)</span> : <span className="font-normal text-muted"> (optional)</span>}
+            </span>
+            <input
+              type={key === "tested" ? "date" : "text"}
+              value={n[key]}
+              onChange={(e) => set(key, e.target.value)}
+              aria-invalid={key === "reason" && missingReason ? true : undefined}
+              className={`${inputClass} mt-1 w-full`}
+            />
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis: (b: GapFilter) => void }) {
+  // Only the bases that actually have an open gap are worth offering as a filter.
+  const offered = [...new Set(r.gaps.map((g) => g.question.basis).filter((b): b is AiBasis => !!b))];
+  const shown = basis === "all" ? r.gaps : r.gaps.filter((g) => g.question.basis === basis);
   return (
     <Card className="mt-8" data-testid="ai-gaps">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -727,16 +925,38 @@ function Gaps({ r }: { r: AiReadiness }) {
       {r.gaps.length > 0 && (
         <>
           <h4 className="mt-5 text-sm font-semibold">Open gaps, most severe first</h4>
+          {offered.length > 1 && (
+            <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Filter open gaps by where the requirement comes from">
+              {([["all", "All gaps"] as const, ...offered.map((b) => [b, aiBases[b]] as const)] as [GapFilter, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={basis === value}
+                  onClick={() => onBasis(value)}
+                  className={`rounded-[var(--radius-control)] border px-2.5 py-1 text-xs transition-colors duration-150 ${
+                    basis === value ? "border-accent bg-accent-soft font-medium text-ink" : "border-rule text-muted [@media(hover:hover)]:hover:border-rule-2 [@media(hover:hover)]:hover:text-ink"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <ul className="mt-2 space-y-2 text-sm">
-            {r.gaps.map((g) => (
+            {shown.map((g) => (
               <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
                 <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                 <span className="text-ink">
-                  {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"} · {g.question.severity})</span>
+                  {g.question.question}{" "}
+                  <span className="text-muted">
+                    ({g.answer ? answerLabels[g.answer] : "Unanswered"} · {g.question.severity}
+                    {basisLabel(g.question.basis) ? ` · ${basisLabel(g.question.basis)}` : ""})
+                  </span>
                 </span>
               </li>
             ))}
           </ul>
+          {shown.length === 0 && <p className="mt-2 text-sm text-muted">No open gaps come from that requirement.</p>}
         </>
       )}
       {r.missing.length > 0 && (

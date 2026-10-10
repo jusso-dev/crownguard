@@ -1,5 +1,5 @@
 import type { Catalogue } from "../content/schema";
-import { aiAccess, aiAutonomy, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns } from "./aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "./aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, type AiField } from "./aiRegister";
 import { isAgentic } from "./aiRegister";
 import { assessAll } from "./risk";
@@ -62,8 +62,7 @@ export interface RegisterOptions {
 }
 
 /** Basis label for a readiness question, so a reader can tell a binding requirement from best-practice guidance. */
-export const basisLabel = (basis?: string) =>
-  ({ "policy-must": "Policy: must", "standard-must": "AI technical standard: must", "addendum-must": "Agentic AI addendum: must", "addendum-should": "Agentic AI addendum: should" })[basis ?? ""] ?? "";
+export const basisLabel = (basis?: string) => (basis && basis in aiBases ? aiBases[basis as AiBasis] : "");
 
 /** The register as rows an agency can paste into its own: the Standard's fields first, in its order, then crownguard's. */
 export function registerTable(catalogue: Catalogue, assessment: Assessment, opts: RegisterOptions = {}): RegisterTable {
@@ -135,8 +134,8 @@ export function aboutRows(catalogue: Catalogue, assessment: Assessment, opts: Re
         ? "The first 15 columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording, with the owner's name and email address in one column as the Standard words it. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register."
         : "The first 16 columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording. The owner's name and email address are one field in the Standard and two columns here. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register.",
     ],
-    ...(assessment.aiRegister?.dateConfirmation
-      ? [["Key date", `The worked-out dates in this register were confirmed by ${assessment.aiRegister.dateConfirmation.by} on ${dayText(assessment.aiRegister.dateConfirmation.on)}.`]]
+    ...(assessment.aiRegister?.dateConfirmation?.by
+      ? [["Key date", `The worked-out dates in this register were confirmed by ${assessment.aiRegister.dateConfirmation.by}${assessment.aiRegister.dateConfirmation.on ? ` on ${dayText(assessment.aiRegister.dateConfirmation.on)}` : ""}.`]]
       : []),
     ...(shareWithDta(assessment, asAt).due
       ? [["Key date", `Next share with the DTA due ${dayText(shareWithDta(assessment, asAt).due!)} (${shareWithDta(assessment, asAt).overdue ? "overdue" : "counted from " + (shareWithDta(assessment, asAt).basis === "shared" ? "the last share" : "the register's creation")}).`]]
