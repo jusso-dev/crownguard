@@ -55,6 +55,10 @@
     - { framework: mcsb, ref: LT-5 }
     - { framework: mcsb, ref: LT-6 }
     - { framework: ms-zero-trust, ref: SecOps I }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1683 }
+    - { framework: ism, ref: ISM-1509 }
+    - { framework: ism, ref: ISM-1988 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: mfa, level: 2 }
@@ -87,6 +91,9 @@
     - { framework: mcsb, ref: LT-1 }
     - { framework: mcsb, ref: LT-2 }
     - { framework: ms-zero-trust, ref: Identity III }
+    - { framework: ism, ref: ISM-1228 }
+    - { framework: ism, ref: ISM-1613 }
+    - { framework: ism, ref: ISM-1650 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -118,6 +125,7 @@
     - { framework: mcsb, ref: IR-2 }
     - { framework: mcsb, ref: IR-3 }
     - { framework: ms-zero-trust, ref: SecOps II }
+    - { framework: ism, ref: ISM-1228 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -147,6 +155,7 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: LT-2 }
     - { framework: ms-zero-trust, ref: Identity VI }
+    - { framework: ism, ref: ISM-1830 }
 
 - id: MS-LOG-006
   module: core
@@ -177,6 +186,7 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: LT-3 }
     - { framework: mcsb, ref: LT-5 }
+    - { framework: ism, ref: ISM-1660 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -210,6 +220,8 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: LT-3 }
     - { framework: mcsb, ref: LT-5 }
+    - { framework: ism, ref: ISM-1623 }
+    - { framework: ism, ref: ISM-1889 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -244,6 +256,7 @@
     - { framework: mcsb, ref: LT-5 }
     - { framework: mcsb, ref: LT-6 }
     - { framework: ms-zero-trust, ref: SecOps I }
+    - { framework: ism, ref: ISM-1815 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -282,6 +295,8 @@
     - { framework: mcsb, ref: LT-1 }
     - { framework: mcsb, ref: LT-3 }
     - { framework: ms-zero-trust, ref: Infrastructure I }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1906 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -317,6 +332,9 @@
     - { framework: nist-csf-2, ref: RS.CO-02 }
     - { framework: mcsb, ref: IR-1 }
     - { framework: mcsb, ref: IR-2 }
+    - { framework: ism, ref: ISM-0123 }
+    - { framework: ism, ref: ISM-0140 }
+    - { framework: ism, ref: ISM-1819 }
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
@@ -352,6 +370,9 @@
     - { framework: mcsb, ref: ES-1 }
     - { framework: mcsb, ref: LT-1 }
     - { framework: ms-zero-trust, ref: Endpoints 4 }
+    - { framework: ism, ref: ISM-0109 }
+    - { framework: ism, ref: ISM-1405 }
+    - { framework: ism, ref: ISM-1907 }
   e8:
     - { strategy: mfa, level: 3 }
     - { strategy: restrict-admin-privileges, level: 3 }

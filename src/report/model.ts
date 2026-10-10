@@ -17,6 +17,7 @@ import {
 import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
 import { socMaturity, type SocProvider, type SocResult } from "../engine/soc";
 import { idcfRows, jewelDsl, systemCell, type IdcfCell, type IdcfRow, type JewelDsl } from "../engine/idcf";
+import { ismBaselineReport, type IsmBaselineSummary } from "../engine/ism";
 import type { Answer, Assessment } from "../engine/types";
 import { readableOn, textOn, tint } from "../theme/color";
 
@@ -85,6 +86,10 @@ export interface ReportModel {
   questions: Question[];
   csf: { fn: string; score: number | null; subcategories: number }[];
   cis: FrameworkRow[];
+  /** Every ISM control the in-scope questions map to, with its shortened statement and status. */
+  ism: FrameworkRow[];
+  /** The chosen ISM baseline's annotation, when one is picked. Never changes a score. */
+  ismBaseline?: IsmBaselineSummary;
   sources: Source[];
   assetTypeName: (id: string) => string;
   frameworkName: (id: string) => string;
@@ -127,10 +132,10 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const bundles = assessment.platforms.map((p) => catalogue.platforms.get(p)).filter((x) => !!x);
   const jewels = assessment.jewels.filter((j) => assessment.platforms.includes(j.platform));
 
-  const refRows = (prefix: string): FrameworkRow[] => {
+  const refRows = (matches: (framework: string) => boolean): FrameworkRow[] => {
     const rows = new Map<string, FrameworkRow>();
     for (const q of questions)
-      for (const r of q.refs.filter((r) => r.framework.startsWith(prefix))) {
+      for (const r of q.refs.filter((r) => matches(r.framework))) {
         const key = `${r.framework}:${r.ref}`;
         const row = rows.get(key) ?? {
           framework: r.framework,
@@ -196,7 +201,9 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
           ? "Function coverage"
           : id === "idcf"
             ? "Data Security Level protection requirements"
-            : "Vendor guidance the questions are drawn from";
+            : id === "ism"
+              ? "Guideline mapping"
+              : "Vendor guidance the questions are drawn from";
 
   const titled = (rs: E8Result[]) => rs.map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy }));
   const idcf = catalogue.frameworks.has("idcf")
@@ -269,7 +276,9 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     roadmap: buildRoadmap(questions, jewels, answers),
     questions,
     csf,
-    cis: refRows("cis-"),
+    cis: refRows((framework) => framework.startsWith("cis-")),
+    ism: refRows((framework) => framework === "ism"),
+    ismBaseline: assessment.ismBaseline ? ismBaselineReport(catalogue, questions, answers, assessment.ismBaseline) : undefined,
     sources: [...sourceIds].map((id) => catalogue.sources.get(id)).filter((s): s is Source => !!s).sort((a, b) => a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title)),
     assetTypeName: (id) => bundles.flatMap((x) => x.assetTypes).find((a) => a.id === id)?.name ?? id,
     frameworkName: (id) => catalogue.frameworks.get(id)?.shortName ?? id,

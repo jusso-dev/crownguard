@@ -89,4 +89,39 @@ describe("content", () => {
     const e8 = catalogue.frameworks.get("essential-eight");
     expect(e8?.controls).toHaveLength(8);
   });
+
+  it("shows ISM control ids in display form and rejects a made-up one", () => {
+    for (const { questions } of catalogue.platforms.values())
+      for (const q of questions)
+        for (const r of q.refs.filter((x) => x.framework === "ism")) expect(r.ref, q.id).toMatch(/^ISM-/);
+    for (const q of catalogue.aiRegister?.questions ?? [])
+      for (const r of q.refs.filter((x) => x.framework === "ism")) expect(r.ref, q.id).toMatch(/^ISM-/);
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const { errors: found } = loadCatalogue({ ...files, [target]: files[target].replace("ref: ISM-1504", "ref: ISM-9999") });
+    expect(found).toContain("platform microsoft: MS-ID-001: ism has no control ISM-9999");
+  });
+
+  it("warns, never fails, on a ref to a withdrawn ISM control", () => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const { errors, warnings } = loadCatalogue({
+      ...files,
+      "content/frameworks/ism.yaml": files["content/frameworks/ism.yaml"].replace("withdrawn: []", "withdrawn: [ISM-9999]"),
+      [target]: files[target].replace("ref: ISM-1504", "ref: ISM-9999"),
+    });
+    expect(errors).toEqual([]);
+    expect(warnings).toContain("platform microsoft: MS-ID-001: ism ref ISM-9999 names a control ASD has withdrawn");
+  });
+
+  it("warns when an e8-tagged question maps to no ISM control in the matching E8 profile", () => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const gap = files[target].replace("    - { framework: ism, ref: ISM-1504 }\n", "");
+    expect(loadCatalogue(files).warnings).not.toContain("MS-ID-001: e8 mfa ML1 maps to no ISM control in the E8 ML1 profile");
+    const { errors, warnings } = loadCatalogue({ ...files, [target]: gap });
+    expect(warnings).toContain("MS-ID-001: e8 mfa ML1 maps to no ISM control in the E8 ML1 profile");
+    // The gap is a warning, not an error: the Essential Eight tag and the question stand on their own.
+    expect(errors).toEqual([]);
+  });
 });

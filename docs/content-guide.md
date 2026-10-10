@@ -60,6 +60,41 @@ Set `closed: false` for frameworks where we cite section names rather than a fix
 (for example Zero Trust deployment guidance). CIS Benchmarks are licensed CC BY-NC-SA 4.0:
 only record recommendation numbers and short titles, never recommendation body text.
 
+### The Information Security Manual (generated)
+
+The ISM (`ism.yaml`) is generated, not typed. It is © Commonwealth of Australia 2024, licensed CC BY 4.0 (Coat of
+Arms and ASD logo excepted), and follows the same rule as the IDCF: control titles may paraphrase or quote it with
+attribution and a note of changes. Here the titles are the statement of each control shortened to 140 characters
+(an ellipsis marks a cut) and the framework's `note` carries the attribution and what changed; the full statements
+and guidance stay in the ISM itself. Question wording stays crownguard's own, and questions cite controls by id.
+
+`pnpm ism:build -- --tag v2026.09.4` reads ASD's official
+[ISM OSCAL catalog](https://github.com/AustralianCyberSecurityCentre/ism-oscal) at that release tag — fetched at
+development time, never at runtime — and writes `content/frameworks/ism.yaml` and
+`scripts/ism/fixtures/ism-controls.txt`, the pinned control id list `pnpm test` checks the YAML against (the same
+pattern as the Prowler and ScubaGoggles fixture lists). Control ids are the OSCAL ids in display form (`ism-1504`
+becomes `ISM-1504`), `group` is the guideline, section and topic the control sits under, and each control keeps the
+ISM's own `updated` month, `applicability` baselines (NC, OS, P, S, TS) and `e8` Essential Eight levels. Nothing
+else is copied. The optional "Show ISM baseline" picker reads `applicability`, and the E8 cross-check below reads
+`e8`, so neither needs extra files. A rerun that changes nothing is a no-op: the retrieval date in the header is
+kept until the content actually moves.
+
+**Bumping the ISM release.**
+
+1. Run `pnpm ism:build -- --tag <new tag>` (add `--catalog ISM_catalog.json` to work from a copy on disk).
+2. Read the new release's notes in the ism-oscal feed: ASD lists the added, amended and withdrawn controls by id.
+3. Review `git diff content/frameworks/ism.yaml` against them. A changed title means the control's statement moved;
+   an id dropped from `controls` that a question still references becomes a warning in `pnpm validate:content` naming
+   the questions (a control ASD has withdrawn stays referenceable through the file's `withdrawn` list and warns
+   rather than failing).
+4. Re-read the questions the changed controls map to — the diff shows which ids moved — then run
+   `pnpm validate:content` and the test suite.
+
+The `ISM OSCAL releases` feed in `scripts/watch/feeds.ts` reports every new release to the source watch, so a bump
+is never missed. `pnpm validate:content` also warns (never fails) when a question tagged `e8:` maps to no ISM
+control in the matching Essential Eight profile: the maturity model document stays the source of truth for maturity
+results, and the warning is a prompt to review the mapping, not a defect in the question.
+
 ## Platform
 
 `platform.yaml` defines modules (core + optional add-ons like Azure or Google Cloud),

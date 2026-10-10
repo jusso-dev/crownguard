@@ -18,6 +18,7 @@ import {
   questionFileSchema,
   sourceFileSchema,
   type Catalogue,
+  type Framework,
   type PlatformBundle,
   type SocModel,
   type SocQuestion,
@@ -29,6 +30,8 @@ export type ContentFiles = Record<string, string>;
 export interface LoadResult {
   catalogue: Catalogue;
   errors: string[];
+  /** Things worth a maintainer's attention that don't make the content unusable: withdrawn refs, E8 mapping gaps. */
+  warnings: string[];
 }
 
 function parseFile<T>(path: string, text: string, schema: z.ZodType<T>, errors: string[]): T | undefined {
@@ -51,6 +54,7 @@ const rel = (path: string) => path.slice(path.indexOf("content/"));
 
 export function loadCatalogue(files: ContentFiles): LoadResult {
   const errors: string[] = [];
+  const warnings: string[] = [];
   const catalogue: Catalogue = { sources: new Map(), frameworks: new Map(), platforms: new Map(), imports: new Map() };
   const entries = Object.entries(files)
     .map(([p, t]) => [rel(p), t] as const)
@@ -115,7 +119,7 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
       .flatMap(([p, t]) => parseFile(p, t, z.array(socQuestionSchema), errors) ?? []);
     if (model) {
       catalogue.soc = { model, questions };
-      errors.push(...checkSoc(model, questions, catalogue));
+      errors.push(...checkSoc(model, questions, catalogue, warnings));
     }
   }
 
@@ -131,12 +135,21 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     const scopes = scopesText ? (parseFile("content/ai-register/oauth-scopes.yaml", scopesText, oauthScopesFileSchema, errors)?.scopes ?? []) : [];
     if (model) {
       catalogue.aiRegister = { model, questions, knownApps, scopes };
-      errors.push(...checkAiRegister(model, questions, knownApps, scopes, catalogue));
+      errors.push(...checkAiRegister(model, questions, knownApps, scopes, catalogue, warnings));
     }
   }
 
-  errors.push(...crossCheck(catalogue));
-  return { catalogue, errors };
+  const { errors: crossErrors, warnings: crossWarnings } = crossCheck(catalogue);
+  errors.push(...crossErrors);
+  warnings.push(...crossWarnings);
+  return { catalogue, errors, warnings };
+}
+
+/** A question's ref against a framework: a withdrawn control warns, a missing one on a closed framework errors. */
+function checkRef(where: string, f: Framework, ref: string, errors: string[], warnings: string[]): void {
+  if (f.controls.some((c) => c.id === ref)) return;
+  if (f.withdrawn.includes(ref)) warnings.push(`${where}: ${f.id} ref ${ref} names a control ASD has withdrawn`);
+  else if (f.closed) errors.push(`${where}: ${f.id} has no control ${ref}`);
 }
 
 /** Every source the AI register's model, questions, curated AI app list and scope table cite. */
@@ -156,6 +169,7 @@ function checkAiRegister(
   knownApps: KnownAiApp[],
   scopes: OAuthScope[],
   catalogue: Catalogue,
+  warnings: string[],
 ): string[] {
   const errors: string[] = [];
   for (const s of new Set(aiRegisterSources({ model, questions, knownApps, scopes }))) if (!catalogue.sources.has(s)) errors.push(`ai-register: unknown source ${s}`);
@@ -203,7 +217,7 @@ function checkAiRegister(
     for (const r of q.refs) {
       const f = catalogue.frameworks.get(r.framework);
       if (!f) errors.push(`${where}: unknown framework ${r.framework}`);
-      else if (f.closed && !f.controls.some((c) => c.id === r.ref)) errors.push(`${where}: ${r.framework} has no control ${r.ref}`);
+      else checkRef(where, f, r.ref, errors, warnings);
     }
   }
   for (const t of themes) if (!covered.has(t)) errors.push(`ai-register: theme ${t} has no questions`);
@@ -213,7 +227,7 @@ function checkAiRegister(
 /** Question id prefix for each SOC domain, e.g. SOC-BUS-001 for business. */
 const socPrefix: Record<string, string> = { business: "BUS", people: "PPL", process: "PRC", technology: "TEC", services: "SVC" };
 
-function checkSoc(model: SocModel, questions: SocQuestion[], catalogue: Catalogue): string[] {
+function checkSoc(model: SocModel, questions: SocQuestion[], catalogue: Catalogue, warnings: string[]): string[] {
   const errors: string[] = [];
   for (const src of [model.source, model.licenceSource, ...model.sources])
     if (!catalogue.sources.has(src)) errors.push(`soc: unknown source ${src}`);
@@ -243,7 +257,7 @@ function checkSoc(model: SocModel, questions: SocQuestion[], catalogue: Catalogu
     for (const r of q.refs) {
       const f = catalogue.frameworks.get(r.framework);
       if (!f) errors.push(`${where}: unknown framework ${r.framework}`);
-      else if (f.closed && !f.controls.some((c) => c.id === r.ref)) errors.push(`${where}: ${r.framework} has no control ${r.ref}`);
+      else checkRef(where, f, r.ref, errors, warnings);
     }
   }
   for (const [a, d] of domainOf) {
@@ -266,8 +280,9 @@ function pageKey(url: string): string {
   }
 }
 
-function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalogue): string[] {
+function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalogue): { errors: string[]; warnings: string[] } {
   const errors: string[] = [];
+  const warnings: string[] = [];
   const cited = new Set<string>();
   for (const f of frameworks.values()) {
     if (!sources.has(f.source)) errors.push(`framework ${f.id}: unknown source ${f.source}`);
@@ -292,8 +307,22 @@ function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalog
   }
   const questionIds = new Set<string>();
   const assetIds = new Set<string>();
-  for (const bundle of platforms.values()) errors.push(...checkPlatform(bundle, sources, frameworks, questionIds, assetIds));
-  return errors;
+  for (const bundle of platforms.values()) errors.push(...checkPlatform(bundle, sources, frameworks, questionIds, assetIds, warnings));
+  // E8 cross-check: every question tagged for the Essential Eight should map to at least one control in the ISM's
+  // E8 profile for that level, so the two views of the same requirement agree. A gap warns, never fails: the
+  // Essential Eight Maturity Model remains the source of truth and the question stands on its own.
+  for (const { questions } of platforms.values())
+    for (const q of questions)
+      for (const tag of q.e8) {
+        const level = `ML${tag.level}`;
+        const mapped = q.refs.some((r) =>
+          frameworks
+            .get(r.framework)
+            ?.controls.some((c) => c.id === r.ref && (c.e8 as string[] | undefined)?.includes(level)),
+        );
+        if (!mapped) warnings.push(`${q.id}: e8 ${tag.strategy} ${level} maps to no ISM control in the E8 ${level} profile`);
+      }
+  return { errors, warnings };
 }
 
 function checkPlatform(
@@ -302,6 +331,7 @@ function checkPlatform(
   frameworks: Catalogue["frameworks"],
   questionIds: Set<string>,
   assetIds: Set<string>,
+  warnings: string[],
 ): string[] {
   const errors: string[] = [];
   const at = `platform ${platform.id}`;
@@ -337,8 +367,7 @@ function checkPlatform(
     for (const r of q.refs) {
       const f = frameworks.get(r.framework);
       if (!f) errors.push(`${where}: unknown framework ${r.framework}`);
-      else if (f.closed && !f.controls.some((c) => c.id === r.ref))
-        errors.push(`${where}: ${r.framework} has no control ${r.ref}`);
+      else checkRef(where, f, r.ref, errors, warnings);
     }
   }
   for (const a of localAssets) if (!covered.has(a)) errors.push(`${at}: asset type ${a} has no questions`);

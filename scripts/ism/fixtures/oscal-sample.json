@@ -1,0 +1,113 @@
+{
+  "catalog": {
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "metadata": {
+      "title": "Information security manual",
+      "published": "2026-09-03T23:10:47.63884244Z",
+      "last-modified": "2026-09-03T23:10:47.63884244Z",
+      "version": "2026.09.4",
+      "oscal-version": "1.1.2",
+      "links": [{ "href": "https://www.cyber.gov.au/ism", "rel": "canonical" }]
+    },
+    "groups": [
+      {
+        "title": "Guidelines for system access",
+        "props": [{ "name": "sort-id", "value": "catalog[1].group[16]" }],
+        "groups": [
+          {
+            "title": "Identity and access management",
+            "props": [{ "name": "sort-id", "value": "catalog[1].group[16].group[1]" }],
+            "groups": [
+              {
+                "title": "Multi-factor authentication",
+                "props": [{ "name": "sort-id", "value": "catalog[1].group[16].group[1].group[17]" }],
+                "parts": [{ "name": "overview", "prose": "Section prose the generator does not use." }],
+                "controls": [
+                  {
+                    "id": "ism-1504",
+                    "class": "ISM-control",
+                    "title": "Control: ism-1504",
+                    "props": [
+                      { "name": "sort-id", "value": "catalog[1].group[16].group[1].group[17].control[01]" },
+                      { "name": "revision", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "4" },
+                      { "name": "updated", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "Sep-26" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "NC" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "OS" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "P" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "S" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "TS" },
+                      { "name": "essential-eight-applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "ML1" },
+                      { "name": "essential-eight-applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "ML2" },
+                      { "name": "essential-eight-applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "ML3" }
+                    ],
+                    "parts": [
+                      {
+                        "id": "ism-1504_smt",
+                        "name": "statement",
+                        "prose": "Multi-factor authentication is used to authenticate human users to their organisation’s online services that process, store or communicate their organisation’s sensitive data. The full statement runs on well past one hundred and forty characters."
+                      }
+                    ],
+                    "controls": [
+                      {
+                        "id": "ism-1504a",
+                        "class": "ISM-control",
+                        "title": "Control: ism-1504a",
+                        "props": [{ "name": "updated", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "Sep-26" }],
+                        "parts": [{ "id": "ism-1504a_smt", "name": "statement", "prose": "A nested control, picked up under its parent’s group." }]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "ism-1679",
+                    "class": "ISM-control",
+                    "title": "Control: ism-1679",
+                    "props": [
+                      { "name": "updated", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "Dec-22" },
+                      { "name": "applicability", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "P" }
+                    ],
+                    "parts": [{ "id": "ism-1679_smt", "name": "statement", "prose": "Phishing-resistant multi-factor authentication is used." }]
+                  },
+                  {
+                    "id": "ism-1999",
+                    "class": "ISM-control-withdrawn",
+                    "title": "Control: ism-1999",
+                    "props": [
+                      { "name": "status", "value": "withdrawn" },
+                      { "name": "updated", "ns": "https://cyber.gov.au/ns/ism/oscal/3.0", "value": "Jun-22" }
+                    ],
+                    "parts": [{ "id": "ism-1999_smt", "name": "statement", "prose": "A control ASD has withdrawn in this release." }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Cyber security principles",
+        "props": [{ "name": "sort-id", "value": "catalog[1].group[02]" }],
+        "groups": [
+          {
+            "title": "The cyber security principles",
+            "props": [{ "name": "sort-id", "value": "catalog[1].group[02].group[1]" }],
+            "groups": [
+              {
+                "title": "Protect cyber security principles",
+                "props": [{ "name": "sort-id", "value": "catalog[1].group[02].group[1].group[3]" }],
+                "controls": [
+                  {
+                    "id": "ism-principle-pro-01",
+                    "class": "ISM-principle",
+                    "title": "Control: ism-principle-pro-01",
+                    "props": [{ "name": "label", "value": "PRO-01" }],
+                    "parts": [{ "id": "ism-principle-pro-01_smt", "name": "statement", "prose": "Applications and systems are hardened and function as intended." }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

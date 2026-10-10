@@ -75,6 +75,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: ism, ref: ISM-2137 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: GO-GEM-004
@@ -159,6 +160,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }
+    - { framework: ism, ref: ISM-2092 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
 
 - id: GO-GEM-007

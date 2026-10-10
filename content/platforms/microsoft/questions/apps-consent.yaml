@@ -26,6 +26,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications V }
+    - { framework: ism, ref: ISM-2137 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: MS-APP-002
@@ -55,6 +56,7 @@
     - { framework: nist-csf-2, ref: ID.AM-02 }
     - { framework: mcsb, ref: PA-4 }
     - { framework: ms-zero-trust, ref: Applications V }
+    - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: MS-APP-003
@@ -87,6 +89,7 @@
     - { framework: mcsb, ref: IM-3 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
+    - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
 
@@ -147,6 +150,7 @@
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications II }
     - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: ism, ref: ISM-2074 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: MS-APP-006
@@ -179,6 +183,8 @@
     - { framework: cis-m365, ref: "5.1.5.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ms-zero-trust, ref: Applications V }
+    - { framework: ism, ref: ISM-2137 }
+    - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
 
 - id: MS-APP-007
@@ -207,4 +213,6 @@
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: mcsb, ref: LT-2 }
+    - { framework: ism, ref: ISM-2139 }
+    - { framework: ism, ref: ISM-1228 }
     - { framework: idcf, ref: "Rule 1" }

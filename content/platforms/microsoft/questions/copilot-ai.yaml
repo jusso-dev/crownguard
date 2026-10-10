@@ -110,6 +110,7 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications II }
+    - { framework: ism, ref: ISM-2156 }
 
 - id: MS-AI-005
   module: core
@@ -138,3 +139,6 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: AI-4 }
     - { framework: mcsb, ref: AI-5 }
+    - { framework: ism, ref: ISM-2113 }
+    - { framework: ism, ref: ISM-2133 }
+    - { framework: ism, ref: ISM-2156 }

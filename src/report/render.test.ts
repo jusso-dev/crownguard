@@ -89,6 +89,34 @@ describe("PDF report", () => {
       const buf = await renderToBuffer(createElement(ReportDocument, { model }) as Parameters<typeof renderToBuffer>[0]);
       expect(buf.subarray(0, 5).toString()).toBe("%PDF-");
     }, 60_000);
+
+  it("shows ISM refs labelled with the release, with shortened statements and attribution", async () => {
+    const text = await pdfText(fixtureAssessment(catalogue, ["microsoft"]));
+    expect(text).toContain("Australian Government Information Security Manual (September 2026 release)");
+    expect(text).toContain("ISM (Sep 2026) controls");
+    expect(text).toContain("ISM (Sep 2026) ISM-");
+    expect(text).toContain("WHAT IT ASKS (SHORTENED)");
+    expect(text).toContain("© Commonwealth of Australia 2024");
+    expect(text).toContain("ISM OSCAL catalogue");
+    expect(text).toContain("not an IRAP assessment or a statement of applicability");
+  }, 120_000);
+
+  it("annotates findings with the chosen ISM baseline and adds a count without changing any score", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    const plain = buildReport(catalogue, a, new Date("2026-10-08"));
+    a.ismBaseline = "PROTECTED";
+    const annotated = buildReport(catalogue, a, new Date("2026-10-08"));
+    expect(annotated.posture).toEqual(plain.posture);
+    expect(annotated.risks.map((r) => r.score)).toEqual(plain.risks.map((r) => r.score));
+    expect(annotated.e8.map((e) => e.level)).toEqual(plain.e8.map((e) => e.level));
+    expect(annotated.ismBaseline!.findings.length).toBeGreaterThan(0);
+    expect(annotated.ismBaseline!.findings.every((f) => f.controls.length > 0)).toBe(true);
+    const text = await pdfText(a);
+    expect(text).toContain("The PROTECTED baseline covers");
+    expect(text).toContain("Touches the ISM PROTECTED baseline");
+    expect(text).toContain("ISM baseline shown: PROTECTED");
+    expect(await pdfText({ ...a, ismBaseline: undefined })).not.toContain("Touches the ISM PROTECTED baseline");
+  }, 120_000);
 });
 
 describe("AI register dates and bases", () => {

@@ -351,6 +351,15 @@ export const FEEDS: FeedDef[] = [
     max: 5,
   },
   {
+    // A new ISM release: regenerate content/frameworks/ism.yaml (docs/content-guide.md).
+    id: "ism-oscal-releases",
+    name: "ISM OSCAL releases",
+    url: "https://github.com/AustralianCyberSecurityCentre/ism-oscal/releases.atom",
+    kind: "posts",
+    include: [/^v\d{4}\.\d{2}/],
+    max: 3,
+  },
+  {
     id: "cis-blog",
     name: "CIS blog",
     url: "https://www.cisecurity.org/feed/blog",

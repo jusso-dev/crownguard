@@ -23,9 +23,11 @@ export interface JourneyOptions {
   dsl?: string;
   /** Include the optional AI register: load the example entries and add one real use case. */
   ai?: boolean;
+  /** Pick an ISM baseline on the review step, so the report annotates findings against it. */
+  ismBaseline?: "NON_CLASSIFIED" | "OFFICIAL_SENSITIVE" | "PROTECTED";
 }
 
-export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false }: JourneyOptions = {}): Promise<string[]> {
+export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false, ismBaseline }: JourneyOptions = {}): Promise<string[]> {
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill(ORG);
@@ -81,6 +83,10 @@ export async function runJourney(page: Page, platformName: string, { jewelCount 
   await expect(page.getByRole("heading", { name: "Risk heatmap" })).toBeVisible();
   if (soc) await expect(page.getByRole("heading", { name: "SOC maturity (indicative)" })).toBeVisible();
   if (ai) await expect(page.getByTestId("ai-card")).toContainText("4 use cases");
+  if (ismBaseline) {
+    await page.getByLabel("Show ISM baseline").selectOption(ismBaseline);
+    await expect(page.getByTestId("ism-baseline")).toContainText("findings touch controls");
+  }
   await next(page);
 
   await page.getByTestId("logo-input").setInputFiles("e2e/fixtures/logo.svg");

@@ -47,6 +47,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | `answers` | object | Question id to `yes` / `partial` / `no` / `unknown` / `na`. |
 | `notes` | object | Question id to note. At most 4000 characters each. |
 | `orphans` | object | Answers and notes whose question is no longer asked. `{ answer?, note? }` per question id. |
+| `ismBaseline` | string | Optional ISM baseline shown in the report: `NON_CLASSIFIED`, `OFFICIAL_SENSITIVE` or `PROTECTED`. Annotates which findings touch controls in that baseline and adds a summary count; never changes a score. |
 | `branding` | object | `logoDataUrl?`, `logoBackdrop?`, `primary`, `accent`, `marking`, `preparedBy`, `preparedFor`. |
 | `evidence` | object | Scan evidence per question id, from an optional automated import. Carries the scanner (`tool`, `toolVersion`), the `account` it covered, and per check a `count` ("3 of 41 resources failing") and up to ten `examples`. |
 | `imports` | object[] | One row per scan import: source, `toolVersion?`, tenant, scanned at, imported at, answers applied. |
@@ -73,6 +74,10 @@ Anything else in the file is allowed and is carried through unchanged.
 - `foundBy` on an entry, set when the consent import (shadow AI discovery) created it. Optional, so no version move:
   it's recorded, never an answer, and only the entry's own fields are saved — the import's user names and email
   addresses are counted and dropped before anything reaches the file.
+- `ismBaseline` records the optional ISM baseline shown in the report (`NON_CLASSIFIED`, `OFFICIAL_SENSITIVE` or
+  `PROTECTED`). Optional and presentational — it annotates which findings touch the baseline's controls and adds a
+  summary count, never changing a score — so no version move, and a build that has never heard of it carries it
+  through a re-save untouched.
 
 ### 3
 

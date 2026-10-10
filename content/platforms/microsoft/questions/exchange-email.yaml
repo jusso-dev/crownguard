@@ -52,6 +52,7 @@
     - { framework: cis-m365, ref: "6.5.4" }
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: mcsb, ref: NS-8 }
+    - { framework: ism, ref: ISM-1919 }
   e8:
     - { strategy: mfa, level: 1 }
 
@@ -80,6 +81,9 @@
     - { framework: cis-m365, ref: "2.1.9" }
     - { framework: cis-m365, ref: "2.1.10" }
     - { framework: nist-csf-2, ref: PR.DS-02 }
+    - { framework: ism, ref: ISM-0574 }
+    - { framework: ism, ref: ISM-0861 }
+    - { framework: ism, ref: ISM-1540 }
 
 - id: MS-EXO-004
   module: core
@@ -111,3 +115,4 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: mcsb, ref: ES-2 }
     - { framework: ms-zero-trust, ref: M365 swim lane 2 }
+    - { framework: ism, ref: ISM-1234 }

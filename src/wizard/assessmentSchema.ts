@@ -114,6 +114,8 @@ export const assessmentSchema = z.looseObject({
   answers: z.record(z.string(), answer),
   notes: z.record(z.string(), note),
   orphans: orphans.optional(),
+  // Optional ISM baseline shown in the report. Annotates findings and adds a summary count; never changes a score.
+  ismBaseline: z.enum(["NON_CLASSIFIED", "OFFICIAL_SENSITIVE", "PROTECTED"]).optional(),
   branding: z.object({
     logoDataUrl: z
       .string()

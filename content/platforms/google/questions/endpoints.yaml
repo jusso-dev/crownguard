@@ -24,6 +24,10 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: google-security-guidance, ref: "Checklist: Endpoints" }
+    - { framework: ism, ref: ISM-1195 }
+    - { framework: ism, ref: ISM-0869 }
+    - { framework: ism, ref: ISM-1887 }
+    - { framework: ism, ref: ISM-1888 }
     - { framework: idcf, ref: "DSL-2 Physical" }
     - { framework: idcf, ref: "DSL-3 Physical" }
     - { framework: idcf, ref: "Whole system" }
@@ -59,6 +63,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-1585 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -84,6 +89,7 @@
   sources: [chrome-extensions]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-1592 }
 
 - id: GO-END-004
   module: core
@@ -110,6 +116,8 @@
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-1691 }
+    - { framework: ism, ref: ISM-1695 }
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
@@ -149,6 +157,9 @@
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: nist-csf-2, ref: ID.AM-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: ism, ref: ISM-1699 }
+    - { framework: ism, ref: ISM-1702 }
+    - { framework: ism, ref: ISM-1807 }
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
@@ -186,6 +197,8 @@
   sources: [gws-windows-updates, gws-computer-details, gws-computers-overview, gws-gwsmo-updates, ms-m365-apps-channels, ms-eos-2025, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1691 }
+    - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 1 }
 
@@ -221,6 +234,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1501 }
+    - { framework: ism, ref: ISM-1695 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
 
@@ -252,6 +267,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
+    - { framework: ism, ref: ISM-1693 }
+    - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
 
@@ -286,6 +303,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-1692 }
   e8:
     - { strategy: patch-applications, level: 3 }
 
@@ -320,6 +338,7 @@
   sources: [chromeos-updates, chromeos-lts, chrome-relaunch-notification, gws-windows-updates, asd-patching, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1696 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -350,6 +369,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -380,6 +400,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+    - { framework: ism, ref: ISM-0304 }
   e8:
     - { strategy: patch-applications, level: 3 }
 
@@ -411,6 +432,10 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
     - { framework: nist-csf-2, ref: PR.PS-03 }
+    - { framework: ism, ref: ISM-1703 }
+    - { framework: ism, ref: ISM-1879 }
+    - { framework: ism, ref: ISM-1900 }
+    - { framework: ism, ref: ISM-1903 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
 
@@ -447,6 +472,9 @@
   sources: [gws-windows-block-apps, gws-computers-overview, ms-appcontrol-applocker-overview, asd-implementing-application-control, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-0843 }
+    - { framework: ism, ref: ISM-1657 }
+    - { framework: ism, ref: ISM-1870 }
   e8:
     - { strategy: application-control, level: 1 }
 
@@ -479,6 +507,8 @@
   sources: [chrome-allow-block-apps, chromeos-device-policies, chrome-user-browser-policies, chromeos-android-apps, chromeos-enroll-devices, chromeos-auto-update-policy, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-1592 }
+    - { framework: ism, ref: ISM-1657 }
   e8:
     - { strategy: application-control, level: 1 }
 
@@ -510,6 +540,9 @@
   sources: [gws-windows-block-apps, ms-app-control-block-rules, asd-implementing-application-control, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-1544 }
+    - { framework: ism, ref: ISM-1582 }
+    - { framework: ism, ref: ISM-1871 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -539,6 +572,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: ism, ref: ISM-1660 }
   e8:
     - { strategy: application-control, level: 2 }
 
@@ -571,6 +605,8 @@
   sources: [ms-app-control-driver-block-rules, ms-appcontrol-applocker-overview, gws-windows-block-apps, chromeos-auto-update-policy, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-1658 }
+    - { framework: ism, ref: ISM-1659 }
   e8:
     - { strategy: application-control, level: 3 }
 
@@ -602,6 +638,10 @@
   sources: [gws-office-files, gws-security-sandbox, ms-macros-internet, ms-cloud-policy, asd-restricting-office-macros, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1488 }
+    - { framework: ism, ref: ISM-1489 }
+    - { framework: ism, ref: ISM-1671 }
+    - { framework: ism, ref: ISM-1672 }
   e8:
     - { strategy: office-macros, level: 1 }
 
@@ -630,6 +670,7 @@
   sources: [gws-windows-common-custom-settings, ms-asr-rules, asd-restricting-office-macros, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1673 }
   e8:
     - { strategy: office-macros, level: 2 }
 
@@ -668,6 +709,11 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: ism, ref: ISM-1487 }
+    - { framework: ism, ref: ISM-1674 }
+    - { framework: ism, ref: ISM-1675 }
+    - { framework: ism, ref: ISM-1890 }
+    - { framework: ism, ref: ISM-1891 }
   e8:
     - { strategy: office-macros, level: 3 }
 
@@ -698,6 +744,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-1485 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -729,6 +776,8 @@
   sources: [gws-windows-custom-settings, chrome-npapi-removal, ms-edge-disable-ie11, asd-e8-assessment-guide, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-02 }
+    - { framework: ism, ref: ISM-1486 }
+    - { framework: ism, ref: ISM-1654 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
 
@@ -762,6 +811,10 @@
   sources: [gws-windows-common-custom-settings, ms-asr-rules, asd-e8-assessment-guide, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1667 }
+    - { framework: ism, ref: ISM-1668 }
+    - { framework: ism, ref: ISM-1669 }
+    - { framework: ism, ref: ISM-1670 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -795,6 +848,7 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: google-security-guidance, ref: "Checklist: Chrome" }
+    - { framework: ism, ref: ISM-1412 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -829,6 +883,11 @@
   sources: [chrome-user-browser-policies, gws-office-files, ms-intune-security-baselines, asd-office-hardening, asd-e8-assessment-guide, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1542 }
+    - { framework: ism, ref: ISM-1823 }
+    - { framework: ism, ref: ISM-1824 }
+    - { framework: ism, ref: ISM-1859 }
+    - { framework: ism, ref: ISM-1860 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -862,6 +921,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
+    - { framework: ism, ref: ISM-1623 }
+    - { framework: ism, ref: ISM-1889 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
 
@@ -892,5 +953,8 @@
   sources: [gws-windows-block-apps, ms-powershell-language-modes, ms-ps2-removal, ms-dotnet35, asd-e8-maturity-model]
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: ism, ref: ISM-1621 }
+    - { framework: ism, ref: ISM-1622 }
+    - { framework: ism, ref: ISM-1655 }
   e8:
     - { strategy: user-application-hardening, level: 3 }
