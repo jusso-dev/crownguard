@@ -136,7 +136,7 @@ test("the register's dates are recorded, the DTA share clock is worked out, and 
   await page.getByRole("button", { name: "Save file" }).click();
   const file = await (await dl).path();
   page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Clear data" }).click();
+  await page.getByRole("button", { name: "Remove from this browser" }).click();
   await page.getByTestId("import-input").setInputFiles(file);
   await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /AI register/ }).click();
 

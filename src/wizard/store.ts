@@ -257,7 +257,8 @@ export const useStore = create<State>()(
     },
     {
       name: STORAGE_KEY,
-      version: 3,
+      // v4: storage may wrap the JSON in an encryption envelope; state shape is unchanged.
+      version: 4,
       storage: checkedStorage,
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
@@ -267,6 +268,7 @@ export const useStore = create<State>()(
         if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step, mode) };
         // migrateProgress reads the saved layout, so running it again on newer saves is harmless.
         if (version < 3 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress, mode);
+        // v3 → v4: plain JSON passes through untouched (encryption is a storage-layer concern).
         return { assessment: p.assessment } as State;
       },
     },

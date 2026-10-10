@@ -47,6 +47,9 @@ test("the deep link doesn't override a resumed assessment without asking", async
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Kept Safe Pty Ltd");
   await expect(page.getByRole("status").filter({ hasText: "Saved in this browser" })).toBeVisible();
+  await expect
+    .poll(async () => page.evaluate(() => localStorage.getItem("crownguard:v1") ?? ""))
+    .toContain("Kept Safe Pty Ltd");
 
   // Following the link is a fresh page load, as it would be from an email or the website.
   const link = await context.newPage();

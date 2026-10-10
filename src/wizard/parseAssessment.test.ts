@@ -167,34 +167,34 @@ describe("the saved file format", () => {
 });
 
 describe("progress saved in this browser", () => {
-  it("validates it like an opened file, and keeps the answers it doesn't recognise", () => {
+  it("validates it like an opened file, and keeps the answers it doesn't recognise", async () => {
     const a: Assessment = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stored Co" }, answers: { "MS-ID-001": "no", GONE: "yes" } };
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: a }, version: 2 });
-    const stored = checkedStorage.getItem(STORAGE_KEY);
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: a }, version: 2 });
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
     expect(stored?.state.assessment).toMatchObject({ org: { name: "Stored Co" } });
     expect(stored?.state.assessment?.answers).toEqual({ "MS-ID-001": "no" });
     expect(stored?.state.assessment?.orphans).toEqual({ GONE: { answer: "yes" } });
   });
 
-  it("starts clean when the stored progress can't be read, and keeps it for download", () => {
+  it("starts clean when the stored progress can't be read, and keeps it for download", async () => {
     const unreadable = { org: "nonsense" } as unknown as Assessment;
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: unreadable }, version: 2 });
-    expect(checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: unreadable }, version: 2 });
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toContain("nonsense");
   });
 
-  it("does the same for progress that isn't even valid JSON", () => {
+  it("does the same for progress that isn't even valid JSON", async () => {
     writeProgress(STORAGE_KEY, "{not json");
-    expect(checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toBe("{not json");
   });
 
-  it("writes nothing while a newer file is open read-only", () => {
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: emptyAssessment() }, version: 2 });
+  it("writes nothing while a newer file is open read-only", async () => {
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: emptyAssessment() }, version: 2 });
     setStorageReadOnly(true);
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: { ...emptyAssessment(), updatedAt: "later" } }, version: 2 });
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: { ...emptyAssessment(), updatedAt: "later" } }, version: 2 });
     checkedStorage.removeItem(STORAGE_KEY);
     setStorageReadOnly(false);
-    expect(checkedStorage.getItem(STORAGE_KEY)?.state.assessment?.updatedAt).not.toBe("later");
+    expect((await checkedStorage.getItem(STORAGE_KEY))?.state.assessment?.updatedAt).not.toBe("later");
   });
 });

@@ -4,11 +4,22 @@ import { questionIdSet } from "./content/questionIds";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Assessment, Mode } from "./engine/types";
 import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
+import { decrypt, isEncryptedEnvelope } from "./wizard/crypto";
 import { parseAssessment } from "./wizard/parseAssessment";
-import { rehydrateNotices } from "./wizard/persistence";
-import { toSaveFile } from "./wizard/saveFile";
+import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY } from "./wizard/persistence";
+import {
+  EphemeralToggle,
+  LegacyOriginBanner,
+  PassphraseFields,
+  UnlockCard,
+  getSessionPassphrase,
+  hasSessionPassphrase,
+} from "./wizard/PrivacyControls";
+import { toEncryptedSaveFile, toSaveFile } from "./wizard/saveFile";
+import { setSessionPassphrase } from "./wizard/sessionSecrets";
 import { clampStep, hasProgress, modeOf, stepsFor, storageAvailable, useStep, useStore } from "./wizard/store";
-import { Button, Card } from "./wizard/ui";
+import { Button, Card, Field, inputClass } from "./wizard/ui";
+import { forgetLockedProgress } from "./wizard/unlock";
 import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
@@ -20,6 +31,7 @@ import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
+import { hasLockedEnvelope } from "./wizard/sessionSecrets";
 
 // One view per entry in each step list (wizard/store.ts), in the same order.
 const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
@@ -83,7 +95,15 @@ function useNow(ms = 30_000) {
   return now;
 }
 
-function SaveStatus({ persisted, fileSave }: { persisted: boolean; fileSave?: { file: string; at: string; downloaded: boolean } }) {
+function SaveStatus({
+  persisted,
+  ephemeral,
+  fileSave,
+}: {
+  persisted: boolean;
+  ephemeral: boolean;
+  fileSave?: { file: string; at: string; downloaded: boolean };
+}) {
   const updatedAt = useStore((s) => s.assessment.updatedAt);
   const now = useNow(fileSave ? 5_000 : 30_000);
   // A file save in the last minute takes over the status line; no toast, nothing moves.
@@ -94,23 +114,36 @@ function SaveStatus({ persisted, fileSave }: { persisted: boolean; fileSave?: { 
         {fileSave.downloaded ? `Downloaded ${fileSave.file}` : `Saved to ${fileSave.file}`} · {relativeTime(fileSave.at, now)}
       </span>
     );
-  if (!persisted)
+  if (ephemeral || !persisted)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
-        This browser won't keep your progress. Use <strong>Save file</strong> before you leave.
+        Not kept in this browser. Use <strong>Save file</strong> before you leave.
       </span>
     );
   return (
     <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted" title="Progress saves automatically in this browser as you go">
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ok" />
       Saved in this browser · {relativeTime(updatedAt, now)}
+      {hasSessionPassphrase() ? " · encrypted" : ""}
     </span>
   );
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue: () => void; onSave: () => void; onNew: () => void; onStartRegister?: () => void }) {
+function ResumeCard({
+  onContinue,
+  onSave,
+  onNew,
+  onStartRegister,
+  onPrivacyChange,
+}: {
+  onContinue: () => void;
+  onSave: () => void;
+  onNew: () => void;
+  onStartRegister?: () => void;
+  onPrivacyChange?: () => void;
+}) {
   const a = useStore((s) => s.assessment);
   const now = useNow();
   const questions = activeQuestions(catalogue, a);
@@ -157,15 +190,20 @@ function ResumeCard({ onContinue, onSave, onNew, onStartRegister }: { onContinue
           </Button>
         </div>
       )}
+      <div className="space-y-4 border-t border-rule bg-paper px-7 py-4">
+        <PassphraseFields idPrefix="resume" onApplied={() => onPrivacyChange?.()} />
+        <EphemeralToggle onChange={() => onPrivacyChange?.()} />
+      </div>
       <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
-        Progress is kept in this browser only. To continue on another computer, or to keep a copy, use <strong className="font-medium text-ink-2">Save file</strong> and open it later.
+        Progress is kept in this browser only (unless you turn that off above). To continue on another computer, or to keep a
+        copy, use <strong className="font-medium text-ink-2">Save file</strong> and open it later.
       </p>
     </div>
   );
 }
 
 /** The first-run choice: the full crown-jewel assessment, or the standalone AI use-case register. */
-function StartCard({ onPick }: { onPick: (mode: Mode) => void }) {
+function StartCard({ onPick, onPrivacyChange }: { onPick: (mode: Mode) => void; onPrivacyChange?: () => void }) {
   return (
     <div className="mx-auto mt-4 max-w-2xl">
       <div className="overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
@@ -194,12 +232,72 @@ function StartCard({ onPick }: { onPick: (mode: Mode) => void }) {
             <Button className="mt-4 self-start" onClick={() => onPick("ai-register")}>AI use-case register only</Button>
           </Card>
         </div>
+        <div className="space-y-4 border-t border-rule bg-paper px-7 py-4">
+          <PassphraseFields idPrefix="start" onApplied={() => onPrivacyChange?.()} />
+          <EphemeralToggle onChange={() => onPrivacyChange?.()} />
+        </div>
         <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
           Not sure? Start with the AI use-case register — it&apos;s the shorter flow, and it can become a full
           crown-jewel assessment later.
         </p>
       </div>
     </div>
+  );
+}
+
+/** Prompt for a passphrase when opening an encrypted saved file. */
+function FileUnlockForm({
+  onUnlock,
+  onCancel,
+}: {
+  onUnlock: (passphrase: string) => Promise<string | null>;
+  onCancel: () => void;
+}) {
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="mx-auto flex max-w-6xl flex-wrap items-end gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        void onUnlock(pass).then((err) => {
+          setBusy(false);
+          if (err) {
+            setError(err);
+            setPass("");
+          }
+        });
+      }}
+    >
+      <div className="min-w-[16rem] flex-1">
+        <Field label="Passphrase for this file" hint="There is no recovery if you have forgotten it.">
+          <input
+            id="file-unlock-pass"
+            type="password"
+            autoComplete="current-password"
+            className={inputClass}
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            autoFocus
+            required
+          />
+        </Field>
+        {error && (
+          <p role="alert" className="mt-1.5 text-sm text-danger">
+            {error}
+          </p>
+        )}
+      </div>
+      <Button type="submit" loading={busy}>
+        Unlock file
+      </Button>
+      <Button variant="ghost" type="button" onClick={onCancel}>
+        Cancel
+      </Button>
+    </form>
   );
 }
 
@@ -226,21 +324,45 @@ export function App() {
   const mode = modeOf(assessment);
   const steps = stepsFor(mode);
   const fileInput = useRef<HTMLInputElement>(null);
-  const [notice, setNotice] = useState<Notice | undefined>(noticeFromRehydrate);
+  const [notice, setNotice] = useState<Notice | undefined>(undefined);
   const [persisted] = useState(storageAvailable);
-  const [screen, setScreen] = useState<"start" | "resume" | "wizard">(() => (hasProgress(useStore.getState().assessment) ? "resume" : linkedAiRegister ? "wizard" : "start"));
+  const [ephemeral, setEphemeral] = useState(isEphemeralMode);
+  const [hydrated, setHydrated] = useState(() => useStore.persist.hasHydrated());
+  const [locked, setLocked] = useState(false);
+  const [pendingEncrypted, setPendingEncrypted] = useState<unknown>(null);
+  const [screen, setScreen] = useState<"start" | "resume" | "wizard">("start");
   const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
   const [saver] = useState(createFileSaver);
+  const fileSavedThisSession = useRef(false);
   const readOnly = useStore((s) => s.readOnly);
   const View = viewsFor(mode)[step] ?? OrgStep;
 
-  // The deep link starts the standalone register on a fresh visit. With a saved assessment it only asks (see ResumeCard).
+  // Deep link: start the standalone register only when hydration finds no progress (ResumeCard asks otherwise).
   const linked = useRef(false);
   useEffect(() => {
-    if (!linkedAiRegister || linked.current) return;
-    linked.current = true;
-    if (screen !== "resume") startAssessment("ai-register");
-  }, [screen]);
+    const finish = () => {
+      setHydrated(true);
+      setNotice(noticeFromRehydrate());
+      setLocked(hasLockedEnvelope());
+      setEphemeral(isEphemeralMode());
+      const a = useStore.getState().assessment;
+      if (hasLockedEnvelope()) {
+        setScreen("start");
+      } else if (hasProgress(a)) {
+        setScreen("resume");
+      } else if (linkedAiRegister) {
+        if (!linked.current) {
+          linked.current = true;
+          startAssessment("ai-register");
+        }
+        setScreen("wizard");
+      } else {
+        setScreen("start");
+      }
+    };
+    if (useStore.persist.hasHydrated()) finish();
+    return useStore.persist.onFinishHydration(finish);
+  }, []);
 
   /** Save to a file without leaving the current step, question or scroll position. */
   const saveFile = useCallback(async () => {
@@ -252,8 +374,12 @@ export function App() {
       });
       return;
     }
-    const result = await saver.save(saveFileName(a), toSaveFile(a, { contentHash }));
+    let contents = toSaveFile(a, { contentHash });
+    const pass = getSessionPassphrase();
+    if (pass) contents = await toEncryptedSaveFile(contents, pass);
+    const result = await saver.save(saveFileName(a), contents);
     if (result.kind === "cancelled") return;
+    fileSavedThisSession.current = true;
     setFileSave({ file: result.file, at: new Date().toISOString(), downloaded: result.kind === "downloaded" });
   }, [saver]);
 
@@ -273,6 +399,20 @@ export function App() {
     window.addEventListener(OPEN_FILE_EVENT, open);
     return () => window.removeEventListener(OPEN_FILE_EVENT, open);
   }, []);
+
+  // Warn before unload only when in-memory work would be lost (ephemeral mode, unsaved).
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isEphemeralMode()) return;
+      if (!hasProgress(useStore.getState().assessment)) return;
+      if (fileSavedThisSession.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
   const go = (i: number) => {
     setStep(i);
     window.scrollTo({ top: 0 });
@@ -291,16 +431,22 @@ export function App() {
     });
   }
 
-  async function onOpen(file: File) {
-    setNotice(undefined);
-    let raw: unknown;
-    try {
-      raw = JSON.parse(await file.text());
-    } catch {
-      setNotice({ kind: "error", text: "Couldn't open that file: it isn't valid JSON." });
-      return;
-    }
+  function acceptParsed(parsed: Extract<ReturnType<typeof parseAssessment>, { kind: "ok" }>) {
+    load(parsed.assessment);
+    if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
+    saver.reset();
+    setFileSave(undefined);
+    setScreen("wizard");
+    const opened = useStore.getState().assessment;
+    const stepName = stepsFor(modeOf(opened))[clampStep(opened.progress?.step, modeOf(opened))];
+    setNotice({
+      kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
+      text: `Opened ${parsed.assessment.org.name || "assessment"}. Picking up at ${stepName}.`,
+      details: parsed.notices.map((n) => n.text),
+    });
+  }
 
+  function openAssessmentJson(raw: unknown) {
     const parsed = parseAssessment(raw, { questionIds: questionIdSet() });
     if (parsed.kind === "error") {
       setNotice({ kind: "error", text: `Couldn't open that file: ${parsed.message}`, details: parsed.issues });
@@ -321,24 +467,57 @@ export function App() {
       return;
     }
 
-    load(parsed.assessment);
-    if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
-    saver.reset();
-    setFileSave(undefined);
-    setScreen("wizard");
-    const opened = useStore.getState().assessment;
-    const stepName = stepsFor(modeOf(opened))[clampStep(opened.progress?.step, modeOf(opened))];
-    setNotice({
-      kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
-      // Read the step back from the store: load() moves positions saved under an older step list.
-      text: `Opened ${parsed.assessment.org.name || "assessment"}. Picking up at ${stepName}.`,
-      details: parsed.notices.map((n) => n.text),
-    });
+    acceptParsed(parsed);
+  }
+
+  async function onOpen(file: File) {
+    setNotice(undefined);
+    setPendingEncrypted(null);
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await file.text());
+    } catch {
+      setNotice({ kind: "error", text: "Couldn't open that file: it isn't valid JSON." });
+      return;
+    }
+
+    if (isEncryptedEnvelope(raw)) {
+      setPendingEncrypted(raw);
+      setNotice({
+        kind: "warn",
+        text: "This file is protected with a passphrase. Enter it below to open the assessment. A wrong passphrase will not load anything.",
+      });
+      return;
+    }
+
+    openAssessmentJson(raw);
+  }
+
+  async function unlockPendingFile(passphrase: string): Promise<string | null> {
+    if (!pendingEncrypted) return "No encrypted file waiting.";
+    try {
+      const plain = await decrypt(pendingEncrypted, passphrase);
+      let raw: unknown;
+      try {
+        raw = JSON.parse(plain);
+      } catch {
+        return "Encrypted file could not be read after decrypting.";
+      }
+      // Keep the passphrase for this visit so a re-save stays protected if the user wants.
+      setSessionPassphrase(passphrase);
+      setPendingEncrypted(null);
+      openAssessmentJson(raw);
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : "Wrong passphrase, or the encrypted data is damaged.";
+    }
   }
 
   function startNew() {
-    if (!hasProgress(assessment) || confirm("Start a new assessment? The current one will be removed from this browser. Choose Cancel, then Save file, if you want to keep it.")) {
+    if (!hasProgress(assessment) || window.confirm("Start a new assessment? The current one will be removed from this browser. Choose Cancel, then Save file, if you want to keep it.")) {
       reset();
+      dropProgress(STORAGE_KEY);
+      setSessionPassphrase(null);
       saver.reset();
       setFileSave(undefined);
       setScreen("start");
@@ -348,7 +527,7 @@ export function App() {
 
   /** The deep link on a resumed assessment: start the standalone register only after the user confirms it. */
   function startLinkedRegister() {
-    if (confirm("Start a fresh AI use-case register? The assessment saved in this browser will be removed. Choose Cancel, then Save file, if you want to keep it.")) {
+    if (window.confirm("Start a fresh AI use-case register? The assessment saved in this browser will be removed. Choose Cancel, then Save file, if you want to keep it.")) {
       startAssessment("ai-register");
       saver.reset();
       setFileSave(undefined);
@@ -358,24 +537,56 @@ export function App() {
   }
 
   function onClear() {
-    if (confirm("Delete this assessment from this browser? Use Save file first if you want to keep it.")) {
+    if (window.confirm("Remove this assessment from this browser? Use Save file first if you want to keep it.")) {
       reset();
+      dropProgress(STORAGE_KEY);
+      setSessionPassphrase(null);
       saver.reset();
       setFileSave(undefined);
       setScreen("start");
       setNotice(undefined);
+      setLocked(false);
     }
+  }
+
+  if (!hydrated) {
+    return <div className="min-h-screen" aria-busy="true" />;
+  }
+
+  if (locked) {
+    return (
+      <div className="min-h-screen">
+        <LegacyOriginBanner />
+        <div className="px-4 py-10 sm:px-6">
+          <UnlockCard
+            onUnlocked={() => {
+              setLocked(false);
+              setEphemeral(isEphemeralMode());
+              setScreen("resume");
+              setNotice(undefined);
+            }}
+            onForget={() => {
+              forgetLockedProgress();
+              setLocked(false);
+              setScreen("start");
+              setNotice(undefined);
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen">
+      <LegacyOriginBanner />
       <header className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
             <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="h-7 w-7 shrink-0" />
             <div className="min-w-0">
               <div className="font-display text-[0.9375rem] font-semibold leading-tight tracking-[-0.01em] text-ink">crownguard</div>
-              <SaveStatus persisted={persisted} fileSave={fileSave} />
+              <SaveStatus persisted={persisted} ephemeral={ephemeral} fileSave={fileSave} />
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -403,7 +614,7 @@ export function App() {
               }}
             />
             <Button variant="danger" disabled={readOnly} onClick={onClear}>
-              Clear data
+              Remove from this browser
             </Button>
           </div>
         </div>
@@ -430,6 +641,17 @@ export function App() {
                 </div>
               )}
             </div>
+            {pendingEncrypted !== null && (
+              <div className="mt-3 border-t border-warn/20 pt-3">
+                <FileUnlockForm
+                  onUnlock={unlockPendingFile}
+                  onCancel={() => {
+                    setPendingEncrypted(null);
+                    setNotice(undefined);
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -440,14 +662,17 @@ export function App() {
             onContinue={() => setScreen("wizard")}
             onSave={() => void saveFile()}
             onNew={startNew}
+            onPrivacyChange={() => setEphemeral(isEphemeralMode())}
             {...(linkedAiRegister ? { onStartRegister: startLinkedRegister } : {})}
           />
         </div>
       ) : screen === "start" ? (
         <div className="px-4 py-10 sm:px-6">
           <StartCard
+            onPrivacyChange={() => setEphemeral(isEphemeralMode())}
             onPick={(m) => {
               startAssessment(m);
+              setEphemeral(isEphemeralMode());
               setScreen("wizard");
             }}
           />

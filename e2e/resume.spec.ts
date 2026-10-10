@@ -74,7 +74,7 @@ test("a saved file reopens at the same place, even after clearing the browser", 
   const file = await download.path();
 
   page.once("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Clear data" }).click();
+  await page.getByRole("button", { name: "Remove from this browser" }).click();
   await expect(page.getByRole("heading", { name: "What would you like to do?" })).toBeVisible();
 
   await page.getByTestId("import-input").setInputFiles(file);
