@@ -1,0 +1,7 @@
+EXAMPLE DATA - synthetic export made for crownguard's tests; not a real tenant or real users
+Application name,Application ID,Scope,Event,User,By an agent,Agent info
+Fathom Meeting Assistant,0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01,calendar.readonly meetings.readonly,Grant access,ana.ivanovic@contoso.example,Yes,Meeting note-taker agent
+Fathom Meeting Assistant,0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01,calendar.readonly meetings.readonly,Grant access,bo.chen@contoso.example,Yes,Meeting note-taker agent
+Contoso Backup Tool,1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c02,gmail.readonly drive.readonly,Grant access,ana.ivanovic@contoso.example,No,
+Contoso Backup Tool,1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c02,gmail.readonly drive.readonly,Grant access,chi.nguyen@contoso.example,No,
+Weather Add-in,2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d03,openid userinfo.email,Grant access,bo.chen@contoso.example,No,

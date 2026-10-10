@@ -33,6 +33,7 @@ import { assessAll } from "../../engine/risk";
 import { answerLabels, type AiUseCase, type Answer } from "../../engine/types";
 import { NOTE_MAX } from "../assessmentSchema";
 import { download, slug } from "../download";
+import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore } from "../store";
 import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
 import { buildXlsx } from "../xlsx";
@@ -57,6 +58,8 @@ export function AiRegisterStep() {
   const active = useStore((s) => s.assessment.progress?.aiSection);
   const setActive = useStore((s) => s.setAiSection);
   const [gapBasis, setGapBasis] = useState<GapFilter>("all");
+  // The Found apps panel remounts when the register is started, so its parsed file and messages live here.
+  const [found, setFound] = useState<FoundAppsState>({});
   const heading = useRef<HTMLHeadingElement>(null);
   const module = catalogue.aiRegister;
 
@@ -99,6 +102,7 @@ export function AiRegisterStep() {
           </div>
           <p className="mt-2 text-xs text-muted">Example entries are labelled as examples everywhere they appear, and you can remove them in one step.</p>
         </Card>
+        <FoundApps state={found} setState={setFound} />
         <KeyDates />
         <Footer />
       </>
@@ -121,6 +125,7 @@ export function AiRegisterStep() {
         <Tile label="Register fields missing" value={String(summary.missingFields)} hint="across all use cases" />
       </div>
       <KeyDates />
+      <FoundApps state={found} setState={setFound} />
 
       <nav className="mt-8 flex flex-wrap gap-x-1 border-b border-rule" aria-label="AI use cases">
         {entries.map((r) => {
@@ -442,6 +447,11 @@ function Entry({
       <div className="flex flex-wrap items-center gap-2.5">
         {e.example && <ExampleBadge />}
         <span className="mono-label text-muted">{r.kind?.name ?? "AI use case"}</span>
+        {e.foundBy && (
+          <span className="mono-label rounded-[4px] bg-sunken px-1.5 py-0.5 text-ink-2" data-testid="ai-found-by">
+            Found by import · {e.foundBy}
+          </span>
+        )}
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="mt-1.5 text-[1.375rem] font-semibold leading-tight outline-none">
         {e.name || "Unnamed use case"}

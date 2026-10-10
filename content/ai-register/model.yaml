@@ -105,7 +105,7 @@ kinds:
     description: An AI note-taker, assistant or plug-in that connects to mail, files, calendars or meetings through OAuth or an app registration.
     defaults: { technology: [generative-ai], usagePatterns: [workplace-productivity], domains: [corporate] }
     exposures: [third-party-apps]
-    relatedQuestions: [MS-APP-001, MS-APP-002, MS-APP-004, GO-APP-001, GO-APP-002, GO-APP-003, GO-AI-003]
+    relatedQuestions: [MS-APP-001, MS-APP-002, MS-APP-004, MS-APP-005, MS-APP-006, MS-APP-007, GO-APP-001, GO-APP-002, GO-APP-003, GO-APP-004, GO-APP-005, GO-AI-003]
     sources: [asd-agentic-ai]
   - id: in-house-agent
     name: In-house AI agent

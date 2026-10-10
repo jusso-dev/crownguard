@@ -3,8 +3,12 @@ import { z } from "zod";
 import {
   aiQuestionSchema,
   aiRegisterModelSchema,
+  knownAiAppsFileSchema,
+  oauthScopesFileSchema,
   type AiQuestion,
   type AiRegisterModel,
+  type KnownAiApp,
+  type OAuthScope,
   socModelSchema,
   socQuestionSchema,
   assetFileSchema,
@@ -121,9 +125,13 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     const questions = entries
       .filter(([p]) => p.startsWith("content/ai-register/questions"))
       .flatMap(([p, t]) => parseFile(p, t, z.array(aiQuestionSchema), errors) ?? []);
+    const knownAppsText = entries.find(([p]) => p === "content/ai-register/known-ai-apps.yaml")?.[1];
+    const scopesText = entries.find(([p]) => p === "content/ai-register/oauth-scopes.yaml")?.[1];
+    const knownApps = knownAppsText ? (parseFile("content/ai-register/known-ai-apps.yaml", knownAppsText, knownAiAppsFileSchema, errors)?.entries ?? []) : [];
+    const scopes = scopesText ? (parseFile("content/ai-register/oauth-scopes.yaml", scopesText, oauthScopesFileSchema, errors)?.scopes ?? []) : [];
     if (model) {
-      catalogue.aiRegister = { model, questions };
-      errors.push(...checkAiRegister(model, questions, catalogue));
+      catalogue.aiRegister = { model, questions, knownApps, scopes };
+      errors.push(...checkAiRegister(model, questions, knownApps, scopes, catalogue));
     }
   }
 
@@ -131,18 +139,51 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
   return { catalogue, errors };
 }
 
-/** Every source the AI register's model and questions cite. */
-export const aiRegisterSources = ({ model, questions }: NonNullable<Catalogue["aiRegister"]>) => [
+/** Every source the AI register's model, questions, curated AI app list and scope table cite. */
+export const aiRegisterSources = ({ model, questions, knownApps, scopes }: NonNullable<Catalogue["aiRegister"]>) => [
   ...model.sources,
   ...model.dates.map((d) => d.source),
   ...model.caveats.flatMap((c) => c.sources),
   ...model.kinds.flatMap((k) => k.sources),
   ...questions.flatMap((q) => q.sources),
+  ...knownApps.map((a) => a.source),
+  ...scopes.map((s) => s.source),
 ];
 
-function checkAiRegister(model: AiRegisterModel, questions: AiQuestion[], catalogue: Catalogue): string[] {
+function checkAiRegister(
+  model: AiRegisterModel,
+  questions: AiQuestion[],
+  knownApps: KnownAiApp[],
+  scopes: OAuthScope[],
+  catalogue: Catalogue,
+): string[] {
   const errors: string[] = [];
-  for (const s of new Set(aiRegisterSources({ model, questions }))) if (!catalogue.sources.has(s)) errors.push(`ai-register: unknown source ${s}`);
+  for (const s of new Set(aiRegisterSources({ model, questions, knownApps, scopes }))) if (!catalogue.sources.has(s)) errors.push(`ai-register: unknown source ${s}`);
+  const appIds = new Set<string>();
+  const clientIds = new Set<string>();
+  for (const a of knownApps) {
+    const where = `ai-register: known app ${a.id}`;
+    if (appIds.has(a.id)) errors.push(`${where}: duplicate app id`);
+    appIds.add(a.id);
+    if (!a.namePatterns.some((p) => p.trim())) errors.push(`${where}: empty name pattern`);
+    for (const c of a.clientIds) {
+      const key = c.trim().toLowerCase();
+      if (clientIds.has(key)) errors.push(`${where}: client id ${c} listed twice`);
+      clientIds.add(key);
+    }
+    if (!catalogue.sources.has(a.source)) errors.push(`${where}: unknown source ${a.source}`);
+  }
+  const scopeIds = new Set<string>();
+  const scopeNames = new Set<string>();
+  for (const s of scopes) {
+    const where = `ai-register: scope ${s.id}`;
+    if (scopeIds.has(s.id)) errors.push(`${where}: duplicate scope id`);
+    scopeIds.add(s.id);
+    const key = `${s.provider} ${s.scope.trim().toLowerCase()}`;
+    if (scopeNames.has(key)) errors.push(`${where}: ${s.scope} listed twice for ${s.provider}`);
+    scopeNames.add(key);
+    if (!catalogue.sources.has(s.source)) errors.push(`${where}: unknown source ${s.source}`);
+  }
   const themes = new Set(model.themes.map((t) => t.id));
   const platformIds = new Set([...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)));
   const kinds = new Set<string>();

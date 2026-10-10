@@ -1,0 +1,135 @@
+# Curated list of well-known AI apps, used to classify the apps in an exported consent inventory (shadow AI
+# discovery). Matching is offline and deliberately simple: `namePatterns` are case-insensitive substrings of the app's
+# display name, checked in the order entries appear here (most specific first), and `clientIds` are public OAuth client
+# ids matched where a vendor documents one. Every entry cites the vendor's own page in content/sources/. The list says
+# "this looks like a known kind of AI tool" so an assessor can decide what to do; it never says a tool is safe.
+#
+# version: bump when the entry shape changes. Adding entries doesn't need a bump.
+version: 1
+entries:
+  - id: copilot-studio
+    name: Microsoft Copilot Studio
+    publisher: Microsoft
+    namePatterns: [copilot studio, copilot agent]
+    category: agent-platform
+    source: ms-copilot-studio
+  - id: microsoft-copilot
+    name: Microsoft 365 Copilot
+    publisher: Microsoft
+    namePatterns: [copilot]
+    category: assistant
+    source: ms-copilot-overview
+  - id: chatgpt
+    name: ChatGPT
+    publisher: OpenAI
+    namePatterns: [chatgpt]
+    category: assistant
+    source: openai-chatgpt
+  - id: openai
+    name: OpenAI
+    publisher: OpenAI
+    namePatterns: [openai]
+    category: model-provider
+    source: openai
+  - id: claude
+    name: Claude
+    publisher: Anthropic
+    namePatterns: [claude]
+    category: assistant
+    source: anthropic-claude
+  - id: anthropic
+    name: Anthropic
+    publisher: Anthropic
+    namePatterns: [anthropic]
+    category: model-provider
+    source: anthropic
+  - id: mcp-server
+    name: Model Context Protocol (MCP) server
+    publisher: Various
+    namePatterns: [mcp server, model context protocol, mcp]
+    category: mcp-server
+    source: model-context-protocol
+  - id: google-gemini
+    name: Gemini
+    publisher: Google
+    namePatterns: [gemini, duet ai]
+    category: assistant
+    source: google-gemini
+  - id: perplexity
+    name: Perplexity
+    publisher: Perplexity
+    namePatterns: [perplexity]
+    category: assistant
+    source: perplexity
+  - id: otter-ai
+    name: Otter.ai
+    publisher: Otter.ai
+    namePatterns: [otter]
+    category: note-taker
+    source: otter-ai
+  - id: fireflies
+    name: Fireflies.ai
+    publisher: Fireflies.ai
+    namePatterns: [fireflies]
+    category: note-taker
+    source: fireflies
+  - id: fathom
+    name: Fathom
+    publisher: Fathom Video
+    namePatterns: [fathom]
+    category: note-taker
+    source: fathom-video
+  - id: grain
+    name: Grain
+    publisher: Grain
+    namePatterns: [grain]
+    category: note-taker
+    source: grain
+  - id: read-ai
+    name: Read.ai
+    publisher: Read.ai
+    namePatterns: [read.ai, read ai]
+    category: note-taker
+    source: read-ai
+  - id: gong
+    name: Gong
+    publisher: Gong
+    namePatterns: [gong]
+    category: note-taker
+    source: gong
+  - id: zoom-ai-companion
+    name: Zoom AI Companion
+    publisher: Zoom
+    namePatterns: [ai companion, zoommate, zoom ai]
+    category: assistant
+    source: zoom-ai-companion
+  - id: notion-ai
+    name: Notion AI
+    publisher: Notion
+    namePatterns: [notion]
+    category: assistant
+    source: notion-ai
+  - id: grammarly
+    name: Grammarly
+    publisher: Grammarly
+    namePatterns: [grammarly]
+    category: assistant
+    source: grammarly
+  - id: zapier
+    name: Zapier AI
+    publisher: Zapier
+    namePatterns: [zapier]
+    category: agent-platform
+    source: zapier-ai
+  - id: make
+    name: Make
+    publisher: Make
+    namePatterns: [make.com]
+    category: agent-platform
+    source: make
+  - id: n8n
+    name: n8n
+    publisher: n8n
+    namePatterns: [n8n]
+    category: agent-platform
+    source: n8n

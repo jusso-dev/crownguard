@@ -114,3 +114,97 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-7 }
+
+- id: MS-APP-005
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-entra-tenant]
+  severity: high
+  question: Are generative AI, AI model provider and MCP server apps discovered and either sanctioned for use or blocked?
+  why: >-
+    Staff connect an AI assistant, note-taker or agent in seconds, and every one that reaches mail,
+    files or meeting transcripts copies your data outside your retention, DLP and contractual
+    controls. Apps claiming to be "Copilot" or another AI product can also be consent-phishing
+    lures. What you can't see, you can't decide about.
+  yesLooksLike: >-
+    Cloud discovery (Defender for Cloud Apps, or equivalent) shows the AI apps actually in use, each
+    generative AI app has a risk score and an explicit decision: sanctioned with a named owner and an
+    approved purpose, or unsanctioned and blocked in the cloud app catalogue and at the proxy or with
+    Conditional Access. AI model providers and MCP servers are inventoried with the same discipline,
+    and staff can find the approved AI tools list.
+  remediation: >-
+    Turn on cloud discovery in Defender for Cloud Apps and open the discovered apps catalogue, filter
+    for generative AI apps and check each one's risk score, then record a decision for every AI tool,
+    AI model provider and MCP server: sanction it with an owner and purpose, or mark it unsanctioned
+    and block it through the cloud app catalogue, session controls or Conditional Access. Publish an
+    approved AI tools list that points staff at the sanctioned options, and re-run the review when
+    new apps appear.
+  effort: M
+  licence: []
+  sources: [ms-manage-generative-ai-apps, ms-mdca-risk-score, ms-mdca-discovered-apps]
+  refs:
+    - { framework: mcsb, ref: AI-1 }
+    - { framework: mcsb, ref: AM-2 }
+    - { framework: ms-zero-trust, ref: Applications II }
+    - { framework: nist-csf-2, ref: ID.AM-02 }
+    - { framework: idcf, ref: "Rule 1" }
+
+- id: MS-APP-006
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-exchange-mailboxes, ms-sharepoint-sites]
+  severity: high
+  question: Are tenant-wide admin consents to third-party apps reviewed, and is user consent limited to verified publishers requesting low-impact permissions?
+  why: >-
+    Tenant-wide admin consent gives an app access to every user's data at once, so one hasty approval
+    can expose the whole organisation. Leaving user consent open to any publisher is how consent
+    phishing lands; limiting it to verified publishers asking for low-impact permissions keeps the
+    self-service path open for harmless apps while closing the dangerous one.
+  yesLooksLike: >-
+    User consent is set to allow only verified publishers requesting low-impact permissions (or is
+    turned off), and every tenant-wide (AllPrincipals) consent grant has been reviewed on a schedule:
+    each has a named owner and business purpose, grants that are no longer needed are revoked, and
+    new tenant-wide grants go through the admin consent workflow.
+  remediation: >-
+    In the Entra admin centre under Enterprise applications, Consent and permissions, limit user
+    consent to verified publishers with low-impact permissions. Then export the OAuth2 permission
+    grants with Microsoft Graph PowerShell (the Global Reader role is enough to read them), list the
+    tenant-wide grants, review each with its owner, revoke what isn't needed, and set a recurring
+    review of tenant-wide consents alongside the app permissions review.
+  effort: M
+  licence: []
+  sources: [ms-user-consent, ms-consent-phishing, ms-admin-consent-workflow]
+  refs:
+    - { framework: cis-m365, ref: "5.1.5.1" }
+    - { framework: cis-m365, ref: "5.1.5.2" }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ms-zero-trust, ref: Applications V }
+    - { framework: idcf, ref: "Rule 1" }
+
+- id: MS-APP-007
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-workload-identities, ms-exchange-mailboxes, ms-sharepoint-sites]
+  severity: medium
+  question: Is there an alert on new consent grants to apps that hold mail, file or meeting-transcript permissions?
+  why: >-
+    A new grant to an app with mail, file or transcript access is the moment shadow AI arrives: from
+    that point the app can copy what your organisation writes. Without an alert, nobody notices until
+    the app is everywhere and the data has already left.
+  yesLooksLike: >-
+    A detection in Microsoft Sentinel, a Defender XDR custom detection or app governance alerts when
+    a new OAuth consent grant appears, or an app gains Mail, Files or OnlineMeetingTranscript
+    permissions, and someone owns and triages those alerts and acts on the apps they surface.
+  remediation: >-
+    Follow the Entra security operations guide for applications and alert on consent grants and newly
+    added app credentials, then scope a custom detection or analytics rule to apps holding Mail, Files
+    or OnlineMeetingTranscript permissions so a new grant raises an alert. Route the alerts to the
+    people who own app governance and record what they did with them.
+  effort: M
+  licence: []
+  sources: [ms-entra-secops-apps, ms-app-permissions-review]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: mcsb, ref: LT-2 }
+    - { framework: idcf, ref: "Rule 1" }

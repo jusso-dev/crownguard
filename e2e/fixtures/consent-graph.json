@@ -1,0 +1,29 @@
+{
+  "example-data": "SYNTHETIC EXAMPLE DATA made for crownguard's tests. Not a real tenant or real users; every name and address here is invented.",
+  "grants": [
+    { "clientId": "0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01", "consentType": "Principal", "scope": "Calendars.Read OnlineMeetings.Read", "principalId": "ana.ivanovic@contoso.example" },
+    { "clientId": "0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01", "consentType": "Principal", "scope": "Calendars.Read OnlineMeetings.Read", "principalId": "bo.chen@contoso.example" },
+    { "clientId": "0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01", "consentType": "Principal", "scope": "Calendars.Read OnlineMeetings.Read", "principalId": "chi.nguyen@contoso.example" },
+    { "clientId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c02", "consentType": "AllPrincipals", "scope": "Mail.Read Files.Read.All", "principalId": null },
+    { "clientId": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d03", "consentType": "Principal", "scope": "User.Read", "principalId": "bo.chen@contoso.example" }
+  ],
+  "servicePrincipals": [
+    {
+      "appId": "0f9d2f4a-7c1b-4a0e-9a3d-5c8e2b7f1a01",
+      "displayName": "Fathom Meeting Assistant",
+      "appOwnerOrganizationId": "3c4d5e6f-7a8b-4c9d-0e1f-2a3b4c5d6e01",
+      "verifiedPublisher": { "displayName": "Fathom Video" }
+    },
+    {
+      "appId": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c02",
+      "displayName": "Contoso Backup Tool",
+      "appOwnerOrganizationId": "4d5e6f7a-8b9c-4d0e-1f2a-3b4c5d6e7f02",
+      "publisherName": "Contoso IT"
+    },
+    {
+      "appId": "2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d03",
+      "displayName": "Weather Add-in",
+      "appOwnerOrganizationId": "f8cdef31-a31e-4b4a-93e4-5f571e91255a"
+    }
+  ]
+}

@@ -80,3 +80,60 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
     - { framework: idcf, ref: "Rule 1" }
+
+- id: GO-APP-004
+  module: core
+  domain: oauth-apps
+  appliesTo: [gw-oauth-apps, gw-gmail, gw-drive]
+  severity: high
+  question: Are OAuth grants made by or through AI agents reviewed, using the "By an agent" attribute in the OAuth log events?
+  why: >-
+    An AI agent can request access on a person's behalf, or hold and use it long after the person
+    clicked Allow, so the grant isn't a considered human decision. Google's OAuth log events record
+    which grants were made by an agent; reviewing them is the only way to see access that no one
+    deliberately chose.
+  yesLooksLike: >-
+    The OAuth log events report is run regularly with the "By an agent" and "Agent info" attributes
+    shown, every grant made by or through an agent is checked against what the agent does with the
+    data and who operates it, its scopes are the narrowest that work, and grants that aren't needed
+    are revoked.
+  remediation: >-
+    In the Admin console under Reporting, Audit and investigation, OAuth log events, add the "By an
+    agent" and "Agent info" attributes and review every grant flagged as made by an agent. Check each
+    agent's scopes against its purpose and its operator, revoke what isn't needed, and add
+    agent-made grants to the standing app review.
+  effort: M
+  sources: [gws-oauth-log-events, gws-app-access-control]
+  refs:
+    - { framework: cis-gws, ref: "4.2.1.2" }
+    - { framework: cis-gws, ref: "5.1.1.1" }
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: google-security-guidance, ref: "Checklist: Apps" }
+    - { framework: idcf, ref: "Rule 1" }
+
+- id: GO-APP-005
+  module: core
+  domain: oauth-apps
+  appliesTo: [gw-oauth-apps, gw-gmail, gw-drive]
+  severity: medium
+  question: Is there an alert on new grants to apps that hold mail, file or meeting-transcript scopes?
+  why: >-
+    A new grant to an app with Gmail, Drive or Meet transcript scopes is how shadow AI starts: the
+    app can read what your organisation writes from that moment on. An alert turns a silent grant
+    into a decision someone has to make.
+  yesLooksLike: >-
+    A rule under Security, Rules (or a scheduled security investigation tool or BigQuery query) fires
+    when an app gains Gmail, Drive or Meet transcript scopes it didn't hold before, the alert reaches
+    the alert centre and a named owner, and someone reviews the apps the alerts surface.
+  remediation: >-
+    Create a rule for OAuth log events where the event is a grant and the scope includes Gmail, Drive
+    or meetings.readonly, or schedule the same query in the security investigation tool or a BigQuery
+    export of the log events. Send the results to the alert centre or your own queue, assign an owner,
+    and record the review.
+  effort: M
+  sources: [gws-activity-rules, gws-investigation-tool, gws-oauth-log-events]
+  refs:
+    - { framework: cis-gws, ref: "5.1.1.1" }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: nist-csf-2, ref: DE.AE-02 }
+    - { framework: idcf, ref: "Rule 1" }

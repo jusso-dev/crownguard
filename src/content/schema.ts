@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { aiAccess, aiAutonomy, aiBases, aiConditions, aiDomains, aiTechnologies, aiUsagePatterns } from "../engine/aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../engine/aiOptions";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
@@ -247,6 +247,58 @@ export type AiRegisterModel = z.infer<typeof aiRegisterModelSchema>;
 export type AiKind = AiRegisterModel["kinds"][number];
 export type AiQuestion = z.infer<typeof aiQuestionSchema>;
 
+/** What a curated AI app does, for the consent import's "Known AI" grouping (content/ai-register/known-ai-apps.yaml). */
+export const aiAppCategories = {
+  assistant: "AI assistant",
+  "note-taker": "Meeting note-taker",
+  "agent-platform": "Agent platform",
+  "model-provider": "AI model provider",
+  "mcp-server": "MCP server",
+} as const;
+export type AiAppCategory = keyof typeof aiAppCategories;
+
+/** One well-known AI app, matched offline against the apps in an exported consent inventory. */
+export const knownAiAppSchema = z.object({
+  id,
+  name: z.string().min(2),
+  publisher: z.string().min(2),
+  /** Case-insensitive substrings of the app's display name. Entries are matched in file order, most specific first. */
+  namePatterns: z.array(z.string().min(2)).min(1),
+  /** Public OAuth client ids, lower-case, where the vendor documents one. */
+  clientIds: z.array(z.string().min(6)).default([]),
+  category: enumOf(aiAppCategories),
+  /** The vendor's own page for the app. */
+  source: id,
+});
+export type KnownAiApp = z.infer<typeof knownAiAppSchema>;
+
+export const knownAiAppsFileSchema = z.object({
+  /** Bump when the entry shape changes; adding entries doesn't move it. */
+  version: z.literal(1),
+  entries: z.array(knownAiAppSchema).min(1),
+});
+
+/** One OAuth scope in plain English, for reading consent imports (content/ai-register/oauth-scopes.yaml). */
+export const oauthScopeSchema = z.object({
+  id,
+  provider: z.enum(["microsoft", "google"]),
+  /** The scope as the platform writes it. Full URLs are shortened to this before matching. */
+  scope: z.string().min(2),
+  summary: z.string().min(5),
+  /** Mail, files, calendar or meeting content: high reach whatever the app holding it is. */
+  highReach: z.boolean().default(false),
+  /** Kinds of data an app with this scope can see, for "Data it handles" on a register entry. */
+  data: z.array(enumOf(aiData)).min(1),
+  /** The vendor's own scope documentation. */
+  source: id,
+});
+export type OAuthScope = z.infer<typeof oauthScopeSchema>;
+
+export const oauthScopesFileSchema = z.object({
+  version: z.literal(1),
+  scopes: z.array(oauthScopeSchema).min(1),
+});
+
 export const questionFileSchema = z.array(questionSchema);
 export const assetFileSchema = z.array(assetTypeSchema);
 export const sourceFileSchema = z.array(sourceSchema);
@@ -272,5 +324,12 @@ export interface Catalogue {
   /** The optional SOC maturity module, when its content is present. */
   soc?: { model: SocModel; questions: SocQuestion[] };
   /** The optional AI use-case register, when its content is present. */
-  aiRegister?: { model: AiRegisterModel; questions: AiQuestion[] };
+  aiRegister?: {
+    model: AiRegisterModel;
+    questions: AiQuestion[];
+    /** Curated AI app list for classifying the apps in a consent import (content/ai-register/known-ai-apps.yaml). */
+    knownApps: KnownAiApp[];
+    /** Scopes in plain English for reading consent imports (content/ai-register/oauth-scopes.yaml). */
+    scopes: OAuthScope[];
+  };
 }

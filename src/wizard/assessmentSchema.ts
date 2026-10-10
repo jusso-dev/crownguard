@@ -182,6 +182,7 @@ export const assessmentSchema = z.looseObject({
           z.looseObject({
             id: z.string().max(60),
             example: z.boolean().optional(),
+            foundBy: z.string().max(200).optional(),
             groupOf: z.string().max(200).optional(),
             kind: z.string().max(60),
             name: z.string().max(200),
