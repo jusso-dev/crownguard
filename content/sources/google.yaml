@@ -703,7 +703,7 @@
 - id: gws-oauth-log-events
   title: "OAuth log events"
   publisher: Google
-  url: https://support.google.com/a/answer/6124308
+  url: https://knowledge.workspace.google.com/admin/reports/oauth-log-events
   retrieved: 2026-10-10
 - id: google-oauth-scopes
   title: "OAuth 2.0 scopes for Google APIs"
@@ -718,17 +718,17 @@
 - id: gws-gemini-conversation-history
   title: "Manage Gemini in Workspace conversation history settings"
   publisher: Google
-  url: https://knowledge.workspace.google.com/admin/gemini/manage-gemini-in-workspace-conversation-history-settings
+  url: https://knowledge.workspace.google.com/admin/generative-ai/workspace-with-gemini/manage-gemini-in-workspace-conversation-history-settings
   retrieved: 2026-10-10
 - id: gws-gemini-conversation-sharing
   title: "Turn conversation sharing on or off"
   publisher: Google
-  url: https://knowledge.workspace.google.com/admin/gemini/turn-conversation-sharing-on-or-off
+  url: https://knowledge.workspace.google.com/admin/generative-ai/gemini-app/turn-conversation-sharing-on-or-off
   retrieved: 2026-10-10
 - id: gws-gemini-gem-sharing
   title: "Turn Gem sharing on or off"
   publisher: Google
-  url: https://knowledge.workspace.google.com/admin/gemini/turn-gem-sharing-on-or-off
+  url: https://knowledge.workspace.google.com/admin/generative-ai/gemini-app/turn-gem-sharing-on-or-off
   retrieved: 2026-10-10
 - id: gws-gemini-workspace-features
   title: "Manage access to Gemini features in Workspace services"
@@ -743,12 +743,12 @@
 - id: gws-gemini-integrations
   title: "Support access to Workspace Integrations"
   publisher: Google
-  url: https://knowledge.workspace.google.com/admin/gemini/support-access-to-workspace-integrations
+  url: https://knowledge.workspace.google.com/admin/generative-ai/support-access-to-workspace-integrations
   retrieved: 2026-10-10
 - id: gws-gemini-alpha
   title: "Turn access to Google Workspace with Gemini Alpha on or off"
   publisher: Google
-  url: https://support.google.com/a/answer/14170809
+  url: https://knowledge.workspace.google.com/admin/generative-ai/workspace-with-gemini/turn-access-to-google-workspace-with-gemini-beta-on-or-off
   retrieved: 2026-10-10
 - id: gws-meet-settings
   title: "Manage Meet settings"
