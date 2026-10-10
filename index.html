@@ -9,6 +9,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Classic script so the default Trusted Types policy exists before the module graph runs. -->
+    <script src="%BASE_URL%trusted-types.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

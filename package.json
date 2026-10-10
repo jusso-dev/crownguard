@@ -4,7 +4,7 @@
   "description": "Crown-jewel risk assessment wizard for Microsoft 365, Google and AWS environments, with a branded PDF report. Runs entirely in your browser.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && tsx scripts/gen-schema.ts && vite build",
+    "build": "tsc && tsx scripts/gen-schema.ts && tsx scripts/gen-sources-checked.ts && vite build",
     "gen:schema": "tsx scripts/gen-schema.ts",
     "preview": "vite preview",
     "test": "vitest run",
@@ -12,9 +12,12 @@
     "lint": "eslint .",
     "typecheck": "tsc",
     "validate:content": "tsx scripts/validate-content.ts",
+    "cg": "tsx src/cli/index.ts",
     "ism:build": "tsx scripts/ism/build.ts",
     "watch:sources": "tsx scripts/watch/index.ts",
-    "watch:apply": "tsx scripts/watch/apply-cli.ts"
+    "watch:apply": "tsx scripts/watch/apply-cli.ts",
+    "check:bundle": "tsx scripts/check-bundle-size.ts",
+    "gen:sources-checked": "tsx scripts/gen-sources-checked.ts"
   },
   "author": "Justin Middler",
   "license": "MIT",
@@ -26,12 +29,12 @@
     "@react-pdf/renderer": "^4.9.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "yaml": "^2.9.1",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.3.3",
@@ -50,7 +53,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "yaml": "^2.9.1"
   },
   "private": true,
   "type": "module"

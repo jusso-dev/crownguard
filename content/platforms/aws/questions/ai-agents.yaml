@@ -1,0 +1,165 @@
+- id: AWS-AI-001
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: high
+  question: Do Bedrock agents and knowledge bases that can reach crown-jewel data each use their own IAM role, scoped only to the data sources and actions they need?
+  why: >-
+    Agents and knowledge bases are often given broad roles so they "just work". A prompt injection or
+    a compromised agent identity then reaches everything that role can read or change.
+  yesLooksLike: >-
+    Each agent and knowledge base has its own role rather than a shared administrator or power-user
+    role; the role lists the specific S3 buckets, knowledge-base data sources, Lambda tools and other
+    actions it needs; and roles are not reused across unrelated agents. Answer N/A if you run no
+    Bedrock agents or knowledge bases.
+  remediation: >-
+    Create a dedicated role per agent and knowledge base, attach only the permissions each one needs
+    for its data sources and tools, and replace any shared or overly broad Bedrock service roles.
+  effort: M
+  sources: [aws-bedrock-iam]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: ism, ref: ISM-2133 }
+    - { framework: ism, ref: ISM-2156 }
+
+- id: AWS-AI-002
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: high
+  question: Do AgentCore runtimes use VPC network mode, and are custom browsers and code interpreters kept on private networks rather than public or sandbox modes?
+  why: >-
+    A runtime, custom browser or code interpreter on a public network is reachable from the internet
+    and can send crown-jewel data out without the network controls you apply inside a VPC.
+  yesLooksLike: >-
+    AgentCore runtimes that process crown-jewel data use VPC network mode; custom browsers are not in
+    public network mode; and custom code interpreters use a private (VPC) network configuration rather
+    than PUBLIC or SANDBOX. Answer N/A if you use no AgentCore runtimes, browsers or code interpreters.
+  remediation: >-
+    Recreate or update AgentCore runtimes for VPC network mode, and recreate custom browsers and code
+    interpreters with VPC (private) network configuration so traffic stays inside your VPC security
+    groups and flow logs.
+  effort: M
+  sources: [aws-bedrock-agentcore-security, aws-securityhub-bedrockagentcore-controls]
+  refs:
+    - { framework: aws-fsbp, ref: BedrockAgentCore.1 }
+    - { framework: aws-fsbp, ref: BedrockAgentCore.5 }
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+
+- id: AWS-AI-003
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: high
+  question: Do AgentCore gateways require authorisation for inbound requests?
+  why: >-
+    Without an authoriser, anyone who can reach the gateway endpoint can invoke the agents behind it,
+    including reading data the agent can access or driving unexpected actions and cost.
+  yesLooksLike: >-
+    Every AgentCore gateway that fronts agents over crown-jewel data has inbound authorisation
+    configured (for example JWT or IAM), so unauthenticated callers are rejected. Answer N/A if you
+    use no AgentCore gateways.
+  remediation: >-
+    Turn on inbound authorisation for each AgentCore gateway and verify unauthenticated requests are
+    denied before the gateway can reach agent targets.
+  effort: S
+  sources: [aws-bedrock-agentcore-security, aws-securityhub-bedrockagentcore-controls]
+  refs:
+    - { framework: aws-fsbp, ref: BedrockAgentCore.2 }
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+
+- id: AWS-AI-004
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: low
+  question: Where the data warrants it, are AgentCore memory and gateways, and Bedrock knowledge-base data sources, encrypted with customer managed KMS keys?
+  why: >-
+    AWS managed keys encrypt these resources by default. A customer managed key (CMK) is defence in
+    depth for a small organisation: it lets you tighten who can decrypt, log key use, and meet
+    policies that require customer-controlled encryption. It is not a requirement for every
+    workload.
+  yesLooksLike: >-
+    AgentCore memory and gateways that hold or route crown-jewel data, and Bedrock data sources that
+    feed knowledge bases over that data, use customer managed KMS keys whose key policies name the
+    roles that need them. Answer Yes if you have reviewed the data and deliberately kept AWS managed
+    keys where a CMK would add little; answer N/A if you use none of these resources.
+  remediation: >-
+    For crown-jewel AgentCore memory, gateways and Bedrock data sources, create a customer managed
+    key, encrypt the resource with it, and restrict the key policy to the roles that must use it.
+    Treat CMK as defence in depth, not a blanket mandate for every AI resource.
+  effort: M
+  sources: [aws-securityhub-bedrockagentcore-controls, aws-securityhub-bedrock-controls, aws-bedrock-agentcore-security]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+
+- id: AWS-AI-005
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: medium
+  question: Is session recording turned on for AgentCore custom browsers that can reach crown-jewel data?
+  why: >-
+    Without recordings you cannot see what an automated browser session did after a prompt injection
+    or a stolen session, including which pages it opened or data it pulled.
+  yesLooksLike: >-
+    Each AgentCore custom browser that can touch crown-jewel data has session recording enabled with
+    an S3 destination you control. Answer N/A if you use no AgentCore custom browsers.
+  remediation: >-
+    Enable session recording on each custom browser and set an S3 destination in an account and bucket
+    your security team can read and that the agent role cannot empty.
+  effort: S
+  sources: [aws-bedrock-agentcore-security, aws-securityhub-bedrockagentcore-controls]
+  refs:
+    - { framework: aws-fsbp, ref: BedrockAgentCore.6 }
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: dta-agentic-ai, ref: AGT.8.1 }
+
+- id: AWS-AI-006
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: medium
+  question: Is Bedrock model invocation logging turned on, and is the log destination protected from the agent's own role?
+  why: >-
+    Invocation logs show what was sent to and returned from the model. Without them you cannot
+    investigate prompt injection or data leakage; if the agent's role can also delete or alter the
+    logs, an attacker who steers the agent can cover their tracks.
+  yesLooksLike: >-
+    Model invocation logging is enabled to CloudWatch Logs and/or S3; the log group or bucket blocks
+    public access and is encrypted; and the agent and knowledge-base roles cannot delete, empty or
+    change the retention of that destination. Answer N/A if you run no Bedrock model invocations.
+  remediation: >-
+    Turn on Bedrock model invocation logging to a dedicated log group or bucket, encrypt it, deny
+    public access, and ensure agent roles have no permission to delete or alter those logs.
+  effort: M
+  sources: [aws-bedrock-invocation-logging]
+  refs:
+    - { framework: nist-csf-2, ref: DE.CM-03 }
+    - { framework: dta-agentic-ai, ref: AGT.8.1 }
+    - { framework: ism, ref: ISM-0585 }
+
+- id: AWS-AI-007
+  module: core
+  domain: ai-agents
+  appliesTo: [aws-ai-agents]
+  severity: high
+  question: Do agents that take user input or read untrusted content have Bedrock Guardrails that filter prompt attacks and sensitive information?
+  why: >-
+    Prompt injection hidden in a document, email or user message can steer an agent into reading,
+    sending or deleting crown-jewel data. Guardrails cut off many of those attacks and stop sensitive
+    values appearing in responses.
+  yesLooksLike: >-
+    Customer- or staff-facing agents, and agents that read untrusted documents or web content, have
+    Guardrails attached with prompt-attack and sensitive-information filters appropriate to the data
+    they handle. Answer N/A if no agent takes user input or untrusted content.
+  remediation: >-
+    Create Bedrock Guardrails with prompt-attack and sensitive-information filters, attach them to
+    each agent that accepts user input or reads untrusted content, and test with known injection
+    examples before go-live.
+  effort: M
+  sources: [aws-bedrock-guardrails]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-05 }
+    - { framework: dta-agentic-ai, ref: AGT.3.3 }
+    - { framework: ism, ref: ISM-2156 }

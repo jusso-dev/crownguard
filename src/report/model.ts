@@ -1,6 +1,7 @@
 import type { AiRegisterModel, Catalogue, Question, SocModel, SocQuestion, Source } from "../content/schema";
+import { SOURCES_LAST_CHECKED } from "../content/sourcesChecked";
 import { aiRegisterSummary, shareWithDta, type AiRegisterSummary, type ShareStatus } from "../engine/aiRegister";
-import { aiRegisterSources } from "../content/loader";
+import { aiRegisterSources } from "../content/aiRegisterSources";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,
@@ -58,6 +59,8 @@ export interface ReportModel {
   /** Licence tier name per selected platform. */
   licenceNames: string[];
   generatedAt: Date;
+  /** YYYY-MM-DD derived at build time from watch/state.json (feed cursors / git date of the file). */
+  sourcesLastChecked?: string;
   theme: ReportTheme;
   platformNames: string[];
   posture: { score: number | null; confidence: number };
@@ -264,6 +267,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     }),
     notApplicable: questions.filter((q) => answers[q.id] === "na").map((question) => ({ question, reason: assessment.notes[question.id].trim() })),
     generatedAt,
+    sourcesLastChecked: SOURCES_LAST_CHECKED !== "unknown" ? SOURCES_LAST_CHECKED : undefined,
     theme: themeOf(b),
     platformNames: bundles.map((x) => x.platform.name),
     posture: overallPosture(catalogue, assessment),

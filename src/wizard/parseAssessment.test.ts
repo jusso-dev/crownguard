@@ -1,11 +1,13 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Assessment } from "../engine/types";
 import { assessmentSchema, formatIssues, SCHEMA_VERSION } from "./assessmentSchema";
+import * as crypto from "./crypto";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
 import { parseAssessment } from "./parseAssessment";
-import { checkedStorage, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "./persistence";
+import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "./persistence";
 import { toSaveFile } from "./saveFile";
+import { setSessionPassphrase } from "./sessionSecrets";
 import { emptyAssessment } from "./store";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8")) as Record<string, unknown>;
@@ -117,6 +119,24 @@ describe("opening a file", () => {
     expect(result.notices.some((n) => n.text.includes("OLD-QUESTION"))).toBe(true);
   });
 
+  it("keeps an AWS-NET-008 answer when the file is opened after the question was narrowed", () => {
+    const ids = new Set(["AWS-NET-008", "AWS-AI-001", "MS-ID-001"]);
+    const result = parseAssessment(
+      {
+        ...emptyAssessment(),
+        platforms: ["aws"],
+        answers: { "AWS-NET-008": "partial", "MS-ID-001": "yes" },
+        notes: { "AWS-NET-008": "Notebooks in VPC; agents reviewed separately." },
+      },
+      { questionIds: ids },
+    );
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+    expect(result.assessment.answers["AWS-NET-008"]).toBe("partial");
+    expect(result.assessment.notes["AWS-NET-008"]).toBe("Notebooks in VPC; agents reviewed separately.");
+    expect(result.assessment.orphans ?? {}).toEqual({});
+  });
+
   it("reports every problem with its path, and no more than five of them", () => {
     const result = parseAssessment({
       ...emptyAssessment(),
@@ -167,34 +187,61 @@ describe("the saved file format", () => {
 });
 
 describe("progress saved in this browser", () => {
-  it("validates it like an opened file, and keeps the answers it doesn't recognise", () => {
+  it("validates it like an opened file, and keeps the answers it doesn't recognise", async () => {
     const a: Assessment = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stored Co" }, answers: { "MS-ID-001": "no", GONE: "yes" } };
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: a }, version: 2 });
-    const stored = checkedStorage.getItem(STORAGE_KEY);
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: a }, version: 2 });
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
     expect(stored?.state.assessment).toMatchObject({ org: { name: "Stored Co" } });
     expect(stored?.state.assessment?.answers).toEqual({ "MS-ID-001": "no" });
     expect(stored?.state.assessment?.orphans).toEqual({ GONE: { answer: "yes" } });
   });
 
-  it("starts clean when the stored progress can't be read, and keeps it for download", () => {
+  it("starts clean when the stored progress can't be read, and keeps it for download", async () => {
     const unreadable = { org: "nonsense" } as unknown as Assessment;
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: unreadable }, version: 2 });
-    expect(checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: unreadable }, version: 2 });
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toContain("nonsense");
   });
 
-  it("does the same for progress that isn't even valid JSON", () => {
+  it("does the same for progress that isn't even valid JSON", async () => {
     writeProgress(STORAGE_KEY, "{not json");
-    expect(checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toBe("{not json");
   });
 
-  it("writes nothing while a newer file is open read-only", () => {
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: emptyAssessment() }, version: 2 });
+  it("does not let a slower passphrase save overwrite a newer one", async () => {
+    const actual = crypto.encrypt;
+    let calls = 0;
+    let releaseFirst: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const spy = vi.spyOn(crypto, "encrypt").mockImplementation(async (plaintext, pass) => {
+      calls += 1;
+      if (calls === 1) await gate;
+      return actual(plaintext, pass);
+    });
+    setSessionPassphrase("race-pass-1234");
+    const stale = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stale Co" } };
+    const fresh = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Fresh Co" } };
+    const first = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: stale }, version: 3 });
+    const second = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: fresh }, version: 3 });
+    await second;
+    releaseFirst();
+    await first;
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
+    expect(stored?.state.assessment?.org.name).toBe("Fresh Co");
+    setSessionPassphrase(null);
+    dropProgress(STORAGE_KEY);
+    spy.mockRestore();
+  });
+
+  it("writes nothing while a newer file is open read-only", async () => {
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: emptyAssessment() }, version: 2 });
     setStorageReadOnly(true);
-    checkedStorage.setItem(STORAGE_KEY, { state: { assessment: { ...emptyAssessment(), updatedAt: "later" } }, version: 2 });
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: { ...emptyAssessment(), updatedAt: "later" } }, version: 2 });
     checkedStorage.removeItem(STORAGE_KEY);
     setStorageReadOnly(false);
-    expect(checkedStorage.getItem(STORAGE_KEY)?.state.assessment?.updatedAt).not.toBe("later");
+    expect((await checkedStorage.getItem(STORAGE_KEY))?.state.assessment?.updatedAt).not.toBe("later");
   });
 });

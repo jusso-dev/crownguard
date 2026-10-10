@@ -42,5 +42,25 @@ test("production build carries a strict content security policy", async ({ page 
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content");
   expect(csp).toContain("default-src 'self'");
   expect(csp).toContain("object-src 'none'");
+  expect(csp).toContain("require-trusted-types-for 'script'");
   expect(await page.locator('meta[name="referrer"]').getAttribute("content")).toBe("no-referrer");
+});
+
+test("short journey reports no Trusted Types / CSP violations", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __cspViolations: string[] }).__cspViolations = [];
+    document.addEventListener("securitypolicyviolation", (e) => {
+      const detail = [e.violatedDirective, e.effectiveDirective, e.blockedURI, e.originalPolicy?.slice(0, 80), e.sample?.slice(0, 80)]
+        .filter(Boolean)
+        .join(" | ");
+      (window as unknown as { __cspViolations: string[] }).__cspViolations.push(detail);
+    });
+  });
+  await page.goto("./");
+  await expect.poll(async () => page.evaluate(() => !!(window as unknown as { trustedTypes?: { defaultPolicy?: unknown } }).trustedTypes?.defaultPolicy)).toBe(true);
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+  await page.getByLabel("Organisation name").fill("CSP Check Co");
+  await page.getByRole("button", { name: /^Next:/ }).click();
+  const violations = await page.evaluate(() => (window as unknown as { __cspViolations: string[] }).__cspViolations);
+  expect(violations, violations.join("\n")).toEqual([]);
 });

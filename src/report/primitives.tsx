@@ -35,11 +35,24 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
 }
 
-export function Table<T>({ columns, rows, headerBg, zebra }: { columns: Column<T>[]; rows: T[]; headerBg: string; zebra: string }) {
+export function Table<T>({
+  columns,
+  rows,
+  headerBg,
+  zebra,
+  repeatHeader,
+}: {
+  columns: Column<T>[];
+  rows: T[];
+  headerBg: string;
+  zebra: string;
+  /** Repeat the header on each page the table spans. Off by default: fixed headers on every table slow large reports. */
+  repeatHeader?: boolean;
+}) {
   const cell: Styles[string] = { paddingVertical: 4, paddingHorizontal: 5 };
   return (
     <View style={{ borderWidth: 0.5, borderColor: line, borderRadius: 3 }}>
-      <View style={{ flexDirection: "row", backgroundColor: headerBg }}>
+      <View fixed={repeatHeader || undefined} style={{ flexDirection: "row", backgroundColor: headerBg }}>
         {columns.map((c) => (
           <Text key={c.header} style={{ ...cell, width: c.width, fontSize: 7.5, fontWeight: 600, color: muted, textTransform: "uppercase" }}>
             {c.header}

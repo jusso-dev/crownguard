@@ -1,4 +1,5 @@
-import { catalogue } from "../content/catalogue";
+import { catalogue, ensureReportContent } from "../content/catalogue";
+import { useEnsurePlatforms, useEnsureReportContent } from "../content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "../engine/risk";
 import { ismBaselineReport, ismBaselines, type IsmBaseline, type IsmBaselineSummary } from "../engine/ism";
 import { useStore } from "./store";
@@ -7,7 +8,9 @@ import { Card, Field, inputClass } from "./ui";
 /** The summary behind the annotation, when a baseline is picked. */
 export function useIsmSummary(): IsmBaselineSummary | undefined {
   const assessment = useStore((s) => s.assessment);
-  if (!assessment.ismBaseline) return undefined;
+  const platformsReady = useEnsurePlatforms(assessment.platforms);
+  const reportReady = useEnsureReportContent();
+  if (!assessment.ismBaseline || !platformsReady || !reportReady) return undefined;
   return ismBaselineReport(catalogue, activeQuestions(catalogue, assessment), effectiveAnswers(assessment), assessment.ismBaseline);
 }
 
@@ -22,7 +25,11 @@ export function IsmBaselinePicker() {
         className={inputClass}
         value={assessment.ismBaseline ?? ""}
         aria-label="Show ISM baseline"
-        onChange={(e) => update(() => ({ ismBaseline: e.target.value ? (e.target.value as IsmBaseline) : undefined }))}
+        onChange={(e) => {
+          const value = e.target.value ? (e.target.value as IsmBaseline) : undefined;
+          if (value) void ensureReportContent();
+          update(() => ({ ismBaseline: value }));
+        }}
       >
         <option value="">No ISM baseline</option>
         {Object.entries(ismBaselines).map(([key, b]) => (

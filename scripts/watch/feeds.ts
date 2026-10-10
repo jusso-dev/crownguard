@@ -6,11 +6,11 @@ export interface FeedDef {
   id: string;
   name: string;
   url: string;
-  /** "posts": one announcement per entry (blogs). "release-notes": entries hold several typed notes under h3 headings. */
-  kind: "posts" | "release-notes";
+  /** "posts": one announcement per entry (blogs). "release-notes": entries hold several typed notes under h3 headings. "html-history": document-history HTML tables. */
+  kind: "posts" | "release-notes" | "html-history";
   /** Posts: report entries carrying one of these labels (Atom categories). */
   labels?: string[];
-  /** Posts: report entries whose title matches. */
+  /** Posts / html-history: report entries whose title (or row text) matches. */
   include?: RegExp[];
   exclude?: RegExp[];
   /** Release notes: report notes of these types, e.g. "Deprecated". */
@@ -23,6 +23,8 @@ export interface FeedDef {
   excerpts?: boolean;
   /** Licence of the feed's text, shown with any quote. Quotes are only made when this is set. */
   licence?: { label: string; url: string };
+  /** When set, matching posts are reported as a mapping / catalogue review with the pinned version. */
+  reviewMapping?: { file: string; pinned: string };
 }
 
 export interface FeedNote {
@@ -81,6 +83,40 @@ type Node = { textContent: string | null };
 const text = (el: Node | null | undefined) => collapse(el?.textContent ?? "");
 /** Element text without collapsing: Atom html content is markup we still need to split. */
 const raw = (el: Node | null | undefined) => el?.textContent ?? "";
+
+/** Rows of an AWS-style document history HTML table, newest first. Rows without a parseable date are dropped. */
+export function parseHtmlHistory(html: string, pageUrl: string): FeedEntry[] {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const entries: FeedEntry[] = [];
+  for (const tr of doc.querySelectorAll("table tr")) {
+    const cells = [...tr.querySelectorAll("td")].map((td) => collapse(td.textContent ?? ""));
+    if (cells.length < 2) continue;
+    const [change, description, dateCell] = cells.length >= 3 ? cells : [cells[0], cells[0], cells[1]];
+    const published = parseHistoryDate(dateCell);
+    if (!published) continue;
+    const title = change || truncate(description, 120);
+    const summary = description || change;
+    const linkHtml = [...tr.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? "").filter(Boolean).map((h) => `href="${h}"`).join(" ");
+    entries.push({
+      id: `${published}:${shortHash(summary).slice(0, 12)}`,
+      title,
+      url: pageUrl,
+      published,
+      labels: [],
+      links: hrefs(linkHtml, pageUrl),
+      notes: [],
+      summary,
+    });
+  }
+  return entries.sort((a, b) => b.published.localeCompare(a.published));
+}
+
+/** Best-effort ISO timestamp from a document-history date cell ("August 20, 2026"). */
+function parseHistoryDate(raw: string): string | undefined {
+  const t = Date.parse(raw);
+  if (!Number.isNaN(t)) return new Date(t).toISOString();
+  return iso(raw);
+}
 
 /** Entries of an Atom or RSS 2.0 feed, newest first. Entries without a parseable date or http(s) link are dropped. */
 export function parseFeed(xml: string): FeedEntry[] {
@@ -175,7 +211,7 @@ export async function checkFeeds(
       keepBaseline();
       continue;
     }
-    const entries = parseFeed(res.body);
+    const entries = def.kind === "html-history" ? parseHtmlHistory(res.body, def.url) : parseFeed(res.body);
     if (!entries.length) {
       run.skipped.push(`${def.name} feed: no entries could be read`);
       keepBaseline();
@@ -245,15 +281,32 @@ function itemKey(f: Finding): string {
 
 function matches(def: FeedDef, e: FeedEntry, hits: (links: string[]) => string[]): Finding[] {
   const date = e.published.slice(0, 10);
-  if (def.kind === "posts") {
-    if (def.exclude?.some((re) => re.test(e.title))) return [];
+  if (def.kind === "posts" || def.kind === "html-history") {
+    if (def.exclude?.some((re) => re.test(e.title) || re.test(e.summary))) return [];
     const why: string[] = [];
     const labels = e.labels.filter((l) => def.labels?.includes(l));
+    const hay = def.kind === "html-history" ? `${e.title}\n${e.summary}` : e.title;
     if (labels.length) why.push(`labelled ${labels.join(", ")}`);
-    else if (def.include?.some((re) => re.test(e.title))) why.push("matching title");
+    else if (def.include?.some((re) => re.test(hay))) why.push(def.kind === "html-history" ? "matching change" : "matching title");
     const linked = def.linksToCited ? hits(e.links) : [];
     if (linked.length) why.push(`links to cited ${linked.length === 1 ? "source" : "sources"} ${linked.join(", ")}`);
-    return why.length ? [candidate(def, e.title || e.url, e.url, date, why.join("; "), def.excerpts && def.licence ? e.summary : undefined)] : [];
+    if (!why.length) return [];
+    const whyText =
+      def.kind === "html-history" ? `${why.join("; ")}. ${truncate(e.summary || e.title, 220)}` : why.join("; ");
+    if (def.reviewMapping) {
+      const { file, pinned } = def.reviewMapping;
+      return [
+        candidate(
+          def,
+          e.title || e.url,
+          e.url,
+          date,
+          `mapping may need review (pinned ${pinned} in ${file}); ${whyText}`,
+          def.excerpts && def.licence ? e.summary : undefined,
+        ),
+      ];
+    }
+    return [candidate(def, e.title || e.url, e.url, date, whyText, def.excerpts && def.licence ? e.summary : undefined)];
   }
   const out: Finding[] = [];
   for (const note of e.notes) {
@@ -357,7 +410,37 @@ export const FEEDS: FeedDef[] = [
     url: "https://github.com/AustralianCyberSecurityCentre/ism-oscal/releases.atom",
     kind: "posts",
     include: [/^v\d{4}\.\d{2}/],
+    reviewMapping: { file: "content/frameworks/ism.yaml", pinned: "v2026.09.4" },
     max: 3,
+  },
+  {
+    // A new Prowler release may rename checks; review content/imports/prowler-*.yaml against checkedAgainst.
+    id: "prowler-releases",
+    name: "Prowler releases",
+    url: "https://github.com/prowler-cloud/prowler/releases.atom",
+    kind: "posts",
+    include: [/^\s*Prowler\s+\d+\.\d+/i, /^\d+\.\d+\.\d+\s*$/],
+    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.44.0" },
+    max: 3,
+  },
+  {
+    // A new ScubaGoggles release may bump SCuBA policy version suffixes.
+    id: "scubagoggles-releases",
+    name: "ScubaGoggles releases",
+    url: "https://github.com/cisagov/ScubaGoggles/releases.atom",
+    kind: "posts",
+    include: [/^v?\d+\.\d+/],
+    reviewMapping: { file: "content/imports/scubagoggles.yaml", pinned: "v1.0.1" },
+    max: 3,
+  },
+  {
+    // Security Hub CSPM control changes for Bedrock, AgentCore and FSBP.
+    id: "aws-securityhub-doc-history",
+    name: "AWS Security Hub CSPM document history",
+    url: "https://docs.aws.amazon.com/securityhub/latest/userguide/doc-history.html",
+    kind: "html-history",
+    include: [/\b(?:Bedrock|AgentCore|FSBP|Foundational Security Best Practices)\b/i],
+    max: 5,
   },
   {
     id: "cis-blog",

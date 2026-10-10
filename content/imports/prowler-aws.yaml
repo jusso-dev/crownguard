@@ -175,8 +175,25 @@ mappings:
     rationale: Private or restricted endpoint and control plane logging is the Yes state; the all-types logging check is stricter than audit plus authenticator, so a fail goes to review.
     failIsInconclusive: true
   - question: AWS-NET-008
-    checks: [sagemaker_notebook_instance_without_direct_internet_access_configured, sagemaker_notebook_instance_root_access_disabled, bedrock_agent_role_least_privilege, bedrock_guardrails_configured]
-    rationale: Covers notebook exposure, agent role scope and guardrails; knowledge-base roles, AgentCore gateway authorisation and invocation-log protection aren't checked.
+    checks: [sagemaker_notebook_instance_without_direct_internet_access_configured, sagemaker_notebook_instance_root_access_disabled]
+    rationale: Covers SageMaker notebook direct internet access and root access; AgentCore VPC network mode is covered under AWS-AI-002, not here.
+    cap: partial
+  - question: AWS-AI-001
+    checks: [bedrock_agent_role_least_privilege, bedrock_agent_role_not_shared_across_agents]
+    rationale: Covers Bedrock agent role least privilege and not sharing a role across agents; knowledge-base roles aren't checked separately.
+    cap: partial
+  - question: AWS-AI-004
+    checks: [bedrock_knowledge_base_encrypted_with_cmk]
+    rationale: Covers knowledge-base / data-source CMK encryption; AgentCore memory and gateway CMK aren't checked.
+    cap: partial
+    failIsInconclusive: true
+  - question: AWS-AI-006
+    checks: [bedrock_model_invocation_logging_enabled, bedrock_model_invocation_logs_encryption_enabled]
+    rationale: Covers invocation logging being on and log encryption; whether the agent's own role can delete or alter the destination isn't checked.
+    cap: partial
+  - question: AWS-AI-007
+    checks: [bedrock_guardrails_configured, bedrock_agent_guardrail_enabled, bedrock_guardrail_prompt_attack_filter_enabled, bedrock_guardrail_sensitive_information_filter_enabled]
+    rationale: Covers Guardrails existing, attached to agents, and prompt-attack plus sensitive-information filters; contextual grounding and which agents need them aren't fully checked.
     cap: partial
   - question: AWS-NET-009
     checks: [route53_dangling_ip_subdomain_takeover, cloudfront_distributions_s3_origin_non_existent_bucket]

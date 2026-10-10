@@ -38,6 +38,38 @@ const evidenceHeader = (ev: Evidence) =>
 const evidenceLine = (c: Evidence["checks"][number]) =>
   `${c.count ? `${c.count}: ` : ""}${c.setting || c.id} – ${c.status}${c.examples?.length ? ` (${c.examples.slice(0, 3).join(", ")})` : ""}`;
 
+const INLINE_EVIDENCE_LIMIT = 6;
+
+/** Questions that carry at least one mapped scan check, in catalogue order. */
+const evidenceEntries = (model: ReportModel) =>
+  model.questions
+    .map((q) => {
+      const evidence = model.assessment.evidence?.[q.id];
+      return evidence?.checks.length ? { question: q, evidence } : null;
+    })
+    .filter((x): x is { question: (typeof model.questions)[number]; evidence: Evidence } => !!x);
+
+type TocEntry = { id: string; title: string };
+
+/** Sections actually rendered, for the contents page and its outline entries. */
+const tocFor = (model: ReportModel, hasAppendix: boolean): TocEntry[] => {
+  const entries: TocEntry[] = [
+    { id: "about", title: "About this report" },
+    { id: "executive-summary", title: "Executive summary" },
+    { id: "crown-jewel-register", title: "Crown-jewel register" },
+    { id: "risk-register", title: "Risk register" },
+    { id: "findings", title: "Findings by domain" },
+  ];
+  if (model.notApplicable.length > 0) entries.push({ id: "not-applicable", title: "Controls marked not applicable" });
+  entries.push({ id: "roadmap", title: "Remediation roadmap" }, { id: "frameworks", title: "Framework alignment" });
+  if (model.idcf) entries.push({ id: "idcf", title: "IDCF Data Security Levels (indicative)" });
+  if (model.soc) entries.push({ id: "soc", title: "SOC maturity (indicative)" });
+  if (model.aiRegister) entries.push({ id: "ai-register", title: "AI use-case register" });
+  entries.push({ id: "method", title: "Method and limitations" }, { id: "references", title: "References" });
+  if (hasAppendix) entries.push({ id: "appendix-a", title: "Appendix A: Scan evidence" });
+  return entries;
+};
+
 const makeStyles = (theme: ReportModel["theme"]) =>
   StyleSheet.create({
     page: { fontFamily: "Inter", fontSize: 9, color: ink, paddingTop: 54, paddingBottom: 54, paddingHorizontal: 46 },
@@ -58,9 +90,9 @@ const Chrome = createContext<ReactNode>(null);
  * Each section is its own Page rather than a break inside one long Page: react-pdf lays out everything after each
  * page break again, so one Page for the whole report made rendering time grow with the square of its length.
  */
-function Section({ s, title, lead, children }: { s: Styles; title: string; lead?: string; children: ReactNode }) {
+function Section({ s, title, lead, id, children }: { s: Styles; title: string; lead?: string; id?: string; children: ReactNode }) {
   return (
-    <Page size="A4" style={s.page}>
+    <Page size="A4" style={s.page} id={id} bookmark={{ title, fit: true }}>
       {useContext(Chrome)}
       <Text style={s.h1} minPresenceAhead={80}>{title}</Text>
       <View style={s.rule} />
@@ -82,6 +114,9 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   const quickWins = model.roadmap.filter((r) => r.phase === "0–30 days").slice(0, 5);
   const unknownCount = model.questions.filter((q) => (model.answers[q.id] ?? "unknown") === "unknown").length;
   const tableProps = { headerBg: theme.tint, zebra: "#fafbfc" };
+  const scanned = evidenceEntries(model);
+  const hasAppendix = scanned.length > 0;
+  const toc = tocFor(model, hasAppendix);
   const chrome = (
     <>
       <View fixed style={{ position: "absolute", top: 20, left: 46, right: 46, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: muted }}>
@@ -98,9 +133,18 @@ export function ReportDocument({ model }: { model: ReportModel }) {
   );
 
   return (
-    <Document title={`${a.org.name} – Crown-jewel risk assessment`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="Crown-jewel risk assessment" creationDate={model.generatedAt}>
+    <Document
+      title={`${a.org.name} – Crown-jewel risk assessment`}
+      author={a.branding.preparedBy || a.org.name}
+      creator="crownguard"
+      producer="crownguard"
+      subject="Crown-jewel risk assessment"
+      creationDate={model.generatedAt}
+      language="en-AU"
+      pageMode="useOutlines"
+    >
       {/* Cover */}
-      <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }}>
+      <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }} bookmark={{ title: "Cover", fit: true }}>
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, backgroundColor: theme.accent }} />
         <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, textAlign: "center", marginTop: 4 }}>{a.branding.marking}</Text>
         {a.branding.logoDataUrl && (
@@ -131,8 +175,16 @@ export function ReportDocument({ model }: { model: ReportModel }) {
       </Page>
 
       <Chrome.Provider value={chrome}>
+        <Section s={s} id="contents" title="Contents" lead="Jump to a section. Page numbers are in the footer of each page.">
+          {toc.map((entry) => (
+            <Link key={entry.id} src={`#${entry.id}`} style={{ fontSize: 10, color: theme.heading, marginBottom: 6, lineHeight: 1.4 }}>
+              {entry.title}
+            </Link>
+          ))}
+        </Section>
+
         {/* About */}
-        <Section s={s} title="About this report">
+        <Section s={s} id="about" title="About this report">
           <Text style={s.p}>
             This report assesses how well {a.org.name} protects its crown jewels in {andList(model.platformNames)}. It was
             prepared with crownguard, a guided self-assessment, from answers given by the organisation. It is not an audit or a
@@ -188,7 +240,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Executive summary */}
-        <Section s={s} title="Executive summary">
+        <Section s={s} id="executive-summary" title="Executive summary">
           {/* Lead with what is working, then where to focus. */}
           <Text style={s.p}>
             {st.inPlace > 0
@@ -302,6 +354,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         {/* Crown-jewel register */}
         <Section
           s={s}
+          id="crown-jewel-register"
           title="Crown-jewel register"
           lead={`The systems and information whose compromise would most seriously harm the organisation, as identified during this assessment. Impact ratings use 1 (minimal) to 5 (severe).${a.jewels.some((j) => j.dsl) ? " IDCF DSL is the Data Security Level the organisation assigned; – means not classified." : ""}`}
         >
@@ -336,7 +389,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Risk register */}
-        <Section s={s} title="Risk register" lead="Risk = impact × likelihood (5×5). Impact is the highest of the confidentiality, integrity and availability ratings, raised one level for regulated or highly confidential data. Likelihood reflects unmet controls weighted by severity, plus recorded exposures.">
+        <Section s={s} id="risk-register" title="Risk register" lead="Risk = impact × likelihood (5×5). Impact is the highest of the confidentiality, integrity and availability ratings, raised one level for regulated or highly confidential data. Likelihood reflects unmet controls weighted by severity, plus recorded exposures.">
           {model.risks.map((r) => {
             const asset = model.assetTypeName(r.jewel.assetType);
             return (
@@ -367,7 +420,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Findings */}
-        <Section s={s} title="Findings by domain" lead="Every control that isn't fully in place, grouped by domain, with the recommended fix. Licence notes show where the fix needs a product your current licence doesn't include.">
+        <Section s={s} id="findings" title="Findings by domain" lead="Every control that isn't fully in place, grouped by domain, with the recommended fix. Licence notes show where the fix needs a product your current licence doesn't include.">
           <View style={{ marginBottom: 10 }}>
             {model.domains.map((d) => (
               <View key={`${d.platform}:${d.domain}`} style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
@@ -402,8 +455,10 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                       {a.evidence?.[q.id] && (
                         <Text style={{ fontSize: 8, marginTop: 2, color: muted }}>
                           Scan evidence ({evidenceHeader(a.evidence[q.id])}):{" "}
-                          {a.evidence[q.id].checks.slice(0, 6).map(evidenceLine).join("; ")}
-                          {a.evidence[q.id].checks.length > 6 ? `; +${a.evidence[q.id].checks.length - 6} more` : ""}
+                          {a.evidence[q.id].checks.slice(0, INLINE_EVIDENCE_LIMIT).map(evidenceLine).join("; ")}
+                          {a.evidence[q.id].checks.length > INLINE_EVIDENCE_LIMIT
+                            ? `; +${a.evidence[q.id].checks.length - INLINE_EVIDENCE_LIMIT} more in Appendix A`
+                            : ""}
                         </Text>
                       )}
                       <Text style={{ ...s.small, marginTop: 2 }}>
@@ -428,7 +483,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
 
         {/* Not applicable */}
         {model.notApplicable.length > 0 && (
-          <Section s={s} title="Controls marked not applicable" lead="Controls the organisation answered N/A, with the reason it gave. They are left out of scoring, so check each reason holds: a wrong N/A hides a real gap.">
+          <Section s={s} id="not-applicable" title="Controls marked not applicable" lead="Controls the organisation answered N/A, with the reason it gave. They are left out of scoring, so check each reason holds: a wrong N/A hides a real gap.">
             <Table
               {...tableProps}
               rows={model.notApplicable}
@@ -446,7 +501,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         )}
 
         {/* Roadmap */}
-        <Section s={s} title="Remediation roadmap" lead="Gaps ranked by how much risk they remove across your crown jewels per unit of effort. Critical gaps that can be fixed with small or medium effort are brought into the first 30 days.">
+        <Section s={s} id="roadmap" title="Remediation roadmap" lead="Gaps ranked by how much risk they remove across your crown jewels per unit of effort. Critical gaps that can be fixed with small or medium effort are brought into the first 30 days.">
           {(["0–30 days", "31–60 days", "61–90 days"] as const).map((phase) => {
             const items = model.roadmap.filter((r) => r.phase === phase);
             if (!items.length) return null;
@@ -474,7 +529,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         </Section>
 
         {/* Frameworks */}
-        <Section s={s} title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0, CIS Benchmarks, the Australian Government Information Security Manual (ISM) and the Department of Home Affairs Industry Data Classification Framework (IDCF). These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
+        <Section s={s} id="frameworks" title="Framework alignment" lead="How your answers map to the ASD Essential Eight, NIST Cybersecurity Framework 2.0, CIS Benchmarks, the Australian Government Information Security Manual (ISM) and the Department of Home Affairs Industry Data Classification Framework (IDCF). These are indicative: they cover only the cloud-platform controls asked in this assessment and are not a formal audit.">
           <Text style={s.h2}>ASD Essential Eight (indicative maturity)</Text>
           <Table
             {...tableProps}
@@ -541,7 +596,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         {model.aiRegister && <AiRegisterSection model={model} s={s} tableProps={tableProps} />}
 
         {/* Methodology */}
-        <Section s={s} title="Method and limitations">
+        <Section s={s} id="method" title="Method and limitations">
           {[
             "This is a self-assessment. Answers were provided by the organisation and have not been independently verified. Treat it as a structured starting point for a security conversation, not as an audit or certification.",
             "Questions are drawn from current Microsoft, Google and AWS security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model, NIST CSF 2.0 and the Department of Home Affairs Industry Data Classification Framework. Each question cites its sources in the references section.",
@@ -551,6 +606,9 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). A check reported once per resource passes only when every resource passes it, and a suppressed (muted) finding is never treated as a pass. The assessor reviewed and could change every answer; scan evidence is shown against each finding, naming the scanner, its version and the account or tenant it covered.",
             ...(a.imports?.length
               ? [`Scan evidence in this report came from ${andList([...new Set(a.imports.map((i) => `${i.source}${i.toolVersion ? ` ${i.toolVersion}` : ""}`))])}.`]
+              : []),
+            ...(hasAppendix
+              ? ["Mapped scan checks are listed in full in Appendix A: Scan evidence. Unmapped failing checks from an import stay in the app and are not repeated here."]
               : []),
             "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
             "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
@@ -571,11 +629,13 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                   "Readiness is an indicative self-check, not a policy compliance finding or a DTA assessment. Risk ratings come from the agency's own AI impact assessment; crownguard records them and doesn't work them out. The register doesn't change the crown-jewel risk ratings: any exposure it suggests must be ticked on the crown jewel itself.",
                 ]
               : []),
+            "This PDF is not tagged for accessibility; until react-pdf can emit a structure tree, use the crownguard app and the CSV/XLSX risk register as the accessible alternatives.",
             `crownguard is independent open-source software and is not affiliated with or endorsed by Microsoft, Google, Amazon Web Services, CIS, ASD, NIST, the Department of Home Affairs, CSIRO${model.aiRegister ? ", the Digital Transformation Agency" : ""}${model.soc ? " or SOC-CMM" : ""}. Product names are trademarks of their owners.`,
+            ...(model.sourcesLastChecked ? [`Sources last checked: ${model.sourcesLastChecked}.`] : []),
           ].map((t) => <Text key={t} style={s.p}>{t}</Text>)}
         </Section>
 
-        <Section s={s} title="References" lead="Guidance consulted for the questions in this report. Retrieved dates show when each source was last checked.">
+        <Section s={s} id="references" title="References" lead={`Guidance consulted for the questions in this report. Retrieved dates show when each source was last checked${model.sourcesLastChecked ? `; the watch last ran on ${model.sourcesLastChecked}` : ""}.`}>
           {model.idcf && (
             <Text style={{ ...s.small, marginBottom: 8 }}>
               Contains material adapted from the Industry Data Classification Framework, © Commonwealth of Australia 2026 and © Commonwealth Scientific and
@@ -599,6 +659,34 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             </View>
           ))}
         </Section>
+
+        {hasAppendix && (
+          <Section
+            s={s}
+            id="appendix-a"
+            title="Appendix A: Scan evidence"
+            lead="Every mapped scan check attached to a finding, grouped by question, tool and scan date. Status, setting and expected value are listed in full; the findings section keeps only a short summary."
+          >
+            {scanned.map(({ question: q, evidence: ev }) => (
+              <View key={q.id} style={{ marginBottom: 10 }}>
+                <Text style={s.h2} minPresenceAhead={60}>
+                  {q.id}: {q.question}
+                </Text>
+                <Text style={{ ...s.small, marginBottom: 4 }}>{evidenceHeader(ev)}</Text>
+                <Table
+                  {...tableProps}
+                  repeatHeader
+                  rows={ev.checks}
+                  columns={[
+                    { header: "Status", width: "12%", render: (c) => c.status },
+                    { header: "Setting", width: "44%", render: (c) => `${c.count ? `${c.count}: ` : ""}${c.setting || c.id}` },
+                    { header: "Expected", width: "44%", render: (c) => c.expected || "–" },
+                  ]}
+                />
+              </View>
+            ))}
+          </Section>
+        )}
       </Chrome.Provider>
     </Document>
   );
@@ -629,9 +717,18 @@ export function AiRegisterDocument({ model }: { model: AiRegisterReportModel }) 
   );
 
   return (
-    <Document title={`${a.org.name} – AI use-case register`} author={a.branding.preparedBy || a.org.name} creator="crownguard" producer="crownguard" subject="AI use-case register" creationDate={model.generatedAt}>
+    <Document
+      title={`${a.org.name} – AI use-case register`}
+      author={a.branding.preparedBy || a.org.name}
+      creator="crownguard"
+      producer="crownguard"
+      subject="AI use-case register"
+      creationDate={model.generatedAt}
+      language="en-AU"
+      pageMode="useOutlines"
+    >
       {/* Cover */}
-      <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }}>
+      <Page size="A4" style={{ fontFamily: "Inter", backgroundColor: theme.primary, color: theme.onPrimary, padding: 56 }} bookmark={{ title: "Cover", fit: true }}>
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 10, backgroundColor: theme.accent }} />
         <Text style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.2, textAlign: "center", marginTop: 4 }}>{a.branding.marking}</Text>
         {a.branding.logoDataUrl && (
@@ -664,7 +761,7 @@ export function AiRegisterDocument({ model }: { model: AiRegisterReportModel }) 
       </Page>
 
       <Chrome.Provider value={chrome}>
-        <Section s={s} title="About this register">
+        <Section s={s} id="about-register" title="About this register">
           <Text style={s.p}>
             This is the register of AI use cases kept by {a.org.name}, recorded with the minimum fields in the Digital
             Transformation Agency&apos;s Standard for accountability. It was prepared with crownguard, a guided
@@ -712,7 +809,8 @@ function Heatmap({ model }: { model: ReportModel }) {
           <Text style={{ width: 10, fontSize: 7, color: muted, textAlign: "right", marginRight: 3 }}>{impact}</Text>
           {[1, 2, 3, 4, 5].map((likelihood) => {
             const n = model.risks.filter((r) => r.impact === impact && r.likelihood === likelihood).length;
-            const c = bandColors[bandOf(impact * likelihood)];
+            const band = bandOf(impact * likelihood);
+            const c = bandColors[band];
             return (
               <View key={likelihood} style={{ width: size, height: size, backgroundColor: c.bg, borderRadius: 2, justifyContent: "center", alignItems: "center" }}>
                 {n > 0 && <Text style={{ color: c.fg, fontWeight: 700, fontSize: 10 }}>{n}</Text>}
@@ -725,6 +823,14 @@ function Heatmap({ model }: { model: ReportModel }) {
         {[1, 2, 3, 4, 5].map((l) => <Text key={l} style={{ width: size, textAlign: "center", fontSize: 7, color: muted }}>{l}</Text>)}
       </View>
       <Text style={{ fontSize: 7, color: muted, marginLeft: 15, marginTop: 2 }}>Likelihood → (rows: impact)</Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginLeft: 15, marginTop: 4 }}>
+        {(["Low", "Medium", "High", "Extreme"] as const).map((band) => (
+          <View key={band} style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <View style={{ width: 8, height: 8, backgroundColor: bandColors[band].bg, borderRadius: 1 }} />
+            <Text style={{ fontSize: 7, color: bandColors[band].fg, fontWeight: 600 }}>{band}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -801,6 +907,7 @@ function SocSection({ model, s, tableProps }: { model: ReportModel; s: Styles; t
   return (
     <Section
       s={s}
+      id="soc"
       title="SOC maturity (indicative)"
       lead={`An indicative self-assessment of the organisation's security operations, rated 0–5 for each of the ${aspects} aspects in the ${soc.domains.length} domains of the SOC-CMM® v2.4 model, with a 0–3 capability rating for technology and services. It is separate from the crown-jewel risk ratings and doesn't change them.`}
     >
@@ -963,6 +1070,7 @@ function AiRegisterSection({ model, s, tableProps }: { model: Pick<ReportModel, 
   return (
     <Section
       s={s}
+      id="ai-register"
       title="AI use-case register"
       lead="The organisation's AI use cases and agents, recorded with the minimum fields in the DTA's Standard for accountability, and an indicative readiness check against the Policy for the responsible use of AI in government and the agentic AI addendum. It's separate from the crown-jewel risk ratings and doesn't change them."
     >
@@ -1123,7 +1231,7 @@ const idcfCellText = (c: IdcfCell) =>
 function IdcfSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
   const idcf = model.idcf!;
   return (
-    <>
+    <View id="idcf" {...{ bookmark: { title: "IDCF Data Security Levels (indicative)", fit: true } }}>
       <Text style={s.h2} minPresenceAhead={80}>IDCF Data Security Levels (indicative)</Text>
       <Text style={s.p}>
         The Industry Data Classification Framework (IDCF), published by the Department of Home Affairs in 2026, gives each item of data one of six Data
@@ -1169,6 +1277,6 @@ function IdcfSection({ model, s, tableProps }: { model: ReportModel; s: Styles; 
       {model.assessment.jewels.some((j) => !j.dsl) && idcf.jewels.length > 0 && (
         <Text style={s.small}>Crown jewels without a level are not classified under the IDCF; under the IDCF, unlabelled data is unclassified, not DSL-0.</Text>
       )}
-    </>
+    </View>
   );
 }

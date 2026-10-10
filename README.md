@@ -46,7 +46,7 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **Optional scan import.** Already run a scanner? Import its results on the Controls step to pre-fill answers where its
   checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
   for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
-  for AWS (52 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
+  for AWS (56 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
   Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
   never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources.
   [ScubaGoggles](https://github.com/cisagov/ScubaGoggles) for Google Workspace (`ScubaResults*.json`, 33 questions) is
@@ -277,10 +277,34 @@ pnpm build      # static site in dist/, host anywhere
 The build is a static site with no server code. Serve `dist/` from any static host; set `BASE_PATH` when it lives
 under a sub-path (the Pages workflow uses `/crownguard/`). The Content Security Policy ships as a `<meta>` tag
 because GitHub Pages can't send custom headers; on a host that can, also send the headers defined in
-`vite.config.ts` (including `frame-ancestors 'none'`, which only works as a header).
+`vite.config.ts` (including `frame-ancestors 'none'` and `Cross-Origin-Opener-Policy`, which only work as headers).
+Copy-paste snippets: [docs/self-hosting.md](docs/self-hosting.md).
 
-Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account,
-so for sensitive assessments prefer **Save file**, a private window, or self-hosting on your own domain.
+### Privacy in the browser
+
+Nothing you enter is sent anywhere. Progress is kept in this browser under `crownguard:v1` unless you choose otherwise:
+
+- **Optional passphrase** — encrypts the autosaved copy and any file you save while it is set (WebCrypto PBKDF2-SHA-256 + AES-GCM). The passphrase stays in memory only for this visit; there is no recovery if you forget it.
+- **Don't keep this assessment in this browser** — assessment data stays in memory only (not `sessionStorage`). Reloading loses it. A small mode flag may remain so the choice survives a reload.
+- **Remove from this browser** — clears the storage key and drops the in-memory assessment immediately.
+
+Browser storage is per origin. On GitHub Pages that origin is shared by every Pages site under the same account.
+A **dedicated origin is recommended but not configured yet** (no custom domain has been chosen); production stays on
+`https://jusso-dev.github.io/crownguard/` for now. For sensitive assessments prefer a passphrase, no-persistence mode,
+**Save file**, a private window, or self-hosting on your own domain. See [docs/threat-model.md](docs/threat-model.md).
+
+### Headless use
+
+For consulting workflows, CI, or agents — validate, import scans, score, render PDFs and export the AI register from
+Node with no browser and no network:
+
+```sh
+pnpm cg new --org "Riverbend Health" --platforms microsoft --out a.crownguard.json
+pnpm cg score a.crownguard.json
+pnpm cg render a.crownguard.json report.pdf
+```
+
+See [docs/cli.md](docs/cli.md) for every command, exit codes, and how to replace the old Hermes `cg-bot` helper.
 
 ## The saved file
 
@@ -376,6 +400,13 @@ separately rejects sources that nothing cites. See [Source watch](docs/content-g
 
 CIS Benchmarks are referenced by recommendation number and title only, under CIS's CC BY-NC-SA 4.0 terms. Get the
 benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit and remediation steps.
+
+## Accessibility
+
+crownguard aims for [WCAG 2.2](https://www.w3.org/TR/WCAG22/) Level AA. Automated axe checks cover every wizard step
+in Playwright. Known limitation: the PDF report is not tagged — use the on-screen Review step with assistive
+technology for now. See [docs/accessibility.md](docs/accessibility.md) for the checklist. Report a problem via
+[SECURITY.md](SECURITY.md) or a [GitHub issue](https://github.com/jusso-dev/crownguard/issues).
 
 ## Limitations
 

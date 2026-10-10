@@ -685,6 +685,26 @@
   publisher: Amazon Web Services
   url: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html
   retrieved: 2026-10-09
+- id: aws-securityhub-bedrockagentcore-controls
+  title: Security Hub CSPM controls for Amazon Bedrock AgentCore
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/securityhub/latest/userguide/bedrockagentcore-controls.html
+  retrieved: 2026-10-10
+- id: aws-securityhub-bedrock-controls
+  title: Security Hub CSPM controls for Amazon Bedrock
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/securityhub/latest/userguide/bedrock-controls.html
+  retrieved: 2026-10-10
+- id: aws-bedrock-agentcore-security
+  title: Security in Amazon Bedrock AgentCore
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security.html
+  retrieved: 2026-10-10
+- id: aws-amazon-quick
+  title: What is Amazon Quick?
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/quick/latest/userguide/what-is.html
+  retrieved: 2026-10-10
 - id: aws-session-manager-logging
   title: Enabling and disabling session logging
   publisher: Amazon Web Services

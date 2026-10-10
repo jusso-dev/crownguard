@@ -87,6 +87,22 @@ describe("scoring", () => {
     expect(r.band).toBe("High");
     expect(r.confidence).toBe(1);
   });
+
+  it("includes an aws-ai-agents finding at the question's severity", () => {
+    const qs = [
+      q("AWS-AI-001", { appliesTo: ["aws-ai-agents"], severity: "high", domain: "ai-agents" }),
+      q("AWS-AI-004", { appliesTo: ["aws-ai-agents"], severity: "low", domain: "ai-agents" }),
+      q("AWS-NET-008", { appliesTo: ["aws-workloads", "aws-ai-agents"], severity: "medium", domain: "network-workloads" }),
+    ];
+    const r = assessJewel(
+      jewel({ platform: "aws", assetType: "aws-ai-agents", name: "Bedrock claims agent" }),
+      qs,
+      { "AWS-AI-001": "no", "AWS-AI-004": "yes", "AWS-NET-008": "yes" },
+    );
+    expect(r.gaps.map((g) => g.question.id)).toEqual(["AWS-AI-001"]);
+    expect(r.gaps[0]?.question.severity).toBe("high");
+    expect(r.band).not.toBe("Low");
+  });
 });
 
 describe("essential eight", () => {

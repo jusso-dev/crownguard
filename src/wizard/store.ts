@@ -6,10 +6,11 @@ import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
 import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
 import type { ScanResult } from "../imports/types";
-import { NOTE_MAX, SCHEMA_VERSION } from "./assessmentSchema";
+import { NOTE_MAX } from "./assessmentSchema";
+import { emptyAssessment, STEP_LAYOUT } from "./empty";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
-export { STORAGE_KEY };
+export { STORAGE_KEY, emptyAssessment, STEP_LAYOUT };
 
 export const fullSteps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
 
@@ -21,9 +22,6 @@ export const stepsFor = (mode: Mode = "full"): readonly string[] => (mode === "a
 
 /** Which flow this assessment runs in. Files saved before the standalone flow existed carry no mode and are full. */
 export const modeOf = (a: Assessment): Mode => a.mode ?? "full";
-
-/** Version of the step list. Layout 2 added "SOC maturity" after Controls; layout 3 added "AI register" after it. */
-export const STEP_LAYOUT = 3;
 
 /**
  * Move a saved position onto the current step list: each added step moves positions saved after it on by one.
@@ -40,24 +38,6 @@ export function migrateProgress(p: Assessment["progress"], mode: Mode = "full"):
   if (layout < 3 && step >= 5) step++;
   return { ...p, step, layout: STEP_LAYOUT };
 }
-
-export const emptyAssessment = (): Assessment => {
-  const now = new Date().toISOString();
-  return {
-    schemaVersion: SCHEMA_VERSION,
-    org: { name: "", sector: "", size: "", jurisdiction: "Australia", regulations: [] },
-    platforms: [],
-    modules: {},
-    licence: {},
-    jewels: [],
-    answers: {},
-    notes: {},
-    branding: { primary: "#1f3a5f", accent: "#d97706", marking: "OFFICIAL: Sensitive", preparedBy: "", preparedFor: "" },
-    progress: { step: 0, layout: STEP_LAYOUT },
-    createdAt: now,
-    updatedAt: now,
-  };
-};
 
 /** True when this browser lets us keep progress between visits (false in some private windows or locked-down profiles). */
 export function storageAvailable(): boolean {
@@ -257,7 +237,8 @@ export const useStore = create<State>()(
     },
     {
       name: STORAGE_KEY,
-      version: 3,
+      // v4: storage may wrap the JSON in an encryption envelope; state shape is unchanged.
+      version: 4,
       storage: checkedStorage,
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
@@ -267,6 +248,7 @@ export const useStore = create<State>()(
         if (version === 0 && p.assessment && !p.assessment.progress) p.assessment.progress = { step: clampStep(p.step, mode) };
         // migrateProgress reads the saved layout, so running it again on newer saves is harmless.
         if (version < 3 && p.assessment) p.assessment.progress = migrateProgress(p.assessment.progress, mode);
+        // v3 → v4: plain JSON passes through untouched (encryption is a storage-layer concern).
         return { assessment: p.assessment } as State;
       },
     },

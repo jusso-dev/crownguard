@@ -1,43 +1,46 @@
 // @vitest-environment node
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
-import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
+import { SOURCES_LAST_CHECKED } from "../content/sourcesChecked";
 import type { SocAnswer } from "../engine/soc";
 import { exampleEntries } from "../engine/aiExamples";
 import { AiRegisterDocument, ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
-import { registerFonts } from "./fonts";
+import { registerFontsFromDisk } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";
 import type { Assessment } from "../engine/types";
 import { emptyAssessment } from "../wizard/store";
 
 beforeAll(() => {
-  // In the browser fonts load by URL; in Node point at the files on disk.
-  const dir = join(import.meta.dirname, "fonts");
-  registerFonts({
-    regular: join(dir, "Inter_400Regular.ttf"),
-    italic: join(dir, "Inter_400Regular_Italic.ttf"),
-    semibold: join(dir, "Inter_600SemiBold.ttf"),
-    bold: join(dir, "Inter_700Bold.ttf"),
-  });
+  // Browser path uses asset URLs in generate.ts; Node/tests share registerFontsFromDisk.
+  registerFontsFromDisk();
 });
 
-const pdfText = async (assessment: ReturnType<typeof fixtureAssessment>) => {
-  const buf = await renderToBuffer(createElement(ReportDocument, { model: buildReport(catalogue, assessment, new Date("2026-10-08")) }) as Parameters<typeof renderToBuffer>[0]);
+type OutlineNode = { title: string; items?: OutlineNode[] };
+
+const flattenOutline = (nodes: OutlineNode[] | null | undefined): string[] =>
+  (nodes ?? []).flatMap((n) => [n.title, ...flattenOutline(n.items)]);
+
+const renderReport = async (assessment: Assessment) => {
+  const model = buildReport(catalogue, assessment, new Date("2026-10-08"));
+  const buf = await renderToBuffer(createElement(ReportDocument, { model }) as Parameters<typeof renderToBuffer>[0]);
   const doc = await getDocument({ data: new Uint8Array(buf) }).promise;
   const pages: string[] = [];
   for (let i = 1; i <= doc.numPages; i++) pages.push((await (await doc.getPage(i)).getTextContent()).items.map((it) => ("str" in it ? it.str : "")).join(" "));
-  return pages.join("\n").replace(/\s+/g, " ");
+  const outline = (await doc.getOutline()) as OutlineNode[] | null;
+  return { model, buf, text: pages.join("\n").replace(/\s+/g, " "), outlineTitles: flattenOutline(outline) };
 };
+
+const pdfText = async (assessment: ReturnType<typeof fixtureAssessment>) => (await renderReport(assessment)).text;
 
 describe("PDF report", () => {
   it("adds the AI use-case register, with examples labelled, only when included", async () => {
     const a = fixtureAssessment(catalogue, ["microsoft"]);
     a.aiRegister = { entries: exampleEntries(a) };
-    const withAi = await pdfText(a);
+    const withAi = await renderReport(a);
     for (const phrase of [
       "AI use-case register",
       "Optional AI use-case register: 3 use cases",
@@ -52,10 +55,12 @@ describe("PDF report", () => {
       "the Digital Transformation Agency",
       "Digital Transformation Agency.",
     ])
-      expect(withAi).toContain(phrase);
-    const without = await pdfText({ ...a, aiRegister: undefined });
-    expect(without).not.toContain("AI use-case register");
-    expect(without).not.toContain("Digital Transformation Agency");
+      expect(withAi.text).toContain(phrase);
+    expect(withAi.outlineTitles).toContain("AI use-case register");
+    const without = await renderReport({ ...a, aiRegister: undefined });
+    expect(without.text).not.toContain("AI use-case register");
+    expect(without.text).not.toContain("Digital Transformation Agency");
+    expect(without.outlineTitles).not.toContain("AI use-case register");
   }, 120_000);
 
   it("adds the SOC maturity section, with its attribution, only when included", async () => {
@@ -68,19 +73,14 @@ describe("PDF report", () => {
       targets: { services: { maturity: 3.5 } },
       provider: "outsourced",
     };
-    const text = async (assessment: typeof a) => {
-      const buf = await renderToBuffer(createElement(ReportDocument, { model: buildReport(catalogue, assessment, new Date("2026-10-08")) }) as Parameters<typeof renderToBuffer>[0]);
-      const doc = await getDocument({ data: new Uint8Array(buf) }).promise;
-      const pages: string[] = [];
-      for (let i = 1; i <= doc.numPages; i++) pages.push((await (await doc.getPage(i)).getTextContent()).items.map((it) => ("str" in it ? it.str : "")).join(" "));
-      return pages.join("\n").replace(/\s+/g, " ");
-    };
-    const withSoc = await text(a);
+    const withSoc = await renderReport(a);
     for (const phrase of ["SOC maturity (indicative)", "Aspect profile", "Priorities to reach target", "by a managed provider", "Rob van Os", "creativecommons.org/licenses/by-sa/4.0", "not SOC-CMM maturity or capability scores", "Privacy impact assessment due in March."])
-      expect(withSoc).toContain(phrase);
-    const without = await text({ ...a, soc: undefined });
-    expect(without).not.toContain("SOC maturity (indicative)");
-    expect(without).not.toContain("SOC-CMM");
+      expect(withSoc.text).toContain(phrase);
+    expect(withSoc.outlineTitles).toContain("SOC maturity (indicative)");
+    const without = await renderReport({ ...a, soc: undefined });
+    expect(without.text).not.toContain("SOC maturity (indicative)");
+    expect(without.text).not.toContain("SOC-CMM");
+    expect(without.outlineTitles).not.toContain("SOC maturity (indicative)");
   }, 120_000);
 
   for (const platforms of [["microsoft"], ["google"], ["aws"], ["microsoft", "google", "aws"]])
@@ -101,6 +101,13 @@ describe("PDF report", () => {
     expect(text).toContain("not an IRAP assessment or a statement of applicability");
   }, 120_000);
 
+  it("includes the sources-last-checked date from the watch baseline in the method text", async () => {
+    const model = buildReport(catalogue, fixtureAssessment(catalogue, ["microsoft"]), new Date("2026-10-08"));
+    expect(model.sourcesLastChecked).toBe(SOURCES_LAST_CHECKED);
+    const text = await pdfText(fixtureAssessment(catalogue, ["microsoft"]));
+    expect(text).toContain(`Sources last checked: ${SOURCES_LAST_CHECKED}`);
+  }, 120_000);
+
   it("annotates findings with the chosen ISM baseline and adds a count without changing any score", async () => {
     const a = fixtureAssessment(catalogue, ["microsoft"]);
     const plain = buildReport(catalogue, a, new Date("2026-10-08"));
@@ -116,6 +123,76 @@ describe("PDF report", () => {
     expect(text).toContain("Touches the ISM PROTECTED baseline");
     expect(text).toContain("ISM baseline shown: PROTECTED");
     expect(await pdfText({ ...a, ismBaseline: undefined })).not.toContain("Touches the ISM PROTECTED baseline");
+  }, 120_000);
+
+  it("sets language and outlines, lists contents, and omits absent optional sections from the outline", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    const { model, buf, text, outlineTitles } = await renderReport(a);
+    const raw = buf.toString("latin1");
+    expect(raw).toMatch(/\/Lang\s*\(en-AU\)/);
+    expect(raw).toMatch(/\/PageMode\s*\/UseOutlines/);
+
+    for (const title of [
+      "Contents",
+      "About this report",
+      "Executive summary",
+      "Crown-jewel register",
+      "Risk register",
+      "Findings by domain",
+      "Remediation roadmap",
+      "Framework alignment",
+      "Method and limitations",
+      "References",
+    ])
+      expect(outlineTitles, title).toContain(title);
+
+    expect(outlineTitles).not.toContain("SOC maturity (indicative)");
+    expect(outlineTitles).not.toContain("AI use-case register");
+    expect(outlineTitles).not.toContain("Appendix A: Scan evidence");
+    if (model.idcf) expect(outlineTitles).toContain("IDCF Data Security Levels (indicative)");
+    else expect(outlineTitles).not.toContain("IDCF Data Security Levels (indicative)");
+
+    expect(text).toContain("Contents");
+    expect(text).toContain("About this report");
+    expect(text).toContain("This PDF is not tagged for accessibility");
+    expect(text).toContain("CSV/XLSX risk register");
+    expect(text).toMatch(/Low|Medium|High|Extreme/);
+    expect(text).not.toContain("Appendix A: Scan evidence");
+  }, 120_000);
+
+  it("keeps a short scan-evidence summary inline and lists every check in Appendix A", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    const model = buildReport(catalogue, a, new Date("2026-10-08"));
+    const gap = model.questions.find((q) => !["yes", "na"].includes(model.answers[q.id] ?? ""));
+    expect(gap).toBeTruthy();
+    const statuses = Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? ("fail" as const) : ("pass" as const)));
+    a.evidence = {
+      [gap!.id]: {
+        source: "Prowler (Microsoft 365)",
+        tool: "Prowler",
+        toolVersion: "5.44.0",
+        tenant: "riverbend.onmicrosoft.com",
+        scannedAt: "2026-10-01T04:00:00.000Z",
+        suggested: "no",
+        checks: statuses.map((status, i) => ({
+          id: `check-${i + 1}`,
+          status,
+          setting: `Setting ${i + 1} unique-token-${i + 1}`,
+          current: status === "pass" ? "ok" : "bad",
+          expected: "ok",
+        })),
+      },
+    };
+    a.imports = [{ source: "Prowler (Microsoft 365)", toolVersion: "5.44.0", tenant: "riverbend.onmicrosoft.com", scannedAt: "2026-10-01T04:00:00.000Z", importedAt: "2026-10-02T00:00:00.000Z", applied: 1 }];
+
+    const { text, outlineTitles } = await renderReport(a);
+    expect(outlineTitles).toContain("Appendix A: Scan evidence");
+    expect(text).toContain("Contents");
+    expect(text).toContain("Appendix A: Scan evidence");
+    expect(text).toContain("+14 more in Appendix A");
+    for (let i = 7; i <= 20; i++) expect(text.split("Appendix A: Scan evidence")[0]).not.toContain(`unique-token-${i}`);
+    for (const status of statuses) expect(text).toContain(status);
+    for (let i = 1; i <= 20; i++) expect(text).toContain(`unique-token-${i}`);
   }, 120_000);
 });
 

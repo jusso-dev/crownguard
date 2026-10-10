@@ -205,31 +205,28 @@
 - id: AWS-NET-008
   module: core
   domain: network-workloads
-  appliesTo: [aws-workloads, aws-data-stores]
+  appliesTo: [aws-workloads, aws-data-stores, aws-ai-agents]
   severity: medium
-  question: Are AI workloads on Amazon Bedrock and SageMaker AI that use crown-jewel data limited to that data and kept off the open internet?
+  question: Are SageMaker AI notebooks that can reach crown-jewel data kept off the open internet, without root access for users?
   why: >-
-    AI agents, knowledge bases and notebooks are often given broad roles so they "just work", and
-    notebooks with direct internet access and root are a convenient place to copy data out. A prompt
-    injection or a stolen notebook session then reaches everything the role can.
+    This question used to cover agent roles, knowledge bases, AgentCore gateways, invocation logging
+    and guardrails in one answer; those now have their own questions under Bedrock, AgentCore and
+    SageMaker AI. What remains here is notebook network exposure: a notebook with direct internet
+    access and root is a convenient place to copy data out once a session is stolen.
   yesLooksLike: >-
-    Bedrock agents, knowledge bases and AgentCore runtimes use their own roles scoped to the data sources
-    and actions they need, and AgentCore gateways require authorisation; SageMaker AI notebook instances
-    run in your VPC without direct internet access or root access for users; Bedrock model invocation
-    logging, if used, writes to a protected log store; and Bedrock Guardrails filter sensitive
-    information where agents answer people. Answer N/A if you run no AI workloads on AWS.
+    SageMaker AI notebook instances that can reach crown-jewel data run in your VPC without direct
+    internet access, and root access is turned off for notebook users. Answer N/A if you run no such
+    notebooks on AWS.
   remediation: >-
-    Give each agent, knowledge base and notebook its own least-privilege role, place SageMaker AI
-    notebooks in a VPC with direct internet access and root access turned off, require authorisation on
-    AgentCore gateways, protect any model invocation log destination like other sensitive logs, and
-    attach Bedrock Guardrails with sensitive information filters to customer- or staff-facing agents.
+    Place SageMaker AI notebooks in a VPC with direct internet access turned off and root access
+    disabled for users. Agent and knowledge-base roles, AgentCore network mode and gateways,
+    encryption, session recording, invocation logging and guardrails are covered by the AI-agent
+    questions.
   effort: M
-  sources: [aws-bedrock-iam, aws-sagemaker-notebook-internet, aws-bedrock-invocation-logging, aws-bedrock-guardrails]
+  sources: [aws-sagemaker-notebook-internet]
   refs:
     - { framework: aws-fsbp, ref: SageMaker.1 }
     - { framework: aws-fsbp, ref: SageMaker.3 }
-    - { framework: aws-fsbp, ref: BedrockAgentCore.2 }
-    - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
 
 - id: AWS-NET-009

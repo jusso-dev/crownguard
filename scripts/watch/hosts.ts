@@ -235,6 +235,30 @@ PROFILES.push(
     botProtected: true,
     concurrency: 1,
   },
+  {
+    host: "www.digital.gov.au",
+    label: "digital.gov.au",
+    // CivicTheme page body inside the Drupal main block; banners and side nav sit outside it.
+    content: ["#block-bdga-content"],
+    expectRoots: 1,
+    strip: [
+      "nav",
+      ".ct-breadcrumb",
+      ".ct-side-navigation",
+      ".ct-attachment__links__link__changed",
+      "#feedback-widget",
+      ".widget-feedback-button",
+      "[hidden]",
+      "[aria-hidden=true]",
+    ],
+    volatile: [],
+    sectionHeadings: "h2, h3",
+    updatedSelector: ".ct-attachment__links__link__changed",
+    excerpts: "cc-by-4.0",
+    licence: "CC BY 4.0, © Commonwealth of Australia",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+    concurrency: 2,
+  },
 );
 
 const byHost = new Map(PROFILES.map((p) => [p.host, p]));

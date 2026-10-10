@@ -4,10 +4,11 @@ vendor: Amazon Web Services
 description: >-
   An AWS environment: the organisation in AWS Organizations and its member accounts, IAM Identity
   Center and IAM, data stores such as Amazon S3 and Amazon RDS, EC2, container and serverless
-  workloads, KMS keys and secrets, logging and threat detection, and AWS Backup. Questions follow
-  AWS's own security best practices and multi-account guidance, the posture checks a cloud
-  security posture management tool would flag, and are cross-referenced to the CIS Amazon Web
-  Services Foundations Benchmark and the AWS Foundational Security Best Practices standard.
+  workloads, Bedrock and AgentCore AI agents, KMS keys and secrets, logging and threat detection,
+  and AWS Backup. Questions follow AWS's own security best practices and multi-account guidance,
+  the posture checks a cloud security posture management tool would flag, and are cross-referenced
+  to the CIS Amazon Web Services Foundations Benchmark and the AWS Foundational Security Best
+  Practices standard.
 
 
 # Licence features below are based on these vendor pricing pages.
@@ -70,7 +71,10 @@ domains:
     description: Public exposure, discovery, encryption at rest and in transit, keys, secrets, database access and deletion protection for S3, databases, snapshots and other data stores.
   - id: network-workloads
     name: Network & workloads
-    description: Internet exposure, web application protection, instance metadata, server administration, AI workloads, and vulnerability scanning and patching of EC2, containers, Kubernetes and Lambda.
+    description: Internet exposure, web application protection, instance metadata, server administration, and vulnerability scanning and patching of EC2, containers, Kubernetes and Lambda.
+  - id: ai-agents
+    name: Bedrock, AgentCore & SageMaker AI
+    description: Agent and knowledge-base roles, AgentCore network mode, gateways, memory encryption, session recording, model invocation logging and guardrails for AI that touches crown-jewel data.
   - id: logging-detection
     name: Logging & detection
     description: CloudTrail and its protection, data access, server and network logs, GuardDuty, Security Hub CSPM, AWS Config, alerting, triage and incident response.
