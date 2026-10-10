@@ -117,6 +117,24 @@ describe("opening a file", () => {
     expect(result.notices.some((n) => n.text.includes("OLD-QUESTION"))).toBe(true);
   });
 
+  it("keeps an AWS-NET-008 answer when the file is opened after the question was narrowed", () => {
+    const ids = new Set(["AWS-NET-008", "AWS-AI-001", "MS-ID-001"]);
+    const result = parseAssessment(
+      {
+        ...emptyAssessment(),
+        platforms: ["aws"],
+        answers: { "AWS-NET-008": "partial", "MS-ID-001": "yes" },
+        notes: { "AWS-NET-008": "Notebooks in VPC; agents reviewed separately." },
+      },
+      { questionIds: ids },
+    );
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+    expect(result.assessment.answers["AWS-NET-008"]).toBe("partial");
+    expect(result.assessment.notes["AWS-NET-008"]).toBe("Notebooks in VPC; agents reviewed separately.");
+    expect(result.assessment.orphans ?? {}).toEqual({});
+  });
+
   it("reports every problem with its path, and no more than five of them", () => {
     const result = parseAssessment({
       ...emptyAssessment(),

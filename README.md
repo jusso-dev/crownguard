@@ -46,7 +46,7 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **Optional scan import.** Already run a scanner? Import its results on the Controls step to pre-fill answers where its
   checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
   for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
-  for AWS (52 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
+  for AWS (56 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
   Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
   never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources.
   [ScubaGoggles](https://github.com/cisagov/ScubaGoggles) for Google Workspace (`ScubaResults*.json`, 33 questions) is

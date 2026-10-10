@@ -76,7 +76,7 @@
   discoveryPrompts:
     - Which workloads face the internet, and what IAM role does each one run with?
     - How do administrators connect to servers and clusters?
-    - Which workloads process or store crown-jewel data, including AI applications on Amazon Bedrock or SageMaker AI?
+    - Which workloads process or store crown-jewel data?
   exposures: [internet-facing, standing-admin, third-party-apps]
   threats:
     - { technique: T1190, name: Exploit Public-Facing Application }
@@ -102,6 +102,31 @@
     - { technique: T1552, name: Unsecured Credentials }
     - { technique: T1555.006, name: "Credentials from Password Stores: Cloud Secrets Management Stores" }
     - { technique: T1485, name: Data Destruction }
+
+- id: aws-ai-agents
+  module: core
+  tier: ai
+  name: Amazon Bedrock, AgentCore & SageMaker AI
+  description: >-
+    Bedrock agents and knowledge bases, AgentCore runtimes, gateways, memory and tools, SageMaker AI
+    endpoints and notebooks that touch crown-jewel data, and Amazon Quick if you use it. Agents hold
+    IAM roles and tool access to your data, so a prompt injection or over-privileged role reaches
+    whatever they can.
+  examples:
+    - Bedrock agents and knowledge bases over company documents
+    - AgentCore runtimes, gateways, memory and custom tools
+    - SageMaker AI notebooks or endpoints that read crown-jewel data
+    - Amazon Quick (or Amazon Q Business for existing customers) over company data
+  discoveryPrompts:
+    - Which Bedrock agents, knowledge bases or AgentCore runtimes can reach crown-jewel data?
+    - Do any SageMaker AI notebooks or endpoints process board, HR, finance or customer data?
+    - Is Amazon Quick (or Q Business) answering from SharePoint, S3 or other company stores?
+  exposures: [ai-grounding, internet-facing, third-party-apps]
+  threats:
+    - { technique: T1213, name: Data from Information Repositories }
+    - { technique: T1530, name: Data from Cloud Storage }
+    - { technique: T1567, name: Exfiltration Over Web Service }
+    - { technique: T1190, name: Exploit Public-Facing Application }
 
 - id: aws-backups
   module: core

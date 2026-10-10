@@ -111,8 +111,24 @@ kinds:
     name: In-house AI agent
     description: An agent your organisation built or configured that can use tools, call APIs or act across several steps.
     defaults: { technology: [generative-ai] }
-    relatedQuestions: [MS-AI-005]
+    relatedQuestions: [MS-AI-005, AWS-AI-001, AWS-AI-002, AWS-AI-003, AWS-AI-005, AWS-AI-006, AWS-AI-007, AWS-NET-008]
     sources: [asd-agentic-ai]
+  - id: bedrock-agent
+    name: Amazon Bedrock or AgentCore agent
+    description: An in-house agent on Amazon Bedrock or Bedrock AgentCore that answers from your data or takes actions through tools and gateways.
+    product: Amazon Bedrock
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: hotl, access: scoped }
+    exposures: [ai-grounding]
+    relatedQuestions: [AWS-AI-001, AWS-AI-002, AWS-AI-003, AWS-AI-004, AWS-AI-005, AWS-AI-006, AWS-AI-007, AWS-NET-008]
+    sources: [aws-bedrock-iam, aws-bedrock-agentcore-security, asd-agentic-ai]
+  - id: amazon-quick
+    name: Amazon Quick
+    description: Amazon Quick answering from your organisation's content. Existing Amazon Q Business customers can use the same preset.
+    product: Amazon Quick
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: assists, access: delegated }
+    exposures: [ai-grounding]
+    relatedQuestions: [AWS-AI-001, AWS-AI-006, AWS-AI-007]
+    sources: [aws-amazon-quick, dta-ai-policy-appendices]
   - id: other
     name: Other AI use case
     description: Machine learning models, computer vision, analytics or any other AI not listed above.
