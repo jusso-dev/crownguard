@@ -32,7 +32,9 @@ export function stripHtml(s: string): string {
   const entities: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
   return s
     .replace(/<br\s*\/?>/gi, " ")
+    // Tags are stripped whole, and one left open at the end of the text runs to the end rather than surviving.
     .replace(/<\/?[a-z][^>]*>/gi, "")
+    .replace(/<\/?[a-z][^>]*$/gi, "")
     .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === "#") {
         const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
@@ -40,6 +42,10 @@ export function stripHtml(s: string): string {
       }
       return entities[e.toLowerCase()] ?? m;
     })
+    // Decoding entities can put an angle bracket back (`&lt;script&gt;`). Once that's happened the text is done being
+    // unescaped, so any bracket that could open a tag comes out. `3 < 4` and similar are untouched: they don't start
+    // with a letter, a slash or an exclamation.
+    .replace(/<(?=[a-z!/?])/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
