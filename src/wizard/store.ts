@@ -96,6 +96,11 @@ interface State {
   setAiSection: (entryId: string) => void;
   /** Add an entry from a preset and open it. Returns its id. */
   addAiUseCase: (kind: AiKind) => string;
+  /**
+   * Add an entry pre-filled from the consent import's "Found apps" panel. It keeps the panel and the open entry as
+   * they are, so several apps can be added in one sitting. The entry never carries a readiness answer.
+   */
+  addImportedAiUseCase: (entry: AiUseCase) => void;
   updateAiUseCase: (id: string, patch: Partial<Omit<AiUseCase, "id" | "example">>) => void;
   removeAiUseCase: (id: string) => void;
   setAiAnswer: (id: string, questionId: string, answer: Answer) => void;
@@ -170,6 +175,7 @@ export const useStore = create<State>()(
           }));
           return id;
         },
+        addImportedAiUseCase: (entry) => update((a) => ({ aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []), entry] } })),
         updateAiUseCase: (id, patch) => update((a) => editEntry(a, id, (e) => ({ ...e, ...patch }))),
         removeAiUseCase: (id) => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
         setAiAnswer: (id, q, answer) => update((a) => editEntry(a, id, (e) => ({ ...e, answers: { ...e.answers, [q]: answer } }))),

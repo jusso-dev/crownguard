@@ -173,6 +173,8 @@ export interface AiUseCase {
   id: string;
   /** Added by "Load example entries": labelled as example data everywhere it appears. */
   example?: boolean;
+  /** Added by the consent import (shadow AI discovery), naming the import it came from. Never an answer. */
+  foundBy?: string;
   /** Preset from content/ai-register/model.yaml, e.g. "m365-copilot". */
   kind: string;
   name: string;

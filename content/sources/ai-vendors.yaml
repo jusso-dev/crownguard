@@ -1,0 +1,94 @@
+# Vendor pages for the curated AI app list in content/ai-register/known-ai-apps.yaml. Each entry there cites one of
+# these; they are the vendors' own product or documentation pages. The list classifies apps so an assessor can decide
+# what to do; citing a vendor here doesn't endorse it.
+
+- id: openai-chatgpt
+  title: ChatGPT Enterprise
+  publisher: OpenAI
+  url: https://openai.com/chatgpt/enterprise/
+  retrieved: 2026-10-10
+- id: openai
+  title: OpenAI
+  publisher: OpenAI
+  url: https://openai.com/
+  retrieved: 2026-10-10
+- id: anthropic-claude
+  title: Claude
+  publisher: Anthropic
+  url: https://www.anthropic.com/claude
+  retrieved: 2026-10-10
+- id: anthropic
+  title: Anthropic
+  publisher: Anthropic
+  url: https://www.anthropic.com/
+  retrieved: 2026-10-10
+- id: model-context-protocol
+  title: Introducing the Model Context Protocol
+  publisher: Anthropic
+  url: https://www.anthropic.com/news/model-context-protocol
+  retrieved: 2026-10-10
+- id: perplexity
+  title: Perplexity documentation
+  publisher: Perplexity
+  url: https://docs.perplexity.ai/
+  retrieved: 2026-10-10
+- id: otter-ai
+  title: Otter.ai
+  publisher: Otter.ai
+  url: https://otter.ai/
+  retrieved: 2026-10-10
+- id: fireflies
+  title: Fireflies.ai
+  publisher: Fireflies.ai
+  url: https://fireflies.ai/
+  retrieved: 2026-10-10
+- id: fathom-video
+  title: Fathom
+  publisher: Fathom Video
+  url: https://fathom.video/
+  retrieved: 2026-10-10
+- id: grain
+  title: Grain
+  publisher: Grain
+  url: https://grain.com/
+  retrieved: 2026-10-10
+- id: read-ai
+  title: Read.ai
+  publisher: Read.ai
+  url: https://www.read.ai/
+  retrieved: 2026-10-10
+- id: gong
+  title: Gong
+  publisher: Gong
+  url: https://www.gong.io/
+  retrieved: 2026-10-10
+- id: zoom-ai-companion
+  title: Zoom AI assistant
+  publisher: Zoom
+  url: https://www.zoom.com/en/products/ai-assistant/
+  retrieved: 2026-10-10
+- id: notion-ai
+  title: Notion AI
+  publisher: Notion
+  url: https://www.notion.com/product/ai
+  retrieved: 2026-10-10
+- id: grammarly
+  title: Grammarly
+  publisher: Grammarly
+  url: https://www.grammarly.com/
+  retrieved: 2026-10-10
+- id: zapier-ai
+  title: Zapier AI
+  publisher: Zapier
+  url: https://zapier.com/ai
+  retrieved: 2026-10-10
+- id: make
+  title: Make
+  publisher: Make
+  url: https://www.make.com/
+  retrieved: 2026-10-10
+- id: n8n
+  title: n8n
+  publisher: n8n
+  url: https://n8n.io/
+  retrieved: 2026-10-10

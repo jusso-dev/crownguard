@@ -685,6 +685,10 @@
               "example": {
                 "type": "boolean"
               },
+              "foundBy": {
+                "type": "string",
+                "maxLength": 200
+              },
               "groupOf": {
                 "type": "string",
                 "maxLength": 200

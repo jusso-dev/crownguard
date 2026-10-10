@@ -1327,3 +1327,28 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments-alert
   retrieved: 2026-10-09
+- id: ms-mdca-risk-score
+  title: Risk score for discovered apps in Microsoft Defender for Cloud Apps
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-cloud-apps/risk-score
+  retrieved: 2026-10-10
+- id: ms-manage-generative-ai-apps
+  title: Manage generative AI apps in Microsoft 365 Copilot
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/manage-generative-ai-apps
+  retrieved: 2026-10-10
+- id: ms-graph-permissions-reference
+  title: Microsoft Graph permissions reference
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/graph/permissions-reference
+  retrieved: 2026-10-10
+- id: ms-copilot-overview
+  title: Microsoft 365 Copilot documentation
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/copilot/microsoft-365/
+  retrieved: 2026-10-10
+- id: ms-copilot-studio
+  title: Microsoft Copilot Studio documentation
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/microsoft-copilot-studio/
+  retrieved: 2026-10-10

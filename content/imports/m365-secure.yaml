@@ -78,8 +78,11 @@ mappings:
     checks: [ENTRA-CONSENT-001, ENTRA-APPS-001, ENTRA-CONSENT-002]
     rationale: Read the default user role for no consent (or verified-publisher low-impact only) and allowedToCreateApps false, and the adminConsentRequestPolicy for enabled with reviewers.
   - question: MS-APP-002
-    checks: [ENTRA-ENTAPP-022]
-    rationale: Passes when every third-party service principal with high-impact permissions has an owner and a sign-in within 90 days.
+    checks: [ENTRA-ENTAPP-022, ENTRA-ENTAPP-004, ENTRA-ENTAPP-011]
+    rationale: >-
+      Check that every third-party service principal with high-impact permissions has an owner and a sign-in within
+      90 days, that no third-party app holds high-impact permissions beyond a reviewed set, and that no foreign
+      (other-tenant) app holds mail, files or sites access without one.
     # Business justification, the quarterly review and alerting on new grants are process evidence.
     cap: partial
   - question: MS-APP-003
@@ -88,6 +91,24 @@ mappings:
   - question: MS-APP-004
     checks: [EXO-APPRBAC-001]
     rationale: Passes when every service principal holding mailbox application permissions is limited by an application access policy or an RBAC for Applications assignment with a custom scope.
+  - question: MS-APP-005
+    checks: [ENTRA-ENTAPP-020]
+    rationale: >-
+      Flags foreign (other-tenant) service principals impersonating Microsoft product names — the shape fake
+      "Copilot", "Outlook" and AI assistant apps take — so a fail shows unsanctioned or deceptive apps are present and
+      discovery and sanctioning aren't holding.
+    # The check looks at app names, not the Defender for Cloud Apps catalogue or the sanction/block decisions, so a
+    # pass only partly answers the question. Name matching has false positives (a partner app called "Outlook ..."),
+    # so a fail sends the question to review rather than straight to No.
+    cap: partial
+    failIsInconclusive: true
+  - question: MS-APP-006
+    checks: [ENTRA-CONSENT-003, ENTRA-CONSENT-004]
+    rationale: >-
+      Read the user consent setting for verified publishers requesting low-impact permissions only, and the tenant-wide
+      (AllPrincipals) admin consent grants to third-party apps.
+    # The periodic review of those tenant-wide consents is process evidence the scan can't see.
+    cap: partial
 
   # ── Exchange ────────────────────────────────────────────────────────────────
   - question: MS-EXO-001

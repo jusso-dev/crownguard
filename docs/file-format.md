@@ -50,7 +50,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | `evidence` | object | Scan evidence per question id, from an optional automated import. Carries the scanner (`tool`, `toolVersion`), the `account` it covered, and per check a `count` ("3 of 41 resources failing") and up to ten `examples`. |
 | `imports` | object[] | One row per scan import: source, `toolVersion?`, tenant, scanned at, imported at, answers applied. |
 | `soc` | object | Optional SOC maturity self-assessment: `answers`, `notes?`, `outOfScope`, `targets?`, `provider?`. |
-| `aiRegister` | object | Optional AI use-case register: `entries`, plus `createdAt?`, `lastSharedWithDta?` and `dateConfirmation?` for the DTA's dates. Entries may set `groupOf` when they're parts of one product. |
+| `aiRegister` | object | Optional AI use-case register: `entries`, plus `createdAt?`, `lastSharedWithDta?` and `dateConfirmation?` for the DTA's dates. Entries may set `groupOf` when they're parts of one product, and `foundBy` when the consent import (shadow AI discovery) created them. |
 | `progress` | object | Where you were: `step`, `section?`, `socSection?`, `layout?`. |
 | `createdAt`, `updatedAt` | string | ISO 8601 timestamps. |
 
@@ -65,6 +65,9 @@ Anything else in the file is allowed and is carried through unchanged.
 - The register block and its entries are now loose objects like the top level. From here on the version moves when a
   field changes meaning or becomes required, **not** when an optional one is added: added fields survive a re-save in
   a build that has never heard of them.
+- `foundBy` on an entry, set when the consent import (shadow AI discovery) created it. Optional, so no version move:
+  it's recorded, never an answer, and only the entry's own fields are saved — the import's user names and email
+  addresses are counted and dropped before anything reaches the file.
 
 ### 3
 

@@ -700,3 +700,18 @@
   publisher: Google
   url: https://support.google.com/chrome/a/answer/1360534
   retrieved: 2026-10-09
+- id: gws-oauth-log-events
+  title: "OAuth log events"
+  publisher: Google
+  url: https://support.google.com/a/answer/6124308
+  retrieved: 2026-10-10
+- id: google-oauth-scopes
+  title: "OAuth 2.0 scopes for Google APIs"
+  publisher: Google
+  url: https://developers.google.com/identity/protocols/oauth2/scopes
+  retrieved: 2026-10-10
+- id: google-gemini
+  title: "Gemini"
+  publisher: Google
+  url: https://gemini.google/overview/
+  retrieved: 2026-10-10

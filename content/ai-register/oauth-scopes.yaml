@@ -1,0 +1,228 @@
+# Common OAuth permission scopes in plain English, for reading the consent inventories the shadow AI import parses
+# (Microsoft Graph delegated scopes and Google OAuth scopes). Each entry cites the vendor's own scope documentation.
+# `highReach` marks the scopes that reach mail, files, calendar or meeting content — an app holding one of these can
+# read what your organisation writes, whatever the app is. `data` is the kind of data an app with this scope can see,
+# which pre-fills "Data it handles" on a register entry created from the import.
+#
+# version: bump when the entry shape changes. Adding scopes doesn't need a bump.
+version: 1
+scopes:
+  # ── Microsoft Graph ─────────────────────────────────────────────────────────
+  - id: graph-mail-read
+    provider: microsoft
+    scope: Mail.Read
+    summary: Read all email in every mailbox
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-mail-readwrite
+    provider: microsoft
+    scope: Mail.ReadWrite
+    summary: Read, create, move and delete email in every mailbox
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-mail-send
+    provider: microsoft
+    scope: Mail.Send
+    summary: Send email from people's mailboxes
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-files-read
+    provider: microsoft
+    scope: Files.Read
+    summary: Read the files the person using it can see
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-files-read-all
+    provider: microsoft
+    scope: Files.Read.All
+    summary: Read every file in the organisation
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-files-readwrite-all
+    provider: microsoft
+    scope: Files.ReadWrite.All
+    summary: Read, create, change and delete every file in the organisation
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-sites-read-all
+    provider: microsoft
+    scope: Sites.Read.All
+    summary: Read all SharePoint and OneDrive sites and their files
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-calendars-read
+    provider: microsoft
+    scope: Calendars.Read
+    summary: Read everyone's calendars, including meeting titles and times
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-calendars-readwrite
+    provider: microsoft
+    scope: Calendars.ReadWrite
+    summary: Read and change everyone's calendars
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-online-meetings-read
+    provider: microsoft
+    scope: OnlineMeetings.Read
+    summary: Read records of everyone's online meetings
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-meeting-transcripts
+    provider: microsoft
+    scope: OnlineMeetingTranscript.Read.All
+    summary: Read transcripts of everyone's online meetings
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-chat-read
+    provider: microsoft
+    scope: Chat.Read
+    summary: Read Microsoft Teams chat messages
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-chat-readwrite
+    provider: microsoft
+    scope: Chat.ReadWrite
+    summary: Read and send Microsoft Teams chat messages
+    highReach: true
+    data: [official, personal]
+    source: ms-graph-permissions-reference
+  - id: graph-user-read-all
+    provider: microsoft
+    scope: User.Read.All
+    summary: Read the name, job title and contact details of every user
+    highReach: false
+    data: [personal]
+    source: ms-graph-permissions-reference
+  - id: graph-user-read
+    provider: microsoft
+    scope: User.Read
+    summary: Read the profile of the person signed in
+    highReach: false
+    data: [personal]
+    source: ms-graph-permissions-reference
+  - id: graph-openid
+    provider: microsoft
+    scope: openid
+    summary: Sign the person in and read their basic identity
+    highReach: false
+    data: [personal]
+    source: ms-graph-permissions-reference
+  - id: graph-email
+    provider: microsoft
+    scope: email
+    summary: Read the email address on the person's account
+    highReach: false
+    data: [personal]
+    source: ms-graph-permissions-reference
+  # ── Google Workspace ────────────────────────────────────────────────────────
+  - id: google-gmail-readonly
+    provider: google
+    scope: gmail.readonly
+    summary: Read all email in Gmail
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-gmail-modify
+    provider: google
+    scope: gmail.modify
+    summary: Read, organise and delete email in Gmail
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-gmail-send
+    provider: google
+    scope: gmail.send
+    summary: Send email from the person's Gmail
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-drive-readonly
+    provider: google
+    scope: drive.readonly
+    summary: See and download every file in Google Drive
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-drive
+    provider: google
+    scope: drive
+    summary: See, create, change and delete every file in Google Drive
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-drive-file
+    provider: google
+    scope: drive.file
+    summary: Open only the files the app created or the person picked
+    highReach: false
+    data: [official]
+    source: google-oauth-scopes
+  - id: google-calendar-readonly
+    provider: google
+    scope: calendar.readonly
+    summary: See everyone's calendars and events
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-calendar-events
+    provider: google
+    scope: calendar.events
+    summary: See, create and change calendar events
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-meet-transcripts
+    provider: google
+    scope: meetings.readonly
+    summary: Read transcripts and details of Google Meet meetings
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-documents-readonly
+    provider: google
+    scope: documents.readonly
+    summary: Read every Google Doc
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-spreadsheets-readonly
+    provider: google
+    scope: spreadsheets.readonly
+    summary: Read every Google Sheet
+    highReach: true
+    data: [official, personal]
+    source: google-oauth-scopes
+  - id: google-contacts-readonly
+    provider: google
+    scope: contacts.readonly
+    summary: See the person's contacts
+    highReach: false
+    data: [personal]
+    source: google-oauth-scopes
+  - id: google-userinfo-email
+    provider: google
+    scope: userinfo.email
+    summary: Read the email address on the person's account
+    highReach: false
+    data: [personal]
+    source: google-oauth-scopes
+  - id: google-userinfo-profile
+    provider: google
+    scope: userinfo.profile
+    summary: Read the person's basic profile
+    highReach: false
+    data: [personal]
+    source: google-oauth-scopes

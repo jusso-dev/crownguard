@@ -3,7 +3,8 @@ import type { Question } from "../../content/schema";
 import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer, type Evidence } from "../../engine/types";
 import { NOTE_MAX } from "../assessmentSchema";
-import { useStore } from "../store";
+import { scrollToFoundApps } from "../FoundApps";
+import { steps, useStore } from "../store";
 import { Button, Progress, SeverityBadge, StepHeader, inputClass, radioKeys, radioTab } from "../ui";
 import { ScanImport, stamp, statusStyle } from "../ScanImport";
 
@@ -67,6 +68,22 @@ export function ControlsStep() {
         <p className="mono-label text-muted">{group.platform}</p>
         <h2 className="mt-1.5 text-[1.375rem] font-semibold leading-tight">{group.domain.name}</h2>
         <p className="mt-1.5 max-w-[68ch] text-sm text-ink-2">{group.domain.description}</p>
+        {["apps-consent", "oauth-apps"].includes(group.domain.id) && (
+          <p className="mt-3 max-w-[68ch] rounded-[var(--radius-control)] border border-rule bg-surface px-4 py-2.5 text-sm text-ink-2" data-testid="found-apps-link">
+            Looking for AI tools people have already connected? The AI register step has a &ldquo;Found apps&rdquo; panel that reads an app consent
+            export and lists the AI assistants, note-takers and agents in it.{" "}
+            <button
+              type="button"
+              className="font-medium text-accent underline decoration-accent/30 underline-offset-2"
+              onClick={() => {
+                useStore.getState().setStep(steps.indexOf("AI register"));
+                scrollToFoundApps();
+              }}
+            >
+              Find the apps people have connected →
+            </button>
+          </p>
+        )}
         <div className="mt-6 space-y-3">
           {group.questions.map((q) => (
             <QuestionCard key={q.id} q={q} />

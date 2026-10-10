@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { readContentFiles } from "../../scripts/read-content";
 import type { ImportMapping } from "../content/schema";
+import { loadCatalogue } from "../content/loader";
 import { aggregate, suggestFor } from "./aggregate";
 import { readScan, scanSchema, suggestLicence } from "./m365Secure";
 
@@ -73,5 +75,59 @@ describe("mapping safeguards", () => {
     expect(suggestFor({ ...base, cap: "partial" }, ["fail"])).toBe("no");
     expect(suggestFor({ ...base, failIsInconclusive: true }, ["fail"])).toBeUndefined();
     expect(suggestFor({ ...base, failIsInconclusive: true }, ["pass"])).toBe("yes");
+  });
+});
+
+/** The mapping crownguard ships, so the consent and shadow-AI rows are tested as written. */
+const shipped = loadCatalogue(readContentFiles()).catalogue.imports.get("m365-secure")!;
+const row = (question: string) => shipped.mappings.find((m) => m.question === question)!;
+
+describe("consent and shadow-AI mappings", () => {
+  it("maps the consent checks to the consent review question, capped at partial", () => {
+    const m = row("MS-APP-006");
+    expect(m.checks).toEqual(["ENTRA-CONSENT-003", "ENTRA-CONSENT-004"]);
+    expect(m.cap).toBe("partial");
+    // Both halves pass → only Partial: the review of those consents is process evidence.
+    expect(suggestFor(m, ["pass", "pass"])).toBe("partial");
+    expect(suggestFor(m, ["pass", "fail"])).toBe("partial");
+    expect(suggestFor(m, ["fail", "fail"])).toBe("no");
+    expect(suggestFor(m, ["review", "review"])).toBeUndefined();
+  });
+
+  it("sends an impersonation failure to review rather than No", () => {
+    const m = row("MS-APP-005");
+    expect(m.checks).toEqual(["ENTRA-ENTAPP-020"]);
+    expect(m.failIsInconclusive).toBe(true);
+    expect(suggestFor(m, ["pass"])).toBe("partial");
+    expect(suggestFor(m, ["fail"])).toBeUndefined();
+    expect(suggestFor(m, ["fail", "pass"])).toBe("partial");
+  });
+
+  it("counts foreign and high-impact apps into the inventory question", () => {
+    const m = row("MS-APP-002");
+    expect(m.checks).toEqual(["ENTRA-ENTAPP-022", "ENTRA-ENTAPP-004", "ENTRA-ENTAPP-011"]);
+    expect(suggestFor(m, ["pass", "pass", "pass"])).toBe("partial");
+    expect(suggestFor(m, ["pass", "pass", "fail"])).toBe("partial");
+    expect(suggestFor(m, ["fail", "fail", "fail"])).toBe("no");
+  });
+
+  it("turns the new checks into evidence when a scan reports them", () => {
+    const scan = scanSchema.parse({
+      summary: {
+        timestamp: "2026-10-10T03:00:00Z",
+        tenant: { display_name: "Contoso Pty Ltd", primary_domain: "contoso.example", license_skus: [] },
+      },
+      findings: [
+        { check_id: "ENTRA-CONSENT-003", status: "pass" },
+        { check_id: "ENTRA-CONSENT-004", status: "fail" },
+        { check_id: "ENTRA-ENTAPP-020", status: "fail" },
+      ],
+    });
+    const r = readScan(scan, shipped);
+    const suggested = Object.fromEntries(r.suggestions.map((s) => [s.question, s.evidence.suggested]));
+    expect(suggested["MS-APP-006"]).toBe("partial");
+    // The impersonation check's false fails go to the assessor, not to No.
+    expect(suggested["MS-APP-005"]).toBeUndefined();
+    expect(r.suggestions.find((s) => s.question === "MS-APP-005")!.evidence.checks.map((c) => c.id)).toEqual(["ENTRA-ENTAPP-020"]);
   });
 });
