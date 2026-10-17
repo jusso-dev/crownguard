@@ -1,0 +1,32 @@
+[package]
+name = "crownguard-tui"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Terminal (Ratatui) front end for crownguard: run the crown-jewel assessment offline with no browser or Node."
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "crownguard"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive"] }
+include_dir = "0.7"
+indexmap = { version = "2", features = ["serde"] }
+ratatui = "0.30"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml_ng = "0.10"
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
+[dev-dependencies]
+jsonschema = { version = "0.30", default-features = false }

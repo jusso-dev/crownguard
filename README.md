@@ -293,6 +293,20 @@ A **dedicated origin is recommended but not configured yet** (no custom domain h
 `https://jusso-dev.github.io/crownguard/` for now. For sensitive assessments prefer a passphrase, no-persistence mode,
 **Save file**, a private window, or self-hosting on your own domain. See [docs/threat-model.md](docs/threat-model.md).
 
+### In the terminal
+
+`tui/` builds crownguard as a single terminal app ([Ratatui](https://ratatui.rs)) with the question catalogue
+inside it: no browser, Node or network needed. It runs the crown-jewel assessment from organisation through to the
+review (posture, heatmap, risks, Essential Eight and roadmap) and saves the same `.crownguard.json` file, so you can
+switch between it and the web app at any point.
+
+```sh
+cargo build --release --manifest-path tui/Cargo.toml
+./tui/target/release/crownguard riverbend.crownguard.json
+```
+
+The PDF, scan import, SOC maturity and the AI register stay in the web app. See [docs/tui.md](docs/tui.md).
+
 ### Headless use
 
 For consulting workflows, CI, or agents — validate, import scans, score, render PDFs and export the AI register from
@@ -421,7 +435,8 @@ finding or a DTA assessment, and it doesn't replace your AI impact assessment.
 
 ## Stack
 
-Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. Fonts (all SIL
+Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. The terminal app
+is Rust with Ratatui. Fonts (all SIL
 Open Font License, self-hosted): Space Grotesk, Inter and JetBrains Mono in the app via `@fontsource`; Inter in the
 PDF (`src/report/fonts/OFL.txt`). The UI design system is documented in [design.md](design.md).
 

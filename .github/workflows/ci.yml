@@ -41,6 +41,31 @@ jobs:
       - run: pnpm build
       - run: pnpm check:bundle
 
+  # The terminal app in tui/: format, lint and test the Rust, then score the fixtures and a few hundred random
+  # assessments with it and with the TypeScript engine, and fail on any difference.
+  tui:
+    name: tui
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: rustup toolchain install stable --profile minimal --component clippy,rustfmt && rustup default stable
+      - run: cargo fmt --manifest-path tui/Cargo.toml --check
+      - run: cargo clippy --manifest-path tui/Cargo.toml --locked --all-targets -- -D warnings
+      - run: cargo test --manifest-path tui/Cargo.toml --locked
+      - run: cargo build --manifest-path tui/Cargo.toml --locked
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tui:parity
+
   # Warn-only on purpose: must not fail CI and block unrelated PRs. GitHub disables scheduled workflows after 60 days
   # without repository activity; this surfaces a quiet source-watch schedule with the re-enable link.
   source-watch-heartbeat:

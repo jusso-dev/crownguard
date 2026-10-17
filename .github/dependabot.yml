@@ -1,4 +1,4 @@
-# Keeps GitHub Actions and npm dependencies current. Major updates come one at a time so a breaking change is easy to
+# Keeps GitHub Actions, npm and Cargo (the terminal app in tui/) dependencies current. Major updates come one at a time so a breaking change is easy to
 # spot; minor and patch updates are grouped to keep the pull request count down.
 version: 2
 updates:
@@ -31,4 +31,18 @@ updates:
         update-types: [minor, patch]
       runtime-dependencies:
         dependency-type: production
+        update-types: [minor, patch]
+
+  - package-ecosystem: cargo
+    directory: /tui
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:29"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      crates:
+        patterns: ["*"]
         update-types: [minor, patch]
