@@ -1,0 +1,254 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ask, message, open, save } from "@tauri-apps/plugin-dialog";
+import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import type { AutosaveStore, FileSaver, OpenedFile, Platform, RecentAssessment, SaveAsResult, SaveResult } from "./types";
+
+/** The file filter for every `.crownguard.json` dialog. */
+const ASSESSMENT_FILTER = { name: "crownguard assessment", extensions: ["json"] };
+
+/** Sent by the Rust side when the operating system asks the running app to open a file (see src-tauri/src/lib.rs). */
+const OPEN_FILE_EVENT = "open-file";
+
+export const basename = (path: string) => path.split(/[\\/]/).pop() || path;
+
+const describe = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * Autosave backed by SQLite in the app data directory.
+ *
+ * The web build reads progress synchronously (`persistence.ts`), so every value is loaded once at start-up and reads
+ * are served from memory. Writes update memory at once and go to SQLite in order, one at a time, so a slow write can
+ * never land after a newer one. Encryption is unchanged: `persistence.ts` encrypts before it calls `setItem`, so an
+ * encrypted assessment reaches SQLite only as its envelope.
+ */
+export class SqliteAutosave implements AutosaveStore {
+  private readonly values: Map<string, string>;
+  private queue: Promise<void> = Promise.resolve();
+  /** The last write that failed, if any, for the settings panel to report. */
+  lastError: string | undefined;
+
+  constructor(initial: Record<string, string>) {
+    this.values = new Map(Object.entries(initial));
+  }
+
+  static async load(): Promise<SqliteAutosave> {
+    return new SqliteAutosave(await invoke<Record<string, string>>("autosave_load"));
+  }
+
+  getItem(key: string): string | null {
+    return this.values.get(key) ?? null;
+  }
+
+  setItem(key: string, value: string): void {
+    this.values.set(key, value);
+    this.enqueue(() => invoke("autosave_set", { key, value }));
+  }
+
+  removeItem(key: string): void {
+    this.values.delete(key);
+    this.enqueue(() => invoke("autosave_remove", { key }));
+  }
+
+  /**
+   * True while "Don't keep this assessment on this device" is on (the flag `persistence.ts` writes). Nothing about
+   * the assessment, not even a file's summary in the recent list, is kept then.
+   */
+  get ephemeral(): boolean {
+    return this.values.get("crownguard:v1:ephemeral") === "1";
+  }
+
+  /** Resolves once every write so far has reached SQLite (or failed). */
+  flush(): Promise<void> {
+    return this.queue;
+  }
+
+  private enqueue(write: () => Promise<unknown>) {
+    this.queue = this.queue.then(write).then(
+      () => {
+        this.lastError = undefined;
+      },
+      (e) => {
+        this.lastError = describe(e);
+        console.error("crownguard: autosave write failed", this.lastError);
+      },
+    );
+  }
+}
+
+let autosaveStore: SqliteAutosave | undefined;
+
+/**
+ * Index a file (org name and platforms only, and nothing at all for an encrypted file) for the recent list, unless
+ * the user has asked for nothing to be kept on this device.
+ */
+async function recordRecent(path: string, contents: string) {
+  if (autosaveStore?.ephemeral) return;
+  await invoke("recent_record", { path, contents }).catch(() => undefined);
+}
+
+async function readOpened(path: string): Promise<OpenedFile> {
+  const text = await readTextFile(path);
+  await recordRecent(path, text);
+  return { name: basename(path), text, path };
+}
+
+/** `.crownguard.json` save: a native dialog the first time, then straight back to the same file, like ⌘/Ctrl S in any app. */
+export function createNativeFileSaver(): FileSaver {
+  let path: string | null = null;
+  return {
+    reset() {
+      path = null;
+    },
+    get fileName() {
+      return path ? basename(path) : undefined;
+    },
+    adopt(file) {
+      if (file.path) path = file.path;
+    },
+    async save(suggestedName, contents): Promise<SaveResult> {
+      const reused = path !== null;
+      const target = path ?? (await save({ defaultPath: suggestedName, filters: [ASSESSMENT_FILTER] }));
+      if (!target) return { kind: "cancelled" };
+      try {
+        await writeTextFile(target, contents);
+      } catch (e) {
+        // Moved, deleted or now read-only: ask for a location next time.
+        path = null;
+        return { kind: "failed", file: basename(target), error: describe(e) };
+      }
+      path = target;
+      await recordRecent(target, contents);
+      return { kind: "saved", file: basename(target), reused };
+    },
+  };
+}
+
+const FILTERS: Record<string, string> = { pdf: "PDF document", xlsx: "Excel workbook", csv: "CSV file", json: "JSON file" };
+
+/** Save generated bytes (PDF, XLSX, CSV) where the user chooses. */
+export async function saveAs(filename: string, data: BlobPart, type: string): Promise<SaveAsResult> {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  const target = await save({ defaultPath: filename, filters: ext ? [{ name: FILTERS[ext] ?? ext.toUpperCase(), extensions: [ext] }] : [] });
+  if (!target) return "cancelled";
+  try {
+    await writeFile(target, new Uint8Array(await new Blob([data], { type }).arrayBuffer()));
+    return "saved";
+  } catch (e) {
+    await message(`Couldn't save ${basename(target)}: ${describe(e)}`, { title: "Save failed", kind: "error" });
+    return "failed";
+  }
+}
+
+/**
+ * External links (vendor guidance, citations) never navigate the app window. Each one opens in the user's browser
+ * only after they confirm it, and only over https: the opener's scope in capabilities/default.json allows nothing else.
+ */
+export async function confirmAndOpen(href: string): Promise<boolean> {
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:") return false;
+  const yes = await ask(`Open this link in your web browser?\n\n${url.href}\n\ncrownguard itself stays offline; your browser will connect to ${url.host}.`, {
+    title: "Open external link",
+    kind: "info",
+    okLabel: "Open in browser",
+    cancelLabel: "Cancel",
+  });
+  if (!yes) return false;
+  await openUrl(url.href);
+  return true;
+}
+
+/** Catch clicks on links that leave the app, before the webview tries to follow them. */
+export function interceptExternalLinks(doc: Document) {
+  const onClick = (e: MouseEvent) => {
+    const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+    if (!a) return;
+    const href = a.getAttribute("href") ?? "";
+    if (href.startsWith("#")) return;
+    let url: URL;
+    try {
+      url = new URL(href, doc.baseURI);
+    } catch {
+      return;
+    }
+    // Same-origin links (the skip link, blob: downloads made by libraries) are left alone.
+    if (url.origin === new URL(doc.baseURI).origin || url.protocol === "blob:") return;
+    e.preventDefault();
+    void confirmAndOpen(url.href);
+  };
+  doc.addEventListener("click", onClick, true);
+  doc.addEventListener("auxclick", onClick, true);
+  return () => {
+    doc.removeEventListener("click", onClick, true);
+    doc.removeEventListener("auxclick", onClick, true);
+  };
+}
+
+/** Pass files the operating system hands us (double-click, Open With) to the app, each exactly once. */
+function onOpenRequest(handler: (file: OpenedFile) => void): () => void {
+  let active = true;
+  const take = async () => {
+    // Check before taking: the Rust side hands each file over once, so a stale subscription must not consume it.
+    if (!active) return;
+    const path = await invoke<string | null>("launch_file_take");
+    if (!path) return;
+    try {
+      handler(await readOpened(path));
+    } catch (e) {
+      await message(`Couldn't open ${basename(path)}: ${describe(e)}`, { title: "Open failed", kind: "error" });
+    }
+  };
+  const unlisten = listen(OPEN_FILE_EVENT, () => void take());
+  void unlisten.then(() => take());
+  return () => {
+    active = false;
+    void unlisten.then((stop) => stop());
+  };
+}
+
+/** Resolves once every autosave write so far has reached SQLite. */
+export const flushAutosave = () => autosaveStore?.flush() ?? Promise.resolve();
+
+export async function createTauriPlatform(): Promise<Platform> {
+  const autosave = (autosaveStore = await SqliteAutosave.load());
+  if (typeof document !== "undefined") interceptExternalLinks(document);
+  // Let the last autosave writes reach SQLite before the window goes, so reopening resumes exactly here.
+  void getCurrentWindow().onCloseRequested(() => autosave.flush());
+  return {
+    kind: "desktop",
+    autosave: () => autosave,
+    openFile: async ({ defaultPath } = {}) => {
+      const path = await open({ multiple: false, directory: false, defaultPath, filters: [ASSESSMENT_FILTER] });
+      return path ? readOpened(path) : null;
+    },
+    createFileSaver: createNativeFileSaver,
+    saveAs,
+    autosaveError: () => autosave.lastError,
+    listRecent,
+    onOpenRequest,
+  };
+}
+
+/** Desktop settings: the optional update check, off unless the user turns it on. */
+export interface DesktopSettings {
+  updateCheck: boolean;
+  updateAvailableInBuild: boolean;
+}
+
+const listRecent = () => invoke<RecentAssessment[]>("recent_list");
+
+export const desktopSettings = {
+  listRecent,
+  get: () => invoke<DesktopSettings>("settings_get"),
+  setUpdateCheck: (enabled: boolean) => invoke<void>("settings_set_update_check", { enabled }),
+  checkForUpdate: () => invoke<{ version: string; notes?: string | null } | null>("update_check"),
+  installUpdate: () => invoke<void>("update_install"),
+  forgetRecent: (path: string) => invoke<void>("recent_forget", { path }),
+};

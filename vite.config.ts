@@ -31,6 +31,16 @@ export const cspDirectives = [
 // frame-ancestors only works as a header, so it's left out of the meta tag.
 export const csp = [...cspDirectives, "frame-ancestors 'none'"].join("; ");
 
+/**
+ * The desktop app's policy (`app.security.csp` in src-tauri/tauri.conf.json, checked against this by
+ * scripts/desktop-config.test.ts). Same as the web policy, except that the webview may talk only to the Tauri IPC
+ * bridge: no data:, blob: or network origins in connect-src. Tauri sends it as a header, so frame-ancestors applies.
+ */
+export const desktopCspDirectives = [
+  ...cspDirectives.map((d) => (d.startsWith("connect-src ") ? "connect-src 'self' ipc: http://ipc.localhost" : d)),
+  "frame-ancestors 'none'",
+];
+
 export const securityHeaders: Record<string, string> = {
   "Content-Security-Policy": csp,
   "Referrer-Policy": "no-referrer",
@@ -52,11 +62,16 @@ const securityMeta = (): Plugin => ({
   ],
 });
 
-export default defineConfig({
-  // Served from /crownguard/ on GitHub Pages; BASE_PATH is set by the Pages workflow.
-  base: process.env.BASE_PATH ?? "/",
-  plugins: [crownguardContent(), react(), tailwindcss(), securityMeta()],
-  preview: { headers: securityHeaders },
+export default defineConfig(({ mode }) => ({
+  // Served from /crownguard/ on GitHub Pages; BASE_PATH is set by the Pages workflow. The desktop build (mode
+  // "desktop", run by `pnpm tauri:build`) is served by Tauri from its own root and gets its CSP from tauri.conf.json.
+  base: mode === "desktop" ? "/" : (process.env.BASE_PATH ?? "/"),
+  plugins: [crownguardContent(), react(), tailwindcss(), ...(mode === "desktop" ? [] : [securityMeta()])],
+  build: mode === "desktop" ? { outDir: "dist-desktop" } : undefined,
+  // `pnpm tauri:dev` loads the dev server from this fixed local port (build.devUrl in tauri.conf.json).
+  server: mode === "desktop" ? { port: 1420, strictPort: true, host: "localhost" } : undefined,
+  // The desktop preview (e2e/desktop.spec.ts) serves the desktop build with the policy Tauri would send.
+  preview: { headers: mode === "desktop" ? { ...securityHeaders, "Content-Security-Policy": desktopCspDirectives.join("; ") } : securityHeaders },
   worker: {
     format: "es",
     // Worker bundles are a separate environment; they need the same content virtual modules.
@@ -66,4 +81,4 @@ export default defineConfig({
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     setupFiles: ["src/content/catalogue.setup.ts"],
   },
-});
+}));
