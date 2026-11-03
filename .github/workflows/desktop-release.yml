@@ -76,10 +76,10 @@ jobs:
           [ "$HAS_UPDATER_KEY" = "true" ] || echo "::warning::Dry run: no updater key, so no update artefacts or latest.json."
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      # No dependency caches in the signing job: a poisoned cache would be built, signed and shipped.
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: pnpm
       # rustup ships on every runner image, so no third-party action is needed to pick the toolchain.
       - name: Install Rust
         shell: bash

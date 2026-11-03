@@ -85,7 +85,11 @@ export const webPlatform: Platform = {
   autosave: localStore,
   openFile: () => undefined,
   createFileSaver,
-  saveAs: async (filename, data, type) => download(filename, data, type),
+  saveAs: async (filename, data, type) => {
+    download(filename, data, type);
+    return "downloaded";
+  },
+  autosaveError: () => undefined,
   listRecent: async () => [],
   onOpenRequest: () => () => {},
 };

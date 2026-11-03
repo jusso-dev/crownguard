@@ -33,4 +33,4 @@ jobs:
           # These crates declare dual MIT/Apache-2.0 or MIT/BSD-3-Clause licences in a form the SPDX parser rejects
           # ("Apache-2.0/MIT"), so they show as LicenseRef-bad-*. Each is checked by hand: all permissive.
           allow-dependencies-licenses: >-
-            pkg:cargo/brotli-decompressor, pkg:cargo/dbus, pkg:cargo/libdbus-sys
+            pkg:cargo/brotli-decompressor@6.2.0, pkg:cargo/dbus@0.9.12, pkg:cargo/libdbus-sys@0.2.7

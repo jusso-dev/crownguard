@@ -17,6 +17,9 @@ export interface OpenedFile {
   path?: string;
 }
 
+/** What happened to a generated file: downloaded (web), saved where the user chose, or not saved. */
+export type SaveAsResult = "downloaded" | "saved" | "cancelled" | "failed";
+
 export type SaveResult =
   | { kind: "saved"; file: string; reused: boolean }
   | { kind: "downloaded"; file: string }
@@ -55,7 +58,9 @@ export interface Platform {
   openFile(options?: { defaultPath?: string }): Promise<OpenedFile | null> | undefined;
   createFileSaver(): FileSaver;
   /** Save a generated file (PDF, XLSX, CSV, a backup): a download on the web, a native save dialog on desktop. */
-  saveAs(filename: string, data: BlobPart, type: string): Promise<void>;
+  saveAs(filename: string, data: BlobPart, type: string): Promise<SaveAsResult>;
+  /** Why the last autosave write failed, if it did (desktop only: browser storage failures fall back to memory). */
+  autosaveError(): string | undefined;
   /** Assessments opened or saved on this device, newest first. */
   listRecent(): Promise<RecentAssessment[]>;
   /** Files the operating system asks the app to open (double-click, Open With). Returns an unsubscribe. */

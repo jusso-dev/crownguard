@@ -14,6 +14,7 @@ export function ReportStep() {
   const setMode = useStore((s) => s.setMode);
   const ism = useIsmSummary();
   const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [saved, setSaved] = useState<"downloaded" | "saved">("downloaded");
   const [error, setError] = useState<string>();
   const standalone = modeOf(assessment) === "ai-register";
   const platformsReady = useEnsurePlatforms(assessment.platforms);
@@ -35,7 +36,13 @@ export function ReportStep() {
         assessment,
         generatedAt: now,
       });
-      download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
+      const result = await download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
+      // On desktop the save dialog can be cancelled, or the write can fail (the user has already been told why).
+      if (result === "cancelled" || result === "failed") {
+        setStatus("idle");
+        return;
+      }
+      setSaved(result);
       setStatus("done");
     } catch (e) {
       console.error(e);
@@ -139,7 +146,11 @@ export function ReportStep() {
         >
           {status === "working" ? "Building PDF…" : "Generate PDF report"}
         </Button>
-        {status === "done" && <p className="mt-3 text-sm text-ok" role="status">Report downloaded. Check your downloads folder.</p>}
+        {status === "done" && (
+          <p className="mt-3 text-sm text-ok" role="status">
+            {saved === "saved" ? "Report saved." : "Report downloaded. Check your downloads folder."}
+          </p>
+        )}
         <p className="mt-3 text-xs text-muted">Each report is stamped with the date and time it was generated, and the time the answers were last changed.</p>
         {status === "error" && <p className="mt-3 text-sm text-danger" role="alert">Couldn't build the PDF: {error}</p>}
         {standalone && (

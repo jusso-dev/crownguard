@@ -124,6 +124,13 @@ function SaveStatus({
         {fileSave.downloaded ? `Downloaded ${fileSave.file}` : `Saved to ${fileSave.file}`} · {relativeTime(fileSave.at, now)}
       </span>
     );
+  const autosaveError = platform.autosaveError();
+  if (autosaveError)
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn" title={autosaveError}>
+        Couldn&apos;t save {HERE}. Use <strong>Save file</strong> to keep your work.
+      </span>
+    );
   if (ephemeral || !persisted)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">

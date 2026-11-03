@@ -29,6 +29,9 @@ fn err(e: rusqlite::Error) -> String {
 /// Open (or create) the database and bring its schema up to date.
 pub fn open(path: &Path) -> Result<Connection> {
     let conn = Connection::open(path).map_err(err)?;
+    // Wait rather than fail if something else (a backup tool, sqlite3) briefly holds the database.
+    conn.busy_timeout(std::time::Duration::from_secs(5))
+        .map_err(err)?;
     prepare(&conn)?;
     Ok(conn)
 }

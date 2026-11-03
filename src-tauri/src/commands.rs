@@ -23,7 +23,9 @@ const AUTOSAVE_KEYS: &[&str] = &[
     "crownguard:v1:probe",
 ];
 
-pub struct Db(pub Mutex<Connection>);
+/// The database, or None in a second copy of the app: only one copy may use the database at a time, so two windows
+/// can never overwrite each other's autosave.
+pub struct Db(pub Mutex<Option<Connection>>);
 
 /// An update found by `update_check`, held until the user chooses to install it.
 #[derive(Default)]
@@ -33,6 +35,10 @@ pub struct PendingUpdate(pub Mutex<Option<Update>>);
 #[derive(Default)]
 pub struct LaunchFile(pub Mutex<Option<PathBuf>>);
 
+/// Shown when a second copy of the app starts while the first still holds the database.
+pub const ALREADY_RUNNING: &str =
+    "crownguard is already open in another window. Close this window and carry on in that one (use Open file there for a file you double-clicked).";
+
 fn with_db<T>(
     db: &State<'_, Db>,
     f: impl FnOnce(&Connection) -> db::Result<T>,
@@ -40,7 +46,10 @@ fn with_db<T>(
     let conn =
         db.0.lock()
             .map_err(|_| "database lock poisoned".to_string())?;
-    f(&conn)
+    match conn.as_ref() {
+        Some(c) => f(c),
+        None => Err(ALREADY_RUNNING.into()),
+    }
 }
 
 pub fn check_key(key: &str) -> Result<(), String> {

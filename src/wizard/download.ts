@@ -1,13 +1,13 @@
 import { platform } from "../platform";
 
-export type { SaveResult } from "../platform";
+export type { SaveAsResult, SaveResult } from "../platform";
 
 /**
  * Save a generated file without leaving the page: a browser download on the web, a native save dialog on desktop
  * (see src/platform/).
  */
 export function download(filename: string, data: BlobPart, type: string) {
-  void platform.saveAs(filename, data, type);
+  return platform.saveAs(filename, data, type);
 }
 
 export const slug = (s: string) =>

@@ -172,13 +172,13 @@ describe("native file saver", () => {
 describe("saveAs", () => {
   it("writes the bytes where the user chose, with a filter for the file type", async () => {
     tauri.saveAnswer = "/out/report.pdf";
-    await saveAs("acme-report.pdf", new Uint8Array([37, 80, 68, 70]), "application/pdf");
+    expect(await saveAs("acme-report.pdf", new Uint8Array([37, 80, 68, 70]), "application/pdf")).toBe("saved");
     expect(save).toHaveBeenCalledWith({ defaultPath: "acme-report.pdf", filters: [{ name: "PDF document", extensions: ["pdf"] }] });
     expect(Array.from(tauri.files.get("/out/report.pdf") as Uint8Array)).toEqual([37, 80, 68, 70]);
   });
 
   it("does nothing when the dialog is cancelled", async () => {
-    await saveAs("a.xlsx", "x", "application/octet-stream");
+    expect(await saveAs("a.xlsx", "x", "application/octet-stream")).toBe("cancelled");
     expect(tauri.files.size).toBe(0);
   });
 });
@@ -228,6 +228,37 @@ describe("createTauriPlatform", () => {
     await new Promise((r) => setTimeout(r, 10));
     expect(opened).toHaveLength(2);
     stop();
+  });
+
+  it("keeps nothing in the recent list while the assessment isn't to be kept on this device", async () => {
+    tauri.db.set("crownguard:v1:ephemeral", "1");
+    const platform = await createTauriPlatform();
+    tauri.files.set("/docs/a.crownguard.json", "{}");
+    tauri.openAnswer = "/docs/a.crownguard.json";
+    expect(await platform.openFile()).not.toBeNull();
+    tauri.saveAnswer = "/docs/b.crownguard.json";
+    expect(await platform.createFileSaver().save("b.crownguard.json", "{}")).toMatchObject({ kind: "saved" });
+    expect(tauri.calls.some((c) => c.cmd === "recent_record")).toBe(false);
+  });
+
+  it("reports autosave write failures", async () => {
+    const platform = await createTauriPlatform();
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("database is locked"));
+    platform.autosave()!.setItem("crownguard:v1", "{}");
+    await vi.waitFor(() => expect(platform.autosaveError()).toBe("database is locked"));
+    error.mockRestore();
+  });
+
+  it("a stale subscription does not consume the launch file", async () => {
+    const platform = await createTauriPlatform();
+    tauri.files.set("/d/one.crownguard.json", "{}");
+    tauri.launch = "/d/one.crownguard.json";
+    // Mounted and unmounted at once (React StrictMode in development), then mounted again.
+    platform.onOpenRequest(() => {})();
+    const opened: string[] = [];
+    platform.onOpenRequest((f) => opened.push(f.path!));
+    await vi.waitFor(() => expect(opened).toEqual(["/d/one.crownguard.json"]));
   });
 
   it("basename handles both separators", () => {

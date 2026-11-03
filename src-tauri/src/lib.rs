@@ -24,6 +24,22 @@ pub fn updater_key_configured(app: &AppHandle) -> bool {
         .is_some_and(|k| !k.trim().is_empty())
 }
 
+/// Held for the life of the process: the lock that makes this copy the database's only user.
+struct InstanceLock(#[allow(dead_code)] std::fs::File);
+
+/// Take the per-user instance lock, or None when another copy of the app holds it. The operating system drops the
+/// lock when the process exits, however it exits.
+fn acquire_instance_lock(dir: &Path) -> Option<std::fs::File> {
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(dir.join("crownguard.lock"))
+        .ok()?;
+    file.try_lock().ok()?;
+    Some(file)
+}
+
 /// A file handed to us by the operating system, if it looks like an assessment we can open.
 fn assessment_file(candidate: &Path) -> Option<PathBuf> {
     let name = candidate
@@ -63,8 +79,16 @@ pub fn run() {
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
+            // One copy of the app per user owns the database. A second copy (on Windows and Linux, double-clicking
+            // a file while crownguard is open starts one) gets no database, and its window says so, instead of both
+            // writing autosave over each other.
+            let Some(lock) = acquire_instance_lock(&dir) else {
+                app.manage(Db(Mutex::new(None)));
+                return Ok(());
+            };
+            app.manage(InstanceLock(lock));
             let conn = db::open(&dir.join("crownguard.db"))?;
-            app.manage(Db(Mutex::new(conn)));
+            app.manage(Db(Mutex::new(Some(conn))));
 
             // Windows and Linux pass a double-clicked file as an argument. macOS sends RunEvent::Opened below.
             if let Some(path) = std::env::args_os()
@@ -106,6 +130,15 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_one_copy_holds_the_instance_lock() {
+        let dir = tempfile::tempdir().unwrap();
+        let first = acquire_instance_lock(dir.path()).expect("first copy gets the lock");
+        assert!(acquire_instance_lock(dir.path()).is_none());
+        drop(first);
+        assert!(acquire_instance_lock(dir.path()).is_some());
+    }
 
     #[test]
     fn only_json_files_are_offered() {
