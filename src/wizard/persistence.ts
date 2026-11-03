@@ -1,5 +1,6 @@
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 import type { Assessment } from "../engine/types";
+import { platform, type AutosaveStore } from "../platform";
 import { questionIdSet } from "../content/questionIds";
 import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
 import { SCHEMA_VERSION } from "./assessmentSchema";
@@ -43,37 +44,37 @@ const rehydration: RehydrateNotice[] = [];
 export const rehydrateNotices = (): readonly RehydrateNotice[] => rehydration;
 
 /**
- * `localStorage` where the browser offers one; memory otherwise (private windows, and the unit tests). Either way
- * the app behaves the same and nothing throws just because the browser said no.
+ * The platform's autosave store where it offers one: `localStorage` in the browser, SQLite on desktop (see
+ * src/platform/). Memory otherwise (private windows, and the unit tests). Either way the app behaves the same and
+ * nothing throws just because storage said no.
  */
 const memory = new Map<string, string>();
-const disk = (): Storage | undefined => {
-  try {
-    return typeof localStorage === "undefined" ? undefined : localStorage;
-  } catch {
-    return undefined;
-  }
-};
+const disk = (): AutosaveStore | undefined => platform.autosave();
 
-/** Don't keep the assessment in this browser: flag survives reload; the assessment does not. */
-let ephemeralMode = (() => {
-  try {
-    const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === "1";
-    // A previous session may have left a stale assessment (or a copy kept aside) on disk; drop it when the mode is on.
-    if (on) {
-      disk()?.removeItem(STORAGE_KEY);
-      disk()?.removeItem(UNREADABLE_KEY);
+/**
+ * Don't keep the assessment in this browser: flag survives reload; the assessment does not. Read on first use rather
+ * than at import, so the desktop build reads it from SQLite once the platform is ready.
+ */
+let ephemeralFlag: boolean | undefined;
+const ephemeral = () =>
+  (ephemeralFlag ??= (() => {
+    try {
+      const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === "1";
+      // A previous session may have left a stale assessment (or a copy kept aside) on disk; drop it when the mode is on.
+      if (on) {
+        disk()?.removeItem(STORAGE_KEY);
+        disk()?.removeItem(UNREADABLE_KEY);
+      }
+      return on;
+    } catch {
+      return false;
     }
-    return on;
-  } catch {
-    return false;
-  }
-})();
+  })());
 
-export const isEphemeralMode = () => ephemeralMode;
+export const isEphemeralMode = () => ephemeral();
 
 export function setEphemeralMode(on: boolean) {
-  ephemeralMode = on;
+  ephemeralFlag = on;
   if (on) {
     writeFlag(EPHEMERAL_FLAG_KEY, "1");
     // Drop any autosaved assessment from disk; keep the in-memory Map copy for this session.
@@ -103,7 +104,7 @@ const writeFlag = (name: string, value: string) => {
 };
 
 /** Keys that hold assessment content. In ephemeral mode they live in memory only. */
-const memoryOnly = (name: string) => ephemeralMode && (name === STORAGE_KEY || name === UNREADABLE_KEY);
+const memoryOnly = (name: string) => ephemeral() && (name === STORAGE_KEY || name === UNREADABLE_KEY);
 
 const read = (name: string): string | null => {
   // Ephemeral: assessment never comes back from disk after a reload.

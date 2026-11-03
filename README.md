@@ -308,6 +308,22 @@ pnpm cg render a.crownguard.json report.pdf
 
 See [docs/cli.md](docs/cli.md) for every command, exit codes, and how to replace the old Hermes `cg-bot` helper.
 
+## Desktop app
+
+crownguard also comes as an offline desktop app for macOS, Windows and Linux, built with Tauri v2 from the same code.
+It keeps assessments in local files and a local SQLite database instead of browser storage, saves through the system's
+own dialogs (Ctrl/⌘ S saves back to the same file), and makes no network connections at all unless you turn on the
+optional update check. Files move freely between the web and desktop apps.
+
+```sh
+pnpm tauri:dev     # run it locally (needs Rust and the Tauri prerequisites)
+pnpm tauri:build   # build installers for this system
+```
+
+Signed installers are published as `desktop-v*` releases. Install steps, where data lives, the offline guarantees and
+how to back up assessments: [docs/desktop/README.md](docs/desktop/README.md). Threat model:
+[docs/desktop/security.md](docs/desktop/security.md).
+
 ## The saved file
 
 **Save file** writes one JSON object with the whole assessment. Nothing is sent anywhere: the file is your data, and you
@@ -423,7 +439,8 @@ finding or a DTA assessment, and it doesn't replace your AI impact assessment.
 
 ## Stack
 
-Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. Fonts (all SIL
+Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. The desktop app adds
+Tauri v2 and SQLite (`rusqlite`) in `src-tauri/`. Fonts (all SIL
 Open Font License, self-hosted): Space Grotesk, Inter and JetBrains Mono in the app via `@fontsource`; Inter in the
 PDF (`src/report/fonts/OFL.txt`). The UI design system is documented in [design.md](design.md).
 

@@ -25,17 +25,35 @@ export interface ScubaReport {
 }
 
 /**
+ * Remove tags in one pass. A tag runs to its `>`, so `<scr<script>ipt>` goes whole, and one never closed runs to the
+ * end of the text rather than surviving. Each `>` search starts past the last, so this is linear on any input, which
+ * a regex can't promise for a run of unclosed `<a`.
+ */
+function stripTags(s: string): string {
+  let out = "";
+  let i = 0;
+  for (let lt = s.indexOf("<"); lt >= 0; lt = s.indexOf("<", i)) {
+    out += s.slice(i, lt);
+    const next = s[lt + 1] === "/" ? s[lt + 2] : s[lt + 1];
+    if (!next || !/[a-z]/i.test(next)) {
+      out += "<";
+      i = lt + 1;
+      continue;
+    }
+    const gt = s.indexOf(">", lt);
+    if (gt < 0) return out;
+    i = gt + 1;
+  }
+  return out + s.slice(i);
+}
+
+/**
  * Strip the HTML ScubaGoggles writes into `Details` (line breaks, spans, annotation markup and
  * entities) down to plain text for the evidence field.
  */
 export function stripHtml(s: string): string {
   const entities = new Map(Object.entries({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }));
-  return s
-    .replace(/<br\s*\/?>/gi, " ")
-    // Tags are stripped whole, and one left open at the end of the text runs to the end rather than surviving. A tag
-    // body stops at the next `<` as well as `>`, so a run of unclosed `<a` can't make either pattern quadratic.
-    .replace(/<\/?[a-z][^<>]*>/gi, "")
-    .replace(/<\/?[a-z][^<>]*$/gi, "")
+  return stripTags(s.replace(/<br\s*\/?>/gi, " "))
     .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === "#") {
         const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);

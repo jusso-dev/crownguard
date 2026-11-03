@@ -176,6 +176,7 @@ describe("stripping HTML out of Details", () => {
     expect(stripHtml("&lt;b&gt;literal&lt;/b&gt; stays as text")).toBe("b>literal/b> stays as text");
     expect(stripHtml("half a tag <script")).toBe("half a tag");
     expect(stripHtml("3 < 4 and a > b")).toBe("3 < 4 and a > b");
+    expect(stripHtml("x <scr<script>ipt>alert(1)</script> y")).not.toMatch(/<[a-z/]/i);
   });
 
   it("strips a long run of unclosed tags in linear time", () => {

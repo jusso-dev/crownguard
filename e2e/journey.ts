@@ -25,9 +25,20 @@ export interface JourneyOptions {
   ai?: boolean;
   /** Pick an ISM baseline on the review step, so the report annotates findings against it. */
   ismBaseline?: "NON_CLASSIFIED" | "OFFICIAL_SENSITIVE" | "PROTECTED";
+  /** Generate the PDF and return its bytes. Defaults to the browser download; the desktop spec uses the save dialog. */
+  generatePdf?: (page: Page) => Promise<Uint8Array>;
 }
 
-export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false, ismBaseline }: JourneyOptions = {}): Promise<string[]> {
+/** Generate the report as a browser download and check its file name. */
+async function downloadReport(page: Page): Promise<Uint8Array> {
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Generate PDF report" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^riverbend-health-crown-jewel-risk-\d{4}-\d{2}-\d{2}-\d{4}\.pdf$/);
+  return new Uint8Array(await readFile(await download.path()));
+}
+
+export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false, ismBaseline, generatePdf = downloadReport }: JourneyOptions = {}): Promise<string[]> {
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill(ORG);
@@ -94,12 +105,7 @@ export async function runJourney(page: Page, platformName: string, { jewelCount 
   await page.getByLabel("Prepared by").fill("Alex Chen, IT Manager");
   await next(page);
 
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Generate PDF report" }).click();
-  const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/^riverbend-health-crown-jewel-risk-\d{4}-\d{2}-\d{2}-\d{4}\.pdf$/);
-  const path = await download.path();
-  return pdfText(new Uint8Array(await readFile(path)));
+  return pdfText(await generatePdf(page));
 }
 
 /** Include SOC maturity, leave network monitoring out of scoring and rate every other question. */

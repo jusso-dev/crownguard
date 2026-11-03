@@ -7,6 +7,7 @@ import { newUseCase } from "../engine/aiRegister";
 import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
 import { applyScan as mergeScan } from "../imports/apply";
 import type { ScanResult } from "../imports/types";
+import { isDesktop, platform } from "../platform";
 import { NOTE_MAX } from "./assessmentSchema";
 import { emptyAssessment, STEP_LAYOUT } from "./empty";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
@@ -44,8 +45,10 @@ export function migrateProgress(p: Assessment["progress"], mode: Mode = "full"):
 export function storageAvailable(): boolean {
   try {
     const k = `${STORAGE_KEY}:probe`;
-    localStorage.setItem(k, "1");
-    localStorage.removeItem(k);
+    const store = platform.autosave();
+    if (!store) return false;
+    store.setItem(k, "1");
+    store.removeItem(k);
     return true;
   } catch {
     return false;
@@ -248,6 +251,8 @@ export const useStore = create<State>()(
       // v4: storage may wrap the JSON in an encryption envelope; state shape is unchanged.
       version: 4,
       storage: checkedStorage,
+      // Desktop progress lives in SQLite, which is ready only after the platform has loaded (main.tsx rehydrates then).
+      skipHydration: isDesktop,
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {
