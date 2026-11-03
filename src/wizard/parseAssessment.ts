@@ -23,6 +23,8 @@ export interface ParseOptions {
   questionIds?: ReadonlySet<string>;
 }
 
+const PROTOTYPE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 const asRecord = (v: unknown): Record<string, unknown> | undefined =>
   v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
 
@@ -78,7 +80,8 @@ function finish(
   questionIds: ReadonlySet<string> | undefined,
   notices: ParseNotice[],
 ): Assessment {
-  const unknown = Object.keys(source).filter((k) => !knownKeys.has(k));
+  // Prototype keys never survive validation, so don't claim to have kept them.
+  const unknown = Object.keys(source).filter((k) => !knownKeys.has(k) && !PROTOTYPE_KEYS.has(k));
   if (unknown.length)
     notices.push({
       kind: "warn",
@@ -93,7 +96,7 @@ function finish(
     if (questionIds.has(id)) continue;
     orphans[id] = { ...orphans[id], answer: answers[id] };
     delete answers[id];
-    if (notes[id] !== undefined) {
+    if (Object.hasOwn(notes, id)) {
       orphans[id] = { ...orphans[id], note: notes[id] };
       delete notes[id];
     }

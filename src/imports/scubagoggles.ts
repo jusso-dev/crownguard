@@ -1,7 +1,7 @@
 import type { ImportMapping } from "../content/schema";
 import type { ScanStatus } from "../engine/types";
 import { suggestAll, type CheckRow } from "./aggregate";
-import { clip, type ScanImporter, type ScanResult } from "./types";
+import { clip, redactEmails, type ScanImporter, type ScanResult } from "./types";
 
 /** One SCuBA policy's assessment result, read from `Results.<product>[].Controls[]`. */
 export interface ScubaControl {
@@ -11,7 +11,7 @@ export interface ScubaControl {
   result: string;
   /** "Shall", "Should", "Shall/3rd Party", ... */
   criticality: string;
-  /** What the tool said about this tenant, with any HTML stripped out. */
+  /** What the tool said about this tenant, with any HTML and email addresses stripped out. */
   details: string;
 }
 
@@ -29,18 +29,20 @@ export interface ScubaReport {
  * entities) down to plain text for the evidence field.
  */
 export function stripHtml(s: string): string {
-  const entities: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  const entities = new Map(Object.entries({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }));
   return s
     .replace(/<br\s*\/?>/gi, " ")
-    // Tags are stripped whole, and one left open at the end of the text runs to the end rather than surviving.
-    .replace(/<\/?[a-z][^>]*>/gi, "")
-    .replace(/<\/?[a-z][^>]*$/gi, "")
+    // Tags are stripped whole, and one left open at the end of the text runs to the end rather than surviving. A tag
+    // body stops at the next `<` as well as `>`, so a run of unclosed `<a` can't make either pattern quadratic.
+    .replace(/<\/?[a-z][^<>]*>/gi, "")
+    .replace(/<\/?[a-z][^<>]*$/gi, "")
     .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === "#") {
         const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-        return isNaN(code) ? m : String.fromCodePoint(code);
+        // Past U+10FFFF fromCodePoint throws, and a lone surrogate isn't text: either stays as written.
+        return isNaN(code) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff) ? m : String.fromCodePoint(code);
       }
-      return entities[e.toLowerCase()] ?? m;
+      return entities.get(e.toLowerCase()) ?? m;
     })
     // Decoding entities can put an angle bracket back (`&lt;script&gt;`). Once that's happened the text is done being
     // unescaped, so any bracket that could open a tag comes out. `3 < 4` and similar are untouched: they don't start
@@ -64,7 +66,7 @@ export function toStatus(result: string): ScanStatus {
 }
 
 /** Product names for the evidence text, from the product block of the policy id. */
-const products: Record<string, string> = {
+const products = new Map(Object.entries({
   ASSUREDCONTROLS: "Assured Controls",
   CALENDAR: "Calendar",
   CHAT: "Chat",
@@ -76,7 +78,7 @@ const products: Record<string, string> = {
   GROUPS: "Groups",
   MEET: "Meet",
   SITES: "Sites",
-};
+}));
 
 /** Policy ids carry a version suffix (`GWS.GMAIL.7.3v1`); questions match on the id without it. */
 const baseId = (id: string) => id.replace(/v[\d.]+$/, "");
@@ -123,7 +125,8 @@ export function parseScubagoggles(text: string): ScubaReport {
           id,
           result: str(row.Result),
           criticality: str(row.Criticality).trim(),
-          details: stripHtml(str(row.Details)),
+          // Details can name accounts too ("The following super admins are configured: ..."), not only Raw.
+          details: redactEmails(stripHtml(str(row.Details))),
         });
       }
     }
@@ -141,7 +144,7 @@ export function parseScubagoggles(text: string): ScubaReport {
 /** Turn one policy result into the evidence row crownguard stores against a question. */
 function toRow(c: ScubaControl): CheckRow {
   const status = toStatus(c.result);
-  const product = products[c.id.split(".")[1] ?? ""] ?? "SCuBA";
+  const product = products.get(c.id.split(".")[1] ?? "") ?? "SCuBA";
   return {
     id: c.id,
     status,
@@ -166,7 +169,9 @@ export function readScuba(report: ScubaReport, mapping: ImportMapping): ScanResu
     versions.set(key, versionOf(c.id));
     firstSeen.set(key, c.id);
     statuses.set(key, toStatus(c.result));
-    byCheck.set(key, [...(byCheck.get(key) ?? []), toRow(c)]);
+    const rows = byCheck.get(key);
+    if (rows) rows.push(toRow(c));
+    else byCheck.set(key, [toRow(c)]);
   }
 
   const mapped = new Set(mapping.mappings.flatMap((m) => m.checks.map(baseId)));

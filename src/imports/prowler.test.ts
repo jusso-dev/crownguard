@@ -156,6 +156,23 @@ describe("mapping Prowler findings to questions", () => {
     expect(result.warnings?.join(" ")).toMatch(/2 accounts were combined/);
     expect(result.suggestions[0].evidence.account).toBeUndefined();
   });
+
+  it("keeps resource ids as examples but drops one that is a user's address", () => {
+    const check = "entra_user_with_vm_access_has_mfa";
+    const m = { ...azureMapping, mappings: [{ question: "MS-ID-001", checks: [check], rationale: "test only" }] };
+    const rows = [finding({ check, status: "fail", resource: "alice@contoso.example" }), finding({ check, status: "fail", resource: "/subscriptions/1/vm/a" })];
+    const ev = readProwler(rows, m).suggestions[0].evidence;
+    expect(ev.checks[0].examples).toEqual(["[account]", "/subscriptions/1/vm/a"]);
+  });
+
+  it("groups a large scan in linear time", () => {
+    // Copying each group on every finding made 60,000 findings take seconds.
+    const many = Array.from({ length: 60_000 }, (_, i) => finding({ resource: `arn:aws:s3:::bucket-${i}` }));
+    const start = performance.now();
+    const result = readProwler(many, awsMapping);
+    expect(performance.now() - start).toBeLessThan(4000);
+    expect(result.accounts?.[0].findings).toBe(60_000);
+  });
 });
 
 describe("the pinned Prowler check list", () => {
@@ -188,5 +205,14 @@ describe("the importers crownguard registers", () => {
     const csv = fixture("prowler-aws.csv");
     expect(importer.detect(csv)).toBe(true);
     expect(prowlerImporter("microsoft").detect(csv)).toBe(false);
+  });
+
+  it("never reads JSON as a CSV just because it names CHECK_ID and STATUS", () => {
+    const json = '{"summary":{},"findings":[{"check_id":"X","status":"pass"}]}';
+    expect(importer.detect(json)).toBe(false);
+    expect(importer.detect(`  \n[${json}]`)).toBe(false);
+    // An OCSF file still goes to the OCSF reader.
+    expect(importer.detect(fixture("prowler-aws.json"))).toBe(true);
+    expect(importer.read(fixture("prowler-aws.json"), awsMapping).suggestions.length).toBeGreaterThan(0);
   });
 });

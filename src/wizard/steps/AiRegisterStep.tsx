@@ -1,5 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { catalogue } from "../../content/catalogue";
+import { pct } from "../../engine/percent";
 import { exposures, type AiKind, type AiQuestion } from "../../content/schema";
 import {
   aiAccess,
@@ -42,7 +43,6 @@ const ADD = "add";
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 /** The open-gaps filter: one basis of readiness question, or all of them. */
 type GapFilter = "all" | AiBasis;
-const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
 const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });

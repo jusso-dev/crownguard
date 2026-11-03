@@ -8,7 +8,7 @@ import { afterStepChange } from "./wizard/a11y";
 import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
 import { decrypt, isEncryptedEnvelope } from "./wizard/crypto";
 import { parseAssessment } from "./wizard/parseAssessment";
-import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY } from "./wizard/persistence";
+import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY, storageWriteFailed } from "./wizard/persistence";
 import {
   EphemeralToggle,
   LegacyOriginBanner,
@@ -19,7 +19,7 @@ import {
 } from "./wizard/PrivacyControls";
 import { toEncryptedSaveFile, toSaveFile } from "./wizard/saveFile";
 import { setSessionPassphrase } from "./wizard/sessionSecrets";
-import { clampStep, hasProgress, modeOf, stepsFor, storageAvailable, useStep, useStore } from "./wizard/store";
+import { currentStep, hasProgress, modeOf, stepsFor, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
 import { forgetLockedProgress } from "./wizard/unlock";
 import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
@@ -39,19 +39,6 @@ import { hasLockedEnvelope } from "./wizard/sessionSecrets";
 const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
 const aiViews = [OrgStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
 const viewsFor = (mode: Mode) => (mode === "ai-register" ? aiViews : views);
-
-/** A step can be entered once the steps before it have their minimum inputs. */
-function useReachable(): number {
-  const a = useStore((s) => s.assessment);
-  const mode = modeOf(a);
-  if (!a.org.name.trim()) return 0;
-  // The standalone register needs nothing else: no platform, crown jewels or Controls answers.
-  if (mode === "full") {
-    if (!a.platforms.length) return 1;
-    if (!a.jewels.length) return 2;
-  }
-  return stepsFor(mode).length - 1;
-}
 
 const saveFileName = (a: Assessment) =>
   modeOf(a) === "ai-register" ? `${slug(a.org.name)}-ai-register.crownguard.json` : `${slug(a.org.name)}.crownguard.json`;
@@ -116,6 +103,12 @@ function SaveStatus({
         {fileSave.downloaded ? `Downloaded ${fileSave.file}` : `Saved to ${fileSave.file}`} · {relativeTime(fileSave.at, now)}
       </span>
     );
+  if (storageWriteFailed())
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
+        Couldn&apos;t save in this browser. Use <strong>Save file</strong> before you leave.
+      </span>
+    );
   if (ephemeral || !persisted)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
@@ -162,7 +155,7 @@ function ResumeCard({
   const questions = platformsReady ? activeQuestions(catalogue, a) : [];
   const answers = effectiveAnswers(a);
   const answered = questions.filter((q) => answers[q.id]).length;
-  const at = clampStep(a.progress?.step, modeOf(a));
+  const at = currentStep(a);
   return (
     <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
       <div className="p-7">
@@ -417,16 +410,19 @@ export function App() {
     setFileSave({ file: result.file, at: new Date().toISOString(), downloaded: result.kind === "downloaded" });
   }, [saver]);
 
+  // Only the open wizard has something to save: on the Unlock or start screen the store holds a blank assessment,
+  // and saving it could overwrite the user's real file.
+  const canSave = !locked && screen === "wizard";
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        void saveFile();
+        if (canSave) void saveFile();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [saveFile]);
+  }, [saveFile, canSave]);
 
   useEffect(() => {
     const open = () => fileInput.current?.click();
@@ -477,7 +473,7 @@ export function App() {
     setFileSave(undefined);
     setScreen("wizard");
     const opened = useStore.getState().assessment;
-    const stepName = stepsFor(modeOf(opened))[clampStep(opened.progress?.step, modeOf(opened))];
+    const stepName = stepsFor(modeOf(opened))[currentStep(opened)];
     setNotice({
       kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
       // Read the step back from the store: load() moves positions saved under an older step list.

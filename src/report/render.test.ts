@@ -9,7 +9,7 @@ import type { SocAnswer } from "../engine/soc";
 import { exampleEntries } from "../engine/aiExamples";
 import { AiRegisterDocument, ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
-import { registerFontsFromDisk } from "./fonts";
+import { breakLongWords, registerFontsFromDisk } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";
 import type { Assessment } from "../engine/types";
 import { emptyAssessment } from "../wizard/store";
@@ -124,6 +124,38 @@ describe("PDF report", () => {
     expect(text).toContain("ISM baseline shown: PROTECTED");
     expect(await pdfText({ ...a, ismBaseline: undefined })).not.toContain("Touches the ISM PROTECTED baseline");
   }, 120_000);
+
+  it("wraps long unbroken tokens instead of running them off the page", async () => {
+    expect(breakLongWords("ordinary")).toEqual(["ordinary"]);
+    // Code-point pieces: the emoji's surrogate pair stays whole.
+    expect(breakLongWords("😀".repeat(30)).every((p) => !/^[\uDC00-\uDFFF]|[\uD800-\uDBFF]$/.test(p))).toBe(true);
+    expect(breakLongWords("x".repeat(40)).join("")).toBe("x".repeat(40));
+
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    // No hyphens in either token, so the hyphens added at line breaks can be stripped when reading the text back.
+    const url = `https://riverbendhealth.sharepoint.com/sites/Security/Shared%20Documents/${"Evidence/".repeat(15)}ConditionalAccessPolicyExportFinalEND.pdf`;
+    expect(url.length).toBeGreaterThan(220);
+    const noted = catalogue.platforms.get("microsoft")!.questions.find((q) => a.answers[q.id] === "no")!;
+    a.notes[noted.id] = url;
+    a.org.name = `Riverbend${"Health".repeat(30)}END`;
+    const flat = (await pdfText(a)).replace(/[-\s]/g, "");
+    expect(flat).toContain(url);
+    expect(flat).toContain(a.org.name);
+  }, 1_200_000);
+
+  it("prints a very long Supports entry in full below the crown-jewel register", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    const short = a.jewels.find((j) => j.businessProcesses)!;
+    // 400 distinct words, under the schema's 2,000-character limit: far taller than a page in the 12% column.
+    a.jewels[0].businessProcesses = Array.from({ length: 400 }, (_, i) => `p${i}`).join(" ");
+    expect(a.jewels[0].businessProcesses.length).toBeLessThanOrEqual(2000);
+    const text = await pdfText(a);
+    expect(text.split("(in full below)").length).toBe(2);
+    // Ordinary entries stay in the table, as before.
+    expect(text).not.toContain(`${short.name} supports:`);
+    expect(text).toContain(`${a.jewels[0].name} supports: p0 p1 p2`);
+    expect(text).toMatch(/\bp398 p399\b/);
+  }, 1_200_000);
 
   it("sets language and outlines, lists contents, and omits absent optional sections from the outline", async () => {
     const a = fixtureAssessment(catalogue, ["microsoft"]);

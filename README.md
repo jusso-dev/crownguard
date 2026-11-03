@@ -44,16 +44,18 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
   copy, including older ones: open it, add a logo or ABN, and regenerate the report.
 - **Optional scan import.** Already run a scanner? Import its results on the Controls step to pre-fill answers where its
-  checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
+  checks are decisive (all pass = Yes, all fail = No, mixed = Partial; a pass alongside a check the scan couldn't
+  settle, such as one needing review, is Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
   for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
   for AWS (56 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
   Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
   never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources.
   [ScubaGoggles](https://github.com/cisagov/ScubaGoggles) for Google Workspace (`ScubaResults*.json`, 33 questions) is
   read the same way from its policy results only: the report's `Raw` section, which holds super admin and break-glass
-  accounts and audit log events, is never touched. Every pre-filled
-  answer shows its scan evidence, you can change any of them, and the report names the scanner, its version and the
-  account it covered. The file is read in your browser only.
+  accounts and audit log events, is never touched. Account email addresses in any scanner's text are replaced with
+  "[account]" before anything is stored. Every pre-filled answer shows its scan evidence, you can change any of them,
+  and the report names the scanner, its version and the account it covered. An answer you keep keeps its own
+  evidence: a later scan's checks never sit under it. The file is read in your browser only.
 - **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
 - **IDCF Data Security Levels.** Optionally record the IDCF Data Security Level (DSL-0 to DSL-5+) your data owner
   chose for each crown jewel. The report shows, for each platform and for DSL-2 to DSL-4, whether your answers found
@@ -324,11 +326,11 @@ being dropped.
 | Answers | Yes = 1, Partial = 0.5, No = 0. **Unknown and unanswered also score 0**: uncertainty is never treated as protection. N/A is excluded. |
 | Weights | Critical 4, High 3, Medium 2, Low 1 |
 | Impact (1–5) | Highest of the confidentiality, integrity and availability ratings, +1 for regulated or highly confidential data, max 5 |
-| Likelihood (1–5) | 1 + 4 × weighted gap ratio of the questions relevant to the crown jewel, +0.5 per recorded exposure, rounded. At least 3 while any critical control is missing |
+| Likelihood (1–5) | 1 + 4 × weighted gap ratio of the questions that apply to the crown jewel on its own platform (its asset type plus platform-wide controls; another selected platform never counts), +0.5 per recorded exposure, rounded. At least 3 while any critical control is missing |
 | Bands | 1–4 Low · 5–9 Medium · 10–19 High · 20–25 Extreme |
-| Essential Eight | A maturity level counts only when every question at that level and below is Yes. Indicative only: cloud-platform controls, not a full ASD assessment |
-| Roadmap | Gaps ranked by risk reduced across your crown jewels ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
-| IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes |
+| Essential Eight | A maturity level counts only when every question at that level and below is Yes or N/A with a reason. Indicative only: cloud-platform controls, not a full ASD assessment |
+| Roadmap | Gaps ranked by risk reduced across the crown jewels on that control's platform ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
+| IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes or N/A with a reason |
 | ISM | Mapping only, generated from ASD's ISM OSCAL catalog (September 2026 release). The optional "Show ISM baseline" picker annotates findings that touch the NON_CLASSIFIED, OFFICIAL: Sensitive or PROTECTED baselines and adds a count; it never changes a score |
 | SOC maturity | Each question rated 0–5 (capability 0–3) against its level descriptions; Unknown scores 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings (never combined); a domain is the unweighted mean of its in-scope aspects. Default targets maturity 3, capability 2. Kept apart from the risk scores |
 | AI readiness | Scored like the controls (Yes 1, Partial 0.5, No, Unknown and unanswered 0, N/A with a reason left out, severity-weighted) over the questions that apply to each use case. Agent questions are asked unless it only gives output. Indicative, not a DTA rating, and kept apart from the risk scores |

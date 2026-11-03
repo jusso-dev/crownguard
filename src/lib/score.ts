@@ -1,3 +1,4 @@
+import { percent } from "../engine/percent";
 import type { ReportModel } from "../report/model";
 
 /** Compact, JSON-serialisable score summary (Hermes helper shape + SOC / IDCF / AI when present). */
@@ -96,9 +97,9 @@ export function scoreSummary(model: ReportModel) {
 /** Short human summary for `cg score --format text`. */
 export function scoreText(model: ReportModel): string {
   const s = scoreSummary(model);
-  const posture = s.posture.score === null ? "n/a" : `${Math.round(s.posture.score * 100)}%`;
+  const posture = s.posture.score === null ? "n/a" : `${percent(s.posture.score)}%`;
   const lines = [
-    `${model.assessment.org.name || "(unnamed)"} — posture ${posture} (confidence ${Math.round(s.posture.confidence * 100)}%)`,
+    `${model.assessment.org.name || "(unnamed)"} — posture ${posture} (confidence ${percent(s.posture.confidence)}%)`,
     `${s.inPlace} in place, ${s.partial} partial, ${s.assessed} assessed of ${s.inScope} in scope`,
     `Risks: ${s.risks.map((r) => `${r.jewel} ${r.band} (${r.score})`).join("; ") || "none"}`,
     `Essential Eight: ${s.e8.map((e) => `${e.strategy}=ML${e.level ?? "–"}`).join(", ") || "n/a"}`,

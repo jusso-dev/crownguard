@@ -84,4 +84,4 @@ export function Meter({ value, color, marker }: { value: number | null; color: s
   );
 }
 
-export const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
+export { pct } from "../engine/percent";

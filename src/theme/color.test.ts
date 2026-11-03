@@ -17,7 +17,16 @@ describe("color", () => {
 
   it("chooses text colour by contrast", () => {
     expect(textOn("#003366")).toBe("#ffffff");
-    expect(textOn("#ffd400")).toBe("#111111");
+    expect(textOn("#ffd400")).toBe("#000000");
+  });
+
+  it("always picks a text colour with at least 4.5:1 contrast", () => {
+    const hex = (n: number) => n.toString(16).padStart(2, "0");
+    // Every 5th level per channel (52³ ≈ 140k colours), plus the mid tones that a near-black failed on.
+    const samples = ["#7260ff", "#e0393e"];
+    for (let r = 0; r <= 255; r += 5) for (let g = 0; g <= 255; g += 5) for (let b = 0; b <= 255; b += 5) samples.push(`#${hex(r)}${hex(g)}${hex(b)}`);
+    const worst = samples.reduce((m, bg) => Math.min(m, contrast(textOn(bg), bg)), Infinity);
+    expect(worst).toBeGreaterThanOrEqual(4.5);
   });
 
   it("extracts dominant and contrasting hue, ignoring white, black, grey and transparent", () => {

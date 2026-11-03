@@ -86,7 +86,9 @@ export async function decrypt(envelope: unknown, passphrase: string): Promise<st
   }
   if (!isEncryptedEnvelope(envelope)) throw new CryptoError("Not an encrypted crownguard file.");
   if (envelope.kdf !== KDF) throw new CryptoError("Unsupported key derivation.");
-  if (envelope.iterations < 1) throw new CryptoError("Invalid encryption parameters.");
+  // The envelope is untrusted: an absurd count would hang the tab in PBKDF2 rather than fail.
+  if (!Number.isInteger(envelope.iterations) || envelope.iterations < 1 || envelope.iterations > 10 * ITERATIONS)
+    throw new CryptoError("Invalid encryption parameters.");
 
   let salt: Uint8Array<ArrayBuffer>;
   let iv: Uint8Array<ArrayBuffer>;

@@ -3,7 +3,10 @@ import { readContentFiles } from "../../scripts/read-content";
 import type { ImportMapping } from "../content/schema";
 import { loadCatalogue } from "../content/loader";
 import { aggregate, suggestFor } from "./aggregate";
-import { readScan, scanSchema, suggestLicence } from "./m365Secure";
+import { m365SecureImporter, readScan, scanSchema, suggestLicence } from "./m365Secure";
+import { prowlerImporter } from "./prowler";
+import { detectImporter } from "./index";
+import { redactEmails } from "./types";
 
 const mapping: ImportMapping = {
   id: "m365-secure",
@@ -40,8 +43,41 @@ describe("M365-Secure import", () => {
     expect(aggregate(["fail", "fail"])).toBe("no");
     expect(aggregate(["pass", "fail"])).toBe("partial");
     expect(aggregate(["warning"])).toBe("partial");
-    expect(aggregate(["pass", "review"])).toBe("yes");
     expect(aggregate(["review", "unknown", "notlicensed", "info"])).toBeUndefined();
+  });
+
+  it("never says Yes while a mapped check still needs review", () => {
+    // A pass beside a check the scan couldn't settle hasn't shown the whole control is in place.
+    expect(aggregate(["pass", "review"])).toBe("partial");
+    expect(aggregate(["pass", "notlicensed"])).toBe("partial");
+    expect(aggregate(["pass", "pass", "info"])).toBe("partial");
+    // Failures still decide as before.
+    expect(aggregate(["fail", "review"])).toBe("no");
+    expect(aggregate(["pass", "fail", "review"])).toBe("partial");
+  });
+
+  it("keeps account names out of the evidence it stores", () => {
+    const withAdmins = scanSchema.parse({
+      summary: { timestamp: "2026-10-01T03:00:00Z", tenant: { display_name: "Contoso", primary_domain: "contoso.example" } },
+      findings: [
+        { check_id: "CA-1", status: "fail", setting: "Break-glass accounts", current_value: "Excluded: bg1@contoso.example, Guest alice_fabrikam.com#EXT#@contoso.onmicrosoft.com" },
+      ],
+    });
+    const ev = readScan(withAdmins, mapping).suggestions[0].evidence;
+    expect(ev.checks[0].current).toBe("Excluded: [account], Guest [account]");
+    expect(JSON.stringify(ev)).not.toMatch(/bg1|alice|fabrikam/);
+  });
+
+  it("removes an address before cutting long text, so half an address never survives", () => {
+    const long = scanSchema.parse({
+      summary: { timestamp: "2026-10-01T03:00:00Z", tenant: { display_name: "Contoso", primary_domain: "contoso.example" } },
+      findings: [{ check_id: "CA-1", status: "fail", setting: "Admins", current_value: `${"x".repeat(1990)} alice.smith@contoso.example` }],
+    });
+    expect(JSON.stringify(readScan(long, mapping).suggestions[0].evidence)).not.toMatch(/alice/);
+  });
+
+  it("leaves version pins that only look like addresses alone", () => {
+    expect(redactEmails("lodash@4.17.21, owner admin@contoso.example")).toBe("lodash@4.17.21, owner [account]");
   });
 
   it("turns a scan into evidence and suggestions, skipping checks the scan didn't run", () => {
@@ -63,6 +99,17 @@ describe("M365-Secure import", () => {
     expect(suggestLicence(["FLOW_FREE"])).toBeUndefined();
   });
 
+  it("recognises a results file with no license_skus as M365-Secure, not Prowler", () => {
+    const text = JSON.stringify({
+      summary: { timestamp: "2026-10-01T03:00:00Z", tenant: { display_name: "Contoso", primary_domain: "contoso.example" } },
+      findings: [{ check_id: "CA-1", status: "pass", setting: "STATUS of MFA" }],
+    });
+    expect(m365SecureImporter.detect(text)).toBe(true);
+    expect(prowlerImporter("aws").detect(text)).toBe(false);
+    expect(prowlerImporter("microsoft").detect(text)).toBe(false);
+    expect(detectImporter(text)).toBe(m365SecureImporter);
+  });
+
   it("rejects files that aren't M365-Secure results", () => {
     expect(scanSchema.safeParse({ version: 1, org: {} }).success).toBe(false);
   });
@@ -75,6 +122,8 @@ describe("mapping safeguards", () => {
     expect(suggestFor({ ...base, cap: "partial" }, ["fail"])).toBe("no");
     expect(suggestFor({ ...base, failIsInconclusive: true }, ["fail"])).toBeUndefined();
     expect(suggestFor({ ...base, failIsInconclusive: true }, ["pass"])).toBe("yes");
+    // An inconclusive fail is review, so it can't let the pass beside it read as Yes.
+    expect(suggestFor({ ...base, failIsInconclusive: true }, ["pass", "fail"])).toBe("partial");
   });
 });
 

@@ -5,6 +5,7 @@ import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
 import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
+import { applyScan as mergeScan } from "../imports/apply";
 import type { ScanResult } from "../imports/types";
 import { NOTE_MAX } from "./assessmentSchema";
 import { emptyAssessment, STEP_LAYOUT } from "./empty";
@@ -56,6 +57,21 @@ export const hasProgress = (a: Assessment) =>
   a.org.name.trim() !== "" || a.jewels.length > 0 || Object.keys(a.answers).length > 0 || (a.aiRegister?.entries.length ?? 0) > 0;
 
 export const clampStep = (n: number | undefined, mode: Mode = "full") => Math.min(stepsFor(mode).length - 1, Math.max(0, Math.trunc(n ?? 0)));
+
+/** The furthest step that can be entered: a step needs the minimum inputs of the steps before it. */
+export function reachableStep(a: Assessment): number {
+  const mode = modeOf(a);
+  if (!a.org.name.trim()) return 0;
+  // The standalone register needs nothing else: no platform, crown jewels or Controls answers.
+  if (mode === "full") {
+    if (!a.platforms.length) return 1;
+    if (!a.jewels.length) return 2;
+  }
+  return stepsFor(mode).length - 1;
+}
+
+/** The step to show: the saved position, kept inside the step list and no further than `reachableStep`. */
+export const currentStep = (a: Assessment) => Math.min(clampStep(a.progress?.step, modeOf(a)), reachableStep(a));
 
 /** The SOC block, or an empty one to change. */
 const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
@@ -205,34 +221,26 @@ export const useStore = create<State>()(
             jewels: a.jewels.filter((j) => j.id !== id),
             ...(a.aiRegister && { aiRegister: { entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
           })),
-        applyScan: (scan, { platform, overwrite, licence }) => {
+        applyScan: (scan, opts) => {
           let applied = 0;
-          update((a) => {
-            const answers = { ...a.answers };
-            const evidence = { ...a.evidence };
-            for (const { question, evidence: ev } of scan.suggestions) {
-              evidence[question] = ev;
-              if (ev.suggested && (overwrite || !answers[question])) {
-                answers[question] = ev.suggested;
-                applied++;
-              }
-            }
-            const now = new Date().toISOString();
-            return {
-              answers,
-              evidence,
-              licence: licence && scan.licence ? { ...a.licence, [platform]: scan.licence } : a.licence,
-              imports: [...(a.imports ?? []), { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied }],
-            };
+          set((s) => {
+            const merged = mergeScan(s.assessment, scan, opts);
+            applied = merged.applied;
+            return { assessment: merged.assessment };
           });
           return applied;
         },
         load: (assessment) => {
           const mode = modeOf(assessment);
           const progress = migrateProgress(assessment.progress ?? { step: 0 }, mode)!;
-          set({ assessment: { ...assessment, progress: { ...progress, step: clampStep(progress.step, mode) } } });
+          // A file can say it was on Report with no organisation or crown jewels: open it no further than it can reach.
+          set({ assessment: { ...assessment, progress: { ...progress, step: currentStep({ ...assessment, progress }) } } });
         },
-        reset: () => set({ assessment: emptyAssessment() }),
+        // A fresh assessment is the user's own, so it is never read-only, even after a newer file or newer progress.
+        reset: () => {
+          setStorageReadOnly(false);
+          set({ assessment: emptyAssessment(), readOnly: false });
+        },
       };
     },
     {
@@ -255,4 +263,5 @@ export const useStore = create<State>()(
   ),
 );
 
-export const useStep = () => useStore((s) => clampStep(s.assessment.progress?.step, modeOf(s.assessment)));
+export const useStep = () => useStore((s) => currentStep(s.assessment));
+export const useReachable = () => useStore((s) => reachableStep(s.assessment));

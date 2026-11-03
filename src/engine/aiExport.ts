@@ -2,6 +2,7 @@ import type { Catalogue } from "../content/schema";
 import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "./aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, type AiField } from "./aiRegister";
 import { isAgentic } from "./aiRegister";
+import { pct } from "./percent";
 import { assessAll } from "./risk";
 import type { Assessment } from "./types";
 
@@ -13,7 +14,6 @@ export interface RegisterTable {
 }
 
 const list = (values: string[]) => values.join("; ");
-const pct = (n: number | null) => (n === null ? "" : `${Math.round(n * 100)}%`);
 const criterionLabel = (c: keyof typeof aiCriteria) => (c === "none" ? "None (not in scope)" : aiCriteria[c].split(":")[0]);
 
 const standardFields: AiField[] = [
@@ -100,7 +100,7 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, opts
       e.access ? aiAccess[e.access].label : "",
       list(e.data.map((d) => aiData[d])),
       list(r.jewels.map((j) => j.jewel.name)),
-      pct(r.score),
+      pct(r.score, ""),
       `${r.answered} of ${r.questions.length}`,
       list(r.gaps.map((g) => `${g.question.id} (${g.question.severity}${basisLabel(g.question.basis) ? `, ${basisLabel(g.question.basis)}` : ""})`)),
       list(r.missing.map((f) => aiFieldLabels[f])),

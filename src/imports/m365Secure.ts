@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ImportMapping } from "../content/schema";
 import { suggestAll, type CheckRow } from "./aggregate";
-import { clip, type ScanImporter, type ScanResult } from "./types";
+import { clip, redactEmails, type ScanImporter, type ScanResult } from "./types";
 
 const status = z.enum(["pass", "fail", "warning", "review", "info", "unknown", "notlicensed"]);
 
@@ -51,11 +51,14 @@ export function readScan(scan: Scan, mapping: ImportMapping): ScanResult {
     const row: CheckRow = {
       id: f.check_id,
       status: f.status,
-      setting: clip(f.setting, 500),
-      current: clip(f.current_value, 2000),
-      expected: clip(f.expected_value, 2000),
+      // Addresses go before the cut: one cut in half no longer looks like an address.
+      setting: clip(redactEmails(f.setting), 500),
+      current: clip(redactEmails(f.current_value), 2000),
+      expected: clip(redactEmails(f.expected_value), 2000),
     };
-    byCheck.set(f.check_id, [...(byCheck.get(f.check_id) ?? []), row]);
+    const rows = byCheck.get(f.check_id);
+    if (rows) rows.push(row);
+    else byCheck.set(f.check_id, [row]);
   }
   const mapped = new Set(mapping.mappings.flatMap((m) => m.checks));
   const tenant = scan.summary.tenant.display_name || scan.summary.tenant.primary_domain;
@@ -73,7 +76,11 @@ export function readScan(scan: Scan, mapping: ImportMapping): ScanResult {
   };
 }
 
-const looksLike = (text: string) => text.includes('"summary"') && text.includes('"findings"') && text.includes("license_skus");
+/**
+ * The fields the schema needs: `summary.tenant.primary_domain` and `findings`. `license_skus` is optional (the schema
+ * defaults it), so a file without one is still M365-Secure rather than falling through to another importer.
+ */
+const looksLike = (text: string) => ['"summary"', '"findings"', '"primary_domain"'].every((k) => text.includes(k));
 
 export const m365SecureImporter: ScanImporter = {
   id: "m365-secure",

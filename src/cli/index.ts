@@ -51,7 +51,7 @@ Usage:
 
 Commands:
   catalogue [--platform aws|microsoft|google] [--out file.json]
-  new --org "Name" --platforms microsoft,aws [--out a.crownguard.json]
+  new --org "Name" --platforms microsoft,aws [--out a.crownguard.json] [--force]
   import <assessment> <scan-file> [--tool auto|m365-secure|prowler|scubagoggles] [--overwrite] [--licence]
   score <assessment> [--format json|text]
   render <assessment> <out.pdf> [--kind full|ai-register]
@@ -66,10 +66,11 @@ JSON on stdout; human messages on stderr. See docs/cli.md.
 const helpFor: Record<string, string> = {
   catalogue: `cg catalogue [--platform aws|microsoft|google] [--out file.json]
   Dump questions, asset types, licence tiers and domains as JSON.`,
-  new: `cg new --org "Name" --platforms microsoft,aws [--out a.crownguard.json]
-  Write an empty assessment that parseAssessment accepts.`,
+  new: `cg new --org "Name" --platforms microsoft,aws [--out a.crownguard.json] [--force]
+  Write an empty assessment that parseAssessment accepts. Refuses to replace an existing file without --force.`,
   import: `cg import <assessment> <scan-file> [--tool auto|m365-secure|prowler|scubagoggles] [--overwrite] [--licence]
-  Pre-fill answers from a local scan file. Writes the assessment back in place.`,
+  Pre-fill answers from a local scan file. Writes the assessment back in place, so a file saved by a newer
+  build (higher schemaVersion) is refused rather than rewritten as this build's schema.`,
   score: `cg score <assessment> [--format json|text]
   Posture, risks, domains, Essential Eight, roadmap, plus SOC/IDCF/AI when present.
   JSON is the default.`,
@@ -83,15 +84,22 @@ const helpFor: Record<string, string> = {
   List every Zod issue and path. Exit 1 on failure.`,
 };
 
+/** A local file as text, without the UTF-8 byte order mark Windows tools (PowerShell, Excel) often write. */
+export function readText(path: string): string {
+  const text = readFileSync(path, "utf8");
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
 function readJson(path: string): unknown {
   try {
-    return JSON.parse(readFileSync(path, "utf8"));
+    return JSON.parse(readText(path));
   } catch (e) {
     throw Object.assign(new Error(`cannot read ${path}: ${(e as Error).message}`), { code: EXIT.INVALID });
   }
 }
 
-function loadAssessment(path: string, questionIds?: ReadonlySet<string>): Assessment {
+/** `writesBack`: the command saves the file in place, which would rewrite a newer file as this build's schema. */
+function loadAssessment(path: string, questionIds?: ReadonlySet<string>, { writesBack = false } = {}): Assessment {
   const result = parseAssessment(readJson(path), { questionIds });
   if (result.kind === "error") {
     for (const i of result.issues) err(i);
@@ -106,6 +114,11 @@ function loadAssessment(path: string, questionIds?: ReadonlySet<string>): Assess
         issues: result.issues,
       });
     }
+    if (writesBack)
+      throw Object.assign(
+        new Error(`assessment is schema ${result.schemaVersion}, newer than this build (schema ${SCHEMA_VERSION}); refusing to rewrite it. Use a newer crownguard build.`),
+        { code: EXIT.INVALID },
+      );
     err(`warn: file is schema ${result.schemaVersion} (newer than this build); using a best-effort parse`);
     return result.assessment;
   }
@@ -189,7 +202,9 @@ export async function run(argv: string[]): Promise<number> {
         return EXIT.INVALID;
     }
   } catch (e) {
-    const code = typeof e === "object" && e && "code" in e && typeof (e as { code: unknown }).code === "number" ? (e as { code: number }).code : EXIT.UNEXPECTED;
+    const raw = typeof e === "object" && e && "code" in e ? (e as { code: unknown }).code : undefined;
+    // node:util parseArgs rejects unknown or malformed options with ERR_PARSE_ARGS_* codes: that's bad input.
+    const code = typeof raw === "number" ? raw : typeof raw === "string" && raw.startsWith("ERR_PARSE_ARGS_") ? EXIT.INVALID : EXIT.UNEXPECTED;
     err((e as Error).message ?? String(e));
     return code === EXIT.INVALID || code === EXIT.CONTENT ? code : EXIT.UNEXPECTED;
   }
@@ -230,6 +245,7 @@ function cmdNew(argv: string[]): number {
       org: { type: "string" },
       platforms: { type: "string" },
       out: { type: "string", default: "assessment.crownguard.json" },
+      force: { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
     },
     allowPositionals: false,
@@ -258,7 +274,13 @@ function cmdNew(argv: string[]): number {
   a.org = { ...a.org, name: values.org.trim() };
   a.platforms = platforms;
   const path = values.out!;
-  writeFileSync(path, toSaveFile(a, { contentHash }));
+  try {
+    writeFileSync(path, toSaveFile(a, { contentHash }), { flag: values.force ? "w" : "wx" });
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
+    err(`${path} already exists; pass --force to replace it`);
+    return EXIT.INVALID;
+  }
   err(`Wrote ${path}`);
   out({ out: path, schemaVersion: a.schemaVersion, org: a.org.name, platforms });
   return EXIT.OK;
@@ -290,10 +312,10 @@ function cmdImport(argv: string[]): number {
     return EXIT.INVALID;
   }
   const { catalogue, contentHash } = catalogueOrThrow();
-  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue));
+  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue), { writesBack: true });
   let text: string;
   try {
-    text = readFileSync(scanPath, "utf8");
+    text = readText(scanPath);
   } catch (e) {
     err(`cannot read ${scanPath}: ${(e as Error).message}`);
     return EXIT.INVALID;
