@@ -60,8 +60,11 @@ export function readableOn(color: string, background = "#ffffff", target = 4.5):
   return toHex(rgb);
 }
 
-/** Black or white, whichever reads better on `background`. */
-export const textOn = (background: string) => (contrast("#ffffff", background) >= contrast("#111111", background) ? "#ffffff" : "#111111");
+/**
+ * Black or white, whichever reads better on `background`. Pure black, not a near-black: the better of black and
+ * white is always at least 4.58:1, whereas a softer dark leaves mid tones (e.g. #7260ff) where neither reaches 4.5:1.
+ */
+export const textOn = (background: string) => (contrast("#ffffff", background) >= contrast("#000000", background) ? "#ffffff" : "#000000");
 
 /** Mix towards white; amount 0–1. */
 export function tint(color: string, amount: number): string {

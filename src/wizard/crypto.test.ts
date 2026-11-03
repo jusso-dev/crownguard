@@ -50,6 +50,14 @@ describe("encrypt / decrypt", () => {
     await expect(decrypt({ ...env, crownguardEncrypted: 99 }, "pass")).rejects.toThrow(/Unsupported encryption format \(version 99\)/);
   });
 
+  it("rejects an iteration count that would hang the tab, or isn't a count at all", async () => {
+    const env = await encrypt("x", "pass");
+    await expect(decrypt({ ...env, iterations: 4e9 }, "pass")).rejects.toThrow(/Invalid encryption parameters/);
+    await expect(decrypt({ ...env, iterations: 10 * ITERATIONS + 1 }, "pass")).rejects.toThrow(/Invalid encryption parameters/);
+    await expect(decrypt({ ...env, iterations: 1.5 }, "pass")).rejects.toThrow(/Invalid encryption parameters/);
+    await expect(decrypt({ ...env, iterations: 0 }, "pass")).rejects.toThrow(/Invalid encryption parameters/);
+  });
+
   it("rejects non-envelopes", async () => {
     await expect(decrypt({ hello: "world" }, "pass")).rejects.toThrow(/Not an encrypted/);
     await expect(decrypt(null, "pass")).rejects.toThrow(/Not an encrypted/);

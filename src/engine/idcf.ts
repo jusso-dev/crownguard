@@ -7,7 +7,7 @@ export const IDCF_LEVELS = [2, 3, 4] as const;
 export type IdcfLevel = (typeof IDCF_LEVELS)[number];
 
 export interface IdcfCell {
-  /** "gaps": a mapped question isn't answered Yes; "clear": none found in what was asked; "not-verified": the
+  /** "gaps": a mapped question isn't answered Yes or N/A; "clear": none found in what was asked; "not-verified": the
    * assessment can't tell (e.g. an Essential Eight level it doesn't ask); "not-assessed": nothing maps here. */
   status: "gaps" | "clear" | "not-verified" | "not-assessed";
   gaps: Question[];
@@ -23,7 +23,7 @@ export interface IdcfRow {
 
 const satisfied = (a: Answer | undefined) => a === "yes" || a === "na";
 
-/** Questions mapped to any of these IDCF refs, and which of them aren't answered Yes. */
+/** Questions mapped to any of these IDCF refs, and which of them aren't answered Yes or N/A. */
 function mappedCell(questions: Question[], answers: Record<string, Answer>, refs: string[]): IdcfCell {
   const mapped = questions.filter((q) => q.refs.some((r) => r.framework === "idcf" && refs.includes(r.ref)));
   if (!mapped.length) return { status: "not-assessed", gaps: [], notVerified: [] };

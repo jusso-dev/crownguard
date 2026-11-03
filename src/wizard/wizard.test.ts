@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { assessmentSchema } from "./assessmentSchema";
-import { clampStep, emptyAssessment, hasProgress, migrateProgress, stepsFor } from "./store";
+import type { CrownJewel } from "../engine/types";
+import { clampStep, currentStep, emptyAssessment, hasProgress, migrateProgress, reachableStep, stepsFor } from "./store";
 import { relativeTime } from "./time";
 
 describe("save and resume", () => {
@@ -25,6 +26,21 @@ describe("save and resume", () => {
 
   it("keeps a resumed step inside the standalone AI register too", () => {
     expect([undefined, -3, 2.7, 99].map((n) => clampStep(n, "ai-register"))).toEqual([0, 0, 2, 4]);
+  });
+
+  it("opens a saved position no further than the assessment can reach", async () => {
+    const blank = { ...emptyAssessment(), progress: { step: 8, layout: 3 } };
+    expect(reachableStep(blank)).toBe(0);
+    expect(currentStep(blank)).toBe(0);
+    const named = { ...blank, org: { ...blank.org, name: "Acme" }, platforms: ["microsoft"] };
+    expect(currentStep(named)).toBe(2);
+    expect(currentStep({ ...named, jewels: [{ id: "j1" } as CrownJewel] })).toBe(8);
+    expect(currentStep({ ...blank, mode: "ai-register" as const, org: named.org })).toBe(4);
+    // load() stores the capped step, so Generate on Report can't be reached by editing the file.
+    const { useStore } = await import("./store");
+    useStore.getState().load(blank);
+    expect(useStore.getState().assessment.progress?.step).toBe(0);
+    useStore.getState().reset();
   });
 
   it("has one step list per mode", () => {
@@ -274,5 +290,46 @@ describe("N/A needs a reason", () => {
     expect(needsReason(a, "MS-ID-001")).toBe(true);
     expect(needsReason(a, "MS-ID-002")).toBe(false);
     expect(effectiveAnswers(a)).toEqual({ "MS-ID-002": "na", "MS-ID-003": "no" });
+  });
+});
+
+describe("starting afresh in the store", () => {
+  it("is never read-only, even after newer progress or a newer file made it so", async () => {
+    const { useStore } = await import("./store");
+    useStore.getState().setReadOnly(true);
+    useStore.getState().reset();
+    expect(useStore.getState().readOnly).toBe(false);
+  });
+});
+
+describe("importing a scan in the store", () => {
+  it("leaves a kept answer's evidence alone when a later scan is imported", async () => {
+    const { useStore } = await import("./store");
+    const scan = (source: string, suggestions: [string, "yes" | "no" | undefined][]) => ({
+      tool: source,
+      tenant: "Contoso",
+      domain: "contoso.example",
+      scannedAt: "2026-10-01T03:00:00Z",
+      unmapped: 0,
+      unmappedFailing: [],
+      suggestions: suggestions.map(([question, suggested]) => ({ question, evidence: { source, tenant: "Contoso", scannedAt: "2026-10-01T03:00:00Z", suggested, checks: [] } })),
+    });
+    const s = useStore.getState();
+    s.reset();
+    s.applyScan(scan("first", [["MS-ID-001", "yes"], ["MS-ID-002", "yes"]]), { platform: "microsoft", overwrite: false, licence: false });
+    // Keep my answers: MS-ID-001 keeps its answer and the evidence behind it; MS-ID-003 was unanswered, so it takes both.
+    expect(s.applyScan(scan("second", [["MS-ID-001", "no"], ["MS-ID-003", "no"]]), { platform: "microsoft", overwrite: false, licence: false })).toBe(1);
+    // Replace, but the scan is non-decisive for MS-ID-002: its answer and evidence stay.
+    s.applyScan(scan("third", [["MS-ID-002", undefined]]), { platform: "microsoft", overwrite: true, licence: false });
+    let a = useStore.getState().assessment;
+    expect(a.answers).toMatchObject({ "MS-ID-001": "yes", "MS-ID-002": "yes", "MS-ID-003": "no" });
+    expect(a.evidence?.["MS-ID-001"]?.source).toBe("first");
+    expect(a.evidence?.["MS-ID-002"]?.source).toBe("first");
+    expect(a.evidence?.["MS-ID-003"]?.source).toBe("second");
+    // Replace with a decisive scan: the answer and its evidence both move.
+    s.applyScan(scan("fourth", [["MS-ID-001", "no"]]), { platform: "microsoft", overwrite: true, licence: false });
+    a = useStore.getState().assessment;
+    expect(a.answers["MS-ID-001"]).toBe("no");
+    expect(a.evidence?.["MS-ID-001"]?.source).toBe("fourth");
   });
 });

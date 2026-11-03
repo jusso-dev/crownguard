@@ -119,7 +119,8 @@ export const assessmentSchema = z.looseObject({
   branding: z.object({
     logoDataUrl: z
       .string()
-      .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/)
+      // PNG or JPEG only: the PDF renderer can't draw anything else, and the logo field re-encodes uploads as PNG.
+      .regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/)
       .max(3_000_000)
       .optional(),
     logoBackdrop: z.enum(["none", "white"]).optional(),

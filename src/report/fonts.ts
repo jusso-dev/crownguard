@@ -29,7 +29,23 @@ export function registerFonts(f: FontFiles) {
       { src: f.bold, fontWeight: 700 },
     ],
   });
-  Font.registerHyphenationCallback((word) => [word]);
+  Font.registerHyphenationCallback(breakLongWords);
+}
+
+const LONG_WORD = 24;
+const WORD_PIECE = 8;
+
+/**
+ * No hyphenation of ordinary words, but long unbroken tokens (URLs, paths, a pasted ID) get break points every few
+ * characters: without them a token wider than its line or table cell runs off the page and the rest is lost.
+ * Splits by code point so a surrogate pair (emoji, rare CJK) is never cut in half.
+ */
+export function breakLongWords(word: string): string[] {
+  const chars = Array.from(word);
+  if (chars.length <= LONG_WORD) return [word];
+  const pieces: string[] = [];
+  for (let i = 0; i < chars.length; i += WORD_PIECE) pieces.push(chars.slice(i, i + WORD_PIECE).join(""));
+  return pieces;
 }
 
 let diskRegistered = false;

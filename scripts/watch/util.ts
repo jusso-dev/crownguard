@@ -282,3 +282,31 @@ export function truncate(text: string, max: number): string {
   const space = cut.lastIndexOf(" ");
   return `${(space > max * 0.5 ? cut.slice(0, space) : cut).trimEnd()}…`;
 }
+
+/**
+ * A response body read as it streams, stopping (and cancelling the download) as soon as it passes `maxBytes`, so a
+ * huge chunked body without a content-length is never buffered whole. Undefined when the body is too large.
+ */
+export async function readCapped(res: Response, maxBytes: number): Promise<Uint8Array | undefined> {
+  if (!res.body) return new Uint8Array(await res.arrayBuffer());
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {});
+      return undefined;
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let at = 0;
+  for (const c of chunks) {
+    out.set(c, at);
+    at += c.byteLength;
+  }
+  return out;
+}

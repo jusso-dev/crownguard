@@ -2,6 +2,8 @@ import type { Catalogue } from "../content/schema";
 import type { Assessment } from "../engine/types";
 import { detectImporter, importerFor, importers, type ScanImporter, type ScanResult } from "../imports/index";
 
+export { applyScan } from "../imports/apply";
+
 export type ToolChoice = "auto" | "m365-secure" | "prowler" | "scubagoggles";
 
 /** Resolve which importer to use. `prowler` picks aws/azure via detect (or assessment platforms). */
@@ -32,39 +34,6 @@ export function readScan(catalogue: Catalogue, importer: ScanImporter, text: str
   const result = importer.read(text, mapping);
   if (!result.suggestions.length) throw new Error("none of the checks in this scan match a question");
   return result;
-}
-
-/** Apply scan suggestions onto an assessment (same rules as the wizard's `applyScan`). */
-export function applyScan(
-  assessment: Assessment,
-  scan: ScanResult,
-  opts: { platform: string; overwrite: boolean; licence: boolean },
-): { assessment: Assessment; applied: number } {
-  const answers = { ...assessment.answers };
-  const evidence = { ...assessment.evidence };
-  let applied = 0;
-  for (const { question, evidence: ev } of scan.suggestions) {
-    evidence[question] = ev;
-    if (ev.suggested && (opts.overwrite || !answers[question])) {
-      answers[question] = ev.suggested;
-      applied++;
-    }
-  }
-  const now = new Date().toISOString();
-  return {
-    applied,
-    assessment: {
-      ...assessment,
-      answers,
-      evidence,
-      licence: opts.licence && scan.licence ? { ...assessment.licence, [opts.platform]: scan.licence } : assessment.licence,
-      imports: [
-        ...(assessment.imports ?? []),
-        { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied },
-      ],
-      updatedAt: now,
-    },
-  };
 }
 
 export { detectImporter, importerFor, importers };

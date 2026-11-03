@@ -27,6 +27,22 @@ const routes: Record<string, (req: IncomingMessage, res: ServerResponse) => void
   "/loop": (_req, res) => res.writeHead(302, { location: "/loop" }).end(),
   "/js": (_req, res) => res.writeHead(302, { location: "javascript:alert(1)" }).end(),
   "/pdf": (_req, res) => res.writeHead(200, { "content-type": "application/pdf" }).end(Buffer.from("%PDF-1.7\n\0binary")),
+  // Chunked, with no content-length: the cap has to be enforced while the body streams.
+  "/huge": (_req, res) => {
+    res.writeHead(200, { "content-type": "text/plain" });
+    let sent = 0;
+    const chunk = "x".repeat(64 * 1024);
+    // Every write counts, including the one that fills the buffer; a full buffer only means wait for `drain`.
+    const push = () => {
+      while (sent < 300 && !res.destroyed) {
+        sent++;
+        if (!res.write(chunk)) return void res.once("drain", push);
+      }
+      res.end();
+    };
+    res.on("close", () => hits.set("/huge", sent));
+    push();
+  },
   "/ua": (req, res) => res.writeHead(200, { "content-type": "text/plain" }).end(`${req.headers["user-agent"]}|${req.headers["accept-language"]}`),
 };
 
@@ -82,6 +98,16 @@ describe("fetchPage", () => {
     const r = await fetcher().fetchPage(`${base}/pdf`);
     expect(r.body).toBeUndefined();
     expect(r.bytes?.byteLength).toBeGreaterThan(5);
+  });
+
+  it("stops reading a chunked body as soon as it passes maxBytes", async () => {
+    const r = await createFetcher({ retries: 0, maxBytes: 256 * 1024 }).fetchPage(`${base}/huge`);
+    expect(r.outcome).toBe("http-error");
+    expect(r.error).toMatch(/body larger than 262144 bytes/);
+    expect(r.body).toBeUndefined();
+    // The server saw the download cancelled long before its 300 chunks (about 19 MB) were all read.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(hits.get("/huge")).toBeLessThan(300);
   });
 
   it("reports network failures", async () => {

@@ -93,9 +93,13 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     const platform = parseFile(`${prefix}platform.yaml`, platformText, platformSchema, errors);
     const assetTypes = parseFile(`${prefix}assets.yaml`, assetsText, assetFileSchema, errors);
     if (!platform || !assetTypes) continue;
+    // Questions are listed in id order on every path (wizard, CLI, report), whatever file they are written in.
     const questions = entries
       .filter(([p]) => p.startsWith(`${prefix}questions/`))
-      .flatMap(([p, t]) => parseFile(p, t, questionFileSchema, errors) ?? []);
+      .flatMap(([p, t]) => parseFile(p, t, questionFileSchema, errors) ?? [])
+      .sort((x, y) => x.id.localeCompare(y.id));
+    if (platform.id !== dir) errors.push(`${prefix}platform.yaml: id ${platform.id} does not match its directory ${dir}`);
+    if (catalogue.platforms.has(platform.id)) errors.push(`${prefix}platform.yaml: duplicate platform id ${platform.id}`);
     catalogue.platforms.set(platform.id, { platform, assetTypes, questions });
   }
 
@@ -103,6 +107,7 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     if (!path.startsWith("content/imports/")) continue;
     const m = parseFile(path, text, importMappingSchema, errors);
     if (!m) continue;
+    if (catalogue.imports.has(m.id)) errors.push(`${path}: duplicate import mapping id ${m.id}`);
     const bundle = catalogue.platforms.get(m.platform);
     if (!bundle) errors.push(`${path}: unknown platform ${m.platform}`);
     const seen = new Set<string>();
@@ -392,7 +397,7 @@ export function contentDigest(catalogue: Catalogue): string {
   for (const [id, b] of [...catalogue.platforms].sort(([a], [b]) => a.localeCompare(b))) {
     parts.push(`platform:${id}`);
     for (const a of b.assetTypes) parts.push(`asset:${a.id}`);
-    for (const q of b.questions.sort((x, y) => x.id.localeCompare(y.id))) {
+    for (const q of b.questions.slice().sort((x, y) => x.id.localeCompare(y.id))) {
       parts.push(`question:${q.id}:${q.licence.join(",")}:${q.sources.join(",")}`);
     }
   }

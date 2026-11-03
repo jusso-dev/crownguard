@@ -121,6 +121,18 @@ describe("privacy: nothing from Raw survives the import", () => {
     expect(JSON.stringify(result)).not.toContain("organizational_unit_names");
     expect(JSON.stringify(result.suggestions.flatMap((s) => s.evidence.checks))).not.toContain(secret);
   });
+
+  it("takes the super admin and break-glass addresses out of Details too", () => {
+    const doc = JSON.parse(example);
+    const admins = (doc.Results.commoncontrols as { Controls: Record<string, string>[] }[])
+      .flatMap((g) => g.Controls)
+      .find((c) => c["Control ID"] === "GWS.COMMONCONTROLS.6.2v1")!;
+    admins.Details = "The following super admins are configured: alice@ex.com, breakglass@ex.com. <i>Note: Exceptions are allowed for break-glass accounts.</i>";
+    const text = JSON.stringify(doc);
+    const control = parseScubagoggles(text).controls.find((c) => c.id === "GWS.COMMONCONTROLS.6.2v1")!;
+    expect(control.details).toBe("The following super admins are configured: [account], [account]. Note: Exceptions are allowed for break-glass accounts.");
+    expect(JSON.stringify(read(text))).not.toMatch(/alice|breakglass@/);
+  });
 });
 
 describe("the pinned ScubaGoggles control list", () => {
@@ -164,5 +176,25 @@ describe("stripping HTML out of Details", () => {
     expect(stripHtml("&lt;b&gt;literal&lt;/b&gt; stays as text")).toBe("b>literal/b> stays as text");
     expect(stripHtml("half a tag <script")).toBe("half a tag");
     expect(stripHtml("3 < 4 and a > b")).toBe("3 < 4 and a > b");
+    expect(stripHtml("x <scr<script>ipt>alert(1)</script> y")).not.toMatch(/<[a-z/]/i);
+  });
+
+  it("strips a long run of unclosed tags in linear time", () => {
+    const start = performance.now();
+    expect(stripHtml(`${"<a".repeat(50_000)}<>tail`)).not.toContain("<a");
+    expect(performance.now() - start).toBeLessThan(1500);
+  });
+
+  it("leaves an out-of-range or surrogate character reference as written instead of failing the import", () => {
+    expect(stripHtml("a &#x110000; b &#1114112; c &#xD800; d")).toBe("a &#x110000; b &#1114112; c &#xD800; d");
+    expect(stripHtml("max &#x10FFFF;")).toBe("max \u{10FFFF}");
+  });
+
+  it("doesn't resolve entity or product names through Object.prototype", () => {
+    expect(stripHtml("&constructor; &toString; &amp;")).toBe("&constructor; &toString; &");
+    const control = { id: "GWS.constructor.1.1v1", result: "Pass", criticality: "Shall", details: "" };
+    const m = { ...mapping, mappings: [{ question: "GO-ADM-001", checks: [control.id], rationale: "test only" }] };
+    const row = readScuba({ ...parseScubagoggles(example), controls: [control] }, m).suggestions[0].evidence.checks[0];
+    expect(row.setting).toBe("GWS.constructor.1.1v1 (SCuBA, shall)");
   });
 });

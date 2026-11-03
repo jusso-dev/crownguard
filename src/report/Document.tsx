@@ -17,13 +17,27 @@ import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, 
 const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
 const protects = (jewels: { name: string }[]) =>
   jewels.length === 0
-    ? "the whole environment"
+    ? "no recorded crown jewel (none is on this platform)"
     : jewels.length <= 3
       ? jewels.map((j) => j.name).join(", ")
       : `${jewels.slice(0, 2).map((j) => j.name).join(", ")} and ${jewels.length - 2} more`;
 const firstSentence = (t: string) => t.split(/(?<=\.)\s/)[0];
 const listText = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
 const sentence = (t: string) => (/[.?!]$/.test(t) ? t : `${t}.`);
+
+/**
+ * Register rows don't split across pages, so a long "Supports" entry (up to 2,000 characters) would be cut off at the
+ * page foot. Past this length the cell gets a shortened version and the full text is printed below the table.
+ */
+const SUPPORTS_CELL_MAX = 160;
+const supportsCell = (t: string) => {
+  const chars = Array.from(t);
+  if (chars.length <= SUPPORTS_CELL_MAX) return t;
+  const cut = chars.slice(0, SUPPORTS_CELL_MAX).join("");
+  const space = cut.lastIndexOf(" ");
+  return `${(space > SUPPORTS_CELL_MAX / 2 ? cut.slice(0, space) : cut).trimEnd()}… (in full below)`;
+};
+const supportsInFull = (t: string) => Array.from(t).length > SUPPORTS_CELL_MAX;
 /** Full timestamp with time zone, e.g. "8 October 2026 at 5:42 pm AEDT". */
 const stampText = (d: Date) =>
   d.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
@@ -373,15 +387,21 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               { header: "C / I / A", width: "10%", render: (r) => `${r.jewel.confidentiality} / ${r.jewel.integrity} / ${r.jewel.availability}` },
               { header: "Obligations", width: "16%", render: (r) => r.jewel.regulations.map((x) => regulations[x].split(" (")[0]).join("; ") || "–" },
               { header: "Exposure", width: "15%", render: (r) => r.jewel.exposures.map((x) => exposures[x]).join("; ") || "None recorded" },
-              { header: "Supports", width: "12%", render: (r) => r.jewel.businessProcesses || "–" },
+              { header: "Supports", width: "12%", render: (r) => (r.jewel.businessProcesses ? supportsCell(r.jewel.businessProcesses) : "–") },
             ]}
           />
-          {model.risks.some((r) => r.jewel.description) && (
+          {model.risks.some((r) => r.jewel.description || supportsInFull(r.jewel.businessProcesses)) && (
             <View style={{ marginTop: 10 }}>
               {model.risks.filter((r) => r.jewel.description).map((r) => (
                 <Text key={r.jewel.id} style={{ ...s.p, fontSize: 8.5 }}>
                   <Text style={{ fontWeight: 600 }}>{r.jewel.name}: </Text>
                   {r.jewel.description}
+                </Text>
+              ))}
+              {model.risks.filter((r) => supportsInFull(r.jewel.businessProcesses)).map((r) => (
+                <Text key={`${r.jewel.id}-supports`} style={{ ...s.p, fontSize: 8.5 }}>
+                  <Text style={{ fontWeight: 600 }}>{r.jewel.name} supports: </Text>
+                  {r.jewel.businessProcesses}
                 </Text>
               ))}
             </View>
@@ -501,7 +521,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
         )}
 
         {/* Roadmap */}
-        <Section s={s} id="roadmap" title="Remediation roadmap" lead="Gaps ranked by how much risk they remove across your crown jewels per unit of effort. Critical gaps that can be fixed with small or medium effort are brought into the first 30 days.">
+        <Section s={s} id="roadmap" title="Remediation roadmap" lead="Gaps ranked by how much risk they remove, per unit of effort, across the crown jewels on each control's platform. Critical gaps that can be fixed with small or medium effort are brought into the first 30 days.">
           {(["0–30 days", "31–60 days", "61–90 days"] as const).map((phase) => {
             const items = model.roadmap.filter((r) => r.phase === phase);
             if (!items.length) return null;
@@ -601,17 +621,17 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             "This is a self-assessment. Answers were provided by the organisation and have not been independently verified. Treat it as a structured starting point for a security conversation, not as an audit or certification.",
             "Questions are drawn from current Microsoft, Google and AWS security guidance and mapped to CIS Benchmarks, the ASD Essential Eight Maturity Model, NIST CSF 2.0 and the Department of Home Affairs Industry Data Classification Framework. Each question cites its sources in the references section.",
             "Answers score Yes = 1, Partial = 0.5, No = 0. Unknown and unanswered questions also score 0, so uncertainty is never counted as protection. N/A questions are excluded. Questions are weighted by severity: critical 4, high 3, medium 2, low 1.",
-            "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions relevant to a crown jewel, plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
+            "Likelihood (1–5) is 1 + 4 × the weighted gap ratio of the questions that apply to a crown jewel on its own platform (its asset type and platform-wide controls; another platform in the same assessment never counts), plus 0.5 for each recorded exposure, rounded. If any critical control is not in place, likelihood is at least 3. Impact (1–5) is the highest confidentiality, integrity or availability rating, plus one for regulated or highly confidential data, capped at 5.",
             "Risk bands: 1–4 Low, 5–9 Medium, 10–19 High, 20–25 Extreme.",
-            "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial). A check reported once per resource passes only when every resource passes it, and a suppressed (muted) finding is never treated as a pass. The assessor reviewed and could change every answer; scan evidence is shown against each finding, naming the scanner, its version and the account or tenant it covered.",
+            "Where an automated scan was imported, its results pre-filled answers only when its checks were decisive (all pass = Yes, all fail = No, mixed = Partial; a pass alongside a check the scan couldn't settle, such as one needing review, is Partial). A check reported once per resource passes only when every resource passes it, and a suppressed (muted) finding is never treated as a pass. The assessor reviewed and could change every answer; scan evidence is shown against each finding, naming the scanner, its version and the account or tenant it covered.",
             ...(a.imports?.length
               ? [`Scan evidence in this report came from ${andList([...new Set(a.imports.map((i) => `${i.source}${i.toolVersion ? ` ${i.toolVersion}` : ""}`))])}.`]
               : []),
             ...(hasAppendix
               ? ["Mapped scan checks are listed in full in Appendix A: Scan evidence. Unmapped failing checks from an import stay in the app and are not repeated here."]
               : []),
-            "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes (or N/A). A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
-            "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
+            "Essential Eight levels are indicative. A level is reached only when every question at that level and below is answered Yes or N/A with a reason. A level that ASD's model defines with no new requirements (patching operating systems at Maturity Level 2) is reached with the level below. Strategies outside the scope of a cloud platform, or levels not asked, are reported as not assessed.",
+            "IDCF alignment is indicative. The IDCF is voluntary, has no compliance, certification or assurance process, and leaves the choice of controls to the organisation. The cyber part of each Data Security Level is read from the indicative Essential Eight results: Maturity Level 1 for DSL-2, 2 for DSL-3 and 3 for DSL-4. The authorised-person and device parts are read from the questions mapped to each level, and whole-system and data-movement questions count at every level. A level shows gaps when any mapped question at or below it is not answered Yes or N/A with a reason, and is shown as not verified when no question maps to that level's own requirements. Each crown jewel's check uses only the questions that apply to it, with the tenant-wide Essential Eight result for the cyber part. Premises security, personnel vetting, training and data residency are not assessed. The organisation chose the Data Security Levels recorded for its crown jewels; crownguard does not assign them.",
             ...(model.ism.length
               ? [
                   "The ISM mapping is generated from ASD's official ISM OSCAL catalogue and pinned to the release named alongside the ISM in this report. It shows which ISM controls each question relates to, not that the organisation meets them: this is not an IRAP assessment or a statement of applicability. Where an ISM baseline is chosen, findings that touch controls the baseline includes are annotated and counted; choosing a baseline never changes a score. The Essential Eight Maturity Model remains the source of truth for maturity results.",

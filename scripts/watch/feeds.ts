@@ -181,6 +181,8 @@ export interface FeedRun {
 
 /** A feed whose newest entry is older than this has probably moved or stopped. */
 const STALE_DAYS = 365;
+/** Entries dated more than this after the run are mistakes (or time zones gone wrong) and are ignored. */
+const FUTURE_SLACK_MS = 86_400_000;
 
 /**
  * New entries since each feed's baseline cursor that match its filters, oldest first, at most `max` per feed. The
@@ -195,12 +197,15 @@ export async function checkFeeds(
   fetcher: Fetcher,
   cited: Map<string, string>,
   memory: Record<string, FeedMemo> = {},
+  now: number = Date.now(),
 ): Promise<FeedRun> {
   const run: FeedRun = { findings: [], feeds: {}, skipped: [] };
+  // One future-dated entry would carry the cursor past every real post that follows it.
+  const horizon = new Date(now + FUTURE_SLACK_MS).toISOString();
   const hits = (links: string[]) => [...new Set(links.map((l) => cited.get(citedKey(l))).filter((id): id is string => !!id))].sort();
 
   for (const def of defs) {
-    const since = baseline[def.id]?.latest;
+    const saved = baseline[def.id]?.latest;
     const seenAtCursor = new Set(baseline[def.id]?.seen ?? []);
     const keepBaseline = () => {
       if (baseline[def.id]) run.feeds[def.id] = baseline[def.id];
@@ -211,7 +216,14 @@ export async function checkFeeds(
       keepBaseline();
       continue;
     }
-    const entries = def.kind === "html-history" ? parseHtmlHistory(res.body, def.url) : parseFeed(res.body);
+    const parsed = def.kind === "html-history" ? parseHtmlHistory(res.body, def.url) : parseFeed(res.body);
+    const entries = parsed.filter((e) => e.published <= horizon);
+    const future = parsed.length - entries.length;
+    if (future)
+      run.skipped.push(`${def.name} feed: ignored ${future} entr${future === 1 ? "y" : "ies"} dated after ${horizon.slice(0, 10)}`);
+    if (saved && saved > horizon)
+      run.skipped.push(`${def.name} feed: the saved cursor ${saved.slice(0, 10)} is in the future; following again from the newest entry`);
+    const since = saved && saved <= horizon ? saved : undefined;
     if (!entries.length) {
       run.skipped.push(`${def.name} feed: no entries could be read`);
       keepBaseline();
@@ -224,7 +236,7 @@ export async function checkFeeds(
     if (memo.lastRead && oldest > memo.lastRead)
       run.skipped.push(`${def.name} feed: entries between ${memo.lastRead.slice(0, 10)} and ${oldest.slice(0, 10)} were never read (the feed's window moved on); check the feed by hand`);
     memo.lastRead = newest;
-    if (Date.parse(newest) < Date.now() - STALE_DAYS * 86_400_000)
+    if (Date.parse(newest) < now - STALE_DAYS * 86_400_000)
       run.skipped.push(`${def.name} feed: newest entry is from ${newest.slice(0, 10)}; the feed may have moved or stopped (scripts/watch/feeds.ts)`);
     if (!since) {
       const startSeen = [...new Set(entries.filter((e) => e.published === newest).flatMap((e) => matches(def, e, hits).map(itemKey)))].sort();

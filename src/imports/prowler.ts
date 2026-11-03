@@ -168,7 +168,11 @@ export function readProwlerOcsf(text: string): Finding[] {
 /** Prowler writes one finding per resource per region, so a check can produce hundreds of rows. */
 function byCheck(findings: Finding[]): Map<string, Finding[]> {
   const groups = new Map<string, Finding[]>();
-  for (const f of findings) groups.set(f.check, [...(groups.get(f.check) ?? []), f]);
+  for (const f of findings) {
+    const group = groups.get(f.check);
+    if (group) group.push(f);
+    else groups.set(f.check, [f]);
+  }
   return groups;
 }
 
@@ -235,6 +239,8 @@ export function readProwler(findings: Finding[], mapping: ImportMapping): ScanRe
 
 const looksLikeCsv = (text: string) => {
   const header = text.slice(0, 1000);
+  // JSON names these fields too (an M365-Secure or OCSF file), but a CSV never opens with a brace or bracket.
+  if (/^\s*[{[]/.test(header)) return false;
   return /CHECK_ID/i.test(header) && /STATUS/i.test(header);
 };
 const looksLikeOcsf = (text: string) => text.includes('"event_code"') && text.includes('"status_code"') && /prowler/i.test(text);

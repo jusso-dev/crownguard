@@ -151,6 +151,22 @@ describe("feeds", () => {
     expect(again.skipped).toEqual([]);
   });
 
+  it("ignores entries dated after the run, so one future-dated post can't carry the cursor past later real posts", async () => {
+    const now = Date.parse("2026-11-03T00:00:00Z");
+    const entry = (id: string, date: string) => `<entry><id>${id}</id><title>Security update ${id}</title><link href="https://blog.test/${id}"/><published>${date}</published></entry>`;
+    const xml = `<feed xmlns="http://www.w3.org/2005/Atom">${entry("typo", "2062-10-02T00:00:00Z")}${entry("real", "2026-11-02T00:00:00Z")}</feed>`;
+    const fetcher = { fetchPage: async (url: string) => ({ requestedUrl: url, finalUrl: url, redirects: [], elapsedMs: 1, status: 200, outcome: "ok" as const, body: xml }) };
+    const def = { id: "t", name: "Test", url: "https://feeds.test/atom", kind: "posts" as const, include: [/Security update/] };
+    const run = await checkFeeds([def], { t: { latest: "2026-10-01T00:00:00.000Z", seen: [] } }, fetcher, new Map(), {}, now);
+    expect(run.findings.map((f) => f.title)).toEqual(["Security update real"]);
+    expect(run.feeds.t.latest).toBe("2026-11-02T00:00:00.000Z");
+    expect(run.skipped.join(" ")).toMatch(/ignored 1 entry dated after 2026-11-04/);
+    // A cursor an earlier run already pushed into the future is dropped and the feed is followed again from now.
+    const stuck = await checkFeeds([def], { t: { latest: "2062-10-02T00:00:00.000Z", seen: [] } }, fetcher, new Map(), {}, now);
+    expect(stuck.feeds.t.latest).toBe("2026-11-02T00:00:00.000Z");
+    expect(stuck.skipped.join(" ")).toMatch(/saved cursor 2062-10-02 is in the future/);
+  });
+
   it("reads Atom and RSS entries, newest first, skipping entries without dates or http links", () => {
     const atom = parseFeed(`<feed xmlns="http://www.w3.org/2005/Atom">
 <entry><id>a</id><title type="html">Passkeys &amp;lt;b&amp;gt;for admins&amp;lt;/b&amp;gt;</title><link rel="alternate" href="https://blog.test/a"/><published>2026-10-02T10:00:00Z</published><summary>New &lt;b&gt;controls&lt;/b&gt;</summary></entry>
@@ -219,6 +235,31 @@ describe("github helpers", () => {
     expect(gh.limited()).toMatch(/rate limit/);
     expect(await gh.commitsBetween("MicrosoftDocs/entra-docs", "docs/a.md", "a", "b")).toBeUndefined();
     expect(calls).toBe(3);
+  });
+});
+
+describe("github size cap", () => {
+  it("treats a raw file or API response larger than maxBytes as a miss without reading it all", async () => {
+    let pulled = 0;
+    const big = () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull(controller) {
+            pulled++;
+            if (pulled > 1000) controller.close();
+            else controller.enqueue(new Uint8Array(1024).fill(0x5b));
+          },
+        }),
+        { status: 200 },
+      );
+    const gh = createGitHub({ fetchImpl: (async () => big()) as typeof fetch, maxBytes: 8 * 1024 });
+    expect(await gh.fileAt("MicrosoftDocs/entra-docs", "main", "docs/a.md")).toBeUndefined();
+    expect(pulled).toBeLessThan(20);
+    pulled = 0;
+    expect(await gh.repoExists("MicrosoftDocs/entra-docs")).toBe(false);
+    expect(pulled).toBeLessThan(20);
+    const small = createGitHub({ fetchImpl: (async () => new Response("# Title\n", { status: 200 })) as typeof fetch, maxBytes: 8 * 1024 });
+    expect(await small.fileAt("MicrosoftDocs/entra-docs", "main", "docs/a.md")).toBe("# Title\n");
   });
 });
 

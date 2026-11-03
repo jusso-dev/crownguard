@@ -11,6 +11,7 @@ import {
   domainPosture,
   gapStats,
   overallPosture,
+  questionPlatform,
   questionsForJewel,
   type DomainPosture,
   type JewelRisk,
@@ -134,6 +135,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const b = assessment.branding;
   const bundles = assessment.platforms.map((p) => catalogue.platforms.get(p)).filter((x) => !!x);
   const jewels = assessment.jewels.filter((j) => assessment.platforms.includes(j.platform));
+  const platformOf = questionPlatform(catalogue, assessment.platforms);
 
   const refRows = (matches: (framework: string) => boolean): FrameworkRow[] => {
     const rows = new Map<string, FrameworkRow>();
@@ -277,7 +279,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     risks,
     domains,
     e8: essentialEight(questions, answers).map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy })),
-    roadmap: buildRoadmap(questions, jewels, answers),
+    roadmap: buildRoadmap(questions, jewels, answers, platformOf),
     questions,
     csf,
     cis: refRows((framework) => framework.startsWith("cis-")),
@@ -286,7 +288,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     sources: [...sourceIds].map((id) => catalogue.sources.get(id)).filter((s): s is Source => !!s).sort((a, b) => a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title)),
     assetTypeName: (id) => bundles.flatMap((x) => x.assetTypes).find((a) => a.id === id)?.name ?? id,
     frameworkName: (id) => catalogue.frameworks.get(id)?.shortName ?? id,
-    platformOf: (q) => bundles.find((x) => x.questions.includes(q))?.platform.id,
+    platformOf,
     licenceGap: (q) => {
       const bundle = bundles.find((x) => x.questions.includes(q));
       if (!bundle) return [];

@@ -63,6 +63,12 @@ describe("argument parsing / help", () => {
     expect(r.stderr).toMatch(/unknown command/);
   });
 
+  it("exits 1, not 3, on an unknown or malformed option", async () => {
+    const r = await capture(["score", "x.json", "--fromat", "text"]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/--fromat/);
+  });
+
   it("shows per-command help", async () => {
     const r = await capture(["score", "--help"]);
     expect(r.code).toBe(EXIT.OK);
@@ -100,6 +106,18 @@ describe("cg new", () => {
     expect(v.code).toBe(EXIT.OK);
   });
 
+  it("refuses to replace an existing file without --force", async () => {
+    const out = join(dir(), "new.crownguard.json");
+    writeFileSync(out, "keep me");
+    const r = await capture(["new", "--org", "Acme", "--platforms", "microsoft", "--out", out]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/already exists; pass --force/);
+    expect(readFileSync(out, "utf8")).toBe("keep me");
+    const forced = await capture(["new", "--org", "Acme", "--platforms", "microsoft", "--out", out, "--force"]);
+    expect(forced.code).toBe(EXIT.OK);
+    expect(JSON.parse(readFileSync(out, "utf8")).org.name).toBe("Acme");
+  });
+
   it("requires --org", async () => {
     const r = await capture(["new", "--platforms", "microsoft"]);
     expect(r.code).toBe(EXIT.INVALID);
@@ -125,6 +143,34 @@ describe("cg import", () => {
     const saved = JSON.parse(readFileSync(assessmentPath, "utf8"));
     expect(Object.keys(saved.answers).length).toBeGreaterThan(0);
     expect(saved.imports?.length).toBe(1);
+  });
+
+  it("reads assessment and scan files that start with a UTF-8 byte order mark", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "a.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.answers = {};
+    a.notes = {};
+    writeFileSync(assessmentPath, `\uFEFF${toSaveFile(a, { contentHash })}`);
+    const scan = join(root, "scan.json");
+    writeFileSync(scan, `\uFEFF${readFileSync(join(process.cwd(), "e2e/fixtures/m365-secure-scan.json"), "utf8")}`);
+    const r = await capture(["import", assessmentPath, scan, "--tool", "m365-secure"]);
+    expect(r.code).toBe(EXIT.OK);
+    expect(JSON.parse(r.stdout).applied).toBeGreaterThan(0);
+  });
+
+  it("refuses to rewrite a file saved by a newer build", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "future.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.answers = {};
+    const text = JSON.stringify({ ...a, schemaVersion: 99 }, null, 2);
+    writeFileSync(assessmentPath, text);
+    const scan = join(process.cwd(), "e2e/fixtures/m365-secure-scan.json");
+    const r = await capture(["import", assessmentPath, scan, "--tool", "m365-secure"]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/schema 99, newer than this build/);
+    expect(readFileSync(assessmentPath, "utf8")).toBe(text);
   });
 
   it("fails when the scan file is missing", async () => {

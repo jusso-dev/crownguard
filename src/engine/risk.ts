@@ -47,6 +47,11 @@ export function activeQuestions(catalogue: Catalogue, assessment: Assessment): Q
   });
 }
 
+/** The selected platform a question belongs to. Questions are shared by reference with their platform bundle. */
+export const questionPlatform = (catalogue: Catalogue, platforms: string[]) => (q: Question) =>
+  platforms.find((pid) => catalogue.platforms.get(pid)?.questions.includes(q));
+
+/** Pass only the jewel's own platform's questions: platform-wide ("*") questions match every asset type. */
 export function questionsForJewel(jewel: CrownJewel, questions: Question[]): Question[] {
   return questions.filter((q) => q.appliesTo.includes(jewel.assetType) || q.appliesTo.includes("*"));
 }
@@ -135,9 +140,11 @@ export function assessJewel(jewel: CrownJewel, questions: Question[], answers: R
 
 export function assessAll(catalogue: Catalogue, assessment: Assessment): JewelRisk[] {
   const questions = activeQuestions(catalogue, assessment);
+  const platformOf = questionPlatform(catalogue, assessment.platforms);
+  const answers = effectiveAnswers(assessment);
   return assessment.jewels
     .filter((j) => assessment.platforms.includes(j.platform))
-    .map((j) => assessJewel(j, questions, effectiveAnswers(assessment)))
+    .map((j) => assessJewel(j, questions.filter((q) => platformOf(q) === j.platform), answers))
     .sort((a, b) => b.score - a.score || b.impact - a.impact);
 }
 

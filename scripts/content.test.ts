@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadCatalogue } from "../src/content/loader";
+import { contentDigest, loadCatalogue } from "../src/content/loader";
 import { readContentFiles } from "./read-content";
 
 const { catalogue, errors } = loadCatalogue(readContentFiles());
@@ -123,5 +123,35 @@ describe("content", () => {
     expect(warnings).toContain("MS-ID-001: e8 mfa ML1 maps to no ISM control in the E8 ML1 profile");
     // The gap is a warning, not an error: the Essential Eight tag and the question stand on their own.
     expect(errors).toEqual([]);
+  });
+  it("rejects unknown keys, so a renamed key can't silently drop mappings", () => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const renamed = files[target].replace(/^ {2}refs:/m, "  ref:").replace(/^ {2}e8:/m, "  E8:");
+    const { errors: found } = loadCatalogue({ ...files, [target]: renamed });
+    expect(found.filter((e) => e.startsWith(`${target}: `)).join("\n")).toMatch(/Unrecognized keys: "ref", "E8"/);
+  });
+
+  it("rejects a duplicate platform id, a platform outside its own directory and a duplicate import mapping id", () => {
+    const files = readContentFiles();
+    const copy = Object.fromEntries(Object.entries(files).filter(([p]) => p.startsWith("content/platforms/aws/")).map(([p, t]) => [p.replace("/aws/", "/aws2/"), t]));
+    const { errors: found } = loadCatalogue({
+      ...files,
+      ...copy,
+      "content/imports/zz-copy.yaml": files["content/imports/prowler-aws.yaml"],
+    });
+    expect(found).toContain("content/platforms/aws2/platform.yaml: id aws does not match its directory aws2");
+    expect(found).toContain("content/platforms/aws2/platform.yaml: duplicate platform id aws");
+    expect(found).toContain("content/imports/zz-copy.yaml: duplicate import mapping id prowler-aws");
+  });
+
+  it("lists questions in id order and leaves them in place when taking the content digest", () => {
+    const { catalogue: fresh } = loadCatalogue(readContentFiles());
+    const before = [...fresh.platforms.values()].map((b) => b.questions.map((q) => q.id));
+    for (const ids of before) expect(ids).toEqual(ids.slice().sort((x, y) => x.localeCompare(y)));
+    const reversed = new Map([...fresh.platforms].map(([id, b]) => [id, { ...b, questions: b.questions.slice().reverse() }]));
+    const order = [...reversed.values()].map((b) => b.questions.map((q) => q.id));
+    expect(contentDigest({ ...fresh, platforms: reversed })).toBe(contentDigest(fresh));
+    expect([...reversed.values()].map((b) => b.questions.map((q) => q.id))).toEqual(order);
   });
 });

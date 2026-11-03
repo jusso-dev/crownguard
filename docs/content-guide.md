@@ -152,7 +152,7 @@ Writing rules:
 - `why` explains the business risk in plain language; `remediation` names the actual feature or setting.
 - Every Yes must be a defensible security outcome; don't ask questions where Yes is the risky answer.
 - `e8` levels follow the ASD Essential Eight Maturity Model: tag the lowest maturity level the requirement first appears at.
-  A strategy reaches a level only when every question tagged at or below that level is answered Yes. A level with no
+  A strategy reaches a level only when every question tagged at or below that level is answered Yes or N/A with a reason. A level with no
   questions stops the strategy there (the report shows it as not verified, which also leaves the matching IDCF level
   not verified), except a level ASD defines with no new requirements (patching operating systems at Maturity Level 2;
   see `NO_NEW_REQUIREMENTS` in `src/engine/maturity.ts`). The questions tagged at a level must together cover
@@ -260,8 +260,9 @@ mappings:
 
 Only map a check when its pass or fail genuinely answers the question. When several checks map to one question,
 all pass gives Yes, all fail gives No, and anything mixed (or a warning) gives Partial. Statuses that can't settle
-a question (review, info, unknown, not licensed) leave it for the assessor. `cap: partial` turns an all-pass into
-Partial when the checks cover only part of the question; `failIsInconclusive: true` sends a fail to review instead of
+a question (review, info, unknown, not licensed) leave it for the assessor when they're all there is, and cap the
+answer at Partial when they sit beside passes. `cap: partial` turns an all-pass into
+Partial when the checks cover only part of the question; `failIsInconclusive: true` sends a fail to review (so it counts as one of those statuses) instead of
 No when a check also fails for reasons the question doesn't ask about.
 
 Each mapping goes with an importer in `src/imports/`: `m365-secure`, `prowler-aws`, `prowler-azure` and `scubagoggles`. Adding a

@@ -180,6 +180,35 @@ describe("the saved file format", () => {
     expect(saved.savedBy).toMatchObject({ app: "crownguard", contentHash: "feedface", savedAt: "2026-10-09T00:00:00.000Z" });
   });
 
+  it("only takes a logo the PDF can draw", () => {
+    const withLogo = (logoDataUrl: string) => ({ ...emptyAssessment(), branding: { ...emptyAssessment().branding, logoDataUrl } });
+    expect(assessmentSchema.safeParse(withLogo("data:image/png;base64,iVBORw0KGgo=")).success).toBe(true);
+    expect(assessmentSchema.safeParse(withLogo("data:image/jpeg;base64,/9j/4AAQ")).success).toBe(true);
+    expect(assessmentSchema.safeParse(withLogo("data:image/webp;base64,UklGRg==")).success).toBe(false);
+  });
+
+  it("doesn't claim to keep __proto__, which validation drops, but reports the prototype names it keeps", () => {
+    const file = JSON.parse(toSaveFile(emptyAssessment())) as Record<string, unknown>;
+    const hostile = JSON.parse(`{"__proto__": {"polluted": true}, "constructor": 1, "prototype": 2, "extra": 3, ${JSON.stringify(file).slice(1)}`) as unknown;
+    const opened = parseAssessment(hostile);
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+    const kept = opened.notices.find((n) => n.text.startsWith("Kept"));
+    expect(kept?.text).toContain("Kept 3 fields");
+    expect(kept?.text).toContain("constructor, prototype, extra");
+    expect(kept?.text).not.toContain("__proto__");
+    expect(Object.hasOwn(opened.assessment, "constructor")).toBe(true);
+    expect(Object.hasOwn(opened.assessment, "__proto__")).toBe(false);
+  });
+
+  it("doesn't mistake an inherited property for a note when moving an orphaned answer", () => {
+    const a = { ...emptyAssessment(), answers: { toString: "yes" as const } };
+    const opened = parseAssessment(JSON.parse(toSaveFile(a)), { questionIds });
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+    expect(opened.assessment.orphans).toEqual({ toString: { answer: "yes" } });
+  });
+
   it("passes its own schema", () => {
     const result = assessmentSchema.safeParse(JSON.parse(toSaveFile(emptyAssessment())));
     expect(result.success).toBe(true);

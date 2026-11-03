@@ -1,22 +1,26 @@
 import type { ImportMapping } from "../content/schema";
 import type { Answer, ScanStatus } from "../engine/types";
-import { clip, type Finding, type Suggestion } from "./types";
+import { clip, redactEmails, type Finding, type Suggestion } from "./types";
 
 /** Statuses that actually say whether the control is in place. Review, info, unknown and not-licensed don't. */
 export const decisive = new Set<ScanStatus>(["pass", "fail", "warning"]);
 
-/** All mapped checks pass → Yes; all fail → No; anything mixed, or any warning → Partial. */
+/**
+ * All mapped checks pass → Yes; all fail → No; anything mixed, or any warning → Partial. A pass beside a check that
+ * needs review (or wasn't licensed, or was muted) is Partial: the scan hasn't shown the whole control is in place.
+ */
 export function aggregate(statuses: ScanStatus[]): Answer | undefined {
   const d = statuses.filter((s) => decisive.has(s));
   if (!d.length) return undefined;
-  if (d.every((s) => s === "pass")) return "yes";
+  if (d.every((s) => s === "pass")) return d.length === statuses.length ? "yes" : "partial";
   if (d.every((s) => s === "fail")) return "no";
   return "partial";
 }
 
 /** Apply a mapping's safeguards on top of the plain aggregate. */
 export function suggestFor(m: ImportMapping["mappings"][number], statuses: ScanStatus[]): Answer | undefined {
-  const usable = m.failIsInconclusive ? statuses.filter((s) => s !== "fail") : statuses;
+  // An inconclusive fail goes to the assessor like any other review, so it can't sit silently beside a pass.
+  const usable = m.failIsInconclusive ? statuses.map((s): ScanStatus => (s === "fail" ? "review" : s)) : statuses;
   const answer = aggregate(usable);
   return m.cap === "partial" && answer === "yes" ? "partial" : answer;
 }
@@ -61,18 +65,19 @@ export function suggestAll(mapping: ImportMapping, byCheck: Map<string, CheckRow
           source: mapping.name,
           tool: meta.tool,
           toolVersion: meta.toolVersion,
-          account: meta.account,
-          tenant: meta.tenant,
+          account: meta.account && redactEmails(meta.account),
+          tenant: meta.tenant && redactEmails(meta.tenant),
           scannedAt: meta.scannedAt,
           suggested: suggestFor(m, found.map((f) => f.status)),
           checks: found.slice(0, 50).map((f) => ({
             id: f.id,
             status: f.status,
-            setting: clip(f.setting, 500),
-            current: clip(f.current, 2000),
-            expected: clip(f.expected, 2000),
+            setting: clip(redactEmails(f.setting), 500),
+            current: clip(redactEmails(f.current), 2000),
+            expected: clip(redactEmails(f.expected), 2000),
             count: f.count,
-            examples: f.examples?.slice(0, 10).map((e) => clip(e, 300)),
+            // Resource ids are kept as examples; one that is a user's UPN is an account, and goes.
+            examples: f.examples?.slice(0, 10).map((e) => clip(redactEmails(e), 300)),
           })),
         },
       };

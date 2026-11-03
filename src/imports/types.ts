@@ -76,3 +76,15 @@ export interface ScanImporter {
 
 /** Truncate for a fixed-width evidence field, keeping the start of the value. */
 export const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+
+/**
+ * Replace email addresses and UPNs with "[account]". Scanners name super admins, break-glass accounts and users in
+ * their free text ("The following super admins are configured: alice@example.com"), and evidence is saved, exported
+ * and printed. The local part may carry `#EXT#` (a guest UPN), so the guest's own address goes too. The lookbehind
+ * starts a match only at the beginning of a run, which keeps this linear on long text with no `@` in it. The local part
+ * takes anything up to a space or a delimiter (so `alice!ops@` or `josé@` goes whole), and the domain must end in a label
+ * starting with a letter, so a version pin such as `lodash@4.17.21` is left alone.
+ */
+const ADDRESS =
+  /(?<![^\s@<>()[\]{}\\,;:"'`|/=?&])[^\s@<>()[\]{}\\,;:"'`|/=?&]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)*\.\p{L}[\p{L}\p{N}-]*/gu;
+export const redactEmails = (s: string) => s.replace(ADDRESS, "[account]");

@@ -366,7 +366,7 @@
         "logoDataUrl": {
           "type": "string",
           "maxLength": 3000000,
-          "pattern": "^data:image\\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$"
+          "pattern": "^data:image\\/(png|jpeg);base64,[A-Za-z0-9+/=]+$"
         },
         "logoBackdrop": {
           "type": "string",

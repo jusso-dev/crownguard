@@ -77,6 +77,8 @@ export function extractControls(file: OscalCatalogFile): IsmExtract {
   const add = (control: OscalControl, path: string[]) => {
     oscalIds.push(control.id);
     const id = displayId(control.id);
+    // Written into the YAML unquoted, so it must be a plain id.
+    if (!/^ISM-[A-Z0-9-]+$/.test(id)) throw new Error(`${control.id} displays as an unexpected id ${JSON.stringify(id)}`);
     if (seen.has(id)) throw new Error(`two OSCAL controls display as ${id}`);
     seen.add(id);
     const statement = statementOf(control);
@@ -87,7 +89,11 @@ export function extractControls(file: OscalCatalogFile): IsmExtract {
       title: shorten(statement),
     };
     const updated = propValues(control, "updated")[0];
-    if (updated) row.updated = updated;
+    if (updated) {
+      // "Sep-26": ASD's month-year label. Anything else is a shape change worth stopping for.
+      if (!UPDATED.test(updated)) throw new Error(`${control.id} has an unexpected updated value ${JSON.stringify(updated)}`);
+      row.updated = updated;
+    }
     const applicability = order(propValues(control, "applicability"), ISM_APPLICABILITY);
     if (applicability.length) row.applicability = applicability;
     const e8 = order(propValues(control, "essential-eight-applicability"), ISM_E8_LEVELS);
@@ -131,6 +137,8 @@ const fold = (text: string, width = 95): string[] => {
 };
 
 const quoted = (s: string) => JSON.stringify(s);
+const UPDATED = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2}$/;
+const CATALOG_VERSION = /^\d{4}\.\d{2}(?:\.\d+)?$/;
 const inlineList = (xs: string[]) => `[${xs.join(", ")}]`;
 
 export const ismSourceId = "asd-ism";
@@ -139,6 +147,11 @@ export const ismOscalSourceId = "asd-ism-oscal";
 /** The framework document (header comment, framework fields, controls) as YAML text. */
 export function ismYaml(file: OscalCatalogFile, extract: IsmExtract, opts: { tag: string; retrieved: string }): string {
   const meta = file.catalog.metadata;
+  // These go into the header comment: a stray newline would start YAML of its own.
+  if (!CATALOG_VERSION.test(meta.version)) throw new Error(`unexpected catalog version ${JSON.stringify(meta.version)}`);
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(meta.published) || Number.isNaN(Date.parse(meta.published)))
+    throw new Error(`unexpected catalog published date ${JSON.stringify(meta.published)}`);
+  if (!/^\d+\.\d+\.\d+$/.test(meta["oscal-version"])) throw new Error(`unexpected OSCAL version ${JSON.stringify(meta["oscal-version"])}`);
   const { short, long } = releaseMonth(opts.tag);
   const note = [
     "The Information Security Manual (ISM) is the Australian Government's cyber security guidance for agencies and the systems they hold.",
@@ -175,7 +188,7 @@ export function ismYaml(file: OscalCatalogFile, extract: IsmExtract, opts: { tag
     lines.push(`  - id: ${r.id}`);
     lines.push(`    group: ${quoted(r.group)}`);
     lines.push(`    title: ${quoted(r.title)}`);
-    if (r.updated) lines.push(`    updated: ${r.updated}`);
+    if (r.updated) lines.push(`    updated: ${quoted(r.updated)}`);
     if (r.applicability) lines.push(`    applicability: ${inlineList(r.applicability)}`);
     if (r.e8) lines.push(`    e8: ${inlineList(r.e8)}`);
   }

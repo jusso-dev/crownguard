@@ -10,16 +10,21 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const OUT_PATH = join("src", "content", "sourcesChecked.ts");
 
-function fromState(): string | undefined {
-  const path = join(root, "watch", "state.json");
-  if (!existsSync(path)) return undefined;
-  const state = JSON.parse(readFileSync(path, "utf8")) as { feeds?: Record<string, { latest?: string }> };
+/** Newest feed cursor date, ignoring any dated more than a day after `now` (a future-dated feed entry is a mistake). */
+export function newestFeedDate(state: { feeds?: Record<string, { latest?: string }> }, now: number = Date.now()): string | undefined {
+  const horizon = new Date(now + 86_400_000).toISOString().slice(0, 10);
   const feedDates = Object.values(state.feeds ?? {})
     .map((f) => f.latest?.slice(0, 10))
-    .filter((d): d is string => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .filter((d): d is string => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d <= horizon)
     .sort()
     .reverse();
   return feedDates[0];
+}
+
+function fromState(): string | undefined {
+  const path = join(root, "watch", "state.json");
+  if (!existsSync(path)) return undefined;
+  return newestFeedDate(JSON.parse(readFileSync(path, "utf8")) as { feeds?: Record<string, { latest?: string }> });
 }
 
 function fromGit(): string | undefined {

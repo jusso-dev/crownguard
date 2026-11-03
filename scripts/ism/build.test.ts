@@ -81,6 +81,20 @@ describe("the ISM generator", () => {
     expect(rerun.yaml).toBe(first.yaml);
   });
 
+  it("quotes each control's updated month and refuses catalog metadata that could break out of the header", () => {
+    const yaml = ismYaml(sample(), extractControls(sample()), { tag: "v2026.09.4", retrieved: "2026-10-10" });
+    expect(yaml).toContain('    updated: "Sep-26"');
+    expect(yaml).not.toMatch(/^ {4}updated: [^"]/m);
+    const odd = sample();
+    odd.catalog.metadata.version = "2026.09.4\nclosed: false";
+    expect(() => ismYaml(odd, extractControls(odd), { tag: "v2026.09.4", retrieved: "2026-10-10" })).toThrowError(/catalog version/);
+    const late = sample();
+    late.catalog.metadata.published = "soon";
+    expect(() => ismYaml(late, extractControls(late), { tag: "v2026.09.4", retrieved: "2026-10-10" })).toThrowError(/published date/);
+    const month = JSON.parse(sampleText.replace('"value": "Dec-22"', '"value": "2022-12"'));
+    expect(() => extractControls(month)).toThrowError(/unexpected updated value/);
+  });
+
   it("fails loudly when the OSCAL shape changes", () => {
     const odd = JSON.parse(sampleText);
     odd.catalog.groups[0].brandNewKey = true;

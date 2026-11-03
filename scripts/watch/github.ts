@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Commit } from "./types";
-import { collapse, truncate } from "./util";
+import { collapse, readCapped, truncate } from "./util";
 
 export interface GitHubOptions {
   /** Token for api.github.com (GITHUB_TOKEN in Actions). Without one the API allows 60 requests an hour. */
@@ -8,6 +8,8 @@ export interface GitHubOptions {
   /** Most API calls one run may make; raw file downloads don't count. */
   maxCalls?: number;
   fetchImpl?: typeof fetch;
+  /** Largest API response or raw file read; anything bigger is treated as a miss. */
+  maxBytes?: number;
   apiBase?: string;
   rawBase?: string;
 }
@@ -34,7 +36,7 @@ const REF = /^[A-Za-z0-9._/-]+$/;
 const encodePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
 
 export function createGitHub(opts: GitHubOptions = {}): GitHub {
-  const { token, maxCalls = 400, fetchImpl = fetch, apiBase = "https://api.github.com", rawBase = "https://raw.githubusercontent.com" } = opts;
+  const { token, maxCalls = 400, fetchImpl = fetch, maxBytes = 20 * 1024 * 1024, apiBase = "https://api.github.com", rawBase = "https://raw.githubusercontent.com" } = opts;
   let calls = 0;
   let limited: string | undefined;
 
@@ -68,7 +70,12 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
       await res.body?.cancel().catch(() => {});
       return undefined;
     }
-    return (await res.json()) as T;
+    try {
+      const buf = await readCapped(res, maxBytes);
+      return buf ? (JSON.parse(new TextDecoder().decode(buf)) as T) : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   async function fileAt(repo: string, ref: string, path: string): Promise<string | undefined> {
@@ -82,7 +89,8 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
         await res.body?.cancel().catch(() => {});
         return undefined;
       }
-      return await res.text();
+      const buf = await readCapped(res, maxBytes);
+      return buf && new TextDecoder().decode(buf);
     } catch {
       return undefined;
     }

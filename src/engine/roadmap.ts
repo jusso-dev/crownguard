@@ -16,13 +16,19 @@ export interface RoadmapItem {
 
 const effortCost = { S: 1, M: 2, L: 3 } as const;
 
-export function buildRoadmap(questions: Question[], jewels: CrownJewel[], answers: Record<string, Answer>): RoadmapItem[] {
+/** `platformOf` names each question's platform, so a control only counts towards jewels on that platform. */
+export function buildRoadmap(
+  questions: Question[],
+  jewels: CrownJewel[],
+  answers: Record<string, Answer>,
+  platformOf: (q: Question) => string | undefined,
+): RoadmapItem[] {
   const items = questions
     .filter((q) => isGap(answers[q.id]))
     .map((question) => {
       const answer = answers[question.id];
       const shortfall = 1 - (answerValue(answer) ?? 1);
-      const protects = jewels.filter((j) => questionsForJewel(j, [question]).length > 0);
+      const protects = jewels.filter((j) => j.platform === platformOf(question) && questionsForJewel(j, [question]).length > 0);
       const impactSum = protects.reduce((sum, j) => sum + impactOf(j), 0) || 1;
       const reduction = severities[question.severity] * shortfall * impactSum;
       return { question, answer, reduction, priority: reduction / effortCost[question.effort], jewels: protects };

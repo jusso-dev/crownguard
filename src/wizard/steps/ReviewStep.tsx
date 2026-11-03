@@ -2,6 +2,7 @@ import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
 import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
 import { essentialEight } from "../../engine/maturity";
+import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../engine/types";
 import { modeOf, stepsFor, useStore } from "../store";
@@ -11,7 +12,6 @@ import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
 import { ExampleBadge, Tile } from "./AiRegisterStep";
 
-const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 
 export function ReviewStep() {
   const assessment = useStore((s) => s.assessment);

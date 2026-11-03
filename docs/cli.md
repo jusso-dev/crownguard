@@ -12,11 +12,11 @@ pnpm cg --help
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Invalid input (bad args, unreadable or invalid assessment/scan) |
+| 1 | Invalid input (bad args or unknown options, unreadable or invalid assessment/scan, a file that would be overwritten) |
 | 2 | Content error (catalogue YAML failed to load) |
 | 3 | Unexpected failure |
 
-Machine-readable JSON goes to **stdout**. Human messages go to **stderr**.
+Machine-readable JSON goes to **stdout**. Human messages go to **stderr**. Assessment and scan files may start with a UTF-8 byte order mark (as PowerShell writes them); it is ignored.
 
 ## Commands
 
@@ -33,9 +33,11 @@ pnpm cg catalogue   # JSON on stdout
 pnpm cg new --org "Riverbend Health" --platforms microsoft,aws --out riverbend.crownguard.json
 ```
 
+Refuses to replace an existing file (the default `--out` is `assessment.crownguard.json`); pass `--force` to overwrite it.
+
 ### Import a scan
 
-Uses the importer registry (M365-Secure, Prowler AWS/Azure, ScubaGoggles). Writes the assessment back in place.
+Uses the importer registry (M365-Secure, Prowler AWS/Azure, ScubaGoggles). Writes the assessment back in place. A file saved by a newer crownguard (a higher `schemaVersion`) is refused with exit 1 rather than rewritten as this build's schema, which would drop what the newer build added.
 
 ```sh
 pnpm cg import riverbend.crownguard.json ./scan.json --tool auto --licence

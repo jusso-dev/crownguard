@@ -1,5 +1,5 @@
 import type { FetchOutcome, FetchResult, Fetcher, RedirectHop } from "./types";
-import { hostOf, isHttpUrl, limiter, sleep as defaultSleep } from "./util";
+import { hostOf, isHttpUrl, limiter, readCapped, sleep as defaultSleep } from "./util";
 
 /** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
 export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
@@ -116,8 +116,8 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
       let body: string | undefined;
       let bytes: Uint8Array | undefined;
       try {
-        const buf = new Uint8Array(await res.arrayBuffer());
-        if (buf.byteLength > maxBytes) return result("http-error", res.status, { contentType, error: `body larger than ${maxBytes} bytes` });
+        const buf = await readCapped(res, maxBytes);
+        if (!buf) return result("http-error", res.status, { contentType, error: `body larger than ${maxBytes} bytes` });
         if (TEXT_TYPES.test(contentType) || (!contentType && !looksBinary(buf))) body = new TextDecoder().decode(buf);
         else bytes = buf;
       } catch (e) {
