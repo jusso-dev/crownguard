@@ -23,7 +23,6 @@ export interface ParseOptions {
   questionIds?: ReadonlySet<string>;
 }
 
-const PROTOTYPE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 const asRecord = (v: unknown): Record<string, unknown> | undefined =>
   v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
@@ -80,8 +79,9 @@ function finish(
   questionIds: ReadonlySet<string> | undefined,
   notices: ParseNotice[],
 ): Assessment {
-  // Prototype keys never survive validation, so don't claim to have kept them.
-  const unknown = Object.keys(source).filter((k) => !knownKeys.has(k) && !PROTOTYPE_KEYS.has(k));
+  // `__proto__` never survives validation, so don't claim to have kept it. `constructor` and `prototype` do survive,
+  // as plain fields, and are reported like any other.
+  const unknown = Object.keys(source).filter((k) => !knownKeys.has(k) && k !== "__proto__");
   if (unknown.length)
     notices.push({
       kind: "warn",

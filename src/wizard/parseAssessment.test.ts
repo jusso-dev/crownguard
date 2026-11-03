@@ -187,16 +187,18 @@ describe("the saved file format", () => {
     expect(assessmentSchema.safeParse(withLogo("data:image/webp;base64,UklGRg==")).success).toBe(false);
   });
 
-  it("doesn't claim to keep prototype keys it can't keep", () => {
+  it("doesn't claim to keep __proto__, which validation drops, but reports the prototype names it keeps", () => {
     const file = JSON.parse(toSaveFile(emptyAssessment())) as Record<string, unknown>;
     const hostile = JSON.parse(`{"__proto__": {"polluted": true}, "constructor": 1, "prototype": 2, "extra": 3, ${JSON.stringify(file).slice(1)}`) as unknown;
     const opened = parseAssessment(hostile);
     expect(opened.kind).toBe("ok");
     if (opened.kind !== "ok") return;
     const kept = opened.notices.find((n) => n.text.startsWith("Kept"));
-    expect(kept?.text).toContain("Kept 1 field");
-    expect(kept?.text).toContain("extra");
-    expect(kept?.text).not.toMatch(/__proto__|constructor|prototype/);
+    expect(kept?.text).toContain("Kept 3 fields");
+    expect(kept?.text).toContain("constructor, prototype, extra");
+    expect(kept?.text).not.toContain("__proto__");
+    expect(Object.hasOwn(opened.assessment, "constructor")).toBe(true);
+    expect(Object.hasOwn(opened.assessment, "__proto__")).toBe(false);
   });
 
   it("doesn't mistake an inherited property for a note when moving an orphaned answer", () => {

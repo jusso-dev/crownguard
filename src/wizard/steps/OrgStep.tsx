@@ -17,13 +17,15 @@ export function OrgStep() {
   const org = assessment.org;
   const [abnTouched, setAbnTouched] = useState(false);
   // More than 11 digits can't be saved (and isn't an ABN), so it stays here, shown as invalid, and the stored ABN is
-  // left as it was: one digit too many never wipes it.
-  const [abnOverflow, setAbnOverflow] = useState<string | null>(null);
+  // left as it was: one digit too many never wipes it. The draft belongs to the ABN it was typed over, so opening
+  // another assessment shows that assessment's ABN, not this draft.
+  const [overflow, setOverflow] = useState<{ digits: string; over: string | undefined } | null>(null);
+  const abnOverflow = overflow && overflow.over === org.abn ? overflow.digits : null;
   const abn = abnOverflow ?? org.abn ?? "";
   const abnError = (abnTouched || abnOverflow !== null) && !!abn && !isValidAbn(abn);
   const changeAbn = (value: string) => {
     const digits = abnDigits(value);
-    setAbnOverflow(digits.length > 11 ? digits : null);
+    setOverflow(digits.length > 11 ? { digits, over: org.abn } : null);
     if (digits.length <= 11) setOrg({ abn: digits });
   };
   const toggle = (r: Regulation, on: boolean) =>

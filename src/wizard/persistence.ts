@@ -121,8 +121,10 @@ const write = (name: string, value: string) => {
   memory.set(name, value);
   if (memoryOnly(name)) return;
   try {
-    disk()?.setItem(name, value);
-    if (name === STORAGE_KEY) writeFailed = false;
+    const store = disk();
+    store?.setItem(name, value);
+    // Only a write that reached storage clears the failure: with no store, the in-memory copy is all there is.
+    if (store && name === STORAGE_KEY) writeFailed = false;
   } catch {
     // Full or locked: the in-memory copy still keeps this session working, but the save status must not say "Saved".
     if (name === STORAGE_KEY) writeFailed = true;

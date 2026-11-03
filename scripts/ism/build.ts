@@ -137,7 +137,7 @@ const fold = (text: string, width = 95): string[] => {
 };
 
 const quoted = (s: string) => JSON.stringify(s);
-const UPDATED = /^[A-Z][a-z]{2}-\d{2}$/;
+const UPDATED = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2}$/;
 const CATALOG_VERSION = /^\d{4}\.\d{2}(?:\.\d+)?$/;
 const inlineList = (xs: string[]) => `[${xs.join(", ")}]`;
 

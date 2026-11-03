@@ -32,10 +32,13 @@ const routes: Record<string, (req: IncomingMessage, res: ServerResponse) => void
     res.writeHead(200, { "content-type": "text/plain" });
     let sent = 0;
     const chunk = "x".repeat(64 * 1024);
+    // Every write counts, including the one that fills the buffer; a full buffer only means wait for `drain`.
     const push = () => {
-      while (sent < 300 && res.write(chunk)) sent++;
-      if (sent >= 300 || res.destroyed) res.end();
-      else res.once("drain", push);
+      while (sent < 300 && !res.destroyed) {
+        sent++;
+        if (!res.write(chunk)) return void res.once("drain", push);
+      }
+      res.end();
     };
     res.on("close", () => hits.set("/huge", sent));
     push();

@@ -103,20 +103,21 @@ function SaveStatus({
 }) {
   const updatedAt = useStore((s) => s.assessment.updatedAt);
   const now = useNow(fileSave ? 5_000 : 30_000);
+  // A failed autosave comes first: a file saved a minute ago doesn't hold the edits made since. The desktop store reports
+  // its own error; the browser's quota failure is only known to persistence.
+  const autosaveError = platform.autosaveError() ?? (storageWriteFailed() ? "Browser storage is full or unavailable." : undefined);
+  if (autosaveError)
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn" title={autosaveError}>
+        Couldn&apos;t save {HERE}. Use <strong>Save file</strong> to keep your work.
+      </span>
+    );
   // A file save in the last minute takes over the status line; no toast, nothing moves.
   if (fileSave && now - Date.parse(fileSave.at) < 60_000)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-ok">
         <span aria-hidden>✓</span>
         {fileSave.downloaded ? `Downloaded ${fileSave.file}` : `Saved to ${fileSave.file}`} · {relativeTime(fileSave.at, now)}
-      </span>
-    );
-  // The desktop store reports its own error; the browser's quota failure is only known to persistence.
-  const autosaveError = platform.autosaveError() ?? (storageWriteFailed() ? "Browser storage is full or unavailable." : undefined);
-  if (autosaveError)
-    return (
-      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn" title={autosaveError}>
-        Couldn&apos;t save {HERE}. Use <strong>Save file</strong> to keep your work.
       </span>
     );
   if (ephemeral || !persisted)

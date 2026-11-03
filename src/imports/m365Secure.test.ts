@@ -78,6 +78,7 @@ describe("M365-Secure import", () => {
 
   it("leaves version pins that only look like addresses alone", () => {
     expect(redactEmails("lodash@4.17.21, owner admin@contoso.example")).toBe("lodash@4.17.21, owner [account]");
+    expect(redactEmails("josé@contoso.example, alice!ops@contoso.example; jürgen@exämple.com")).toBe("[account], [account]; [account]");
   });
 
   it("turns a scan into evidence and suggestions, skipping checks the scan didn't run", () => {

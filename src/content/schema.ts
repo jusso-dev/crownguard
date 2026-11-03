@@ -150,7 +150,7 @@ export type ImportMapping = z.infer<typeof importMappingSchema>;
 const socLevel = z.strictObject({ level: z.number().int().min(0).max(5), name: z.string().min(3), description: z.string().min(10) });
 
 export const socModelSchema = z
-  .object({
+  .strictObject({
     id,
     name: z.string(),
     shortName: z.string(),
@@ -185,7 +185,7 @@ export const socModelSchema = z
   .refine((m) => [m.scales.maturity, m.scales.capability].every((scale) => scale.every((l, i) => l.level === i)), "levels must be listed in order from 0");
 
 export const socQuestionSchema = z
-  .object({
+  .strictObject({
     id: z.string().regex(/^SOC-(BUS|PPL|PRC|TEC|SVC)-\d{3}$/, "e.g. SOC-BUS-001"),
     aspect: id,
     /** Maturity questions are rated 0-5, capability questions 0-3. */
@@ -229,7 +229,7 @@ export const aiRegisterModelSchema = z.strictObject({
         /** A public generative AI service used outside the organisation's tenant. */
         publicTool: z.boolean().default(false),
         defaults: z
-          .object({
+          .strictObject({
             technology: z.array(enumOf(aiTechnologies)).default([]),
             usagePatterns: z.array(enumOf(aiUsagePatterns)).default([]),
             domains: z.array(enumOf(aiDomains)).default([]),
