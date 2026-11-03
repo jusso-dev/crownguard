@@ -30,3 +30,7 @@ jobs:
             MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense,
             Python-2.0, CC-BY-4.0, CC-BY-SA-4.0, MPL-2.0, Unicode-3.0, Zlib, MIT-0, Apache-2.0 WITH LLVM-exception,
             CDLA-Permissive-2.0
+          # These crates declare dual MIT/Apache-2.0 or MIT/BSD-3-Clause licences in a form the SPDX parser rejects
+          # ("Apache-2.0/MIT"), so they show as LicenseRef-bad-*. Each is checked by hand: all permissive.
+          allow-dependencies-licenses: >-
+            pkg:cargo/brotli-decompressor, pkg:cargo/dbus, pkg:cargo/libdbus-sys
