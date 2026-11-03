@@ -7,6 +7,8 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
 import "./index.css";
 import { App } from "./App";
+import { isDesktop, platformReady } from "./platform";
+import { useStore } from "./wizard/store";
 
 /**
  * React sets some DOM properties via innerHTML (style/script hoistables). With
@@ -29,8 +31,16 @@ if (tt && !tt.defaultPolicy) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const render = () =>
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+
+if (isDesktop) {
+  // Desktop: load progress from SQLite before the first render (see src/platform/).
+  void platformReady.then(() => useStore.persist.rehydrate()).then(render);
+} else {
+  render();
+}

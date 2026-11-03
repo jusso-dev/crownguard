@@ -159,7 +159,7 @@ export function ReportStep() {
         )}
         <p className="mt-4 text-xs leading-relaxed text-muted">
           Your progress is saved in this browser. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
-          <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={requestOpenFile}>
+          <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={() => requestOpenFile()}>
             Open its saved file
           </button>
           , add the logo or ABN on the Organisation step, then generate again.

@@ -31,7 +31,7 @@ export function OrgStep() {
         <span className="text-ink-2">
           Updating an earlier assessment? Open its saved <span className="font-mono text-xs">.crownguard.json</span> file, add your logo or ABN, then regenerate the report.
         </span>
-        <Button variant="secondary" className="sm:ml-auto" onClick={requestOpenFile}>
+        <Button variant="secondary" className="sm:ml-auto" onClick={() => requestOpenFile()}>
           Open saved file
         </Button>
       </div>

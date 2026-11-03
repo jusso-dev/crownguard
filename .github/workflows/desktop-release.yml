@@ -1,0 +1,247 @@
+name: Desktop release
+
+# Builds the signed desktop app (src-tauri/) for macOS, Windows and Linux when a `desktop-v*` tag is pushed, and
+# publishes everything to a draft GitHub release for a human to check and publish. Nothing here publishes a release.
+#
+# Signing material comes from repository secrets only; docs/desktop/release.md lists each one by name. A prerelease
+# tag (one with a hyphen, e.g. desktop-v0.0.0-rc1) may build without signing secrets, as a dry run of the pipeline. A
+# release tag fails early unless every platform can be signed.
+
+on:
+  push:
+    tags: ["desktop-v*"]
+
+permissions: {}
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      contents: write # create the draft release and upload installers to it
+    outputs:
+      release-id: ${{ steps.tauri.outputs.releaseId }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos
+            os: macos-15
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: --target universal-apple-darwin --bundles app,dmg
+          - name: windows
+            os: windows-2025
+            rust-targets: ""
+            args: --bundles msi,nsis
+          - name: linux
+            os: ubuntu-22.04
+            rust-targets: ""
+            args: --bundles appimage,deb
+    env:
+      PRERELEASE: ${{ contains(github.ref_name, '-') }}
+      HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_UPDATER_PUBKEY != '' }}
+      HAS_APPLE: ${{ secrets.APPLE_CERTIFICATE != '' && secrets.APPLE_ID != '' }}
+      HAS_WINDOWS: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Work out the version and check signing is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#desktop-v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME is not desktop-v<semver>"; exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          # MSI versions must be numeric: drop any prerelease suffix for WiX only.
+          echo "WIX_VERSION=${VERSION%%-*}" >> "$GITHUB_ENV"
+          case "${{ matrix.name }}" in
+            macos) SIGNED="$HAS_APPLE" ;;
+            windows) SIGNED="$HAS_WINDOWS" ;;
+            *) SIGNED=true ;; # Linux packages get detached GPG signatures in the publish job
+          esac
+          echo "SIGNED=$SIGNED" >> "$GITHUB_ENV"
+          if [ "$PRERELEASE" != "true" ] && { [ "$SIGNED" != "true" ] || [ "$HAS_UPDATER_KEY" != "true" ]; }; then
+            echo "::error::Release tags must be signed. Add the secrets listed in docs/desktop/release.md."; exit 1
+          fi
+          [ "$SIGNED" = "true" ] || echo "::warning::Dry run: ${{ matrix.name }} installers from this prerelease tag are NOT signed."
+          [ "$HAS_UPDATER_KEY" = "true" ] || echo "::warning::Dry run: no updater key, so no update artefacts or latest.json."
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install Linux build dependencies
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential file libxdo-dev libssl-dev librsvg2-dev patchelf
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:desktop
+
+      - name: Import the Authenticode certificate
+        if: matrix.name == 'windows' && env.HAS_WINDOWS == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          Remove-Item $pfx
+          "WINDOWS_THUMBPRINT=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      # Release-only settings layered over tauri.conf.json: version from the tag, the updater's public key and
+      # update artefacts (only when the updater key is configured), and the Authenticode certificate.
+      - name: Write the release config
+        shell: bash
+        env:
+          TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY }}
+        run: |
+          node -e '
+            const e = process.env;
+            const updater = e.HAS_UPDATER_KEY === "true";
+            const conf = {
+              version: e.VERSION,
+              bundle: {
+                createUpdaterArtifacts: updater,
+                windows: { wix: { version: e.WIX_VERSION }, ...(e.WINDOWS_THUMBPRINT ? { certificateThumbprint: e.WINDOWS_THUMBPRINT } : {}) },
+              },
+              ...(updater ? { plugins: { updater: { pubkey: e.TAURI_UPDATER_PUBKEY } } } : {}),
+            };
+            require("fs").writeFileSync(require("path").join(e.RUNNER_TEMP, "release.conf.json"), JSON.stringify(conf));
+          '
+
+      - id: tauri
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          tauriScript: pnpm tauri
+          args: ${{ matrix.args }} --config ${{ runner.temp }}/release.conf.json
+          tagName: ${{ github.ref_name }}
+          releaseName: crownguard desktop ${{ env.VERSION }}
+          releaseBody: Draft built by desktop-release.yml. Check the installers, SHA256SUMS and attestation, then publish.
+          releaseDraft: true
+          prerelease: ${{ env.PRERELEASE }}
+          uploadUpdaterJson: ${{ env.HAS_UPDATER_KEY }}
+
+      - name: Verify the macOS signature and notarisation
+        if: matrix.name == 'macos' && env.SIGNED == 'true'
+        run: |
+          set -euo pipefail
+          APP=$(ls -d src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app | head -1)
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl -a -vv "$APP"
+          xcrun stapler validate "$APP"
+
+      - name: Verify the Windows signatures
+        if: matrix.name == 'windows' && env.SIGNED == 'true'
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          $files = Get-ChildItem -Recurse src-tauri\target\release\bundle -Include *.msi, *-setup.exe
+          if (-not $files) { throw "No installers found" }
+          foreach ($f in $files) {
+            & $signtool.FullName verify /pa /v $f.FullName
+            if ($LASTEXITCODE -ne 0) { throw "signtool verify failed for $($f.Name)" }
+          }
+
+  # Detached GPG signatures for the Linux packages, SHA256SUMS over every asset, and a build provenance attestation,
+  # all added to the same draft release.
+  publish:
+    name: checksums and provenance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    needs: build
+    permissions:
+      contents: write # upload signatures and SHA256SUMS to the draft release
+      id-token: write # sign the attestation
+      attestations: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_ID: ${{ needs.build.outputs.release-id }}
+      HAS_GPG: ${{ secrets.LINUX_GPG_PRIVATE_KEY != '' }}
+      PRERELEASE: ${{ contains(github.ref_name, '-') }}
+    steps:
+      - name: Download the draft release assets
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate --jq '.[] | "\(.id) \(.name)"' |
+            while read -r id name; do
+              gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "assets/$name"
+            done
+          ls -l assets
+
+      - name: Sign the Linux packages
+        if: env.HAS_GPG == 'true'
+        env:
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          printf '%s' "$LINUX_GPG_PRIVATE_KEY" | gpg --batch --import
+          for f in assets/*.AppImage assets/*.deb; do
+            printf '%s' "$LINUX_GPG_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --armor --detach-sign --output "$f.asc" "$f"
+            gpg --batch --verify "$f.asc" "$f"
+          done
+          rm -rf "$GNUPGHOME"
+
+      - name: Check Linux signing is configured
+        if: env.HAS_GPG != 'true'
+        run: |
+          if [ "$PRERELEASE" != "true" ]; then echo "::error::LINUX_GPG_PRIVATE_KEY is required for release tags"; exit 1; fi
+          echo "::warning::Dry run: Linux packages from this prerelease tag have no detached signatures."
+
+      - name: Write SHA256SUMS
+        run: |
+          set -euo pipefail
+          cd assets
+          sha256sum -- * > ../SHA256SUMS
+          cat ../SHA256SUMS
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: SHA256SUMS
+
+      - name: Upload signatures and SHA256SUMS to the draft release
+        run: |
+          set -euo pipefail
+          for f in SHA256SUMS assets/*.asc; do
+            [ -e "$f" ] || continue
+            gh api --method POST -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$(basename "$f")" \
+              --input "$f" > /dev/null
+            echo "uploaded $(basename "$f")"
+          done

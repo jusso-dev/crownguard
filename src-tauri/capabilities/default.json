@@ -1,0 +1,51 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Least privilege for the main window. File access is limited to the app data directory plus files the user picks in a native dialog (the dialog plugin adds each picked path to the scope at run time). No http, shell or wide opener access.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-autosave-load",
+    "allow-autosave-set",
+    "allow-autosave-remove",
+    "allow-recent-list",
+    "allow-recent-record",
+    "allow-recent-forget",
+    "allow-launch-file-take",
+    "allow-settings-get",
+    "allow-settings-set-update-check",
+    "allow-update-check",
+    "allow-update-install",
+    "core:app:allow-version",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-destroy",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-ask",
+    "dialog:allow-message",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-write-file",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        },
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
+    },
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        }
+      ]
+    }
+  ]
+}
