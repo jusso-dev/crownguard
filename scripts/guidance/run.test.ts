@@ -206,7 +206,20 @@ describe("the GitHub client", () => {
 describe("the registry and the workflow", () => {
   const workflow = repo(".github/workflows/guidance-update.yml");
   const addPaths = workflow.match(/add-paths: \|\n((?:\s{12}\S.*\n)+)/)![1].split("\n").map((l) => l.trim()).filter(Boolean);
-  const covered = (p: string) => addPaths.some((a) => (a.includes("*") ? new RegExp(`^${a.replace(/\./g, "\\.").replace(/\*/g, "[^/]*")}$`).test(p) : a === p));
+  /** Glob match for add-paths entries: `*` is any run of characters within one path segment. */
+  const globMatch = (glob: string, p: string) => {
+    const [head, ...rest] = glob.split("*");
+    if (!p.startsWith(head)) return false;
+    let at = head.length;
+    for (const [i, part] of rest.entries()) {
+      const last = i === rest.length - 1;
+      const found = last ? (p.endsWith(part) && p.length - part.length >= at ? p.length - part.length : -1) : p.indexOf(part, at);
+      if (found < 0 || p.slice(at, found).includes("/")) return false;
+      at = found + part.length;
+    }
+    return at === p.length;
+  };
+  const covered = (p: string) => addPaths.some((a) => (a.includes("*") ? globMatch(a, p) : a === p));
 
   it("commits every file an updater writes, and nothing else", () => {
     const paths = [...new Set(UPDATERS.flatMap((u) => u.paths))];
