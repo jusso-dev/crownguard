@@ -1322,7 +1322,9 @@
     protection stops them at the device, on or off the office network.
   yesLooksLike: >-
     Network protection is set to block mode (not audit) for all Windows, macOS and other supported
-    devices through Intune or another management tool, SmartScreen is on, and custom indicators block
+    devices through Intune or another management tool, and is actually running: on Windows that needs
+    Microsoft Defender Antivirus in active mode with real-time protection on, so devices where another
+    antivirus product puts Defender into passive mode aren't counted as covered; SmartScreen is on, and custom indicators block
     any domains or IP addresses your threat intelligence flags. Web content filtering may also block
     unwanted categories.
   remediation: >-
@@ -1330,6 +1332,8 @@
     security or attack surface reduction policy for all devices, after a short audit period to check
     for false positives. Keep Microsoft Defender SmartScreen on, add indicators for domains and IP
     addresses you need to block, and consider web content filtering policies for high-risk categories.
+    Check the device inventory for devices whose Defender Antivirus is passive or has real-time
+    protection off, and fix those first, because the setting does nothing there.
   effort: S
   licence: [defender-endpoint-p1]
   sources: [ms-mde-network-protection, ms-mde-indicators-ip-url, ms-mde-web-content-filtering]

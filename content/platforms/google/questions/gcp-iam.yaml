@@ -307,15 +307,17 @@
     anonymous proxies to take instructions and move data. A deny rule on those destinations stops the
     connection even when the workload itself is already compromised.
   yesLooksLike: >-
-    Cloud NGFW Standard is in use, and a hierarchical firewall policy at the organisation or folder (or
-    a global network firewall policy on every VPC with workloads) has egress deny rules using Google
+    Cloud NGFW Standard is in use, and a hierarchical firewall policy associated with the organisation,
+    or with every folder that holds workload VPCs (or a global network firewall policy on every VPC with
+    workloads), has egress deny rules using Google
     Threat Intelligence lists such as known malicious IPs, crypto mining sites, Tor exit nodes and
     anonymous proxies, with firewall rule logging turned on.
   remediation: >-
     Create or update a hierarchical firewall policy and add an egress rule with the deny action whose
     destination is the predefined Google Threat Intelligence lists (for example
     iplist-known-malicious-ips, iplist-crypto-miners, iplist-tor-exit-nodes and iplist-anon-proxies).
-    Associate it with the organisation or the folders holding production, give it a higher priority
+    Associate it with the organisation, or with every folder that holds workload VPCs (not only
+    production), give it a higher priority
     than broad allow rules, and turn on logging for the rule.
   effort: M
   licence: []

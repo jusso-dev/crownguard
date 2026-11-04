@@ -720,18 +720,20 @@
   why: >-
     Malware, ransomware and data theft tools look up their command-and-control and drop sites by name
     before they connect. Blocking known malicious domains at the VPC resolver stops those lookups for
-    every instance, container and function, whatever software they run.
+    every instance, container and VPC-attached function in that VPC, whatever software they run.
+    Lambda functions that aren't attached to a VPC don't use its resolver, so they aren't covered.
   yesLooksLike: >-
     A DNS Firewall rule group with the AWS managed domain lists for malware, botnet command and control
     and aggregate threats set to BLOCK is associated with every VPC that hosts workloads, in every
-    account and region you use (for example through Firewall Manager); the rule group's logs go to the
-    log archive; and any VPC egress through AWS Network Firewall also uses the AWS threat signature
+    account and region you use (for example through Firewall Manager); a Route 53 Resolver query
+    logging configuration on each of those VPCs sends the blocked queries to the log archive; and any VPC egress through AWS Network Firewall also uses the AWS threat signature
     managed rule groups in drop mode.
   remediation: >-
     Create a DNS Firewall rule group with the AWS managed domain lists for malware, botnet command and
     control and aggregate threat lists, run it in ALERT for a short period to catch false positives,
     then set the rules to BLOCK. Associate it with every workload VPC, using Firewall Manager across the
-    organisation so new VPCs are covered, and turn on query logging. If you inspect egress with AWS
+    organisation so new VPCs are covered. DNS Firewall has no logs of its own: create a Resolver query
+    logging configuration that sends to the log archive and associate it with the same VPCs. If you inspect egress with AWS
     Network Firewall, add the threat signature managed rule groups as well.
   effort: M
   licence: []

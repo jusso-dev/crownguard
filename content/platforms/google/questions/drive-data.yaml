@@ -186,7 +186,7 @@
   domain: drive-data
   appliesTo: [gw-drive, gw-gmail, gw-collaboration]
   severity: medium
-  question: Does a data loss prevention rule find passwords, keys and tokens stored in Drive, Gmail or Chat, and alert someone who gets them removed and changed?
+  question: Does a data loss prevention rule find passwords, keys and tokens in Drive files and in new Gmail and Chat messages, and alert someone who gets them removed and changed?
   why: >-
     Passwords, cloud access keys and service account key files end up in Docs, Sheets, emails and chat
     messages, where anyone who gets into an account can find them with a simple search. Attackers look
@@ -203,7 +203,8 @@
     for Drive, Gmail and Chat that uses the predefined credentials and secrets detectors. Start in
     audit mode to tune it, then send alerts to the alert center and the team that owns secrets. For
     each match, rotate the credential, store it in a password manager or Secret Manager, and remove
-    the copy.
+    the copy. Gmail and Chat rules only check messages as they are sent or received, so search
+    existing mail and chats for credentials once, by hand or with Vault, when you turn the rule on.
   effort: M
   licence: [dlp]
   sources: [gws-dlp-predefined-detectors, gws-dlp]

@@ -141,7 +141,8 @@
     today's lures look like, and show you who needs more help before an attacker finds them.
   yesLooksLike: >-
     Attack simulation training in Microsoft Defender for Office 365 (or another training service) runs
-    simulation automations or training campaigns for every user at least annually, with payloads and
+    a phishing simulation for every user at least annually (training campaigns alone don't count, as
+    they send no simulation), with training campaigns or other training added where needed, with payloads and
     modules refreshed to reflect current techniques such as credential harvesting and OAuth consent
     phishing; people who submit credentials are assigned training automatically; and completion is
     tracked in the reports.

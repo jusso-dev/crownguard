@@ -98,7 +98,7 @@
   domain: data-protection
   appliesTo: [ms-sharepoint-sites, ms-teams, ms-exchange-mailboxes, ms-sensitive-data]
   severity: medium
-  question: Does a data loss prevention policy find passwords, keys and tokens stored in SharePoint, OneDrive and email, and alert someone who gets them removed and changed?
+  question: Does a data loss prevention policy find passwords, keys and tokens stored in SharePoint and OneDrive, and in new email, and alert someone who gets them removed and changed?
   why: >-
     Passwords, API keys and connection strings end up in documents, spreadsheets and emails, where
     anyone who gets into a mailbox or site can find them with a simple search. Attackers look for them
@@ -113,7 +113,9 @@
     OneDrive accounts (and Teams chat and channel messages if you have the licence) that detects the
     All credentials sensitive information type. Start in simulation mode to tune it, then turn on alerts
     or incident reports to the team that owns secrets. For each match, rotate the credential, store it
-    in a password manager or key vault, and remove the copy.
+    in a password manager or key vault, and remove the copy. The Exchange part of the policy checks
+    mail as it is sent, not mail already in mailboxes, so run a one-off Content search for credentials
+    in existing mail when you turn it on.
   effort: M
   licence: [purview-dlp]
   sources: [ms-sit-all-credentials, ms-dlp]

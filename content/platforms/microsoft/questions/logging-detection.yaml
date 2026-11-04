@@ -443,14 +443,15 @@
   domain: logging-detection
   appliesTo: ["*"]
   severity: medium
-  question: Are alerts from endpoints, email, identities and cloud apps correlated into Microsoft Defender XDR incidents, and are incidents investigated as a whole rather than alert by alert?
+  question: Are alerts from every Defender product you're licensed for correlated into Microsoft Defender XDR incidents, and are incidents investigated as a whole rather than alert by alert?
   why: >-
     A real intrusion shows up as a phishing email, then a risky sign-in, then a suspicious process,
     each in a different product. Looked at one by one, each alert can seem minor; joined up, they show
     the attack and how far it got.
   yesLooksLike: >-
-    Defender for Endpoint, Defender for Office 365, Defender for Identity and Defender for Cloud Apps
-    all feed the Defender portal (with Microsoft Sentinel onboarded there if you use it); analysts work
+    Every Defender product the tenant is licensed for and can use feeds the Defender portal: at least
+    Defender for Endpoint and Defender for Office 365, plus Defender for Identity where you have
+    on-premises Active Directory and Defender for Cloud Apps where licensed (with Microsoft Sentinel onboarded there if you use it); analysts work
     from the incident queue, so related alerts arrive grouped with the users, devices and mailboxes
     involved; and closed incidents show that every alert in them was reviewed.
   remediation: >-
@@ -459,7 +460,7 @@
     provider at the incident queue rather than individual alerts. Check that incidents list alerts from
     more than one product, and fix any product that never appears.
   effort: M
-  licence: [defender-office-p1, defender-endpoint-p2, defender-identity, defender-cloud-apps]
+  licence: [defender-office-p1, defender-endpoint-p2]
   sources: [ms-xdr-incidents, ms-defender-xdr]
   refs:
     - { framework: nist-csf-2, ref: DE.AE-03 }
