@@ -92,3 +92,37 @@
   essentials:
     - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
     - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+
+- id: MS-DP-004
+  module: core
+  domain: data-protection
+  appliesTo: [ms-sharepoint-sites, ms-teams, ms-exchange-mailboxes, ms-sensitive-data]
+  severity: medium
+  question: Does a data loss prevention policy find passwords, keys and tokens stored in SharePoint and OneDrive, and in new email, and alert someone who gets them removed and changed?
+  why: >-
+    Passwords, API keys and connection strings end up in documents, spreadsheets and emails, where
+    anyone who gets into a mailbox or site can find them with a simple search. Attackers look for them
+    straight after getting in, because they open systems that MFA doesn't protect.
+  yesLooksLike: >-
+    A Purview DLP policy uses the All credentials sensitive information type (or the individual
+    credential types) across Exchange, SharePoint and OneDrive, and Teams where licensed; matches raise
+    alerts to a named owner; and each finding leads to the secret being moved to a vault and changed,
+    not just the file being deleted.
+  remediation: >-
+    In the Microsoft Purview portal, create a DLP policy for Exchange email, SharePoint sites and
+    OneDrive accounts (and Teams chat and channel messages if you have the licence) that detects the
+    All credentials sensitive information type. Start in simulation mode to tune it, then turn on alerts
+    or incident reports to the team that owns secrets. For each match, rotate the credential, store it
+    in a password manager or key vault, and remove the copy. The Exchange part of the policy checks
+    mail as it is sent, not mail already in mailboxes, so run a one-off Content search for credentials
+    in existing mail when you turn it on.
+  effort: M
+  licence: [purview-dlp]
+  sources: [ms-sit-all-credentials, ms-dlp]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: mcsb, ref: IM-8 }
+    - { framework: ism, ref: ISM-1875 }
+  essentials:
+    - { action: IT.PRO-13.3, domains: [VR], coverage: partial }
+    - { action: CL.PRO-13.x1, domains: [VR], coverage: partial }

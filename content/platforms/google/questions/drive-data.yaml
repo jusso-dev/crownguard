@@ -180,3 +180,38 @@
   essentials:
     - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
     - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+
+- id: GO-DRV-007
+  module: core
+  domain: drive-data
+  appliesTo: [gw-drive, gw-gmail, gw-collaboration]
+  severity: medium
+  question: Does a data loss prevention rule find passwords, keys and tokens in Drive files and in new Gmail and Chat messages, and alert someone who gets them removed and changed?
+  why: >-
+    Passwords, cloud access keys and service account key files end up in Docs, Sheets, emails and chat
+    messages, where anyone who gets into an account can find them with a simple search. Attackers look
+    for them straight after getting in, because they open systems that 2-Step Verification doesn't
+    protect.
+  yesLooksLike: >-
+    A DLP rule uses the predefined detectors in the credentials and secrets category, such as
+    passwords, authentication tokens, Google Cloud credentials, AWS credentials and Azure tokens,
+    across Drive and Gmail, and Chat where you use it; matches create alerts in the alert center for a
+    named owner; and each finding leads to the secret being moved to a vault and changed, not just the
+    file being deleted.
+  remediation: >-
+    In the Admin console, go to Security > Access and data control > Data protection and create a rule
+    for Drive, Gmail and Chat that uses the predefined credentials and secrets detectors. Start in
+    audit mode to tune it, then send alerts to the alert center and the team that owns secrets. For
+    each match, rotate the credential, store it in a password manager or Secret Manager, and remove
+    the copy. Gmail and Chat rules only check messages as they are sent or received, so search
+    existing mail and chats for credentials once, by hand or with Vault, when you turn the rule on.
+  effort: M
+  licence: [dlp]
+  sources: [gws-dlp-predefined-detectors, gws-dlp]
+  refs:
+    - { framework: nist-csf-2, ref: PR.DS-01 }
+    - { framework: google-security-guidance, ref: "Checklist: Drive" }
+    - { framework: ism, ref: ISM-1875 }
+  essentials:
+    - { action: IT.PRO-13.3, domains: [VR], coverage: partial }
+    - { action: CL.PRO-13.x1, domains: [VR], coverage: partial }

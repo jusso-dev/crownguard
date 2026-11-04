@@ -780,3 +780,35 @@
   publisher: Google
   url: https://knowledge.workspace.google.com/admin/meet/choose-automatic-meeting-artifact-settings-for-your-organization
   retrieved: 2026-10-10
+
+# Essentials gaps: credential scanning, supplier advisories, outbound blocking, detection coverage
+- id: gws-dlp-predefined-detectors
+  title: "About predefined content detectors"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/admin/security/how-to-use-predefined-content-detectors
+  retrieved: 2026-11-04
+- id: gcp-ngfw-threat-intelligence
+  title: "Google Threat Intelligence for firewall policy rules"
+  publisher: Google
+  url: https://docs.cloud.google.com/firewall/docs/threat-intelligence-overview
+  retrieved: 2026-11-04
+- id: gcp-ngfw-overview
+  title: "Cloud NGFW overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/firewall/docs/about-firewalls
+  retrieved: 2026-11-04
+- id: gcp-essential-contacts
+  title: "Essential Contacts overview"
+  publisher: Google
+  url: https://docs.cloud.google.com/resource-manager/docs/managing-notification-contacts
+  retrieved: 2026-11-04
+- id: gcp-security-bulletins
+  title: "Google Cloud security bulletins"
+  publisher: Google
+  url: https://docs.cloud.google.com/support/bulletins
+  retrieved: 2026-11-04
+- id: gcp-secops-mitre-coverage
+  title: "Monitor threat coverage (MITRE) in Google Security Operations"
+  publisher: Google
+  url: https://docs.cloud.google.com/chronicle/docs/detection/mitre-dashboard
+  retrieved: 2026-11-04

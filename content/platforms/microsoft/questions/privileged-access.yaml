@@ -492,3 +492,38 @@
     - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
     - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
   essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
+
+- id: MS-PA-015
+  module: core
+  domain: privileged-access
+  appliesTo: [ms-privileged-roles, ms-entra-tenant, ms-azure-subscriptions]
+  severity: medium
+  question: Do administrators complete security training on admin-specific risks, such as consent phishing and MFA fatigue, before they are given a privileged role and again at least annually?
+  why: >-
+    Attackers target administrators because one approved prompt or one malicious app consent from an
+    admin account can hand over the whole tenant. General staff training doesn't cover how admin
+    accounts are attacked or the habits that protect them.
+  yesLooksLike: >-
+    Before anyone is made eligible for a privileged role, they complete admin-focused training (for
+    example the Security Essentials for IT Administrators modules in Attack simulation training, or an
+    equivalent course) covering consent phishing, MFA fatigue, using separate admin accounts and
+    privileged access workstations; the training is repeated at least annually; and completion is
+    recorded against each admin.
+  remediation: >-
+    Add a training step to the process for granting privileged roles, so a role isn't made eligible in
+    PIM until the course is complete. Use a training campaign in Attack simulation training with the
+    Security Essentials for IT Administrators modules, or another provider's admin course, targeted at
+    the group of admins, and run it again each year. Keep the completion records with your access
+    approvals.
+  effort: S
+  licence: []
+  sources: [ms-ast-training-modules, ms-ast-training-campaigns]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AT-02 }
+    - { framework: ism, ref: ISM-1565 }
+    - { framework: ism, ref: ISM-0435 }
+  essentials:
+    - { action: IT.PRO-14.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-14.2, domains: [GC], coverage: partial }
+    - { action: CL.PRO-14.x2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-14.x1, domains: [GC], coverage: partial }

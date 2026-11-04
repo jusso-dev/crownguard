@@ -775,3 +775,60 @@
   publisher: Amazon Web Services
   url: https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html
   retrieved: 2026-10-09
+
+# Essentials gaps: credential scanning, secure deployment, supplier advisories, outbound blocking, detection and post-incident review
+- id: aws-dns-firewall
+  title: Using DNS Firewall to filter outbound DNS traffic
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall.html
+  retrieved: 2026-11-04
+- id: aws-dns-firewall-managed-lists
+  title: Managed Domain Lists for Route 53 Resolver DNS Firewall
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver-dns-firewall-managed-domain-lists.html
+  retrieved: 2026-11-04
+- id: aws-network-firewall-threat-signatures
+  title: AWS threat signature managed rule groups for AWS Network Firewall
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-threat-signature.html
+  retrieved: 2026-11-04
+- id: aws-guardduty-extended-threat-detection
+  title: GuardDuty Extended Threat Detection
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-extended-threat-detection.html
+  retrieved: 2026-11-04
+- id: aws-security-lake
+  title: What is Amazon Security Lake?
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/security-lake/latest/userguide/what-is-security-lake.html
+  retrieved: 2026-11-04
+- id: aws-wa-correlate-alerts
+  title: "SEC04-BP03 Correlate and enrich security alerts"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_detect_investigate_events_security_alerts.html
+  retrieved: 2026-11-04
+- id: aws-wa-learning-from-incidents
+  title: "SEC10-BP08 Establish a framework for learning from incidents"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_establish_incident_framework.html
+  retrieved: 2026-11-04
+- id: aws-wa-automate-security-controls
+  title: "SEC01-BP06 Automate deployment of standard security controls"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_securely_operate_automate_security_controls.html
+  retrieved: 2026-11-04
+- id: aws-wa-automate-deployment
+  title: "OPS05-BP10 Fully automate integration and deployment"
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/ops_dev_integ_auto_integ_deploy.html
+  retrieved: 2026-11-04
+- id: aws-health-aggregate-events
+  title: Aggregating AWS Health events across accounts
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/health/latest/ug/aggregate-events.html
+  retrieved: 2026-11-04
+- id: aws-health-notifications
+  title: Manage AWS Health notifications in AWS User Notifications
+  publisher: Amazon Web Services
+  url: https://docs.aws.amazon.com/health/latest/ug/manage-user-notifications.html
+  retrieved: 2026-11-04

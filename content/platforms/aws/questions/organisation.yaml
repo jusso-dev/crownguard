@@ -200,3 +200,67 @@
   essentials:
     - { action: IT.RES-05.1, domains: [VR], coverage: partial }
     - { action: CL.RES-05.x1, domains: [VR], coverage: partial }
+
+- id: AWS-ORG-008
+  module: core
+  domain: organisation
+  appliesTo: [aws-organization, aws-workloads, aws-data-stores]
+  severity: medium
+  question: Are changes to production infrastructure deployed only through reviewed infrastructure-as-code pipelines, with people's direct write access to production limited to break-glass use?
+  why: >-
+    When people build and change production by hand in the console, security settings drift from one
+    account to the next and a stolen admin session can change anything. Reviewed templates applied by a
+    pipeline put the same controls in place every time and leave a record of who approved each change.
+  yesLooksLike: >-
+    Production resources are defined in CloudFormation, CDK or Terraform held in version control;
+    changes need a reviewed pull request and are applied by a CI/CD pipeline role with a test stage;
+    standard security controls such as logging, encryption and guardrails are deployed the same way;
+    and people's roles in production accounts are read-only except for monitored emergency access.
+  remediation: >-
+    Move production resources into infrastructure-as-code templates, require review before merge, and
+    deploy through AWS CodePipeline or another CI/CD system using a dedicated deployment role. Deploy
+    standard security controls from the same pipeline (for example with CloudFormation StackSets across
+    the organisation). Then reduce people's production permission sets to read-only, keeping a
+    break-glass role whose use is alerted.
+  effort: L
+  licence: []
+  sources: [aws-wa-automate-security-controls, aws-wa-automate-deployment]
+  refs:
+    - { framework: nist-csf-2, ref: PR.PS-01 }
+    - { framework: nist-csf-2, ref: PR.PS-06 }
+    - { framework: ism, ref: ISM-1211 }
+  essentials:
+    - { action: IT.PRO-01.2, domains: [CPS, BUS], coverage: partial }
+    - { action: CL.PRO-01.x2, domains: [CPS, BUS], coverage: partial }
+  essentialsReviewed: "IT.PRO-04.3 not tagged: deploying through reviewed pipelines does not show configuration drift is detected and fixed."
+
+- id: AWS-ORG-009
+  module: core
+  domain: organisation
+  appliesTo: ["*"]
+  severity: low
+  question: Is AWS Health organisational view turned on, with security and other Health notifications for every account sent to a team that acts on them?
+  why: >-
+    AWS uses Health events to tell you about security issues, exposed keys, required updates and
+    retirements that affect your specific resources. Spread across dozens of accounts, or sent only to
+    the root email address, they go unread until something breaks or is exploited.
+  yesLooksLike: >-
+    Organisational view is on in AWS Health, ideally with a delegated administrator in the security
+    account; AWS managed notifications in AWS User Notifications (or an EventBridge rule) send Health
+    events, including the security category, for all accounts to a monitored team mailbox or chat
+    channel; and someone is responsible for raising and tracking an action for each relevant event.
+  remediation: >-
+    From the management account, turn on organisational view in AWS Health and register the security
+    account as delegated administrator. Configure AWS managed notifications in AWS User Notifications for
+    Health events across the organisation, or create an EventBridge rule that forwards them, and route
+    them to a shared mailbox or chat channel. Name the team that owns the follow-up.
+  effort: S
+  licence: []
+  sources: [aws-health-aggregate-events, aws-health-notifications]
+  refs:
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: nist-csf-2, ref: ID.RA-02 }
+  essentials:
+    - { action: IT.PRO-16.2, domains: [CPS, PE], coverage: partial }
+    - { action: CL.PRO-16.x3, domains: [CPS, PE], coverage: partial }
+    - { action: CL.PRO-13.x3, domains: [CPS, PE], coverage: partial }

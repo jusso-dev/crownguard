@@ -128,3 +128,38 @@
   essentials:
     - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
     - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
+
+- id: MS-EXO-005
+  module: core
+  domain: exchange-email
+  appliesTo: ["*"]
+  severity: medium
+  question: Do all staff receive phishing simulations and security awareness training on a regular schedule, with extra training assigned to anyone who falls for a simulation?
+  why: >-
+    Most account takeovers still start with someone entering their password on a fake page or approving
+    a request they didn't expect. Regular, current training and realistic simulations teach people what
+    today's lures look like, and show you who needs more help before an attacker finds them.
+  yesLooksLike: >-
+    Attack simulation training in Microsoft Defender for Office 365 (or another training service) runs
+    a phishing simulation for every user at least annually (training campaigns alone don't count, as
+    they send no simulation), with training campaigns or other training added where needed, with payloads and
+    modules refreshed to reflect current techniques such as credential harvesting and OAuth consent
+    phishing; people who submit credentials are assigned training automatically; and completion is
+    tracked in the reports.
+  remediation: >-
+    In the Microsoft Defender portal, open Email & collaboration > Attack simulation training. Create a
+    simulation automation that targets all users on a schedule, assign training to users who fail, and
+    add a training campaign so new starters and anyone who missed a simulation still get the modules.
+    Review the payloads and modules each quarter so they match the phishing your organisation is
+    actually seeing, and check completion in the training reports.
+  effort: M
+  licence: [defender-office-p2]
+  sources: [ms-ast-get-started, ms-ast-simulation-automations, ms-ast-training-campaigns]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AT-01 }
+    - { framework: ism, ref: ISM-0252 }
+  essentials:
+    - { action: IT.PRO-14.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-14.2, domains: [GC], coverage: partial }
+    - { action: CL.PRO-14.x2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-14.x1, domains: [GC], coverage: partial }

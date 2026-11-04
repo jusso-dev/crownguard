@@ -1347,3 +1347,55 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/microsoft-copilot-studio/
   retrieved: 2026-10-10
+
+# Essentials gaps: awareness training, credential scanning, outbound blocking, detection and post-incident review
+- id: ms-ast-get-started
+  title: Get started using Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-get-started
+  retrieved: 2026-11-04
+- id: ms-ast-training-campaigns
+  title: Training campaigns in Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-training-campaigns
+  retrieved: 2026-11-04
+- id: ms-ast-simulation-automations
+  title: Simulation automations for Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-simulation-automations
+  retrieved: 2026-11-04
+- id: ms-ast-training-modules
+  title: Training modules for Training campaigns in Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-training-modules
+  retrieved: 2026-11-04
+- id: ms-sit-all-credentials
+  title: All Credential Types entity definition
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/sit-defn-all-creds
+  retrieved: 2026-11-04
+- id: ms-mde-network-protection
+  title: Use network protection to help prevent connections to malicious or suspicious sites
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/network-protection
+  retrieved: 2026-11-04
+- id: ms-mde-web-content-filtering
+  title: Web content filtering in Microsoft Defender for Endpoint
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/web-content-filtering
+  retrieved: 2026-11-04
+- id: ms-mde-indicators-ip-url
+  title: Create indicators for IPs and URLs/domains
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/indicator-ip-domain
+  retrieved: 2026-11-04
+- id: ms-xdr-incidents
+  title: Incidents and alerts in the Microsoft Defender portal
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/incidents-overview
+  retrieved: 2026-11-04
+- id: ms-secops-incident-adoption
+  title: Plan for incident response in the security adoption model
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/security-adoption-discipline-security-operations-incidents
+  retrieved: 2026-11-04

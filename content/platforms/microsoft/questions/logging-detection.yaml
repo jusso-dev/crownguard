@@ -437,3 +437,66 @@
     - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
     - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
   essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."
+
+- id: MS-LOG-012
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are alerts from every Defender product you're licensed for correlated into Microsoft Defender XDR incidents, and are incidents investigated as a whole rather than alert by alert?
+  why: >-
+    A real intrusion shows up as a phishing email, then a risky sign-in, then a suspicious process,
+    each in a different product. Looked at one by one, each alert can seem minor; joined up, they show
+    the attack and how far it got.
+  yesLooksLike: >-
+    Every Defender product the tenant is licensed for and can use feeds the Defender portal: at least
+    Defender for Endpoint and Defender for Office 365, plus Defender for Identity where you have
+    on-premises Active Directory and Defender for Cloud Apps where licensed (with Microsoft Sentinel onboarded there if you use it); analysts work
+    from the incident queue, so related alerts arrive grouped with the users, devices and mailboxes
+    involved; and closed incidents show that every alert in them was reviewed.
+  remediation: >-
+    Turn on and connect each Defender product you are licensed for, onboard Microsoft Sentinel to the
+    Defender portal if you use it, and point your triage process and any managed detection and response
+    provider at the incident queue rather than individual alerts. Check that incidents list alerts from
+    more than one product, and fix any product that never appears.
+  effort: M
+  licence: [defender-office-p1, defender-endpoint-p2]
+  sources: [ms-xdr-incidents, ms-defender-xdr]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-03 }
+    - { framework: mcsb, ref: IR-3 }
+  essentials:
+    - { action: IT.DET-03.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x2, domains: [VR], coverage: partial }
+
+- id: MS-LOG-013
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: After each significant cyber security incident, do you hold a post-incident review that finds the gaps behind each stage of the attack and checks how well monitoring and response worked, with fixes assigned?
+  why: >-
+    An incident shows exactly where your defences let an attacker in, move and stay. Without a review,
+    the same gaps stay open and the same detection or response delays happen next time.
+  yesLooksLike: >-
+    Within a few weeks of each significant incident, a review records how the attacker got in, moved
+    and acted, which control failed or was missing at each stage, when monitoring first saw it and how
+    the response plan performed; actions such as new detections, more logging or updated playbooks have
+    owners and due dates; and the incident register links to the review.
+  remediation: >-
+    Add a post-incident review step to your incident response plan using ASD's practitioner guidance
+    and Microsoft's incident response guidance. Use the Defender XDR incident timeline and the Purview
+    audit log to rebuild each stage, list the gaps, and track the resulting changes to controls,
+    detections and playbooks until they are done.
+  effort: M
+  licence: []
+  sources: [ms-secops-incident-adoption, asd-ir-planning]
+  refs:
+    - { framework: nist-csf-2, ref: RS.AN-03 }
+    - { framework: nist-csf-2, ref: ID.IM-04 }
+    - { framework: mcsb, ref: IR-7 }
+  essentials:
+    - { action: IT.RES-04.1, domains: [VR], coverage: partial }
+    - { action: IT.RES-04.2, domains: [VR], coverage: partial }
+    - { action: CL.RES-04.x1, domains: [VR], coverage: partial }
+    - { action: CL.RES-04.x2, domains: [VR], coverage: partial }

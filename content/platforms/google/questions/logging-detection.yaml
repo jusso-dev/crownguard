@@ -303,3 +303,33 @@
     - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
     - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
   essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."
+
+- id: GO-LOG-009
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Is your detection coverage reviewed on a schedule and after new services or major changes, with any gaps assigned to someone to fix?
+  why: >-
+    New apps, Google Cloud projects and integrations arrive faster than detections do. Without a
+    review, a service can run for months with no logs connected and no rules looking at it, and nobody
+    notices until an incident.
+  yesLooksLike: >-
+    At least every six months, and whenever a new service, project or major architecture change goes
+    live, someone compares connected log sources and active detections with the asset inventory, for
+    example using the MITRE ATT&CK coverage dashboard in Google Security Operations or your SIEM's
+    equivalent; gaps are recorded with an owner and a due date.
+  remediation: >-
+    Add a detection coverage check to your change process and a recurring calendar review. In Google
+    Security Operations, use the MITRE ATT&CK coverage dashboard to see which techniques your rules
+    cover and which data sources feed them. Compare that with your crown-jewel systems, then enable
+    rules, connect missing log sources or record why a gap is accepted.
+  effort: M
+  licence: []
+  sources: [gcp-secops-mitre-coverage]
+  refs:
+    - { framework: nist-csf-2, ref: ID.IM-01 }
+  essentials:
+    - { action: IT.DET-05.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-05.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.GOV-04.2 and IT.RES-04.2 not tagged: a detection coverage review is not a review of the cyber security program or of monitoring after an incident."
