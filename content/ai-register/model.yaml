@@ -117,7 +117,7 @@ kinds:
     name: Amazon Bedrock or AgentCore agent
     description: An in-house agent on Amazon Bedrock or Bedrock AgentCore that answers from your data or takes actions through tools and gateways.
     product: Amazon Bedrock
-    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workplace-productivity], domains: [corporate], autonomy: hotl, access: scoped }
+    defaults: { technology: [generative-ai, natural-language-processing], usagePatterns: [workflow-automation], domains: [corporate], autonomy: hotl, access: scoped }
     exposures: [ai-grounding]
     relatedQuestions: [AWS-AI-001, AWS-AI-002, AWS-AI-003, AWS-AI-004, AWS-AI-005, AWS-AI-006, AWS-AI-007, AWS-NET-008]
     sources: [aws-bedrock-iam, aws-bedrock-agentcore-security, asd-agentic-ai]

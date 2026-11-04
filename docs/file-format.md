@@ -3,7 +3,7 @@
 A saved assessment is one JSON object. It is written by **Save file** (or Ctrl/⌘ S) and read by **Open file**. Nothing
 is sent anywhere: the file is the whole of your data, and you choose where it lives.
 
-- Published JSON Schema: [`public/schema/crownguard-assessment.v3.json`](../public/schema/crownguard-assessment.v4.json),
+- Published JSON Schema: [`public/schema/crownguard-assessment.v5.json`](../public/schema/crownguard-assessment.v5.json),
   generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
 - Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
@@ -36,7 +36,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | Field | Type | Notes |
 | --- | --- | --- |
 | `$schema` | string | Written on save. Points at the published JSON Schema for this format. |
-| `schemaVersion` | integer | File format version. **4** is current. |
+| `schemaVersion` | integer | File format version. **5** is current. |
 | `mode` | string | `"ai-register"` for the standalone AI use-case register flow. Omitted, and meaning the full crown-jewel assessment, otherwise. |
 | `savedBy` | object | `{ app, appVersion, contentHash?, savedAt }`. Who wrote the file, and the digest of the questions they saved against. For support and debugging. |
 | `org` | object | Organisation profile: `name`, `abn?`, `sector`, `size`, `jurisdiction`, `regulations`. |
@@ -61,7 +61,16 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ## Changelog
 
-### 4 — current
+### 5 — current
+
+- AI register usage patterns: `strategic-support`, `workflow-automation` and `coding`, the three that version 2.1 of
+  the DTA's Policy for the responsible use of AI in government added to its classification system (Appendix D).
+  Nothing to migrate, as every schema 4 value is still valid. The version moved because an entry's `usagePatterns` is
+  a closed list: a schema 4 build would refuse a file that used a new pattern, so it now sees the file as newer and
+  opens it read-only instead.
+
+### 4
+
 
 - `essentials` records the optional ASD Essentials section and its chapter (`enterprise-it` or `cloud`). Optional and
   presentational like `ismBaseline`, so no version move: a build that has never heard of it carries it through a
@@ -107,6 +116,6 @@ tell a file saved yesterday from one saved a year earlier.
 
 If you write `.crownguard.json` files yourself (the Hermes `crown-jewel-risk-assessor` profile does):
 
-1. Set `schemaVersion: 4` and fill in `savedBy`.
+1. Set `schemaVersion: 5` and fill in `savedBy`.
 2. Validate against the published JSON Schema before writing.
 3. Don't drop fields you don't recognise. crownguard keeps them, so keep them too.

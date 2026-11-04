@@ -11,7 +11,7 @@
       "const": 1
     },
     "schemaVersion": {
-      "default": 4,
+      "default": 5,
       "type": "integer",
       "minimum": 1,
       "maximum": 100000
@@ -793,8 +793,11 @@
                   "enum": [
                     "decision-making",
                     "analytics",
+                    "strategic-support",
                     "workplace-productivity",
-                    "image-processing"
+                    "workflow-automation",
+                    "image-processing",
+                    "coding"
                   ]
                 }
               },
@@ -1000,7 +1003,7 @@
     "updatedAt"
   ],
   "additionalProperties": {},
-  "$id": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v4.json",
+  "$id": "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v5.json",
   "title": "crownguard assessment",
   "description": "A .crownguard.json file: one crown-jewel risk assessment saved from https://jusso-dev.github.io/crownguard/. Fields the app does not know about are allowed and are carried through a re-save unchanged."
 }

@@ -49,6 +49,69 @@ describe("schema versions", () => {
   });
 });
 
+describe("schema 5: the usage patterns DTA's AI policy v2.1 added", () => {
+  const registerEntry = (usagePatterns: string[]) => ({
+    id: "uc-1",
+    kind: "other",
+    name: "Code assistant",
+    reference: "AI-1",
+    description: "Helps developers write and review code.",
+    product: "",
+    technology: ["generative-ai"],
+    domains: ["corporate"],
+    usagePatterns,
+    ownerName: "Jo",
+    ownerEmail: "jo@example.com",
+    criteria: ["none"],
+    data: [],
+    jewels: [],
+    answers: {},
+    notes: {},
+  });
+  const withRegister = (schemaVersion: number, usagePatterns: string[]) => ({
+    ...emptyAssessment(),
+    schemaVersion,
+    aiRegister: { entries: [registerEntry(usagePatterns)] },
+  });
+
+  it("opens a schema 4 file, brings it up to 5 and keeps its patterns", () => {
+    const result = parseAssessment(withRegister(4, ["workplace-productivity", "analytics"]));
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+    expect(result.assessment.schemaVersion).toBe(5);
+    expect(result.assessment.aiRegister?.entries[0].usagePatterns).toEqual(["workplace-productivity", "analytics"]);
+    expect(result.notices.some((n) => n.text.includes("older 4 format"))).toBe(true);
+  });
+
+  it("round-trips a schema 5 file that uses the new patterns", () => {
+    const patterns = ["coding", "strategic-support", "workflow-automation"];
+    const opened = parseAssessment(withRegister(5, patterns));
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+    expect(opened.notices).toEqual([]);
+
+    const saved = JSON.parse(toSaveFile(opened.assessment)) as Assessment;
+    expect(saved.schemaVersion).toBe(5);
+    expect(saved.$schema).toMatch(/crownguard-assessment\.v5\.json$/);
+    const reopened = parseAssessment(saved);
+    expect(reopened.kind).toBe("ok");
+    if (reopened.kind !== "ok") return;
+    expect(reopened.assessment.aiRegister?.entries[0].usagePatterns).toEqual(patterns);
+  });
+
+  it("opens a file with a pattern this build doesn't know read-only, the way a schema 4 build sees `coding`", () => {
+    // A schema 4 build reading a schema 5 file takes the newer-file path: never migrated, never offered for editing.
+    // Here the build is 5 and the file one ahead, with a pattern this build has never heard of.
+    const result = parseAssessment(withRegister(SCHEMA_VERSION + 1, ["coding", "some-later-pattern"]));
+    expect(result.kind).toBe("newer");
+    if (result.kind !== "newer") return;
+    expect(result.schemaVersion).toBe(SCHEMA_VERSION + 1);
+    expect(result.assessment).toBeUndefined();
+    expect(result.issues[0]).toMatch(/^aiRegister\.entries\.0\.usagePatterns\.1: /);
+    expect(migrate(withRegister(SCHEMA_VERSION + 1, ["coding"]), SCHEMA_VERSION + 1).migrated).toBe(false);
+  });
+});
+
 describe("opening a file", () => {
   it("round-trips a version 1 file through a save without losing anything", () => {
     const legacy = fixture("legacy.crownguard.json");

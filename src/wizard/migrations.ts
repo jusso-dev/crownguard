@@ -40,6 +40,15 @@ export const migrations: Migration[] = [
     // version bump: the version moves when a field changes meaning or becomes required, not when one is added.
     up: (raw) => ({ ...raw, schemaVersion: 4 }),
   },
+  {
+    from: 4,
+    to: 5,
+    // Schema 5 adds the usage patterns DTA's AI policy v2.1 introduced: `strategic-support`, `workflow-automation` and
+    // `coding`. Nothing to transform, as every schema 4 value is still valid. The version moves because a register
+    // entry's `usagePatterns` is a closed enum: a schema 4 build would refuse a file that used a new pattern, so it
+    // has to see the file as newer and open it read-only instead.
+    up: (raw) => ({ ...raw, schemaVersion: 5 }),
+  },
 ];
 
 /**
