@@ -52,7 +52,12 @@ const citing = (framework: string): Map<string, string[]> => {
   const out = new Map<string, string[]>();
   for (const bundle of catalogue.platforms.values())
     for (const q of bundle.questions)
-      for (const r of q.refs) if (r.framework === framework) out.set(r.ref, [...new Set([...(out.get(r.ref) ?? []), q.id])]);
+      for (const ref of [
+        ...q.refs.filter((r) => r.framework === framework).map((r) => r.ref),
+        // Essentials questions cite actions through `essentials:` tags rather than `refs:`.
+        ...(catalogue.frameworks.get(framework)?.essentials ? q.essentials.map((t) => t.action) : []),
+      ])
+        out.set(ref, [...new Set([...(out.get(ref) ?? []), q.id])]);
   return out;
 };
 

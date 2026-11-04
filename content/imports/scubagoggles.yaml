@@ -7,7 +7,7 @@
 # Privacy: the importer reads only MetaData and Results. It never touches the `Raw` section, which
 # holds super admin and break-glass accounts, organisational unit names and audit log events.
 #
-# Coverage (of the SCuBA policies at v1.0.1): Gmail 26 of 36, Drive and Docs 13 of 17,
+# Coverage (of the SCuBA policies at v1.1.0): Gmail 26 of 36, Drive and Docs 13 of 17,
 # Common Controls 27 of 42, Gemini 5 of 5. Everything not mapped is listed here with the reason.
 #
 # Gmail not mapped:
@@ -46,7 +46,10 @@
 #     Studio sharing and Pinpoint. No question asks whether unused Google services are turned off.
 #
 # Gemini: all five policies map.
-# Meet: all eight policies map.
+# Meet not mapped:
+#   GWS.MEET.6.3v1  Screenshots of presented content only captured in notes when recording is on
+#     (new in v1.1.0). A manual check with no setting ScubaGoggles reads, so it can't pre-fill an
+#     answer; GO-MEET-003 asks about who can open notes, not what goes into them.
 # Other products:
 #   GWS.CHAT.5.1v1, GWS.CHAT.5.2v1  Chat content reporting (user moderation). Not a crown-jewel
 #     control.

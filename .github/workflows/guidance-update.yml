@@ -117,6 +117,8 @@ jobs:
           add-paths: |
             content/frameworks/ism.yaml
             scripts/ism/fixtures/ism-controls.txt
+            content/frameworks/asd-essentials-enterprise-it.yaml
+            scripts/essentials/fixtures/e4eit-actions.txt
             content/sources/standards.yaml
             e2e/fixtures/prowler-checks-aws.txt
             e2e/fixtures/prowler-checks-azure.txt

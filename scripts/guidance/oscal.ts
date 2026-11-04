@@ -1,6 +1,6 @@
 /**
- * Updater for a framework generated from an OSCAL catalog at a release tag (the ISM today, ASD's Essentials for
- * enterprise IT next). The generator owns the file format; this moves the release, the feed pin and the source
+ * Updater for a framework generated from an OSCAL catalog at a release tag (the ISM and ASD's Essentials for
+ * enterprise IT). The generator owns the file format; this moves the release, the feed pin and the source
  * that cites the release, and lists the questions whose controls the new release drops or withdraws.
  */
 import { parse } from "yaml";
@@ -14,8 +14,11 @@ export interface OscalSource {
   name: string;
   /** GitHub repo publishing the catalog as releases, e.g. `AustralianCyberSecurityCentre/ism-oscal`. */
   repo: string;
-  /** Catalog file at the root of each release tag, e.g. `ISM_catalog.json`. */
-  catalog: string;
+  /**
+   * Files the generator reads from the root of each release tag: `ISM_catalog.json` for the ISM; the catalog, mapping
+   * collection and domain profiles for Essentials. Passed to `build` keyed by name.
+   */
+  files: string[];
   /** Framework id the questions cite (`ism`). */
   framework: string;
   /** The generated framework file, carrying `at release tag <tag>` in its header. */
@@ -27,10 +30,10 @@ export interface OscalSource {
   /** The content/sources entry that links the release page (`.../releases/tag/<tag>`). */
   source?: { file: string; id: string };
   /**
-   * The generator: catalog text in, both files' text out. `previousYaml` lets it keep the retrieval date when
+   * The generator: release file texts (by name) in, both files' text out. `previousYaml` lets it keep the retrieval date when
    * nothing else moved. Throws when the catalog doesn't parse, so a shape change stops the run for a human.
    */
-  build(catalog: string, opts: { tag: string; retrieved: string; previousYaml?: string }): { yaml: string; ids: string };
+  build(files: Record<string, string>, opts: { tag: string; retrieved: string; previousYaml?: string }): { yaml: string; ids: string };
 }
 
 /** Control ids in a generated framework file, live and withdrawn. */
@@ -74,8 +77,9 @@ export function oscalUpdater(def: OscalSource): GuidanceUpdater {
     },
     async update(ws, gh, release: Release, from) {
       const previousYaml = ws.read(def.frameworkFile);
-      const catalog = await gh.raw(def.repo, release.tag, def.catalog);
-      const { yaml, ids } = def.build(catalog, { tag: release.tag, retrieved: ws.today, previousYaml });
+      const inputs: Record<string, string> = {};
+      for (const name of def.files) inputs[name] = await gh.raw(def.repo, release.tag, name);
+      const { yaml, ids } = def.build(inputs, { tag: release.tag, retrieved: ws.today, previousYaml });
       const files: Record<string, string> = { [def.frameworkFile]: yaml, [def.idsFile]: ids };
       if (def.feed) files[FEEDS_FILE] = setFeedPin(ws.read(FEEDS_FILE), def.feed, release.tag);
       if (def.source) {

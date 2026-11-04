@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
@@ -134,13 +134,13 @@ describe("the OSCAL updater", () => {
     label: "ISM",
     name: "ISM",
     repo: repoName,
-    catalog: "ISM_catalog.json",
+    files: ["ISM_catalog.json"],
     framework: "ism",
     frameworkFile: "content/frameworks/ism.yaml",
     idsFile: "scripts/ism/fixtures/ism-controls.txt",
     feed: "ism-oscal-releases",
     source: { file: "content/sources/standards.yaml", id: "asd-ism-oscal" },
-    build: (c, o) => buildIsm(parseSample(c), o),
+    build: (f, o) => buildIsm(parseSample(f["ISM_catalog.json"]), o),
   });
   // The committed state at v2026.09.4, built from the sample plus one control the next release drops.
   const withExtra = JSON.parse(sampleText);
@@ -173,6 +173,31 @@ describe("the OSCAL updater", () => {
     const r = await runUpdates({ updaters: UPDATERS.filter((u) => u.id === "ism"), ws: workspace(files), gh });
     expect(r.updates[0]).toMatchObject({ status: "error", error: expect.stringMatching(/expected OSCAL shape/) });
     expect(r.files).toEqual({});
+  });
+});
+
+describe("the Essentials updater", () => {
+  const essentials = UPDATERS.find((u) => u.id === "essentials")!;
+  const repoName = "AustralianCyberSecurityCentre/e4eit-oscal";
+  const sampleDir = join(root, "scripts", "essentials", "fixtures", "sample");
+  const names = readdirSync(sampleDir).filter((n) => n.endsWith(".json"));
+  const raw = Object.fromEntries(names.map((n) => [`${repoName}@v2027.01.20:${n}`, readFileSync(join(sampleDir, n), "utf8")]));
+  const files = {
+    "content/frameworks/asd-essentials-enterprise-it.yaml": repo("content/frameworks/asd-essentials-enterprise-it.yaml"),
+    "scripts/essentials/fixtures/e4eit-actions.txt": repo("scripts/essentials/fixtures/e4eit-actions.txt"),
+    "scripts/watch/feeds.ts": repo("scripts/watch/feeds.ts"),
+  };
+
+  it("reads every release file it needs and moves the chapter, its pinned list and the feed pin together", async () => {
+    expect(names).toHaveLength(10);
+    const gh = offline({ [repoName]: "v2027.01.20" }, raw);
+    const r = await runUpdates({ updaters: [essentials], ws: workspace(files, { "IT.PRO-13.4": ["MS-ID-001"], "IT.PRO-13.5": ["MS-ID-002"] }), gh });
+    expect(r.updates[0]).toMatchObject({ status: "updated", from: "v2026.10.15" });
+    expect(headerTag(r.files["content/frameworks/asd-essentials-enterprise-it.yaml"])).toBe("v2027.01.20");
+    expect(r.files["scripts/essentials/fixtures/e4eit-actions.txt"]).toContain("release tag v2027.01.20");
+    expect(feedPin(r.files["scripts/watch/feeds.ts"], "e4eit-oscal-releases")).toBe("v2027.01.20");
+    // The sample keeps IT.PRO-13.4 and drops IT.PRO-13.5, so only the question tagged with the dropped action is listed.
+    expect(r.updates[0].review).toEqual([{ id: "IT.PRO-13.5", file: "content/frameworks/asd-essentials-enterprise-it.yaml", questions: ["MS-ID-002"], reason: "gone from the catalog" }]);
   });
 });
 
