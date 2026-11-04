@@ -52,7 +52,7 @@ const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
  * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
  * are migrated up on open (see `migrations.ts`). A file with a higher number than this build knows is opened read-only.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** Version of the app that wrote the file. Kept in sync with package.json. */
 export const APP_VERSION = "1.0.0";

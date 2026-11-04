@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessmentSchema } from "./assessmentSchema";
+import { assessmentSchema, SCHEMA_VERSION } from "./assessmentSchema";
 import type { CrownJewel } from "../engine/types";
 import { clampStep, currentStep, emptyAssessment, hasProgress, migrateProgress, reachableStep, stepsFor } from "./store";
 import { relativeTime } from "./time";
@@ -258,7 +258,7 @@ describe("the standalone AI register mode", () => {
     s.setOrg({ name: "Riverbend Health" });
     const raw = JSON.parse(toSaveFile(useStore.getState().assessment)) as Record<string, unknown>;
     expect(raw.mode).toBe("ai-register");
-    expect(raw.schemaVersion).toBe(4);
+    expect(raw.schemaVersion).toBe(SCHEMA_VERSION);
     const parsed = parseAssessment(raw);
     expect(parsed.kind).toBe("ok");
     if (parsed.kind === "ok") {

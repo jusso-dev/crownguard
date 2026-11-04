@@ -33,14 +33,18 @@ export const aiDomains = {
 export type AiDomain = keyof typeof aiDomains;
 
 /**
- * Usage patterns, Classification system for AI use (Appendix D of the policy, v2.1). v2.1 also lists Strategic support,
- * Workflow automation and Coding; adding them needs a saved-file schema bump, so they aren't offered yet.
+ * Usage patterns, Classification system for AI use (Appendix D of the policy, v2.1), in its order. Strategic support,
+ * Workflow automation and Coding are new in v2.1; they arrived with saved-file schema 5, because an older build's
+ * enum would refuse a file that used them.
  */
 export const aiUsagePatterns = {
   "decision-making": "Decision-making and administrative action",
   analytics: "Analytics",
+  "strategic-support": "Strategic support",
   "workplace-productivity": "Workplace productivity",
+  "workflow-automation": "Workflow automation",
   "image-processing": "Image processing",
+  coding: "Coding",
 } as const;
 export type AiUsagePattern = keyof typeof aiUsagePatterns;
 
