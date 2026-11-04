@@ -4,6 +4,9 @@ import { hostOf, isHttpUrl, limiter, readCapped, sleep as defaultSleep } from ".
 /** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
 export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
 
+/** The same identity without the "Mozilla/5.0 (compatible; ...)" wrapper, for hosts that drop requests carrying it. */
+export const PLAIN_USER_AGENT = "crownguard-source-watch/1.0";
+
 /** Hosts a redirect only reaches when a page wants a signed-in or consenting user: never a real page move. */
 const SIGN_IN_HOSTS = new Set([
   "accounts.google.com",
@@ -35,6 +38,8 @@ export interface FetcherOptions {
   delayFor?: (host: string) => number;
   /** Per-host retries; falls back to `retries`. */
   retriesFor?: (host: string) => number | undefined;
+  /** Per-host user agent; falls back to `userAgent`. */
+  userAgentFor?: (host: string) => string | undefined;
   timeoutMs?: number;
   /** Extra attempts after a network error, 5xx or 429. */
   retries?: number;
@@ -50,6 +55,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
     concurrencyFor = () => 4,
     delayFor = () => 0,
     retriesFor = () => undefined,
+    userAgentFor = () => undefined,
     timeoutMs = 30_000,
     retries = 2,
     maxRedirects = 10,
@@ -87,7 +93,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         res = await fetchImpl(current, {
           redirect: "manual",
           signal: AbortSignal.timeout(timeoutMs),
-          headers: { "user-agent": userAgent, accept, "accept-language": "en-US,en;q=0.9" },
+          headers: { "user-agent": userAgentFor(hostOf(current)) ?? userAgent, accept, "accept-language": "en-US,en;q=0.9" },
         });
       } catch (e) {
         const err = e as Error & { cause?: { code?: string; message?: string } };

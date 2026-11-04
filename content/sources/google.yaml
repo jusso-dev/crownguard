@@ -270,6 +270,11 @@
   publisher: Google
   url: https://knowledge.workspace.google.com/vault/retention/how-retention-works
   retrieved: 2026-10-08
+- id: gws-vault-gemini
+  title: "Vault: supported services and data types (Gemini app and Gemini in Workspace)"
+  publisher: Google
+  url: https://knowledge.workspace.google.com/vault/getting-started/supported-services-and-data-types
+  retrieved: 2026-11-04
 - id: gws-vault-faq
   title: "Google Vault FAQ"
   publisher: Google
@@ -391,10 +396,10 @@
   url: https://docs.cloud.google.com/bigquery/docs/control-access-to-resources-iam
   retrieved: 2026-10-08
 - id: gcp-cloudsql-private-ip
-  title: "Configure private IP (Cloud SQL)"
+  title: "Configure private IP with private services access (Cloud SQL)"
   publisher: Google
-  url: https://docs.cloud.google.com/sql/docs/mysql/configure-private-ip
-  retrieved: 2026-10-08
+  url: https://docs.cloud.google.com/sql/docs/mysql/configure-private-services-access
+  retrieved: 2026-11-04
 - id: gcp-vpc-service-controls
   title: "Overview of VPC Service Controls"
   publisher: Google

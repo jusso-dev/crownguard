@@ -147,6 +147,16 @@
   url: https://www.cyber.gov.au/publication/frequently-asked-questions
   retrieved: 2026-11-04
   highAttention: true
+- id: asd-essentials-cloud-scoping
+  title: Asset scoping guide for cloud
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/asset-scoping-guide-for-cloud
+  retrieved: 2026-11-04
+- id: asd-essentials-ai
+  title: AI considerations within the Essentials
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/ai-considerations-within-the-essentials
+  retrieved: 2026-11-04
 - id: asd-essentials-oscal
   title: Essentials for enterprise IT OSCAL releases
   publisher: Australian Signals Directorate

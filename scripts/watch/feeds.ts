@@ -482,7 +482,7 @@ export const FEEDS: FeedDef[] = [
     max: 3,
   },
   {
-    // The SOC-CMM site blocks automated requests, so new model and tool releases are picked up from its forum.
+    // New SOC-CMM model and tool releases are announced on its forum before the site's pages change.
     id: "soc-cmm-community",
     name: "SOC-CMM user community",
     url: "https://soc-cmm.discourse.group/latest.rss",

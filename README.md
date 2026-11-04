@@ -74,7 +74,7 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   [Standard for accountability](https://www.digital.gov.au/ai/ai-in-government-policy/accountability), mostly by clicking options.
   Each use case gets up to 22 readiness questions on accountability, human oversight, access, data, monitoring,
   switch-off, transparency and assurance, drawn from the
-  [Policy for the responsible use of AI in government](https://www.digital.gov.au/policy/ai/policy) v2.0, its impact
+  [Policy for the responsible use of AI in government](https://www.digital.gov.au/ai/ai-in-government-policy) v2.1, its impact
   assessment guidance, the [agentic AI addendum](https://www.digital.gov.au/policy/ai/agentic-ai-addendum) and ASD's
   guidance on agentic AI. Link a use case to the crown jewels it can reach to see their risk, the related Controls
   answers and the exposures it usually adds. Export the register as CSV or XLSX, with the DTA's fields first, and the
@@ -243,7 +243,7 @@ It works on a phone too: every step fits a 390px screen.
 ## AI register only
 
 If you only need the AI use-case register — the one the
-[Policy for the responsible use of AI in government](https://www.digital.gov.au/policy/ai/policy) asks non-corporate
+[Policy for the responsible use of AI in government](https://www.digital.gov.au/ai/ai-in-government-policy) asks non-corporate
 Commonwealth entities to create and share with the DTA every six months — you don't need to invent a platform or a
 crown jewel to get it. Choose **AI use-case register only** on the start screen, or open the deep link:
 

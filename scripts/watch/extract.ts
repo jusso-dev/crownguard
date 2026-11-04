@@ -179,7 +179,8 @@ export function extractHtml(html: string, profile: HostProfile): Extracted {
   const { document } = parseHTML(html);
   const title = pageTitle(document, profile.title);
   const learn = learnMeta(document);
-  const lang = document.documentElement?.getAttribute("lang") ?? undefined;
+  // AWS blog posts carry no <html lang>, only og:locale ("en_US").
+  const lang = document.documentElement?.getAttribute("lang") || meta(document, "og:locale")?.replace("_", "-") || undefined;
   const pageText = collapse(document.body?.textContent ?? "");
   const updatedEl = profile.updatedSelector ? document.querySelector(profile.updatedSelector) : null;
   const updated = profile.ignoreUpdated
