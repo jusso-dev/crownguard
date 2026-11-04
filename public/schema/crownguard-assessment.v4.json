@@ -360,6 +360,22 @@
         "PROTECTED"
       ]
     },
+    "essentials": {
+      "type": "object",
+      "properties": {
+        "chapter": {
+          "type": "string",
+          "enum": [
+            "enterprise-it",
+            "cloud"
+          ]
+        }
+      },
+      "required": [
+        "chapter"
+      ],
+      "additionalProperties": false
+    },
     "branding": {
       "type": "object",
       "properties": {

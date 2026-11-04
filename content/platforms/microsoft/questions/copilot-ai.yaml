@@ -25,6 +25,9 @@
     - { framework: ms-zero-trust, ref: Copilot step 1 }
     - { framework: ms-zero-trust, ref: M365 swim lane 4 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [BUS], coverage: partial }
 
 - id: MS-AI-002
   module: core
@@ -54,6 +57,9 @@
     - { framework: mcsb, ref: AI-2 }
     - { framework: ms-zero-trust, ref: Copilot step 1 }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AI-003
   module: core
@@ -83,6 +89,10 @@
     - { framework: mcsb, ref: AI-6 }
     - { framework: ms-zero-trust, ref: M365 swim lane 4 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x2, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AI-004
   module: core
@@ -111,6 +121,11 @@
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications II }
     - { framework: ism, ref: ISM-2156 }
+  essentials:
+    - { action: IT.GOV-08.1, domains: [GC], coverage: partial }
+    - { action: CL.GOV-08.x2, domains: [GC], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [BUS], coverage: partial }
+    - { action: CL.GOV-08.x1, domains: [GC], coverage: partial }
 
 - id: MS-AI-005
   module: core
@@ -142,3 +157,9 @@
     - { framework: ism, ref: ISM-2113 }
     - { framework: ism, ref: ISM-2133 }
     - { framework: ism, ref: ISM-2156 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: IT.GOV-08.1, domains: [GC], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
+    - { action: CL.GOV-08.x1, domains: [GC], coverage: partial }

@@ -157,6 +157,38 @@ describe("PDF report", () => {
     expect(text).toMatch(/\bp398 p399\b/);
   }, 1_200_000);
 
+  it("adds an indicative Essentials section beside the Essential Eight without changing anything else", async () => {
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    const plain = buildReport(catalogue, a, new Date("2026-10-08"));
+    const withEssentials = buildReport(catalogue, { ...a, essentials: { chapter: "enterprise-it" } }, new Date("2026-10-08"));
+    expect(plain.essentials).toBeUndefined();
+    expect(withEssentials.posture).toEqual(plain.posture);
+    expect(withEssentials.risks.map((r) => r.score)).toEqual(plain.risks.map((r) => r.score));
+    expect(withEssentials.e8).toEqual(plain.e8);
+    expect(withEssentials.ism).toEqual(plain.ism);
+    expect(withEssentials.cis).toEqual(plain.cis);
+    expect(withEssentials.csf).toEqual(plain.csf);
+    const e = withEssentials.essentials!;
+    // Phase 1 technical domains first, capability domains last.
+    expect(e.domains.slice(0, 2).map((d) => d.id)).toEqual(["BS", "IS"]);
+    expect(e.domains.slice(-2).map((d) => d.type)).toEqual(["capability", "capability"]);
+    const text = await pdfText({ ...a, essentials: { chapter: "enterprise-it" } });
+    expect(text).toContain("ASD Essentials (indicative)");
+    expect(text).toContain("Gap analysis finding, not a rating");
+    expect(text).toContain("not a formal Essentials assessment");
+    expect(text).toContain("Not assessed");
+    const without = await pdfText(a);
+    expect(without).not.toContain("ASD Essentials (indicative)");
+    expect(without).not.toContain("Essentials IT.");
+  }, 120_000);
+
+  it("marks cloud chapter Essentials ids as provisional", async () => {
+    const a = { ...fixtureAssessment(catalogue, ["google"]), essentials: { chapter: "cloud" as const } };
+    const model = buildReport(catalogue, a, new Date("2026-10-08"));
+    expect(model.essentials!.framework.provisional).toBe(true);
+    expect(await pdfText(a)).toContain("provisional ID");
+  }, 120_000);
+
   it("sets language and outlines, lists contents, and omits absent optional sections from the outline", async () => {
     const a = fixtureAssessment(catalogue, ["microsoft"]);
     const { model, buf, text, outlineTitles } = await renderReport(a);

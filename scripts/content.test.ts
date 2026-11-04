@@ -114,6 +114,54 @@ describe("content", () => {
     expect(warnings).toContain("platform microsoft: MS-ID-001: ism ref ISM-9999 names a control ASD has withdrawn");
   });
 
+  it("ships both Essentials chapters and leaves the Essential Eight and ISM files alone", () => {
+    expect(catalogue.frameworks.get("asd-essentials-enterprise-it")?.controls).toHaveLength(58);
+    expect(catalogue.frameworks.get("asd-essentials-cloud")?.controls).toHaveLength(78);
+    expect(catalogue.frameworks.get("essential-eight")?.essentials).toBeUndefined();
+    expect(catalogue.frameworks.get("ism")?.essentials).toBeUndefined();
+  });
+
+  it("rejects an Essentials action in an unknown domain, mixing capability and technical domains, or citing a made-up ISM control", () => {
+    const files = readContentFiles();
+    const target = "content/frameworks/asd-essentials-enterprise-it.yaml";
+    const text = files[target];
+    const bad = text
+      .replace(/( {2}- id: IT\.GOV-01\.1\n(?: {4}.*\n)*? {4}domains: )\[GC\]/, "$1[GC, IS]")
+      .replace(/( {2}- id: IT\.GOV-14\.1\n(?: {4}.*\n)*? {4}evidence: \{ ism: \[)/, "$1ISM-9999, ")
+      .replace(/( {2}- id: IT\.IDE-04\.1\n(?: {4}.*\n)*? {4}principle: )IDE-04/, "$1IDE-99");
+    expect(bad).not.toBe(text);
+    const { errors: found } = loadCatalogue({ ...files, [target]: bad });
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.GOV-01.1: mixes capability and technical domains");
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.GOV-14.1: evidence ISM-9999 is not in the ISM");
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.IDE-04.1: unknown principle IDE-99");
+    expect(found).toContain("framework asd-essentials-enterprise-it: principle IDE-04 has no actions");
+  });
+
+  /** MS-ID-001's YAML block with its Essentials fields replaced by `extra` (raw YAML lines, or nothing). */
+  const withMsId001 = (extra: string) => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const block = files[target].split(/\n(?=- id: )/)[0];
+    const stripped = block.replace(/\n {2}essentials:(?: \[\])?(?:\n {4}- .*)*/, "").replace(/\n {2}essentialsReviewed: .*/, "");
+    return loadCatalogue({ ...files, [target]: files[target].replace(block, `${stripped.trimEnd()}${extra}\n`) });
+  };
+
+  it("rejects an Essentials tag naming an unknown action or a domain the action doesn't apply to, and a full tag without a note", () => {
+    const { errors: found } = withMsId001(
+      "\n  essentialsReviewed: Overridden for this test only.\n  essentials:\n    - { action: IT.PRO-99.1, domains: [IS], coverage: partial }\n    - { action: IT.GOV-01.1, domains: [IS], coverage: partial }",
+    );
+    expect(found).toContain("MS-ID-001: essentials IT.PRO-99.1: unknown action");
+    expect(found).toContain("MS-ID-001: essentials IT.GOV-01.1: action doesn't apply to domain IS");
+    const { errors: full } = withMsId001("\n  essentials:\n    - { action: IT.PRO-13.4, domains: [IS], coverage: full }");
+    expect(full.some((e) => e.endsWith("essentials.0.note: coverage: full needs a note"))).toBe(true);
+  });
+
+  it("warns when a question's ISM refs suggest an Essentials action it isn't tagged with", () => {
+    const { errors: found, warnings } = withMsId001("");
+    expect(found).toEqual([]);
+    expect(warnings.some((w) => w.startsWith("MS-ID-001: ISM refs suggest Essentials IT.PRO-13.4"))).toBe(true);
+  });
+
   it("warns when an e8-tagged question maps to no ISM control in the matching E8 profile", () => {
     const files = readContentFiles();
     const target = "content/platforms/microsoft/questions/identity.yaml";

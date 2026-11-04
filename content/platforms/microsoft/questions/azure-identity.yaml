@@ -28,6 +28,9 @@
     - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: MS-AZ-004
   module: azure
@@ -58,6 +61,10 @@
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
     - { framework: ism, ref: ISM-2141 }
+  essentials:
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for short-lived or keyless credentials over long-lived secrets, so only the cloud actions are tagged."
 
 - id: MS-AZ-007
   module: azure
@@ -92,6 +99,12 @@
     - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
 
 - id: MS-AZ-008
   module: azure
@@ -123,6 +136,11 @@
     - { framework: mcsb, ref: PA-2 }
     - { framework: ms-zero-trust, ref: Infrastructure III }
     - { framework: ism, ref: ISM-1649 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
 
 - id: MS-AZ-009
   module: azure
@@ -158,6 +176,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [PE, IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [PE, IS], coverage: partial }
 
 - id: MS-AZ-010
   module: azure
@@ -195,6 +216,13 @@
     - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS, PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
 
 - id: MS-AZ-011
   module: azure
@@ -228,6 +256,11 @@
     - { framework: mcsb, ref: PA-4 }
     - { framework: ms-zero-trust, ref: Identity IV }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-13.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [IS], coverage: partial }
 
 - id: MS-AZ-044
   module: azure
@@ -263,6 +296,13 @@
     - { framework: ms-zero-trust, ref: Identity IV }
     - { framework: ism, ref: ISM-1073 }
     - { framework: ism, ref: ISM-2124 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.1, domains: [PE], coverage: partial }
+    - { action: IT.GOV-11.2, domains: [GC], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [PE], coverage: partial }
+    - { action: CL.GOV-11.x2, domains: [GC], coverage: partial }
 
 - id: MS-AZ-045
   module: azure
@@ -295,3 +335,7 @@
     - { framework: ms-zero-trust, ref: Infrastructure II }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
     - { framework: ism, ref: ISM-1249 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [BS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [BS], coverage: partial }

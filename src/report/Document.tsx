@@ -9,10 +9,11 @@ import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../engine/aiOptions";
 import { aiFieldLabels } from "../engine/aiRegister";
 import { basisLabel } from "../engine/aiExport";
+import { gapLabels, ratingLabels, type EssentialsRating } from "../engine/essentials";
 import type { AiRegisterReportModel, ReportModel } from "./model";
 
 const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
-import { Badge, bandColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
+import { Badge, bandColors, essentialsColors, good, ink, line, Meter, muted, pct, severityColors, Table } from "./primitives";
 
 const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
 const protects = (jewels: { name: string }[]) =>
@@ -76,6 +77,7 @@ const tocFor = (model: ReportModel, hasAppendix: boolean): TocEntry[] => {
   ];
   if (model.notApplicable.length > 0) entries.push({ id: "not-applicable", title: "Controls marked not applicable" });
   entries.push({ id: "roadmap", title: "Remediation roadmap" }, { id: "frameworks", title: "Framework alignment" });
+  if (model.essentials) entries.push({ id: "essentials", title: "ASD Essentials (indicative)" });
   if (model.idcf) entries.push({ id: "idcf", title: "IDCF Data Security Levels (indicative)" });
   if (model.soc) entries.push({ id: "soc", title: "SOC maturity (indicative)" });
   if (model.aiRegister) entries.push({ id: "ai-register", title: "AI use-case register" });
@@ -263,6 +265,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             {st.partial > 0 ? `, with a further ${st.partial} partly in place` : ""}.
             {st.strongDomains.length > 0 ? ` Its strongest areas are ${listText(st.strongDomains.slice(0, 3).map((d) => `${d.name} (${pct(d.score)})`))}.` : ""}
             {e8Reached.length > 0 ? ` It reaches indicative Essential Eight Maturity Level 1 or above for ${listText(e8Reached.map((r) => `${r.title.toLowerCase()} (ML${r.level})`))}.` : ""}
+            {essentialsSummary(model)}
             {model.notApplicable.length > 0
               ? ` ${model.notApplicable.length} control${model.notApplicable.length === 1 ? " was" : "s were"} confirmed not applicable, each with a documented reason.`
               : ""}
@@ -482,7 +485,11 @@ export function ReportDocument({ model }: { model: ReportModel }) {
                         </Text>
                       )}
                       <Text style={{ ...s.small, marginTop: 2 }}>
-                        {[...q.refs.map((r) => `${model.frameworkName(r.framework)} ${r.ref}`), ...q.e8.map((t) => `E8 ${t.strategy} ML${t.level}`)].join(" · ")}
+                        {[
+                          ...q.refs.map((r) => `${model.frameworkName(r.framework)} ${r.ref}`),
+                          ...q.e8.map((t) => `E8 ${t.strategy} ML${t.level}`),
+                          ...essentialsRefs(model, q),
+                        ].join(" · ")}
                       </Text>
                       {model.ismBaseline &&
                         (() => {
@@ -611,6 +618,8 @@ export function ReportDocument({ model }: { model: ReportModel }) {
           )}
         </Section>
 
+        {model.essentials && <EssentialsSection model={model} s={s} tableProps={tableProps} />}
+
         {model.soc && <SocSection model={model} s={s} tableProps={tableProps} />}
 
         {model.aiRegister && <AiRegisterSection model={model} s={s} tableProps={tableProps} />}
@@ -635,6 +644,15 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             ...(model.ism.length
               ? [
                   "The ISM mapping is generated from ASD's official ISM OSCAL catalogue and pinned to the release named alongside the ISM in this report. It shows which ISM controls each question relates to, not that the organisation meets them: this is not an IRAP assessment or a statement of applicability. Where an ISM baseline is chosen, findings that touch controls the baseline includes are annotated and counted; choosing a baseline never changes a score. The Essential Eight Maturity Model remains the source of truth for maturity results.",
+                ]
+              : []),
+            ...(model.essentials
+              ? [
+                  `ASD Essentials results are indicative and use ASD's ${model.essentials.framework.name} (${model.essentials.framework.provisional ? `transcribed ${model.essentials.framework.release}` : `OSCAL release ${model.essentials.framework.release}`}). Each action is rated per domain from the questions tagged with it: any No gives not effective; fully effective needs every tagged question Yes or N/A and at least one Yes that covers the whole action; Partial, or Unknown alongside other answers, gives partially effective; Unknown or unanswered alone, or no tagged question, gives not assessed. Principles take the weakest rating of their actions. A domain's percentage counts not effective as 0, partially effective as 0.5 and fully effective as 1, divided by the principles assessed; not assessed principles are counted and shown but left out of the percentage.`,
+                  "Priority phases are ASD's order for doing the work. They are not a rating. Essential Eight maturity levels are not converted into Essentials ratings: ASD says previous ratings do not automatically translate, and nothing in the Essentials section is calculated from them. crownguard asks about settings, not the Indicators of Good Practice an assessor checks, so this is not a formal Essentials assessment. The gap analysis classes are ASD's transition classes, which ASD describes as gap analysis findings, not ratings.",
+                  ...(model.essentials.framework.provisional
+                    ? ["ASD has not published action ids for the cloud chapter, so the CL ids in this report are provisional and will change when ASD publishes its own."]
+                    : []),
                 ]
               : []),
             ...(model.soc
@@ -668,6 +686,13 @@ export function ReportDocument({ model }: { model: ReportModel }) {
               ISM control titles are shortened statements from the Information Security Manual, © Commonwealth of Australia 2024, generated from ASD&apos;s ISM
               OSCAL catalogue and used under CC BY 4.0 (creativecommons.org/licenses/by/4.0), Coat of Arms and ASD logo excepted. The shortening is
               crownguard&apos;s own and does not imply endorsement.
+            </Text>
+          )}
+          {model.essentials && (
+            <Text style={{ ...s.small, marginBottom: 8 }}>
+              ASD Essentials action titles are shortened statements from ASD&apos;s {model.essentials.framework.name}, © Commonwealth of Australia 2026, used under CC
+              BY 4.0 (creativecommons.org/licenses/by/4.0), Coat of Arms and ASD logo excepted. The shortening and the indicative ratings are crownguard&apos;s
+              own and do not imply endorsement.
             </Text>
           )}
           {model.sources.map((src) => (
@@ -911,6 +936,104 @@ function SocRadar({ result, color, accent }: { result: SocResult; color: string;
 }
 
 /** Optional SOC maturity results, reported apart from crown-jewel risk, with the CC BY-SA attribution. */
+/** "Essentials IT.PRO-13.4 (IS)" references for one question, in the chapter the report uses. */
+function essentialsRefs(model: ReportModel, q: ReportModel["questions"][number]): string[] {
+  const e = model.essentials;
+  if (!e) return [];
+  const prefix = e.chapter === "enterprise-it" ? "IT." : "CL.";
+  return q.essentials.filter((t) => t.action.startsWith(prefix)).map((t) => `Essentials ${t.action}${e.framework.provisional ? " (provisional ID)" : ""} (${t.domains.join(", ")})`);
+}
+
+/** One sentence on the phase 1 domains, beside the Essential Eight sentence in the executive summary. */
+function essentialsSummary(model: ReportModel): string {
+  const e = model.essentials;
+  if (!e) return "";
+  const first = e.domains.filter((d) => d.type === "technical" && d.phases.includes(1));
+  const parts = first.map((d) => (d.percentage === null ? `${d.name} not assessed` : `${d.name} ${d.percentage}%`));
+  return parts.length ? ` In ASD's Essentials, the priority phase 1 domains show indicative effectiveness of ${listText(parts)}.` : "";
+}
+
+function RatingBadge({ rating }: { rating: EssentialsRating }) {
+  return <Badge {...essentialsColors[rating]}>{ratingLabels[rating]}</Badge>;
+}
+
+function EssentialsSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
+  const e = model.essentials!;
+  const phaseText = (d: (typeof e.domains)[number]) => (d.type === "capability" ? "All phases" : `Phase ${d.phases.join(", ")}`);
+  const idText = (id: string) => (e.framework.provisional ? `${id} (provisional ID)` : id);
+  return (
+    <Section
+      s={s}
+      id="essentials"
+      title="ASD Essentials (indicative)"
+      lead={`Indicative effectiveness ratings against ASD's ${e.framework.name}, by priority phase and domain. Shown beside the Essential Eight, not instead of it: nothing here is calculated from Essential Eight maturity levels, and this is not a formal Essentials assessment.`}
+    >
+      <Text style={s.h2}>Summary by phase and domain</Text>
+      <Text style={{ ...s.small, marginBottom: 6 }}>
+        Phases are ASD&apos;s order for doing the work, not a rating. Capability domains run across every phase. Not assessed principles are counted
+        separately and left out of the percentage.
+      </Text>
+      <Table
+        {...tableProps}
+        rows={e.domains}
+        columns={[
+          { header: "Domain", width: "28%", render: (d) => <Text style={{ fontWeight: 600 }}>{d.name}</Text> },
+          { header: "Phase", width: "14%", render: phaseText },
+          { header: "Effective", width: "12%", render: (d) => (d.percentage === null ? "Not assessed" : `${d.percentage}%`) },
+          { header: "Fully", width: "11%", render: (d) => String(d.counts["fully-effective"]) },
+          { header: "Partially", width: "11%", render: (d) => String(d.counts["partially-effective"]) },
+          { header: "Not effective", width: "12%", render: (d) => String(d.counts["not-effective"]) },
+          { header: "Not assessed", width: "12%", render: (d) => String(d.counts["not-assessed"]) },
+        ]}
+      />
+      {e.domains.map((d) => (
+        <View key={d.id}>
+          <Text style={s.h2} minPresenceAhead={80}>
+            {d.name} ({phaseText(d).toLowerCase()})
+          </Text>
+          <Table
+            {...tableProps}
+            rows={d.principles.flatMap((p) => p.actions.filter((a) => a.rating !== null).map((a, i) => ({ p, a, first: i === 0 })))}
+            columns={[
+              {
+                header: "Principle",
+                width: "24%",
+                render: ({ p, first }) =>
+                  first ? (
+                    <View style={{ gap: 2 }}>
+                      <Text style={{ fontWeight: 600 }}>{p.id} {p.name}</Text>
+                      <RatingBadge rating={p.rating} />
+                    </View>
+                  ) : (
+                    ""
+                  ),
+              },
+              { header: "Action", width: "16%", render: ({ a }) => idText(a.id) },
+              { header: "What it asks (shortened)", width: "30%", render: ({ a }) => a.title },
+              { header: "Rating", width: "14%", render: ({ a }) => <RatingBadge rating={a.rating!} /> },
+              { header: "Questions", width: "16%", render: ({ a }) => a.evidence.map((x) => x.question.id).join(", ") || "None asked" },
+            ]}
+          />
+        </View>
+      ))}
+      <Text style={s.h2} minPresenceAhead={80}>Essential Eight to Essentials gap view</Text>
+      <Text style={{ ...s.small, marginBottom: 6 }}>
+        Gap analysis finding, not a rating. ASD&apos;s transition guide maps each Essential Eight strategy to Essentials principles; the class here comes
+        from each principle&apos;s own Essentials results above, never from a maturity level.
+      </Text>
+      <Table
+        {...tableProps}
+        rows={e.gaps}
+        columns={[
+          { header: "Principle", width: "38%", render: (g) => `${g.principle} ${g.name}` },
+          { header: "Essential Eight strategies", width: "36%", render: (g) => g.strategies.map((x) => model.e8.find((r) => r.strategy === x)?.title ?? x).join(", ") || "No Essential Eight equivalent" },
+          { header: "Gap analysis finding", width: "26%", render: (g) => (g.gap ? gapLabels[g.gap] : "Not enough answers") },
+        ]}
+      />
+    </Section>
+  );
+}
+
 function SocSection({ model, s, tableProps }: { model: ReportModel; s: Styles; tableProps: { headerBg: string; zebra: string } }) {
   const { model: soc, questions, result, provider, notes, source, licence } = model.soc!;
   const theme = model.theme;

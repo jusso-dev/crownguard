@@ -34,6 +34,9 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: AWS-DATA-002
   module: core
@@ -60,6 +63,9 @@
     - { framework: aws-fsbp, ref: RDS.1 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: AWS-DATA-003
   module: core
@@ -92,6 +98,8 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-1271 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BUS], coverage: partial }
 
 - id: AWS-DATA-004
   module: core
@@ -121,6 +129,9 @@
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: ism, ref: ISM-0393 }
     - { framework: idcf, ref: "Risk assessment" }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BUS], coverage: partial }
 
 - id: AWS-DATA-005
   module: core
@@ -156,6 +167,9 @@
     - { framework: aws-fsbp, ref: Opensearch.1 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: ism, ref: ISM-1080 }
+  essentials:
+    - { action: CL.PRO-08.x1, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: AWS-DATA-006
   module: core
@@ -189,6 +203,9 @@
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: ism, ref: ISM-1781 }
     - { framework: idcf, ref: Movement }
+  essentials:
+    - { action: CL.PRO-08.x1, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: AWS-DATA-007
   module: core
@@ -217,6 +234,10 @@
     - { framework: aws-fsbp, ref: KMS.5 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-08.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: AWS-DATA-008
   module: core
@@ -242,6 +263,10 @@
     - { framework: aws-fsbp, ref: KMS.3 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.DS-11 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-08.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [CPS], coverage: partial }
 
 - id: AWS-DATA-009
   module: core
@@ -275,6 +300,10 @@
     - { framework: ism, ref: ISM-1685 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.6 not tagged: keeping secrets in a managed store does not show each credential is unique."
 
 - id: AWS-DATA-010
   module: core
@@ -300,6 +329,9 @@
     - { framework: aws-fsbp, ref: SecretsManager.1 }
     - { framework: aws-fsbp, ref: SecretsManager.4 }
     - { framework: nist-csf-2, ref: PR.AA-01 }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for credential rotation (IT.PRO-13.2 covers storage and is tagged on AWS-DATA-009), so only the cloud action is tagged."
 
 - id: AWS-DATA-011
   module: core
@@ -333,6 +365,12 @@
     - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-13.6, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-13.x8, domains: [CPS], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.2 not tagged: the question is about MFA to reach data, not where secrets are stored."
 
 - id: AWS-DATA-012
   module: core
@@ -360,3 +398,4 @@
     - { framework: aws-fsbp, ref: DocumentDB.5 }
     - { framework: aws-fsbp, ref: Neptune.4 }
     - { framework: nist-csf-2, ref: PR.DS-11 }
+  essentialsReviewed: "Deletion protection guards against accidental or malicious deletion of a database, and no Essentials action asks for it directly."

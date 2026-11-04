@@ -9,6 +9,7 @@ import { modeOf, stepsFor, useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";
 import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
+import { EssentialsCard } from "../EssentialsOption";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
 import { ExampleBadge, Tile } from "./AiRegisterStep";
 
@@ -112,6 +113,7 @@ export function ReviewStep() {
       </div>
 
       <IsmBaselineCard />
+      <EssentialsCard />
       <SocCard />
       <AiRegisterCard />
 

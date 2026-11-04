@@ -1,0 +1,833 @@
+{
+ "catalog": {
+  "uuid": "190159f6-6614-514d-8edd-4e3d19af95dc",
+  "metadata": {
+   "title": "Assessment evidence guide for enterprise IT",
+   "published": "2026-10-15T00:30:23Z",
+   "last-modified": "2026-10-15T00:30:23Z",
+   "version": "2026.10.15",
+   "oscal-version": "1.2.3",
+   "links": [
+    {
+     "href": "#d517958c-8847-5410-a5a7-a9a237bb3372",
+     "rel": "canonical"
+    },
+    {
+     "href": "#1fc7a6d3-ce69-5899-a809-5fb799211b00",
+     "rel": "latest-version"
+    },
+    {
+     "href": "#45be3df1-6949-5152-80ca-4428f3477459",
+     "rel": "predecessor-version"
+    },
+    {
+     "href": "#af930706-9ab9-5737-9b46-8646e11f0a85",
+     "rel": "successor-version"
+    },
+    {
+     "href": "#8258ae17-ec4c-5ff4-be50-f105ce1b629c",
+     "rel": "alternate"
+    }
+   ],
+   "roles": [
+    {
+     "id": "prepared-by",
+     "title": "Document creator"
+    }
+   ],
+   "parties": [
+    {
+     "uuid": "7ad3636f-7138-5252-a09d-61efa47d8afa",
+     "type": "organization",
+     "name": "Australian Cyber Security Centre",
+     "short-name": "ACSC",
+     "links": [
+      {
+       "href": "https://www.cyber.gov.au",
+       "rel": "website"
+      }
+     ],
+     "email-addresses": [
+      "asd.assist@defence.gov.au"
+     ],
+     "addresses": [
+      {
+       "type": "work",
+       "addr-lines": [
+        "Australian Cyber Security Centre",
+        "General enquiries",
+        "PO Box 5076"
+       ],
+       "city": "Kingston",
+       "state": "ACT",
+       "postal-code": "2604",
+       "country": "AU"
+      }
+     ]
+    }
+   ],
+   "responsible-parties": [
+    {
+     "role-id": "prepared-by",
+     "party-uuids": [
+      "7ad3636f-7138-5252-a09d-61efa47d8afa"
+     ]
+    }
+   ],
+   "remarks": "Consumers of this file should refer to the [Essentials OSCAL NS 1.0](#0f38f159-be60-59fc-b7c2-bd59e4396c56) page for information regarding the Essentials specific representation used in this OSCAL file."
+  },
+  "groups": [
+   {
+    "id": "GOV",
+    "title": "Govern principles",
+    "props": [
+     {
+      "name": "sort-id",
+      "value": "1"
+     }
+    ],
+    "groups": [
+     {
+      "id": "GOV-01",
+      "class": "essentials-principle",
+      "title": "GOV-01 - Executive cyber security accountability",
+      "props": [
+       {
+        "name": "sort-id",
+        "value": "1.1"
+       }
+      ],
+      "parts": [
+       {
+        "id": "GOV-01.overview",
+        "name": "overview",
+        "props": [
+         {
+          "name": "sort-id",
+          "value": "1.1.1"
+         },
+         {
+          "name": "label",
+          "value": "Principle"
+         }
+        ],
+        "prose": "The board of directors or executive committee is accountable for cyber security."
+       }
+      ],
+      "controls": [
+       {
+        "id": "IT.GOV-01.1",
+        "title": "IT.GOV-01.1",
+        "props": [
+         {
+          "name": "sort-id",
+          "value": "1.1.2"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "governance-and-culture"
+         }
+        ],
+        "parts": [
+         {
+          "id": "IT.GOV-01.1.action",
+          "name": "statement",
+          "class": "essentials-action",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "1.1.2.1"
+           },
+           {
+            "name": "label",
+            "value": "Action"
+           }
+          ],
+          "prose": "Formally define and establish executive and board-level accountabilities for cyber security, including setting, monitoring and adjusting organisational risk appetite, and review these accountabilities at a defined cadence."
+         },
+         {
+          "id": "IT.GOV-01.1.indicators-of-good-practice",
+          "name": "statement",
+          "class": "indicators-of-good-practice",
+          "title": "Indicators of Good Practice",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "1.1.2.2"
+           }
+          ],
+          "parts": [
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Not effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "1.1.2.2.1"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.GOV-01.1.NE-1",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.1.1"
+               }
+              ],
+              "prose": "No named executive or board member is accountable for cyber security."
+             },
+             {
+              "id": "IT.GOV-01.1.NE-2",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.1.2"
+               }
+              ],
+              "prose": "Cyber security accountability exists only informally, or is assumed rather than documented."
+             },
+             {
+              "id": "IT.GOV-01.1.NE-3",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.1.3"
+               }
+              ],
+              "prose": "No evidence of cyber security reporting to the executive board."
+             },
+             {
+              "id": "IT.GOV-01.1.NE-4",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.1.4"
+               }
+              ],
+              "prose": "Organisational risk appetite is not set."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Partially effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "1.1.2.2.2"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.GOV-01.1.PE-1",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.2.1"
+               }
+              ],
+              "prose": "A named executive or board member is accountable for cyber security, but reporting obligations are not formally defined."
+             },
+             {
+              "id": "IT.GOV-01.1.PE-2",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.2.2"
+               }
+              ],
+              "prose": "Board-level reporting on cyber security occurs but is ad hoc rather than on a defined schedule."
+             },
+             {
+              "id": "IT.GOV-01.1.PE-3",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.2.3"
+               }
+              ],
+              "prose": "Accountability is documented but has not been reviewed within the organisationally defined cadence or following relevant organisational restructuring or leadership changes."
+             },
+             {
+              "id": "IT.GOV-01.1.PE-4",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.2.4"
+               }
+              ],
+              "prose": "Organisational risk appetite is set but is not monitored or adjusted over time."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Fully effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "1.1.2.2.3"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.GOV-01.1.FE-1",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.3.1"
+               }
+              ],
+              "prose": "A named executive or board member has documented accountability for cyber security with defined reporting obligations."
+             },
+             {
+              "id": "IT.GOV-01.1.FE-2",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.3.2"
+               }
+              ],
+              "prose": "Regular reporting to the board or executives occurs on a defined cadence with evidence of reporting artefacts."
+             },
+             {
+              "id": "IT.GOV-01.1.FE-3",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.3.3"
+               }
+              ],
+              "prose": "Accountability arrangements are reviewed when organisational structures or leadership changes occur."
+             },
+             {
+              "id": "IT.GOV-01.1.FE-4",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "1.1.2.2.3.4"
+               }
+              ],
+              "prose": "Organisational risk appetite is set and is monitored and adjusted over time as required."
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "PRO",
+    "title": "Protect principles",
+    "props": [
+     {
+      "name": "sort-id",
+      "value": "3"
+     }
+    ],
+    "groups": [
+     {
+      "id": "PRO-13",
+      "class": "essentials-principle",
+      "title": "PRO-13 - Identity, credential and access management",
+      "props": [
+       {
+        "name": "sort-id",
+        "value": "3.03"
+       }
+      ],
+      "parts": [
+       {
+        "id": "PRO-13.overview",
+        "name": "overview",
+        "props": [
+         {
+          "name": "sort-id",
+          "value": "3.03.1"
+         },
+         {
+          "name": "label",
+          "value": "Principle"
+         }
+        ],
+        "prose": "Robust and secure identity, credential and access management is used to establish, maintain and control access to systems (infrastructure, operating systems, applications and data) and to support effective detection of identity and credential misuse."
+       }
+      ],
+      "controls": [
+       {
+        "id": "IT.PRO-13.3",
+        "title": "IT.PRO-13.3",
+        "props": [
+         {
+          "name": "sort-id",
+          "value": "3.03.4"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "visibility-and-response"
+         }
+        ],
+        "parts": [
+         {
+          "id": "IT.PRO-13.3.action",
+          "name": "statement",
+          "class": "essentials-action",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "3.03.4.1"
+           },
+           {
+            "name": "label",
+            "value": "Action"
+           }
+          ],
+          "prose": "Identify and remediate unsecured keys, secrets and credentials by regularly scanning codebases, configuration files, file shares and user collaboration platforms."
+         },
+         {
+          "id": "IT.PRO-13.3.indicators-of-good-practice",
+          "name": "statement",
+          "class": "indicators-of-good-practice",
+          "title": "Indicators of Good Practice",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "3.03.4.2"
+           }
+          ],
+          "parts": [
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Not effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.4.2.1"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.3.NE-1",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.1.1"
+               }
+              ],
+              "prose": "No secret scanning capability is deployed."
+             },
+             {
+              "id": "IT.PRO-13.3.NE-2",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.1.2"
+               }
+              ],
+              "prose": "No process exists to identify credentials exposed in codebases, configuration files, file shares or user collaboration platforms."
+             },
+             {
+              "id": "IT.PRO-13.3.NE-3",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.1.3"
+               }
+              ],
+              "prose": "Unsecured keys, secrets and credentials found exposed in codebases, configuration files, scripts, file shares or user collaboration platforms are left in place with no action taken."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Partially effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.4.2.2"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.3.PE-1",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.2.1"
+               }
+              ],
+              "prose": "Secret scanning is deployed but does not cover all repositories, pipelines or user collaboration platforms."
+             },
+             {
+              "id": "IT.PRO-13.3.PE-2",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.2.2"
+               }
+              ],
+              "prose": "Scanning runs but discovered credentials are not assessed in a timely manner."
+             },
+             {
+              "id": "IT.PRO-13.3.PE-3",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.2.3"
+               }
+              ],
+              "prose": "Unsecured keys, secrets and credentials that are discovered are assessed, but are not rotated or revoked in a timely manner."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Fully effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.4.2.3"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.3.FE-1",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.3.1"
+               }
+              ],
+              "prose": "Secret scanning tooling is deployed across codebases, configuration files, file shares and user collaboration platforms."
+             },
+             {
+              "id": "IT.PRO-13.3.FE-2",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.3.2"
+               }
+              ],
+              "prose": "Scans to identify unsecured keys, secrets and credentials run on a regular schedule defined by the organisation."
+             },
+             {
+              "id": "IT.PRO-13.3.FE-3",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.4.2.3.3"
+               }
+              ],
+              "prose": "Unsecured keys, secrets and credentials that are discovered are assessed, then rotated and/or revoked within timeframes defined by the organisation."
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "IT.PRO-13.4",
+        "title": "IT.PRO-13.4",
+        "props": [
+         {
+          "name": "sort-id",
+          "value": "3.03.5"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "boundary-services"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "identity-services"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "critical-processes-and-services"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "privileged-environments"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "business-systems"
+         },
+         {
+          "name": "domain",
+          "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+          "value": "user-devices"
+         }
+        ],
+        "parts": [
+         {
+          "id": "IT.PRO-13.4.action",
+          "name": "statement",
+          "class": "essentials-action",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "3.03.5.1"
+           },
+           {
+            "name": "label",
+            "value": "Action"
+           }
+          ],
+          "prose": "Use phishing-resistant MFA for users authenticating to systems, including from untrusted, external or high-risk locations."
+         },
+         {
+          "id": "IT.PRO-13.4.indicators-of-good-practice",
+          "name": "statement",
+          "class": "indicators-of-good-practice",
+          "title": "Indicators of Good Practice",
+          "props": [
+           {
+            "name": "sort-id",
+            "value": "3.03.5.2"
+           }
+          ],
+          "parts": [
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Not effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.5.2.1"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.4.NE-1",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.1.1"
+               }
+              ],
+              "prose": "Phishing-resistant MFA is not enforced for interactive user authentication to systems."
+             },
+             {
+              "id": "IT.PRO-13.4.NE-2",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.1.2"
+               }
+              ],
+              "prose": "MFA is deployed but uses non-phishing-resistant methods, such as SMS, voice, or push-only authentication instead of phishing-resistant MFA."
+             },
+             {
+              "id": "IT.PRO-13.4.NE-3",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.1.3"
+               }
+              ],
+              "prose": "No access policies differentiate between trusted and untrusted, external or high-risk locations."
+             },
+             {
+              "id": "IT.PRO-13.4.NE-4",
+              "name": "item",
+              "class": "not-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.1.4"
+               }
+              ],
+              "prose": "Access from untrusted, external or high-risk locations is permitted without MFA, or with non-phishing-resistant MFA."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Partially effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.5.2.2"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.4.PE-1",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.2.1"
+               }
+              ],
+              "prose": "Phishing-resistant MFA is deployed for some but not all systems within scope."
+             },
+             {
+              "id": "IT.PRO-13.4.PE-2",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.2.2"
+               }
+              ],
+              "prose": "Access policies exist but do not cover all organisationally defined high-risk location categories."
+             },
+             {
+              "id": "IT.PRO-13.4.PE-3",
+              "name": "item",
+              "class": "partially-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.2.3"
+               }
+              ],
+              "prose": "Exceptions or alternative authentication pathways allow routine or recurring authentication without phishing-resistant MFA, or emergency access arrangements are not adequately restricted, monitored, tested or reviewed."
+             }
+            ]
+           },
+           {
+            "name": "item",
+            "class": "indicator-group",
+            "title": "Fully effective",
+            "props": [
+             {
+              "name": "sort-id",
+              "value": "3.03.5.2.3"
+             }
+            ],
+            "parts": [
+             {
+              "id": "IT.PRO-13.4.FE-1",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.3.1"
+               }
+              ],
+              "prose": "Phishing-resistant MFA is enforced for all routine interactive user authentication to systems within scope."
+             },
+             {
+              "id": "IT.PRO-13.4.FE-2",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.3.2"
+               }
+              ],
+              "prose": "Phishing-resistant MFA is enforced for routine authentication attempts from untrusted, external or high-risk locations."
+             },
+             {
+              "id": "IT.PRO-13.4.FE-3",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.3.3"
+               }
+              ],
+              "prose": "Customer-facing services provide a phishing-resistant MFA option for authentication."
+             },
+             {
+              "id": "IT.PRO-13.4.FE-4",
+              "name": "item",
+              "class": "fully-effective-indicator-statement",
+              "props": [
+               {
+                "name": "sort-id",
+                "value": "3.03.5.2.3.4"
+               }
+              ],
+              "prose": "Emergency access arrangements are periodically tested and reviewed to confirm that they remain operational, appropriately protected and limited to their intended purpose. Credentials or authentication factors used for emergency access are securely managed and are not used for routine administration."
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

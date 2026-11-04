@@ -17,6 +17,40 @@ export const sourceSchema = z.strictObject({
 /** Values of the ISM's own `essential-eight-applicability` prop, carried on generated ISM controls. */
 export const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
 
+/**
+ * ASD Essentials domains, keyed the way ASD abbreviates them and the same as the shared catalogue in GRiCk and
+ * Alignr: GC Governance and culture, VR Visibility and response, BS Boundary services, IS Identity services, CPS
+ * Critical processes and services, PE Privileged environments, BUS Business systems, UD User devices.
+ */
+export const essentialsDomains = ["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"] as const;
+export type EssentialsDomain = (typeof essentialsDomains)[number];
+export const essentialsChapters = ["enterprise-it", "cloud"] as const;
+export type EssentialsChapter = (typeof essentialsChapters)[number];
+/** Cloud shared responsibility: (C) Customer, (S) Supplied, (P) Provider-inherited. */
+const responsibility = z.enum(["C", "S", "P"]);
+
+/** The chapter structure an ASD Essentials framework file carries on top of its controls (the actions). */
+export const essentialsMetaSchema = z.strictObject({
+  chapter: z.enum(essentialsChapters),
+  /** OSCAL release tag, or the publication month for a chapter transcribed from its web page. */
+  release: z.string().min(4),
+  /** True while ASD has published no action ids for the chapter, so ours are placeholders. */
+  provisional: z.boolean().default(false),
+  domains: z
+    .array(
+      z.strictObject({
+        id: z.enum(essentialsDomains),
+        name: z.string().min(3),
+        type: z.enum(["capability", "technical"]),
+        /** Priority phases the domain sits in. Capability domains run across every phase. */
+        phases: z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).min(1),
+      }),
+    )
+    .min(1),
+  principles: z.array(z.strictObject({ id: z.string().regex(/^[A-Z]{3}-\d{2}$/), name: z.string().min(3) })).min(1),
+});
+export type EssentialsMeta = z.infer<typeof essentialsMetaSchema>;
+
 export const frameworkSchema = z.strictObject({
   id,
   name: z.string(),
@@ -30,6 +64,8 @@ export const frameworkSchema = z.strictObject({
   note: z.string().optional(),
   /** Controls the publisher has withdrawn: a ref to one is a warning, not a broken ref. */
   withdrawn: z.array(z.string().min(1)).default([]),
+  /** Present only on ASD Essentials chapter files, whose controls are the chapter's actions. */
+  essentials: essentialsMetaSchema.optional(),
   controls: z
     .array(
       z.strictObject({
@@ -41,6 +77,14 @@ export const frameworkSchema = z.strictObject({
         updated: z.string().optional(),
         applicability: z.array(z.string().min(1)).optional(),
         e8: z.array(z.enum(ismE8Levels)).optional(),
+        // Essentials actions: the principle the action serves, the domains it applies to, the ISM controls ASD
+        // lists as potential evidence (outside and inside the Essential Eight), the number of Indicators of Good
+        // Practice statements per tier, and for the cloud chapter the shared responsibility for PaaS and SaaS.
+        principle: z.string().regex(/^[A-Z]{3}-\d{2}$/).optional(),
+        domains: z.array(z.enum(essentialsDomains)).optional(),
+        evidence: z.strictObject({ ism: z.array(z.string()).default([]), e8: z.array(z.string()).default([]) }).optional(),
+        igp: z.strictObject({ ne: z.number().int().min(0), pe: z.number().int().min(0), fe: z.number().int().min(0) }).optional(),
+        responsibility: z.strictObject({ paas: responsibility.optional(), saas: responsibility.optional() }).optional(),
       }),
     )
     .default([]),
@@ -117,6 +161,24 @@ export const questionSchema = z.strictObject({
   sources: z.array(id).min(1),
   refs: z.array(z.strictObject({ framework: id, ref: z.string().min(1) })).default([]),
   e8: z.array(z.strictObject({ strategy: z.enum(e8Strategies), level: z.union([z.literal(1), z.literal(2), z.literal(3)]) })).default([]),
+  /**
+   * ASD Essentials actions the question gives evidence for, and in which Essentials domains. `partial` means a Yes
+   * shows only part of the action; `full` needs a note saying why the question covers the whole action there.
+   */
+  essentials: z
+    .array(
+      z
+        .strictObject({
+          action: z.string().regex(/^(IT|CL)\.[A-Z]{3}-\d{2}\.x?\d+$/, "e.g. IT.PRO-13.4"),
+          domains: z.array(z.enum(essentialsDomains)).min(1),
+          coverage: z.enum(["full", "partial"]),
+          note: z.string().min(10).optional(),
+        })
+        .refine((t) => t.coverage === "partial" || !!t.note, { path: ["note"], message: "coverage: full needs a note" }),
+    )
+    .default([]),
+  /** Set when a reviewer decided no Essentials action fits, with the reason; silences the candidate warning. */
+  essentialsReviewed: z.string().min(10).optional(),
 });
 
 /** Maps an automated scanner's check ids to questions, so its results can pre-fill answers. */

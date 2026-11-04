@@ -28,6 +28,10 @@
     - { framework: mcsb, ref: NS-1 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
     - { framework: ism, ref: ISM-1182 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: IT.PRO-18.2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: MS-AZ-021
   module: azure
@@ -56,6 +60,9 @@
     - { framework: mcsb, ref: NS-1 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
     - { framework: ism, ref: ISM-2068 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: MS-AZ-022
   module: azure
@@ -86,6 +93,9 @@
     - { framework: cis-azure, ref: "7.15" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-6 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: MS-AZ-023
   module: azure
@@ -115,6 +125,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: IM-1 }
     - { framework: mcsb, ref: PA-7 }
+  essentials:
+    - { action: IT.PRO-13.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-024
   module: azure
@@ -143,6 +156,9 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: MS-AZ-025
   module: azure
@@ -171,6 +187,9 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: IM-1 }
     - { framework: mcsb, ref: DS-6 }
+  essentials:
+    - { action: IT.PRO-13.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-026
   module: azure
@@ -199,6 +218,9 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: mcsb, ref: IM-1 }
     - { framework: mcsb, ref: NS-8 }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [BS], coverage: partial }
+    - { action: CL.PRO-13.x7, domains: [BS], coverage: partial }
 
 - id: MS-AZ-027
   module: azure
@@ -224,6 +246,11 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-3 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-028
   module: azure
@@ -262,6 +289,14 @@
     - { framework: ism, ref: ISM-1905 }
   e8:
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BS], coverage: partial }
+    - { action: CL.PRO-01.x3, domains: [BS], coverage: partial }
 
 - id: MS-AZ-043
   module: azure
@@ -292,3 +327,6 @@
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Infrastructure II }
     - { framework: ism, ref: ISM-2141 }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x7, domains: [BUS], coverage: partial }

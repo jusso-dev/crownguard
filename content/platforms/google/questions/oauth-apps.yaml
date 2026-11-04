@@ -28,6 +28,9 @@
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
     - { framework: ism, ref: ISM-2137 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-16.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
 
 - id: GO-APP-002
   module: core
@@ -55,6 +58,10 @@
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
     - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
 
 - id: GO-APP-003
   module: core
@@ -82,6 +89,12 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Apps" }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: IT.IDE-01.2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [IS], coverage: partial }
 
 - id: GO-APP-004
   module: core
@@ -114,6 +127,10 @@
     - { framework: ism, ref: ISM-2138 }
     - { framework: ism, ref: ISM-2139 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
 
 - id: GO-APP-005
   module: core
@@ -143,3 +160,7 @@
     - { framework: ism, ref: ISM-2139 }
     - { framework: ism, ref: ISM-1228 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: the question checks that alerts fire, not how they are triaged, correlated or baselined."

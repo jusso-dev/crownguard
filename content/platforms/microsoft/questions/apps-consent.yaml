@@ -28,6 +28,9 @@
     - { framework: ms-zero-trust, ref: Applications V }
     - { framework: ism, ref: ISM-2137 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-16.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
 
 - id: MS-APP-002
   module: core
@@ -58,6 +61,12 @@
     - { framework: ms-zero-trust, ref: Applications V }
     - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [IS], coverage: partial }
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
 
 - id: MS-APP-003
   module: core
@@ -92,6 +101,10 @@
     - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for short-lived or keyless credentials over long-lived secrets, so only the cloud actions are tagged."
 
 - id: MS-APP-004
   module: core
@@ -117,6 +130,10 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-7 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
 
 - id: MS-APP-005
   module: core
@@ -152,6 +169,11 @@
     - { framework: nist-csf-2, ref: ID.AM-02 }
     - { framework: ism, ref: ISM-2074 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.GOV-08.1, domains: [GC], coverage: partial }
+    - { action: IT.IDE-01.1, domains: [VR], coverage: partial }
+    - { action: CL.IDE-01.x2, domains: [VR], coverage: partial }
+    - { action: CL.GOV-08.x1, domains: [GC], coverage: partial }
 
 - id: MS-APP-006
   module: core
@@ -186,6 +208,11 @@
     - { framework: ism, ref: ISM-2137 }
     - { framework: ism, ref: ISM-2138 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-16.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
 
 - id: MS-APP-007
   module: core
@@ -216,3 +243,7 @@
     - { framework: ism, ref: ISM-2139 }
     - { framework: ism, ref: ISM-1228 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: the question checks that alerts fire, not how they are triaged, correlated or baselined."

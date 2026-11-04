@@ -22,6 +22,11 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Cloud super admin best practices" }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
 
 - id: GO-CIAM-002
   module: gcp
@@ -51,6 +56,12 @@
     - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS, PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
 
 - id: GO-CIAM-003
   module: gcp
@@ -77,6 +88,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
 
 - id: GO-CIAM-004
   module: gcp
@@ -108,6 +122,10 @@
     - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for short-lived or keyless credentials over long-lived secrets, so only the cloud actions are tagged."
 
 - id: GO-CIAM-005
   module: gcp
@@ -137,6 +155,10 @@
     - { framework: cis-gcp, ref: "4.2" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ism, ref: ISM-1249 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
 
 - id: GO-CIAM-006
   module: gcp
@@ -163,6 +185,9 @@
     - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: GO-CIAM-007
   module: gcp
@@ -193,6 +218,10 @@
     - { framework: ism, ref: ISM-1387 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: GO-CIAM-008
   module: gcp
@@ -228,6 +257,9 @@
     - { framework: ism, ref: ISM-1871 }
   e8:
     - { strategy: application-control, level: 2 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [BS], coverage: partial }
+    - { action: CL.PRO-07.x3, domains: [BS], coverage: partial }
 
 - id: GO-CIAM-009
   module: gcp
@@ -260,3 +292,6 @@
     - { framework: ism, ref: ISM-1658 }
   e8:
     - { strategy: application-control, level: 3 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-07.x3, domains: [BUS], coverage: partial }

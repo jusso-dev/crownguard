@@ -7,6 +7,7 @@ import { formatAbn, isValidAbn } from "../../engine/abn";
 import { download, requestOpenFile, slug } from "../download";
 import { modeOf, stepsFor, useStore } from "../store";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
+import { EssentialsPicker } from "../EssentialsOption";
 import { Button, Card, StepHeader } from "../ui";
 
 export function ReportStep() {
@@ -113,6 +114,8 @@ export function ReportStep() {
             <dd>
               {ism ? `${ism.label} — ${ism.findings.length} of ${ism.totalFindings} findings annotated` : "Not shown"}
             </dd>
+            <dt className="text-muted">ASD Essentials</dt>
+            <dd>{model?.essentials ? `${model.essentials.framework.name}, indicative` : "Not shown"}</dd>
             {model?.aiRegister && (
               <>
                 <dt className="text-muted">AI use cases</dt>
@@ -136,6 +139,9 @@ export function ReportStep() {
         {!standalone && (
           <div className="mb-5">
             <IsmBaselinePicker />
+            <div className="mt-4">
+              <EssentialsPicker />
+            </div>
           </div>
         )}
         <Button

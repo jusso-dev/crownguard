@@ -25,6 +25,9 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: google-security-guidance, ref: "Blueprint: Preventative controls" }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-CDAT-002
   module: gcp
@@ -49,6 +52,9 @@
     - { framework: cis-gcp, ref: "7.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: GO-CDAT-003
   module: gcp
@@ -76,6 +82,8 @@
     - { framework: cis-gcp, ref: "6.7" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-1271 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BUS], coverage: partial }
 
 - id: GO-CDAT-004
   module: gcp
@@ -102,6 +110,10 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [CPS], coverage: partial }
 
 - id: GO-CDAT-005
   module: gcp
@@ -127,6 +139,9 @@
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: ism, ref: ISM-0393 }
     - { framework: idcf, ref: "Risk assessment" }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BUS], coverage: partial }
 
 - id: GO-CDAT-006
   module: gcp
@@ -157,6 +172,11 @@
     - { framework: ism, ref: ISM-1707 }
   e8:
     - { strategy: regular-backups, level: 2 }
+  essentials:
+    - { action: IT.PRO-10.1, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-10.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [CPS], coverage: partial }
 
 - id: GO-CDAT-007
   module: gcp
@@ -193,3 +213,9 @@
     - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-13.6, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x8, domains: [BUS], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.2 not tagged: the question is about MFA to reach data, not where secrets are stored."

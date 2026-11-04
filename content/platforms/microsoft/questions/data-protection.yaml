@@ -26,6 +26,9 @@
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data I }
     - { framework: idcf, ref: Labels }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BUS], coverage: partial }
 
 - id: MS-DP-002
   module: core
@@ -53,6 +56,9 @@
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data II }
     - { framework: idcf, ref: Movement }
+  essentials:
+    - { action: CL.PRO-08.x1, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: MS-DP-003
   module: core
@@ -83,3 +89,6 @@
     - { framework: ms-zero-trust, ref: Data IV }
     - { framework: idcf, ref: Movement }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }

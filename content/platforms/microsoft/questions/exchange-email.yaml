@@ -24,6 +24,9 @@
     - { framework: mcsb, ref: DP-2 }
     - { framework: ms-zero-trust, ref: Data IV }
     - { framework: idcf, ref: Movement }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
 
 - id: MS-EXO-002
   module: core
@@ -55,6 +58,9 @@
     - { framework: ism, ref: ISM-1919 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x7, domains: [BUS], coverage: partial }
 
 - id: MS-EXO-003
   module: core
@@ -84,6 +90,9 @@
     - { framework: ism, ref: ISM-0574 }
     - { framework: ism, ref: ISM-0861 }
     - { framework: ism, ref: ISM-1540 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: MS-EXO-004
   module: core
@@ -116,3 +125,6 @@
     - { framework: mcsb, ref: ES-2 }
     - { framework: ms-zero-trust, ref: M365 swim lane 2 }
     - { framework: ism, ref: ISM-1234 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
