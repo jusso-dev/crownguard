@@ -247,3 +247,42 @@
     - { action: IT.DET-02.2, domains: [VR], coverage: partial }
     - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
   essentialsReviewed: "IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: the question checks that alerts fire, not how they are triaged, correlated or baselined."
+
+- id: MS-APP-008
+  module: core
+  domain: apps-consent
+  appliesTo: [ms-sharepoint-sites, ms-copilot-agents]
+  severity: medium
+  question: Are the SharePoint sites holding crown-jewel data limited to the third-party apps and agents approved for them, using Application Restrictions?
+  why: >-
+    An app or agent granted Sites.Read.All or similar can read every SharePoint site, including
+    board, HR and legal sites it has no reason to touch. Consent reviews decide whether an app gets
+    in at all; Application Restrictions decides which sites it can reach, so a breached vendor or a
+    misused agent can't read the crown jewels.
+  yesLooksLike: >-
+    Application Restrictions is turned on for the organisation, each crown-jewel site has a site
+    policy in Allow mode listing only the apps and agents (or agent blueprints) approved for it, an
+    emergency tenant deny list is kept for apps that must be kept out of every site, and policy
+    changes are reviewed in the unified audit log. The gaps are known and covered elsewhere: the
+    policy governs third-party apps only (never Microsoft's own apps), doesn't apply to OneDrive and
+    doesn't trim search results.
+  remediation: >-
+    As a SharePoint Administrator, collect the Entra application (client) IDs that need each
+    crown-jewel site, then in SharePoint Online Management Shell (the only place it's managed) set
+    the site to Allow mode, add those IDs to its allow list and enable the site policy. Stage and
+    check sites first, then turn on the tenant switch with Enable-SPOTenantRestrictedAppAccessControl,
+    because nothing is enforced until it's on and an empty allow list blocks every third-party app.
+    Keep using restricted access control for users and Restricted Content Discovery for Copilot,
+    because Microsoft first-party apps are never governed by this policy.
+  effort: M
+  # The Application Restrictions page names no licence or SharePoint Advanced Management requirement.
+  licence: []
+  sources: [ms-spo-app-restrictions, ms-restricted-access-control]
+  refs:
+    - { framework: nist-csf-2, ref: PR.AA-05 }
+    - { framework: mcsb, ref: AI-4 }
+    - { framework: ism, ref: ISM-2156 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [BUS], coverage: partial }

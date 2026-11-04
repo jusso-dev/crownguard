@@ -344,6 +344,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/sharepoint/restricted-access-control
   retrieved: 2026-10-08
+- id: ms-spo-app-restrictions
+  title: Restrict SharePoint site access for applications and agents with Application Restrictions
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/restrict-application-agent-access
+  retrieved: 2026-11-04
 - id: ms-restricted-content-discovery
   title: Restrict discovery of SharePoint sites and content
   publisher: Microsoft
