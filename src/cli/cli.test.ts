@@ -201,6 +201,23 @@ describe("cg score", () => {
     );
   });
 
+  it("adds Essentials per domain, with not assessed kept apart, only when the assessment asks for it", async () => {
+    const root = dir();
+    const plainPath = join(root, "plain.crownguard.json");
+    writeAssessment(plainPath);
+    const plain = JSON.parse((await capture(["score", plainPath])).stdout);
+    expect(plain.essentials).toBeUndefined();
+    const path = join(root, "e.crownguard.json");
+    writeAssessment(path, { ...fixtureAssessment(catalogue, ["microsoft"]), essentials: { chapter: "enterprise-it" } });
+    const got = JSON.parse((await capture(["score", path])).stdout);
+    expect(got.e8).toEqual(plain.e8);
+    expect(got.essentials.indicative).toBe(true);
+    expect(got.essentials.domains.map((d: { id: string }) => d.id).slice(0, 2)).toEqual(["BS", "IS"]);
+    for (const d of got.essentials.domains) expect(Object.keys(d.counts).sort()).toEqual(["fully-effective", "not-assessed", "not-effective", "partially-effective"]);
+    const text = (await capture(["score", path, "--format", "text"])).stdout;
+    expect(text).toMatch(/Essentials \(enterprise-it, indicative\): BS=/);
+  });
+
   it("text format is a short human summary", async () => {
     const path = join(dir(), "a.crownguard.json");
     writeAssessment(path);

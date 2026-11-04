@@ -29,6 +29,9 @@
     - { framework: ism, ref: ISM-0445 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
 
 - id: MS-PA-002
   module: core
@@ -62,6 +65,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [PE, IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [PE, IS], coverage: partial }
 
 - id: MS-PA-003
   module: core
@@ -95,6 +101,9 @@
     - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: MS-PA-004
   module: core
@@ -126,6 +135,11 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-13.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [PE], coverage: partial }
 
 - id: MS-PA-005
   module: core
@@ -157,6 +171,11 @@
     - { framework: ism, ref: ISM-1613 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [PE], coverage: partial }
+    - { action: IT.PRO-13.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [PE], coverage: partial }
 
 - id: MS-PA-006
   module: core
@@ -188,6 +207,14 @@
     - { framework: ism, ref: ISM-1898 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-07.2, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-07.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.2 not tagged: separate admin accounts and devices do not show who may change accounts and roles."
 
 - id: MS-PA-007
   module: core
@@ -217,6 +244,11 @@
     - { framework: ism, ref: ISM-2124 }
     - { framework: idcf, ref: "Rule 1" }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: MS-PA-008
   module: core
@@ -253,6 +285,9 @@
     - { framework: ism, ref: ISM-1926 }
     - { framework: ism, ref: ISM-1927 }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [IS, PE], coverage: partial }
 
 - id: MS-PA-009
   module: core
@@ -281,6 +316,9 @@
     - { framework: mcsb, ref: IM-1 }
     - { framework: ms-zero-trust, ref: Identity I }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x4, domains: [IS], coverage: partial }
 
 - id: MS-PA-010
   module: core
@@ -310,6 +348,10 @@
     - { framework: ism, ref: ISM-1507 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.1 not tagged: approval when access is requested is not a periodic access review."
 
 - id: MS-PA-011
   module: core
@@ -344,6 +386,10 @@
     - { framework: ism, ref: ISM-1688 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-18.2 not tagged: the question is about where administrators work, not network pathways between segments."
 
 - id: MS-PA-012
   module: core
@@ -372,6 +418,9 @@
     - { framework: ism, ref: ISM-1687 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
 
 - id: MS-PA-013
   module: core
@@ -404,6 +453,8 @@
     - { framework: ism, ref: ISM-1387 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
 
 - id: MS-PA-014
   module: core
@@ -435,3 +486,9 @@
     - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."

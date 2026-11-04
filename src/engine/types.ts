@@ -1,4 +1,4 @@
-import type { ExposureId } from "../content/schema";
+import type { EssentialsChapter, ExposureId } from "../content/schema";
 import type { IsmBaseline } from "./ism";
 import type { SocAnswer, SocProvider, SocTargets } from "./soc";
 import type { AiAccess, AiAutonomy, AiCriterion, AiDataKind, AiDomain, AiLifecycle, AiRiskRating, AiStandardUse, AiTechnology, AiUsagePattern } from "./aiOptions";
@@ -159,6 +159,11 @@ export interface Assessment {
    * findings touch controls in that baseline and adds a count to the summary; it never changes a score.
    */
   ismBaseline?: IsmBaseline;
+  /**
+   * Optional ASD Essentials section in the report, for the chosen chapter. Indicative per-domain effectiveness
+   * ratings from the questions tagged with each action; it sits beside the Essential Eight and changes no score.
+   */
+  essentials?: { chapter: EssentialsChapter };
   /** Optional SOC maturity self-assessment; present when the user includes it. */
   soc?: { answers: Record<string, SocAnswer>; notes?: Record<string, string>; outOfScope: string[]; targets?: SocTargets; provider?: SocProvider };
   /**

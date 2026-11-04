@@ -27,6 +27,8 @@ export interface JourneyOptions {
   ismBaseline?: "NON_CLASSIFIED" | "OFFICIAL_SENSITIVE" | "PROTECTED";
   /** Generate the PDF and return its bytes. Defaults to the browser download; the desktop spec uses the save dialog. */
   generatePdf?: (page: Page) => Promise<Uint8Array>;
+  /** Show the ASD Essentials section for this chapter, chosen on the review step. */
+  essentials?: "enterprise-it" | "cloud";
 }
 
 /** Generate the report as a browser download and check its file name. */
@@ -38,7 +40,7 @@ async function downloadReport(page: Page): Promise<Uint8Array> {
   return new Uint8Array(await readFile(await download.path()));
 }
 
-export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false, ismBaseline, generatePdf = downloadReport }: JourneyOptions = {}): Promise<string[]> {
+export async function runJourney(page: Page, platformName: string, { jewelCount = 4, soc = false, dsl, ai = false, ismBaseline, essentials, generatePdf = downloadReport }: JourneyOptions = {}): Promise<string[]> {
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill(ORG);
@@ -97,6 +99,10 @@ export async function runJourney(page: Page, platformName: string, { jewelCount 
   if (ismBaseline) {
     await page.getByLabel("Show ISM baseline").selectOption(ismBaseline);
     await expect(page.getByTestId("ism-baseline")).toContainText("findings touch controls");
+  }
+  if (essentials) {
+    await page.getByLabel("Show ASD Essentials").selectOption(essentials);
+    await expect(page.getByTestId("essentials")).toContainText("Priority phase 1:");
   }
   await next(page);
 

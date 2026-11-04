@@ -26,6 +26,9 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ism, ref: ISM-2145 }
+  essentials:
+    - { action: IT.PRO-13.1, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [IS, PE], coverage: partial }
 
 - id: AWS-IAM-002
   module: core
@@ -57,6 +60,11 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ism, ref: ISM-1611 }
     - { framework: ism, ref: ISM-1685 }
+  essentials:
+    - { action: IT.PRO-13.1, domains: [IS, PE], coverage: partial }
+    - { action: IT.PRO-13.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [IS, PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.6 not tagged: the question covers root use and access keys, not whether credentials are unique."
 
 - id: AWS-IAM-003
   module: core
@@ -85,6 +93,9 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: ism, ref: ISM-0414 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-13.6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x8, domains: [IS], coverage: partial }
 
 - id: AWS-IAM-004
   module: core
@@ -115,6 +126,9 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x4, domains: [IS], coverage: partial }
 
 - id: AWS-IAM-005
   module: core
@@ -147,6 +161,9 @@
     - { framework: ism, ref: ISM-1173 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS, PE], coverage: partial }
 
 - id: AWS-IAM-006
   module: core
@@ -178,6 +195,9 @@
     - { framework: ism, ref: ISM-1872 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS, BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS, BUS], coverage: partial }
 
 - id: AWS-IAM-007
   module: core
@@ -206,6 +226,9 @@
     - { framework: ism, ref: ISM-1504 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: AWS-IAM-008
   module: core
@@ -232,6 +255,9 @@
     - { framework: ism, ref: ISM-1681 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: AWS-IAM-009
   module: core
@@ -257,6 +283,9 @@
     - { framework: ism, ref: ISM-1873 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: AWS-IAM-010
   module: core
@@ -282,6 +311,9 @@
     - { framework: ism, ref: ISM-1874 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: AWS-IAM-011
   module: core
@@ -310,6 +342,9 @@
     - { framework: ism, ref: ISM-0445 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-012
   module: core
@@ -341,6 +376,10 @@
     - { framework: ism, ref: ISM-1688 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-18.2 not tagged: the question is about where administrators work, not network pathways between segments."
 
 - id: AWS-IAM-013
   module: core
@@ -367,6 +406,9 @@
     - { framework: ism, ref: ISM-1687 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-014
   module: core
@@ -395,6 +437,11 @@
     - { framework: ism, ref: ISM-1898 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-07.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-07.x1, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-015
   module: core
@@ -422,6 +469,10 @@
     - { framework: idcf, ref: "DSL-2 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.1 not tagged: approval when access is requested is not a periodic access review."
 
 - id: AWS-IAM-016
   module: core
@@ -454,6 +505,11 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-13.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-017
   module: core
@@ -482,6 +538,9 @@
     - { framework: idcf, ref: "DSL-4 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-018
   module: core
@@ -516,6 +575,12 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS, PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS, PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
 
 - id: AWS-IAM-019
   module: core
@@ -541,6 +606,9 @@
   sources: [aws-iam-passrole, aws-iam-boundaries, aws-iam-best-practices]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
 
 - id: AWS-IAM-020
   module: core
@@ -571,6 +639,9 @@
     - { framework: ism, ref: ISM-1613 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: CL.PRO-16.x4, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers access when the identity provider is down, so only the cloud action on identity provider dependency is tagged."
 
 - id: AWS-IAM-021
   module: core
@@ -604,6 +675,10 @@
     - { framework: ism, ref: ISM-2141 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for short-lived or keyless credentials over long-lived secrets, so only the cloud actions are tagged."
 
 - id: AWS-IAM-022
   module: core
@@ -632,6 +707,10 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: GV.SC-07 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
 
 - id: AWS-IAM-023
   module: core
@@ -669,3 +748,6 @@
     - { framework: aws-fsbp, ref: SSM.7 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [BUS], coverage: partial }

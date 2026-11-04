@@ -23,6 +23,7 @@ const q = (id: string, over: Partial<Question> = {}): Question => ({
   sources: ["src"],
   refs: [],
   e8: [],
+  essentials: [],
   ...over,
 });
 

@@ -30,6 +30,10 @@
     - { framework: aws-fsbp, ref: EC2.21 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-1182 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: IT.PRO-18.2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: AWS-NET-002
   module: core
@@ -61,6 +65,10 @@
     - { framework: aws-fsbp, ref: ECS.16 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-2068 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
 
 - id: AWS-NET-003
   module: core
@@ -88,6 +96,9 @@
     - { framework: aws-fsbp, ref: EC2.170 }
     - { framework: aws-fsbp, ref: AutoScaling.3 }
     - { framework: nist-csf-2, ref: PR.PS-01 }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-004
   module: core
@@ -116,6 +127,10 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ism, ref: ISM-1249 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [BS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [BS], coverage: partial }
 
 - id: AWS-NET-005
   module: core
@@ -147,6 +162,9 @@
     - { framework: aws-fsbp, ref: WAF.10 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: nist-csf-2, ref: DE.CM-01 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: AWS-NET-006
   module: core
@@ -174,6 +192,8 @@
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-1546 }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [BS], coverage: partial }
 
 - id: AWS-NET-007
   module: core
@@ -201,6 +221,11 @@
     - { framework: aws-fsbp, ref: EKS.8 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: nist-csf-2, ref: PR.PS-04 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BS], coverage: partial }
+    - { action: IT.DET-01.2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [BS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BS], coverage: partial }
 
 - id: AWS-NET-008
   module: core
@@ -228,6 +253,11 @@
     - { framework: aws-fsbp, ref: SageMaker.1 }
     - { framework: aws-fsbp, ref: SageMaker.3 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: AWS-NET-009
   module: core
@@ -253,6 +283,9 @@
   refs:
     - { framework: aws-fsbp, ref: CloudFront.12 }
     - { framework: nist-csf-2, ref: ID.AM-08 }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BS], coverage: partial }
 
 - id: AWS-NET-010
   module: core
@@ -284,6 +317,8 @@
     - { framework: ism, ref: ISM-1387 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
 
 - id: AWS-NET-011
   module: core
@@ -313,6 +348,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS, PE], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS, PE], coverage: partial }
 
 - id: AWS-NET-012
   module: core
@@ -340,6 +378,9 @@
     - { framework: ism, ref: ISM-1685 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.6, domains: [BUS, PE], coverage: partial }
+    - { action: CL.PRO-13.x8, domains: [BUS, PE], coverage: partial }
 
 - id: AWS-NET-013
   module: core
@@ -371,6 +412,11 @@
     - { framework: ism, ref: ISM-1897 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-014
   module: core
@@ -406,6 +452,9 @@
   e8:
     - { strategy: patch-operating-systems, level: 1 }
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BS, BUS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BS, BUS], coverage: partial }
 
 - id: AWS-NET-015
   module: core
@@ -438,6 +487,13 @@
     - { framework: ism, ref: ISM-1877 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [BS, BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BS, BUS], coverage: partial }
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BS, BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BS, BUS], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
 
 - id: AWS-NET-016
   module: core
@@ -478,6 +534,14 @@
     - { framework: ism, ref: ISM-1905 }
   e8:
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BS], coverage: partial }
+    - { action: CL.PRO-01.x3, domains: [BS], coverage: partial }
 
 - id: AWS-NET-017
   module: core
@@ -506,6 +570,12 @@
     - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BUS, UD], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BUS, UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS, UD], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-018
   module: core
@@ -538,6 +608,13 @@
     - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-019
   module: core
@@ -565,6 +642,11 @@
     - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [BUS, UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS, UD], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-020
   module: core
@@ -593,6 +675,11 @@
     - { framework: ism, ref: ISM-1879 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: AWS-NET-021
   module: core
@@ -620,3 +707,6 @@
     - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }

@@ -27,6 +27,10 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-DRV-002
   module: core
@@ -53,6 +57,10 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-DRV-003
   module: core
@@ -81,6 +89,9 @@
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: GO-DRV-004
   module: core
@@ -109,6 +120,9 @@
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
     - { framework: idcf, ref: Movement }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
 
 - id: GO-DRV-005
   module: core
@@ -134,6 +148,9 @@
     - { framework: nist-csf-2, ref: ID.AM-07 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: idcf, ref: Labels }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BUS], coverage: partial }
 
 - id: GO-DRV-006
   module: core
@@ -160,3 +177,6 @@
     - { framework: google-security-guidance, ref: "Checklist: Drive" }
     - { framework: idcf, ref: "Whole system" }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }

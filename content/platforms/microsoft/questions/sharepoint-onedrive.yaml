@@ -29,6 +29,10 @@
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: idcf, ref: "Sharing agreement" }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: MS-SPO-002
   module: core
@@ -58,6 +62,10 @@
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: ms-zero-trust, ref: Copilot step 7 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: MS-SPO-003
   module: core
@@ -85,3 +93,6 @@
     - { framework: mcsb, ref: PA-4 }
     - { framework: ms-zero-trust, ref: Copilot step 7 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [BUS], coverage: partial }

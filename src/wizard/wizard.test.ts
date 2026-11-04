@@ -93,6 +93,14 @@ describe("save and resume", () => {
     expect(assessmentSchema.safeParse({ ...emptyAssessment(), progress: { step: 500 } }).success).toBe(false);
   });
 
+  it("accepts the optional Essentials chapter, opens older files without it, and rejects an unknown chapter", () => {
+    expect(assessmentSchema.safeParse({ ...emptyAssessment(), essentials: { chapter: "enterprise-it" } }).success).toBe(true);
+    expect(assessmentSchema.safeParse({ ...emptyAssessment(), essentials: { chapter: "cloud" } }).success).toBe(true);
+    const older = assessmentSchema.safeParse(emptyAssessment());
+    expect(older.success && older.data.essentials).toBeUndefined();
+    expect(assessmentSchema.safeParse({ ...emptyAssessment(), essentials: { chapter: "ot" } }).success).toBe(false);
+  });
+
   it("accepts files with SOC maturity answers, and rejects ratings or targets off the scale", () => {
     const soc = { answers: { "SOC-BUS-001": 3, "SOC-TEC-002": "unknown" }, outOfScope: ["network-monitoring"], targets: { technology: { maturity: 3.5, capability: 2 } }, provider: "outsourced" };
     expect(assessmentSchema.safeParse({ ...emptyAssessment(), soc }).success).toBe(true);

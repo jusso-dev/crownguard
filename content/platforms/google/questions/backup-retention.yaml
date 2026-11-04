@@ -26,6 +26,11 @@
     - { framework: ism, ref: ISM-1515 }
   e8:
     - { strategy: regular-backups, level: 1 }
+  essentials:
+    - { action: IT.PRO-10.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-10.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x3, domains: [BUS], coverage: partial }
 
 - id: GO-BAK-002
   module: core
@@ -53,6 +58,9 @@
     - { framework: ism, ref: ISM-2152 }
   e8:
     - { strategy: regular-backups, level: 2 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [BUS], coverage: partial }
 
 - id: GO-BAK-003
   module: core
@@ -82,6 +90,10 @@
     - { framework: ism, ref: ISM-2151 }
   e8:
     - { strategy: regular-backups, level: 3 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [BUS], coverage: partial }
 
 - id: GO-BAK-004
   module: core
@@ -107,6 +119,7 @@
   refs:
     - { framework: nist-csf-2, ref: GV.OC-03 }
     - { framework: nist-csf-2, ref: PR.DS-01 }
+  essentialsReviewed: "Vault retention meets legal and record-keeping duties. It is not a backup, and no Essentials action asks for it."
 
 - id: GO-BAK-005
   module: core
@@ -136,3 +149,11 @@
     - { framework: ism, ref: ISM-1508 }
     - { framework: ism, ref: ISM-1509 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-05.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x3, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1, IT.PRO-12.1 and IT.DET-01.2 not tagged: limiting and auditing Vault access does not show secure design, a periodic review or central log forwarding."

@@ -52,6 +52,11 @@ pnpm cg score riverbend.crownguard.json --format text
 ```
 
 JSON includes posture, risks, domains, Essential Eight blockers, roadmap, and SOC / IDCF / AI register summaries when present.
+When the assessment has `essentials: { chapter }` set, it also has an `essentials` object: per domain the phases,
+`percentage` (null when nothing was assessed), `counts` for each rating including `not-assessed`, and each
+principle's rating and actions, plus `gaps` with ASD's transition `gapAnalysisFinding` per principle. The text
+format adds a line such as `Essentials (enterprise-it, indicative): BS=50% (FE 0, PE 2, NE 0, NA 1), ...`. All of
+it is indicative and none of it is calculated from Essential Eight levels.
 
 ### Render PDF
 

@@ -38,6 +38,31 @@ export function scoreSummary(model: ReportModel) {
       phase: r.phase,
       reduction: r.reduction,
     })),
+    ...(model.essentials
+      ? {
+          essentials: {
+            framework: model.essentials.framework.id,
+            chapter: model.essentials.chapter,
+            release: model.essentials.framework.release,
+            provisionalIds: model.essentials.framework.provisional,
+            indicative: true,
+            domains: model.essentials.domains.map((d) => ({
+              id: d.id,
+              name: d.name,
+              type: d.type,
+              phases: d.phases,
+              percentage: d.percentage,
+              counts: d.counts,
+              principles: d.principles.map((p) => ({
+                id: p.id,
+                rating: p.rating,
+                actions: p.actions.filter((a) => a.rating !== null).map((a) => ({ id: a.id, rating: a.rating, questions: a.evidence.map((x) => x.question.id) })),
+              })),
+            })),
+            gaps: model.essentials.gaps.map((g) => ({ principle: g.principle, strategies: g.strategies, gapAnalysisFinding: g.gap })),
+          },
+        }
+      : {}),
     ...(model.soc
       ? {
           soc: {
@@ -104,6 +129,12 @@ export function scoreText(model: ReportModel): string {
     `Risks: ${s.risks.map((r) => `${r.jewel} ${r.band} (${r.score})`).join("; ") || "none"}`,
     `Essential Eight: ${s.e8.map((e) => `${e.strategy}=ML${e.level ?? "–"}`).join(", ") || "n/a"}`,
   ];
+  if (s.essentials)
+    lines.push(
+      `Essentials (${s.essentials.chapter}, indicative): ${s.essentials.domains
+        .map((d) => `${d.id}=${d.percentage === null ? "not assessed" : `${d.percentage}%`} (FE ${d.counts["fully-effective"]}, PE ${d.counts["partially-effective"]}, NE ${d.counts["not-effective"]}, NA ${d.counts["not-assessed"]})`)
+        .join(", ")}`,
+    );
   if (s.soc) lines.push(`SOC overall ${s.soc.overall ?? "n/a"} (target ${s.soc.overallTarget})`);
   if (s.aiRegister) lines.push(`AI register: ${s.aiRegister.entries} entries, ${s.aiRegister.openGaps} open gaps`);
   if (s.idcf) lines.push(`IDCF: ${s.idcf.jewels.length} jewel DSL checks across ${s.idcf.platforms.length} platform(s)`);

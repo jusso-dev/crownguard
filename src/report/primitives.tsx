@@ -14,6 +14,14 @@ export const bandColors: Record<Band, { bg: string; fg: string }> = {
   Extreme: { bg: "#f6c9c9", fg: "#8c1414" },
 };
 
+/** ASD Essentials ratings. Not assessed has its own neutral colour so it is never read as a failure. */
+export const essentialsColors = {
+  "not-assessed": { bg: "#e8eaef", fg: "#3d4556" },
+  "not-effective": { bg: "#f6c9c9", fg: "#8c1414" },
+  "partially-effective": { bg: "#fbefc8", fg: "#7a5200" },
+  "fully-effective": { bg: "#d9efe1", fg: "#1d5c36" },
+} as const;
+
 export const severityColors = {
   critical: "#8c1414",
   high: "#8a3200",

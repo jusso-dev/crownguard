@@ -32,6 +32,11 @@
     - { framework: nist-csf-2, ref: DE.AE-06 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: google-security-guidance, ref: "Admin accounts: Monitor" }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
 
 - id: GO-LOG-002
   module: core
@@ -64,6 +69,13 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.1, domains: [IS, BUS], coverage: partial }
+    - { action: IT.DET-01.2, domains: [IS, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [IS, BUS], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: GO-LOG-003
   module: core
@@ -91,6 +103,9 @@
     - { framework: cis-gws, ref: "5.1.1.2" }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: google-security-guidance, ref: "Checklist: Monitoring" }
+  essentials:
+    - { action: IT.PRO-04.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [BUS], coverage: partial }
 
 - id: GO-LOG-004
   module: core
@@ -119,6 +134,10 @@
     - { framework: google-security-guidance, ref: "Checklist: Accounts" }
     - { framework: ism, ref: ISM-0043 }
     - { framework: ism, ref: ISM-1784 }
+  essentials:
+    - { action: IT.RES-03.1, domains: [VR], coverage: partial }
+    - { action: CL.RES-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.RES-05.1 and IT.RES-04.2 not tagged: an account containment playbook does not cover external reporting or a post-incident review of monitoring."
 
 - id: GO-LOG-005
   module: core
@@ -152,6 +171,10 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.2 and IT.DET-04.1 not tagged: a triage time does not show correlation across sources or baselining of software execution."
 
 - id: GO-LOG-006
   module: core
@@ -187,6 +210,10 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.1, domains: [IS, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
 
 - id: GO-LOG-007
   module: core
@@ -223,6 +250,11 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.RES-03.1, domains: [VR], coverage: partial }
+    - { action: IT.RES-05.1, domains: [VR], coverage: partial }
+    - { action: CL.RES-03.x1, domains: [VR], coverage: partial }
+    - { action: CL.RES-05.x1, domains: [VR], coverage: partial }
 
 - id: GO-LOG-008
   module: core
@@ -261,3 +293,13 @@
     - { strategy: restrict-admin-privileges, level: 3 }
     - { strategy: application-control, level: 3 }
     - { strategy: user-application-hardening, level: 3 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."

@@ -25,6 +25,9 @@
     - { framework: mcsb, ref: LT-3 }
     - { framework: ms-zero-trust, ref: SecOps I }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BUS], coverage: partial }
 
 - id: MS-LOG-002
   module: core
@@ -63,6 +66,14 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [IS, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.PRO-05.3, domains: [IS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [IS, BUS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.PRO-05.x3, domains: [IS], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 and IT.DET-02.2 not tagged: collecting and keeping logs does not show they are normalised or that detection logic runs on them."
 
 - id: MS-LOG-003
   module: core
@@ -96,6 +107,10 @@
     - { framework: ism, ref: ISM-1650 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.PRO-05.3, IT.DET-01.2, IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: alerting on changes does not show every admin action is recorded, logs are centralised, alerts are triaged or software execution is baselined."
 
 - id: MS-LOG-004
   module: core
@@ -131,6 +146,10 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.2 and IT.DET-04.1 not tagged: a triage time does not show correlation across sources or baselining of software execution."
 
 - id: MS-LOG-005
   module: core
@@ -156,6 +175,11 @@
     - { framework: mcsb, ref: LT-2 }
     - { framework: ms-zero-trust, ref: Identity VI }
     - { framework: ism, ref: ISM-1830 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.DET-04.1, domains: [IS], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-04.x1, domains: [IS], coverage: partial }
 
 - id: MS-LOG-006
   module: core
@@ -189,6 +213,10 @@
     - { framework: ism, ref: ISM-1660 }
   e8:
     - { strategy: application-control, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD, BUS], coverage: partial }
+  essentialsReviewed: "IT.DET-02.2 and IT.DET-04.1 not tagged: collecting application control events does not show detection logic or behaviour analysis runs on them."
 
 - id: MS-LOG-007
   module: core
@@ -224,6 +252,10 @@
     - { framework: ism, ref: ISM-1889 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD, BUS], coverage: partial }
+  essentialsReviewed: "IT.DET-04.1 not tagged: collecting PowerShell and process creation logs does not show software execution is analysed."
 
 - id: MS-LOG-008
   module: core
@@ -262,6 +294,10 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.1, domains: [IS, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
 
 - id: MS-LOG-009
   module: core
@@ -302,6 +338,14 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: MS-LOG-010
   module: core
@@ -340,6 +384,11 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.RES-03.1, domains: [VR], coverage: partial }
+    - { action: IT.RES-05.1, domains: [VR], coverage: partial }
+    - { action: CL.RES-03.x1, domains: [VR], coverage: partial }
+    - { action: CL.RES-05.x1, domains: [VR], coverage: partial }
 
 - id: MS-LOG-011
   module: core
@@ -378,3 +427,13 @@
     - { strategy: restrict-admin-privileges, level: 3 }
     - { strategy: application-control, level: 3 }
     - { strategy: user-application-hardening, level: 3 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD, BUS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."

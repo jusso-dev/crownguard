@@ -24,9 +24,9 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **Crown-jewel discovery.** Guided prompts per category: identity plane, privileged access, business data,
   collaboration and email, endpoints, cloud infrastructure and AI assistants.
 - **Vendor-grounded questions.** Each question cites the Microsoft, Google or AWS guidance it comes from and maps to
-  CIS Benchmark recommendations, the ASD Essential Eight, NIST CSF 2.0, the Australian Government Information
-  Security Manual (ISM, September 2026 release) and the Department of Home Affairs Industry Data Classification
-  Framework (IDCF).
+  CIS Benchmark recommendations, the ASD Essential Eight, ASD Essentials (enterprise IT and cloud), NIST CSF 2.0, the
+  Australian Government Information Security Manual (ISM, September 2026 release) and the Department of Home Affairs
+  Industry Data Classification Framework (IDCF).
 - **Cloud posture for Azure, Google Cloud and AWS.** Optional Azure and Google Cloud modules and an AWS platform ask
   about the misconfigurations a cloud security posture management (CSPM) tool flags first: privileged access to the
   management plane, public storage, databases and snapshots, secrets in configuration, logging and threat detection,
@@ -163,7 +163,9 @@ Both are built in the browser.
 
 Risk for each crown jewel is impact × likelihood on a 5×5 matrix, recalculated as you answer. The Review step shows
 control posture, answer confidence, the heatmap, crown jewels ranked by risk, posture by domain, indicative Essential
-Eight maturity and the biggest gaps, plus the SOC maturity result and the AI register when you included them.
+Eight maturity and the biggest gaps, plus the SOC maturity result and the AI register when you included them. The
+optional "Show ASD Essentials" picker adds indicative Essentials ratings for the enterprise IT or cloud chapter to the
+report, beside the Essential Eight.
 
 <table>
   <tr>
@@ -347,6 +349,7 @@ being dropped.
 | Essential Eight | A maturity level counts only when every question at that level and below is Yes or N/A with a reason. Indicative only: cloud-platform controls, not a full ASD assessment |
 | Roadmap | Gaps ranked by risk reduced across the crown jewels on that control's platform ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
 | IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes or N/A with a reason |
+| ASD Essentials | Optional. Each action is rated per domain from the questions tagged with it: any No is not effective, fully effective needs every question Yes or N/A and one Yes covering the whole action, Unknown alone is not assessed. Principles take their weakest action; a domain's percentage is NE 0, PE 0.5, FE 1 over the principles assessed. Domains are ordered by ASD's priority phases, which set the order of work, not a rating. Never calculated from Essential Eight levels. Indicative, not a formal Essentials assessment; cloud chapter ids are provisional |
 | ISM | Mapping only, generated from ASD's ISM OSCAL catalog (September 2026 release). The optional "Show ISM baseline" picker annotates findings that touch the NON_CLASSIFIED, OFFICIAL: Sensitive or PROTECTED baselines and adds a count; it never changes a score |
 | SOC maturity | Each question rated 0–5 (capability 0–3) against its level descriptions; Unknown scores 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings (never combined); a domain is the unweighted mean of its in-scope aspects. Default targets maturity 3, capability 2. Kept apart from the risk scores |
 | AI readiness | Scored like the controls (Yes 1, Partial 0.5, No, Unknown and unanswered 0, N/A with a reason left out, severity-weighted) over the questions that apply to each use case. Agent questions are asked unless it only gives output. Indicative, not a DTA rating, and kept apart from the risk scores |
@@ -455,7 +458,10 @@ guide to system security" by the Australian Government Department of Home Affair
 terms (CC BY 3.0 AU). The ISM control titles in [`content/frameworks/ism.yaml`](content/frameworks/ism.yaml) are
 shortened statements from the Information Security Manual, © Commonwealth of Australia 2024, generated from ASD's
 ISM OSCAL catalog and licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms and ASD
-logo excepted). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
+logo excepted). The ASD Essentials action titles in `content/frameworks/asd-essentials-*.yaml` are shortened
+statements from ASD's Essentials for enterprise IT (generated from ASD's E4EIT OSCAL release) and Essentials for cloud,
+© Commonwealth of Australia 2026, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms
+and ASD logo excepted). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
 © Commonwealth of Australia, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and draws on ASD
 guidance. CIS Benchmarks are referenced by recommendation number and title only, under CC BY-NC-SA 4.0.
 

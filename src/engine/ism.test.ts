@@ -44,6 +44,7 @@ const q = (id: string, refs: string[], over: Partial<Question> = {}): Question =
   sources: ["src"],
   refs: refs.map((ref) => ({ framework: "ism", ref })),
   e8: [],
+  essentials: [],
   ...over,
 });
 

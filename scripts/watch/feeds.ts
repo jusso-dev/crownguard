@@ -426,6 +426,16 @@ export const FEEDS: FeedDef[] = [
     max: 3,
   },
   {
+    // A new Essentials for enterprise IT release: regenerate content/frameworks/asd-essentials-enterprise-it.yaml.
+    id: "e4eit-oscal-releases",
+    name: "Essentials for enterprise IT OSCAL releases",
+    url: "https://github.com/AustralianCyberSecurityCentre/e4eit-oscal/releases.atom",
+    kind: "posts",
+    include: [/^v\d{4}\.\d{2}/],
+    reviewMapping: { file: "content/frameworks/asd-essentials-enterprise-it.yaml", pinned: "v2026.10.15" },
+    max: 3,
+  },
+  {
     // A new Prowler release may rename checks; review content/imports/prowler-*.yaml against checkedAgainst.
     id: "prowler-releases",
     name: "Prowler releases",

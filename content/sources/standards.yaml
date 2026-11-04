@@ -105,3 +105,51 @@
   publisher: Australian Signals Directorate
   url: https://github.com/AustralianCyberSecurityCentre/ism-oscal/releases/tag/v2026.09.4
   retrieved: 2026-10-10
+- id: asd-essentials-what
+  title: What is the Essentials?
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/what-is-the-essentials
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-enterprise-it
+  title: Essentials for enterprise IT
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essentials-for-enterprise-it
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-cloud
+  title: Essentials for cloud
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/essentials-for-cloud
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-evidence-enterprise-it
+  title: Assessment evidence guide for enterprise IT
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/assessment-evidence-guide-for-enterprise-it
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-assessment-process
+  title: Essentials assessment process guide
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/assessment-process-guide
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-transition
+  title: Transitioning from the Essential Eight
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/transitioning-from-the-essential-eight
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-faq
+  title: Essentials frequently asked questions
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/publication/frequently-asked-questions
+  retrieved: 2026-11-04
+  highAttention: true
+- id: asd-essentials-oscal
+  title: Essentials for enterprise IT OSCAL releases
+  publisher: Australian Signals Directorate
+  url: https://www.cyber.gov.au/e4eit/oscal
+  retrieved: 2026-11-04
+  highAttention: true

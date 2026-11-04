@@ -41,6 +41,11 @@
     - { framework: mcsb, ref: LT-1 }
     - { framework: mcsb, ref: PV-5 }
     - { framework: ms-zero-trust, ref: Infrastructure I }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [BUS], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-029
   module: azure
@@ -70,6 +75,9 @@
     - { framework: cis-azure, ref: "8.1.15" }
     - { framework: nist-csf-2, ref: DE.AE-06 }
     - { framework: mcsb, ref: IR-2 }
+  essentials:
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
 
 - id: MS-AZ-030
   module: azure
@@ -101,6 +109,11 @@
     - { framework: nist-csf-2, ref: ID.RA-05 }
     - { framework: mcsb, ref: AM-1 }
     - { framework: ms-zero-trust, ref: Applications VI }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [CPS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [CPS], coverage: partial }
 
 - id: MS-AZ-031
   module: azure
@@ -139,6 +152,14 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [PE], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.PRO-05.3, domains: [PE], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [PE], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.PRO-05.x3, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: MS-AZ-032
   module: azure
@@ -171,6 +192,12 @@
     - { framework: mcsb, ref: LT-5 }
     - { framework: ism, ref: ISM-1405 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: MS-AZ-033
   module: azure
@@ -200,6 +227,12 @@
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: mcsb, ref: LT-4 }
     - { framework: ism, ref: ISM-1405 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: MS-AZ-034
   module: azure
@@ -241,6 +274,10 @@
     - { framework: mcsb, ref: LT-1 }
     - { framework: ism, ref: ISM-1228 }
     - { framework: ism, ref: ISM-1650 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.PRO-05.3, IT.DET-01.2, IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: alerting on changes does not show every admin action is recorded, logs are centralised, alerts are triaged or software execution is baselined."
 
 - id: MS-AZ-035
   module: azure
@@ -272,6 +309,13 @@
     - { framework: mcsb, ref: PV-1 }
     - { framework: mcsb, ref: PV-2 }
     - { framework: ms-zero-trust, ref: Infrastructure IV }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-036
   module: azure
@@ -303,3 +347,6 @@
     - { framework: cis-azure, ref: "9.3.9" }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: AM-3 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [CPS], coverage: partial }

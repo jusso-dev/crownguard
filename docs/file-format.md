@@ -48,6 +48,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | `notes` | object | Question id to note. At most 4000 characters each. |
 | `orphans` | object | Answers and notes whose question is no longer asked. `{ answer?, note? }` per question id. |
 | `ismBaseline` | string | Optional ISM baseline shown in the report: `NON_CLASSIFIED`, `OFFICIAL_SENSITIVE` or `PROTECTED`. Annotates which findings touch controls in that baseline and adds a summary count; never changes a score. |
+| `essentials` | object | Optional ASD Essentials section in the report: `{ chapter: "enterprise-it" | "cloud" }`. Adds indicative per-domain effectiveness ratings beside the Essential Eight; never changes a score. |
 | `branding` | object | `logoDataUrl?`, `logoBackdrop?`, `primary`, `accent`, `marking`, `preparedBy`, `preparedFor`. |
 | `evidence` | object | Scan evidence per question id, from an optional automated import. Carries the scanner (`tool`, `toolVersion`), the `account` it covered, and per check a `count` ("3 of 41 resources failing") and up to ten `examples`. |
 | `imports` | object[] | One row per scan import: source, `toolVersion?`, tenant, scanned at, imported at, answers applied. |
@@ -62,6 +63,9 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ### 4 — current
 
+- `essentials` records the optional ASD Essentials section and its chapter (`enterprise-it` or `cloud`). Optional and
+  presentational like `ismBaseline`, so no version move: a build that has never heard of it carries it through a
+  re-save untouched, and a file without it reports exactly as before.
 - `mode` records which flow the assessment runs in: `"ai-register"` for the standalone AI use-case register with its
   own step list and its own PDF, absent and meaning the full crown-jewel assessment otherwise. Optional and on the
   loose top-level object, so no version move: older builds open a register file in the full assessment and carry the

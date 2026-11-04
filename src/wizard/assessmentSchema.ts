@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { exposures, type ExposureId } from "../content/schema";
+import { essentialsChapters, exposures, type ExposureId } from "../content/schema";
 import { socProviders, type SocProvider } from "../engine/soc";
 import {
   aiAccess,
@@ -116,6 +116,8 @@ export const assessmentSchema = z.looseObject({
   orphans: orphans.optional(),
   // Optional ISM baseline shown in the report. Annotates findings and adds a summary count; never changes a score.
   ismBaseline: z.enum(["NON_CLASSIFIED", "OFFICIAL_SENSITIVE", "PROTECTED"]).optional(),
+  // Optional ASD Essentials section in the report. Indicative; sits beside the Essential Eight and changes no score.
+  essentials: z.object({ chapter: z.enum(essentialsChapters) }).optional(),
   branding: z.object({
     logoDataUrl: z
       .string()

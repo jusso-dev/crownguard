@@ -20,6 +20,7 @@ import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
 import { socMaturity, type SocProvider, type SocResult } from "../engine/soc";
 import { idcfRows, jewelDsl, systemCell, type IdcfCell, type IdcfRow, type JewelDsl } from "../engine/idcf";
 import { ismBaselineReport, type IsmBaselineSummary } from "../engine/ism";
+import { essentials as essentialsResult, transitionGaps, type EssentialsResult, type TransitionGap } from "../engine/essentials";
 import type { Answer, Assessment } from "../engine/types";
 import { readableOn, textOn, tint } from "../theme/color";
 
@@ -94,6 +95,11 @@ export interface ReportModel {
   ism: FrameworkRow[];
   /** The chosen ISM baseline's annotation, when one is picked. Never changes a score. */
   ismBaseline?: IsmBaselineSummary;
+  /**
+   * The optional ASD Essentials section for the chosen chapter: indicative ratings by phase and domain, and the
+   * Essential Eight to Essentials gap view. Built from `essentials:` tags only; nothing in it comes from `e8`.
+   */
+  essentials?: EssentialsResult & { gaps: TransitionGap[] };
   sources: Source[];
   assetTypeName: (id: string) => string;
   frameworkName: (id: string) => string;
@@ -195,6 +201,15 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const aiRegister = aiModule ? { ...aiRegisterSummary(catalogue, assessment, risks, generatedAt), model: aiModule.model, share: shareWithDta(assessment, generatedAt) } : undefined;
   if (aiModule) for (const id of aiRegisterSources(aiModule)) sourceIds.add(id);
 
+  const essentialsFramework = assessment.essentials ? catalogue.frameworks.get(`asd-essentials-${assessment.essentials.chapter}`) : undefined;
+  const essentials = essentialsFramework?.essentials
+    ? (() => {
+        const result = essentialsResult(essentialsFramework, questions, answers);
+        for (const id of [essentialsFramework.source, ...essentialsFramework.sources]) sourceIds.add(id);
+        return { ...result, gaps: transitionGaps(result) };
+      })()
+    : undefined;
+
   const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));
   if (questions.some((q) => q.e8.length)) used.add("essential-eight");
   const roleOf = (id: string) =>
@@ -208,7 +223,9 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
             ? "Data Security Level protection requirements"
             : id === "ism"
               ? "Guideline mapping"
-              : "Vendor guidance the questions are drawn from";
+              : id.startsWith("asd-essentials-")
+                ? "Indicative effectiveness ratings by domain"
+                : "Vendor guidance the questions are drawn from";
 
   const titled = (rs: E8Result[]) => rs.map((r) => ({ ...r, title: e8Titles.find((c) => c.id === r.strategy)?.title ?? r.strategy }));
   const idcf = catalogue.frameworks.has("idcf")
@@ -235,6 +252,8 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     .filter((f) => !!f)
     .map((f) => ({ name: f.name, publisher: f.publisher, role: roleOf(f.id) }))
     .sort((x, y) => Number(y.role.startsWith("Vendor")) - Number(x.role.startsWith("Vendor")) || x.name.localeCompare(y.name));
+  if (essentials && essentialsFramework)
+    frameworksUsed.push({ name: essentialsFramework.name, publisher: essentialsFramework.publisher, role: roleOf(essentialsFramework.id) });
   if (soc)
     frameworksUsed.push({
       name: `SOC-CMM® model v${soc.model.basisVersion.split(".").slice(0, 2).join(".")} (domain and aspect structure)`,
@@ -285,6 +304,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     cis: refRows((framework) => framework.startsWith("cis-")),
     ism: refRows((framework) => framework === "ism"),
     ismBaseline: assessment.ismBaseline ? ismBaselineReport(catalogue, questions, answers, assessment.ismBaseline) : undefined,
+    essentials,
     sources: [...sourceIds].map((id) => catalogue.sources.get(id)).filter((s): s is Source => !!s).sort((a, b) => a.publisher.localeCompare(b.publisher) || a.title.localeCompare(b.title)),
     assetTypeName: (id) => bundles.flatMap((x) => x.assetTypes).find((a) => a.id === id)?.name ?? id,
     frameworkName: (id) => catalogue.frameworks.get(id)?.shortName ?? id,

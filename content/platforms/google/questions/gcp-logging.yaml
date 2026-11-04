@@ -25,6 +25,9 @@
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
     - { framework: ism, ref: ISM-1537 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
 
 - id: GO-CLOG-002
   module: gcp
@@ -55,6 +58,13 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.1, domains: [PE], coverage: partial }
+    - { action: IT.DET-01.2, domains: [PE], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: GO-CLOG-003
   module: gcp
@@ -82,6 +92,13 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: google-security-guidance, ref: "Blueprint: Detective controls" }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [BUS], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [BUS], coverage: partial }
 
 - id: GO-CLOG-004
   module: gcp
@@ -109,6 +126,10 @@
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: ism, ref: ISM-1228 }
     - { framework: ism, ref: ISM-1650 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.PRO-05.3, IT.DET-01.2, IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: alerting on changes does not show every admin action is recorded, logs are centralised, alerts are triaged or software execution is baselined."
 
 - id: GO-CLOG-005
   module: gcp
@@ -144,6 +165,14 @@
     - { strategy: restrict-admin-privileges, level: 2 }
     - { strategy: application-control, level: 2 }
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: GO-CLOG-006
   module: gcp
@@ -182,6 +211,12 @@
     - { framework: ism, ref: ISM-1702 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BS, BUS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BS, BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BS, BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BS, BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BS, BUS], coverage: partial }
 
 - id: GO-CLOG-007
   module: gcp
@@ -219,6 +254,14 @@
     - { framework: ism, ref: ISM-1698 }
   e8:
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BS], coverage: partial }
+    - { action: CL.PRO-01.x3, domains: [BS], coverage: partial }
 
 - id: GO-CLOG-008
   module: gcp
@@ -252,6 +295,13 @@
     - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: GO-CLOG-009
   module: gcp
@@ -282,6 +332,11 @@
     - { framework: ism, ref: ISM-1696 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
 
 - id: GO-CLOG-010
   module: gcp
@@ -310,6 +365,9 @@
     - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
 
 - id: GO-CLOG-011
   module: gcp
@@ -341,3 +399,8 @@
     - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }

@@ -34,6 +34,14 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [IS, PE], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.PRO-05.3, domains: [PE], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [IS, PE], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.PRO-05.x3, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 and IT.DET-02.2 not tagged: collecting and keeping logs does not show they are normalised or that detection logic runs on them."
 
 - id: AWS-LOG-002
   module: core
@@ -69,6 +77,10 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.1, domains: [PE], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
 
 - id: AWS-LOG-003
   module: core
@@ -96,6 +108,9 @@
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
 
 - id: AWS-LOG-004
   module: core
@@ -133,6 +148,9 @@
     - { framework: aws-fsbp, ref: GuardDuty.13 }
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
 
 - id: AWS-LOG-005
   module: core
@@ -165,6 +183,11 @@
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: nist-csf-2, ref: DE.CM-09 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [BUS], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [BUS], coverage: partial }
 
 - id: AWS-LOG-006
   module: core
@@ -209,6 +232,10 @@
     - { framework: nist-csf-2, ref: DE.AE-06 }
     - { framework: ism, ref: ISM-1228 }
     - { framework: ism, ref: ISM-1650 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.PRO-05.3, IT.DET-01.2, IT.DET-03.1, IT.DET-03.2 and IT.DET-04.1 not tagged: alerting on changes does not show every admin action is recorded, logs are centralised, alerts are triaged or software execution is baselined."
 
 - id: AWS-LOG-007
   module: core
@@ -234,6 +261,12 @@
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: nist-csf-2, ref: PR.PS-04 }
     - { framework: ism, ref: ISM-1405 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: AWS-LOG-008
   module: core
@@ -263,6 +296,10 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.2 and IT.DET-04.1 not tagged: a triage time does not show correlation across sources or baselining of software execution."
 
 - id: AWS-LOG-009
   module: core
@@ -298,6 +335,14 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BS], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 not tagged: central collection does not show logs are normalised or time-synchronised."
 
 - id: AWS-LOG-010
   module: core
@@ -329,6 +374,11 @@
   e8:
     - { strategy: mfa, level: 2 }
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.RES-03.1, domains: [VR], coverage: partial }
+    - { action: IT.RES-05.1, domains: [VR], coverage: partial }
+    - { action: CL.RES-03.x1, domains: [VR], coverage: partial }
+    - { action: CL.RES-05.x1, domains: [VR], coverage: partial }
 
 - id: AWS-LOG-011
   module: core
@@ -358,3 +408,11 @@
   e8:
     - { strategy: mfa, level: 3 }
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BUS, UD], coverage: partial }
+    - { action: IT.DET-01.3, domains: [VR], coverage: partial }
+    - { action: IT.DET-03.1, domains: [VR], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BUS, UD], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."
