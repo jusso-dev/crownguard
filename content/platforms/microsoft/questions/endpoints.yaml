@@ -1309,3 +1309,34 @@
     - { action: IT.PRO-04.2, domains: [UD, BUS], coverage: partial }
     - { action: CL.PRO-04.x1, domains: [UD, BUS], coverage: partial }
     - { action: CL.PRO-04.x2, domains: [UD, BUS], coverage: partial }
+
+- id: MS-END-037
+  module: core
+  domain: endpoints
+  appliesTo: [ms-managed-endpoints]
+  severity: high
+  question: Is Defender for Endpoint network protection in block mode on every managed device, so connections to known malicious or low-reputation sites are blocked from any browser or app?
+  why: >-
+    Phishing pages, malware downloads and command-and-control servers all need an outbound connection.
+    Browser filtering alone misses connections made by other apps, scripts and malware, while network
+    protection stops them at the device, on or off the office network.
+  yesLooksLike: >-
+    Network protection is set to block mode (not audit) for all Windows, macOS and other supported
+    devices through Intune or another management tool, SmartScreen is on, and custom indicators block
+    any domains or IP addresses your threat intelligence flags. Web content filtering may also block
+    unwanted categories.
+  remediation: >-
+    In Intune, set the Defender for Endpoint network protection setting to block mode in an endpoint
+    security or attack surface reduction policy for all devices, after a short audit period to check
+    for false positives. Keep Microsoft Defender SmartScreen on, add indicators for domains and IP
+    addresses you need to block, and consider web content filtering policies for high-risk categories.
+  effort: S
+  licence: [defender-endpoint-p1]
+  sources: [ms-mde-network-protection, ms-mde-indicators-ip-url, ms-mde-web-content-filtering]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: mcsb, ref: ES-1 }
+    - { framework: ism, ref: ISM-1236 }
+  essentials:
+    - { action: IT.PRO-09.2, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x1, domains: [BS, UD], coverage: partial }

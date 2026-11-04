@@ -416,3 +416,96 @@
     - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
     - { action: CL.DET-03.x1, domains: [VR], coverage: partial }
   essentialsReviewed: "IT.DET-02.1 and IT.DET-04.1 not tagged: central collection and analysis do not show normalisation or baselining of software execution."
+
+- id: AWS-LOG-012
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are GuardDuty Extended Threat Detection attack sequence findings, which link signals across identities, data and workloads, monitored and investigated as single incidents?
+  why: >-
+    An attacker using stolen credentials leaves a trail of individually minor events: an unusual API
+    call, a policy change, then data read from a bucket. Looked at one by one, they're easy to dismiss.
+    Attack sequences join them into one finding that shows the whole attack.
+  yesLooksLike: >-
+    GuardDuty is on across the organisation with the protection plans for your workloads, so Extended
+    Threat Detection has signals to correlate; attack sequence findings reach the same triage queue as
+    other critical findings; and analysts work each one as an incident covering every resource and
+    identity it names.
+  remediation: >-
+    Confirm GuardDuty is enabled in every account and region (Extended Threat Detection comes with it at
+    no extra cost), enable the S3, EKS, runtime and other protection plans that cover your crown jewels,
+    and route attack sequence findings from the delegated administrator account to your on-call queue
+    through EventBridge or Security Hub CSPM. Add a playbook step that investigates the full sequence.
+  effort: S
+  licence: [guardduty]
+  sources: [aws-guardduty-extended-threat-detection]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-03 }
+    - { framework: ism, ref: ISM-1228 }
+  essentials:
+    - { action: IT.DET-03.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-03.x2, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-03.1 and IT.DET-04.1 not tagged: monitoring attack sequences does not set a triage time or baseline software execution."
+
+- id: AWS-LOG-013
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: Are your AWS security logs and findings normalised into a common schema, such as OCSF in Amazon Security Lake or your SIEM's own model, so they can be searched and correlated together?
+  why: >-
+    CloudTrail, VPC flow logs, DNS logs and security findings each use their own format. Without a
+    common schema, an investigation means writing different queries for every source and joining them
+    by hand, which is slow and misses links between them.
+  yesLooksLike: >-
+    Amazon Security Lake collects CloudTrail, VPC flow, Route 53 resolver and Security Hub CSPM data
+    from every account and region and converts it to OCSF, or your SIEM parses the same sources into
+    its normalised model; timestamps, account, user and resource fields line up across sources; and
+    detections and hunting queries run across all of them.
+  remediation: >-
+    Enable Amazon Security Lake from the delegated administrator account for all accounts and regions,
+    add the AWS log sources you use, and give your SIEM or analytics tools subscriber access. If you
+    already use a SIEM, check that each AWS source has a parser into its normalised schema. Then
+    rewrite important detections to query the normalised fields so they correlate across sources.
+  effort: M
+  licence: []
+  sources: [aws-security-lake, aws-wa-correlate-alerts]
+  refs:
+    - { framework: nist-csf-2, ref: DE.AE-03 }
+    - { framework: ism, ref: ISM-1959 }
+  essentials:
+    - { action: IT.DET-02.1, domains: [IS, PE, CPS], coverage: partial }
+    - { action: CL.DET-02.x3, domains: [IS, PE, CPS], coverage: partial }
+
+- id: AWS-LOG-014
+  module: core
+  domain: logging-detection
+  appliesTo: ["*"]
+  severity: medium
+  question: After each significant cyber security incident in AWS, do you hold a post-incident review that finds the gaps behind each stage of the attack and checks how well monitoring and response worked, with fixes assigned?
+  why: >-
+    An incident shows exactly where your defences let an attacker in, move and stay. Without a review,
+    the same gaps stay open and the same detection or response delays happen next time.
+  yesLooksLike: >-
+    Within a few weeks of each significant incident, a lessons learned review records how the attacker
+    got in, moved and acted, which control failed or was missing at each stage, when GuardDuty or other
+    monitoring first saw it and how the response plan performed; actions such as new detections, more
+    logging or updated playbooks have owners and due dates; and the incident register links to the
+    review.
+  remediation: >-
+    Add a lessons learned step to your incident response plan, following AWS's guidance on a framework
+    for learning from incidents and ASD's practitioner guidance. Use CloudTrail, GuardDuty findings and
+    other logs to rebuild each stage, list the gaps, and track the resulting changes to controls,
+    detections and playbooks until they are done.
+  effort: M
+  licence: []
+  sources: [aws-wa-learning-from-incidents, asd-ir-planning]
+  refs:
+    - { framework: nist-csf-2, ref: RS.AN-03 }
+    - { framework: nist-csf-2, ref: ID.IM-04 }
+  essentials:
+    - { action: IT.RES-04.1, domains: [VR], coverage: partial }
+    - { action: IT.RES-04.2, domains: [VR], coverage: partial }
+    - { action: CL.RES-04.x1, domains: [VR], coverage: partial }
+    - { action: CL.RES-04.x2, domains: [VR], coverage: partial }

@@ -404,3 +404,34 @@
     - { action: IT.PRO-06.3, domains: [BUS], coverage: partial }
     - { action: CL.PRO-06.x3, domains: [BUS], coverage: partial }
     - { action: CL.PRO-06.x4, domains: [BUS], coverage: partial }
+
+- id: GO-CLOG-012
+  module: gcp
+  domain: gcp-logging
+  appliesTo: ["*"]
+  severity: low
+  question: Are Essential Contacts set at the organisation for security and technical notifications, and does a named team follow Google Cloud security bulletins and act on those that affect your services?
+  why: >-
+    Google sends notices about vulnerabilities, abuse and required changes to the contacts on your
+    organisation, and publishes security bulletins for issues in its products. If those reach a former
+    employee or nobody reads them, a known exposure can stay open until it is exploited.
+  yesLooksLike: >-
+    Essential Contacts at the organisation send the Security and Technical categories to a monitored
+    team group rather than individuals; someone subscribes to the Google Cloud security bulletins feed;
+    and each bulletin or notice affecting a product you use becomes a tracked action with an owner.
+  remediation: >-
+    In the Google Cloud console, open Essential Contacts at the organisation and add a security team
+    group for the Security and Technical categories (and the others you need). Subscribe that team to
+    the security bulletins XML feed, review each bulletin against the products you run, and record the
+    action taken.
+  effort: S
+  licence: []
+  sources: [gcp-essential-contacts, gcp-security-bulletins]
+  refs:
+    - { framework: cis-gcp, ref: "1.17" }
+    - { framework: nist-csf-2, ref: GV.SC-07 }
+    - { framework: nist-csf-2, ref: ID.RA-02 }
+  essentials:
+    - { action: IT.PRO-16.2, domains: [CPS, PE], coverage: partial }
+    - { action: CL.PRO-16.x3, domains: [CPS, PE], coverage: partial }
+    - { action: CL.PRO-13.x3, domains: [CPS, PE], coverage: partial }

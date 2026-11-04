@@ -295,3 +295,35 @@
   essentials:
     - { action: IT.PRO-07.1, domains: [BUS], coverage: partial }
     - { action: CL.PRO-07.x3, domains: [BUS], coverage: partial }
+
+- id: GO-CIAM-010
+  module: gcp
+  domain: gcp-iam
+  appliesTo: [gcp-org-iam, gcp-data-stores, gcp-service-accounts]
+  severity: high
+  question: Do hierarchical or global firewall policies block egress from your Google Cloud networks to known malicious IP addresses, using Google Threat Intelligence lists?
+  why: >-
+    Compromised VMs and containers call out to command-and-control servers, crypto mining pools and
+    anonymous proxies to take instructions and move data. A deny rule on those destinations stops the
+    connection even when the workload itself is already compromised.
+  yesLooksLike: >-
+    Cloud NGFW Standard is in use, and a hierarchical firewall policy at the organisation or folder (or
+    a global network firewall policy on every VPC with workloads) has egress deny rules using Google
+    Threat Intelligence lists such as known malicious IPs, crypto mining sites, Tor exit nodes and
+    anonymous proxies, with firewall rule logging turned on.
+  remediation: >-
+    Create or update a hierarchical firewall policy and add an egress rule with the deny action whose
+    destination is the predefined Google Threat Intelligence lists (for example
+    iplist-known-malicious-ips, iplist-crypto-miners, iplist-tor-exit-nodes and iplist-anon-proxies).
+    Associate it with the organisation or the folders holding production, give it a higher priority
+    than broad allow rules, and turn on logging for the rule.
+  effort: M
+  licence: []
+  sources: [gcp-ngfw-threat-intelligence, gcp-ngfw-overview]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-0963 }
+  essentials:
+    - { action: IT.PRO-09.2, domains: [BS, CPS], coverage: partial }
+    - { action: CL.PRO-09.x1, domains: [BS, CPS], coverage: partial }
+  essentialsReviewed: "IT.PRO-09.1 and IT.PRO-09.3 not tagged: blocking egress to malicious IP addresses does not inspect outbound data or filter inbound content."

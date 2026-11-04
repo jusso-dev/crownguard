@@ -710,3 +710,35 @@
   essentials:
     - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
     - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
+
+- id: AWS-NET-022
+  module: core
+  domain: network-workloads
+  appliesTo: [aws-workloads, aws-data-stores, aws-ai-agents]
+  severity: high
+  question: Does Route 53 Resolver DNS Firewall, with the AWS managed domain lists set to block, protect every VPC that runs your workloads?
+  why: >-
+    Malware, ransomware and data theft tools look up their command-and-control and drop sites by name
+    before they connect. Blocking known malicious domains at the VPC resolver stops those lookups for
+    every instance, container and function, whatever software they run.
+  yesLooksLike: >-
+    A DNS Firewall rule group with the AWS managed domain lists for malware, botnet command and control
+    and aggregate threats set to BLOCK is associated with every VPC that hosts workloads, in every
+    account and region you use (for example through Firewall Manager); the rule group's logs go to the
+    log archive; and any VPC egress through AWS Network Firewall also uses the AWS threat signature
+    managed rule groups in drop mode.
+  remediation: >-
+    Create a DNS Firewall rule group with the AWS managed domain lists for malware, botnet command and
+    control and aggregate threat lists, run it in ALERT for a short period to catch false positives,
+    then set the rules to BLOCK. Associate it with every workload VPC, using Firewall Manager across the
+    organisation so new VPCs are covered, and turn on query logging. If you inspect egress with AWS
+    Network Firewall, add the threat signature managed rule groups as well.
+  effort: M
+  licence: []
+  sources: [aws-dns-firewall, aws-dns-firewall-managed-lists, aws-network-firewall-threat-signatures]
+  refs:
+    - { framework: nist-csf-2, ref: PR.IR-01 }
+    - { framework: ism, ref: ISM-1782 }
+  essentials:
+    - { action: IT.PRO-09.2, domains: [BS, CPS], coverage: partial }
+    - { action: CL.PRO-09.x1, domains: [BS, CPS], coverage: partial }
