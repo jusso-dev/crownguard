@@ -249,7 +249,7 @@ describe("the registry and the workflow", () => {
   it("commits every file an updater writes, and nothing else", () => {
     const paths = [...new Set(UPDATERS.flatMap((u) => u.paths))];
     for (const p of paths) expect(covered(p), `${p} missing from add-paths`).toBe(true);
-    for (const a of addPaths) expect(paths.some((p) => (a.includes("*") ? covered(p) : a === p)), `${a} is in add-paths but no updater writes it`).toBe(true);
+    for (const a of addPaths) expect(paths.some((p) => (a.includes("*") ? globMatch(a, p) : a === p)), `${a} is in add-paths but no updater writes it`).toBe(true);
   });
 
   it("reads every pin it is going to move from the repo, and they agree", () => {
