@@ -12,7 +12,7 @@ const text = (f: string) => readFileSync(join(dir, f), "utf8");
 
 describe("GitHub workflows", () => {
   it("finds the workflows it is meant to be policing", () => {
-    expect(files.sort()).toEqual(["ci.yml", "dependency-review.yml", "desktop-release.yml", "scorecard.yml", "source-watch.yml"]);
+    expect(files.sort()).toEqual(["ci.yml", "dependency-review.yml", "desktop-release.yml", "guidance-update.yml", "scorecard.yml", "source-watch.yml"]);
   });
 
   it("pins every action to a full commit SHA, with the version in a comment", () => {

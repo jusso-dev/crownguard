@@ -442,7 +442,7 @@ export const FEEDS: FeedDef[] = [
     url: "https://github.com/prowler-cloud/prowler/releases.atom",
     kind: "posts",
     include: [/^\s*Prowler\s+\d+\.\d+/i, /^\d+\.\d+\.\d+\s*$/],
-    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.44.0" },
+    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.47.0" },
     max: 3,
   },
   {
@@ -452,7 +452,7 @@ export const FEEDS: FeedDef[] = [
     url: "https://github.com/cisagov/ScubaGoggles/releases.atom",
     kind: "posts",
     include: [/^v?\d+\.\d+/],
-    reviewMapping: { file: "content/imports/scubagoggles.yaml", pinned: "v1.0.1" },
+    reviewMapping: { file: "content/imports/scubagoggles.yaml", pinned: "v1.1.0" },
     max: 3,
   },
   {

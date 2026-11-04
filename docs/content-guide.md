@@ -90,8 +90,8 @@ kept until the content actually moves.
 4. Re-read the questions the changed controls map to — the diff shows which ids moved — then run
    `pnpm validate:content` and the test suite.
 
-The `ISM OSCAL releases` feed in `scripts/watch/feeds.ts` reports every new release to the source watch, so a bump
-is never missed. `pnpm validate:content` also warns (never fails) when a question tagged `e8:` maps to no ISM
+The `ISM OSCAL releases` feed in `scripts/watch/feeds.ts` reports every new release to the source watch, and the
+nightly [guidance update](#guidance-update) runs step 1 for you and opens a pull request, so a bump is never missed. `pnpm validate:content` also warns (never fails) when a question tagged `e8:` maps to no ISM
 control in the matching Essential Eight profile: the maturity model document stays the source of truth for maturity
 results, and the warning is a prompt to review the mapping, not a defect in the question.
 
@@ -342,8 +342,8 @@ combined, and the panel lists the accounts it found.
 
 `checkedAgainst` records the Prowler release the check ids were checked against; an import from another major version
 is flagged, because Prowler renames checks between versions. `e2e/fixtures/prowler-checks-<provider>.txt` pins the ids
-of that release, so a mapping that drifts away from Prowler fails `pnpm test`. Regenerate both together when
-`checkedAgainst` moves.
+of that release, so a mapping that drifts away from Prowler fails `pnpm test`. The nightly
+[guidance update](#guidance-update) regenerates both together when Prowler releases.
 
 ### Importing a ScubaGoggles scan
 
@@ -359,7 +359,8 @@ is stripped before the text becomes evidence. A ScubaGear (Microsoft 365) report
 Policy ids carry a version suffix, so the importer matches on the id without it and flags a report whose suffix differs
 from the one crownguard checked against. `checkedAgainst` records the ScubaGoggles release the ids came from, and
 `e2e/fixtures/scubagoggles-controls.txt` pins the policy ids of that release, so a mapping that drifts away from the
-SCuBA baselines fails `pnpm test`. Regenerate both together when `checkedAgainst` moves.
+SCuBA baselines fails `pnpm test`. The nightly [guidance update](#guidance-update) regenerates both together when
+ScubaGoggles releases.
 
 ## Source watch
 
@@ -462,3 +463,45 @@ if the nightly runs stop, re-enable the workflow from the Actions tab.
 at build time from `watch/state.json` (newest feed cursor date, else the git date of the state file) via the tiny
 `SOURCES_LAST_CHECKED` constant in `src/content/sourcesChecked.ts` — the whole state JSON is never shipped in the
 client bundle.
+
+## Guidance update
+
+Source watch only reports a new ISM, Prowler or ScubaGoggles release. `.github/workflows/guidance-update.yml` acts on
+it: each night (17:23 UTC, and on demand from the Actions tab) it runs `pnpm guidance:update`, which checks the
+latest GitHub release of each source in `scripts/guidance/registry.ts` against the pins in the repo and, when upstream
+is newer, regenerates the files. It keeps one pull request open from the `bot/guidance-update` branch, labelled
+`guidance-update`, and closes it when there is nothing to change.
+
+| Source | Regenerated | Pins moved |
+| --- | --- | --- |
+| ISM OSCAL catalog | `content/frameworks/ism.yaml`, `scripts/ism/fixtures/ism-controls.txt` (through `buildIsm`) | the tag in both headers, the `ism-oscal-releases` feed pin, the `asd-ism-oscal` source |
+| Prowler | `e2e/fixtures/prowler-checks-aws.txt` and `-azure.txt` | `checkedAgainst` in `prowler-aws.yaml` and `prowler-azure.yaml`, the `prowler-releases` feed pin |
+| ScubaGoggles | `e2e/fixtures/scubagoggles-controls.txt` | `checkedAgainst` in `scubagoggles.yaml`, the `scubagoggles-releases` feed pin |
+
+The scanner lists always move to the new release. `checkedAgainst` and the feed pin move only when every check id the
+mapping uses still exists upstream. When one has gone, the PR opens as a draft, lists each removed id with the
+questions that use it under "Needs review", and `pnpm test` fails on it until the mapping is fixed. Fix the mapping on
+a branch of your own and merge that; the next nightly run then moves the pins. For the ISM, a question citing a
+control the new release drops or withdraws is listed the same way, and `pnpm validate:content` warns about it.
+
+**Handling the PR.** Read each release's notes (linked from the PR body) against the diff, follow the ISM steps in
+[Bumping the ISM release](#the-information-security-manual-generated) for an ISM bump, and look at the new checks the
+PR points out in families a mapping already uses. Merge when the diff matches the notes.
+
+**How it runs.** The `update` job has a read-only token: it reads the releases and uploads the regenerated files with
+`summary.json` and `pr-body.md`. The `propose` job applies them with `pnpm guidance:apply`, which writes only the
+updaters' own paths and re-derives the `feeds.ts` pins from validated tags, then runs `pnpm validate:content`,
+`pnpm lint`, `pnpm typecheck` and `pnpm test` before it opens or updates the PR. A source that can't be read fails the
+run rather than closing a PR that is still needed. When only the retrieval date would move, the open PR is left as it
+is.
+
+Run it locally with `pnpm guidance:update --dry-run` to see what would change, `--only prowler,ism` to limit it, and
+`--out <dir>` to write the PR body and summary. Set `GITHUB_TOKEN` to avoid the API's limit of 60 requests an hour.
+
+**Adding a source.** An OSCAL catalog is one `oscalUpdater({...})` entry in `scripts/guidance/registry.ts`: its repo,
+catalog file name, framework id, the generated framework file and id list, the feed in `scripts/watch/feeds.ts` and the
+`content/sources` entry linking the release. Its generator needs a `build(catalog, { tag, retrieved, previousYaml })`
+function like `buildIsm`, and both files' headers must say `at release tag <tag>`. ASD's Essentials for enterprise IT
+(`AustralianCyberSecurityCentre/e4eit-oscal`, `pnpm essentials:build -- --tag <tag>`) fits this shape. Then add its
+two files to `add-paths` in the workflow; `scripts/guidance/run.test.ts` fails until the workflow and the registry
+agree. A new scanner list is a `scannerUpdater` entry with a function that lists the ids at a tag.

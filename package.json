@@ -20,6 +20,8 @@
     "essentials:cloud": "tsx scripts/essentials/cloud.ts",
     "watch:sources": "tsx scripts/watch/index.ts",
     "watch:apply": "tsx scripts/watch/apply-cli.ts",
+    "guidance:update": "tsx scripts/guidance/index.ts",
+    "guidance:apply": "tsx scripts/guidance/apply-cli.ts",
     "check:bundle": "tsx scripts/check-bundle-size.ts",
     "gen:sources-checked": "tsx scripts/gen-sources-checked.ts",
     "tauri": "tauri",

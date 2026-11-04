@@ -1,5 +1,5 @@
-# Check ids in Prowler aws at tag 5.44.0 (2026-09-29), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.44.0/prowler/providers/aws/services.
+# Check ids in Prowler aws at tag 5.47.0 (2026-10-29), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.47.0/prowler/providers/aws/services.
 # One id per line. Regenerate when content/imports/prowler-aws.yaml moves to a newer Prowler.
 accessanalyzer_enabled
 accessanalyzer_enabled_without_findings
@@ -70,9 +70,11 @@ bedrock_full_access_policy_attached
 bedrock_guardrail_contextual_grounding_filter_enabled
 bedrock_guardrail_prompt_attack_filter_enabled
 bedrock_guardrail_sensitive_information_filter_enabled
+bedrock_guardrail_sensitive_information_filter_enforced
 bedrock_guardrails_configured
 bedrock_knowledge_base_encrypted_with_cmk
 bedrock_model_invocation_logging_enabled
+bedrock_model_invocation_logging_text_data_enabled
 bedrock_model_invocation_logs_encryption_enabled
 bedrock_prompt_encrypted_with_cmk
 bedrock_prompt_management_exists
@@ -146,6 +148,7 @@ codebuild_report_group_export_encrypted
 codecommit_repository_no_secrets
 codepipeline_project_repo_private
 cognito_identity_pool_guest_access_disabled
+cognito_user_pool_account_recovery_sms_not_preferred
 cognito_user_pool_advanced_security_enabled
 cognito_user_pool_blocks_compromised_credentials_sign_in_attempts
 cognito_user_pool_blocks_potential_malicious_sign_in_attempts
@@ -324,6 +327,7 @@ elasticbeanstalk_environment_cloudwatch_logging_enabled
 elasticbeanstalk_environment_enhanced_health_reporting
 elasticbeanstalk_environment_managed_updates_enabled
 elasticbeanstalk_environment_no_secrets_in_configuration
+elasticbeanstalk_environment_php_platform_updated
 elb_connection_draining_enabled
 elb_cross_zone_load_balancing_enabled
 elb_desync_mitigation_mode
@@ -468,6 +472,7 @@ kms_key_not_publicly_accessible
 lib
 lightsail_database_public
 lightsail_instance_automated_snapshots
+lightsail_instance_php_blueprint_updated
 lightsail_instance_public
 lightsail_static_ip_unused
 macie_automated_sensitive_data_discovery_enabled
@@ -659,6 +664,7 @@ waf_regional_rulegroup_not_empty
 waf_regional_webacl_logging_enabled
 waf_regional_webacl_with_rules
 wafv2_webacl_logging_enabled
+wafv2_webacl_managed_rule_groups_enabled
 wafv2_webacl_rule_logging_enabled
 wafv2_webacl_with_rules
 wellarchitected_workload_no_high_or_medium_risks

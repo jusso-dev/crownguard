@@ -1,0 +1,141 @@
+name: Guidance update
+
+# Regenerates the machine-readable guidance crownguard pins to upstream releases (ISM controls from ASD's OSCAL
+# catalog, Prowler and ScubaGoggles check ids) each night, and keeps one pull request (branch bot/guidance-update)
+# open while a newer release is waiting. Source watch only reports; this updates the generated files.
+# How to handle the PR: docs/content-guide.md#guidance-update
+
+on:
+  schedule:
+    # 17:23 UTC is 03:23 AEST / 04:23 AEDT: after source watch (16:41) and away from the top of the hour.
+    - cron: "23 17 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: guidance-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Regenerate from upstream releases
+    # This job reads upstream release files, so it only ever gets a read-only token.
+    if: github.repository == 'jusso-dev/crownguard' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      blocked: ${{ steps.update.outputs.blocked }}
+      title: ${{ steps.update.outputs.title }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The open PR's files, so a night where only the retrieval date would move changes nothing.
+      - name: Fetch the open pull request branch
+        run: git fetch --no-tags --depth=1 origin +refs/heads/bot/guidance-update:refs/remotes/origin/bot/guidance-update || true
+
+      # Fails when any upstream can't be read, so a network error never closes a PR that is still needed.
+      - name: Regenerate
+        id: update
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          pnpm guidance:update
+          --out "$RUNNER_TEMP/guidance-update"
+          --previous-ref origin/bot/guidance-update
+
+      - name: Upload results
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: guidance-update
+          path: ${{ runner.temp }}/guidance-update/
+          retention-days: 30
+          if-no-files-found: error
+
+  propose:
+    name: Open, update or close the pull request
+    needs: update
+    if: github.repository == 'jusso-dev/crownguard' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: guidance-update
+          path: ${{ runner.temp }}/guidance-update
+
+      # With nothing changed the workspace stays clean, so the PR step closes any stale PR.
+      - name: Apply the regenerated files
+        if: needs.update.outputs.changed == 'true'
+        run: pnpm guidance:apply "$RUNNER_TEMP/guidance-update"
+
+      # CI on a PR opened with GITHUB_TOKEN waits for a maintainer's approval, so check everything here first.
+      - name: Validate
+        if: needs.update.outputs.changed == 'true'
+        run: |
+          pnpm validate:content
+          pnpm lint
+          pnpm typecheck
+
+      # A mapped check removed upstream fails the pinned-list tests on purpose. That PR still opens, as a draft,
+      # with the removed ids listed under "Needs review".
+      - name: Test
+        if: needs.update.outputs.changed == 'true'
+        continue-on-error: ${{ needs.update.outputs.blocked == 'true' }}
+        run: pnpm test
+
+      - name: Open, update or close the pull request
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: bot/guidance-update
+          base: main
+          add-paths: |
+            content/frameworks/ism.yaml
+            scripts/ism/fixtures/ism-controls.txt
+            content/frameworks/asd-essentials-enterprise-it.yaml
+            scripts/essentials/fixtures/e4eit-actions.txt
+            content/sources/standards.yaml
+            e2e/fixtures/prowler-checks-aws.txt
+            e2e/fixtures/prowler-checks-azure.txt
+            e2e/fixtures/scubagoggles-controls.txt
+            content/imports/*.yaml
+            scripts/watch/feeds.ts
+          commit-message: Update generated guidance to the latest upstream releases
+          title: ${{ needs.update.outputs.title }}
+          body-path: ${{ runner.temp }}/guidance-update/pr-body.md
+          labels: guidance-update
+          draft: ${{ needs.update.outputs.blocked == 'true' && 'always-true' || 'false' }}
+          delete-branch: true
+          sign-commits: true
+
+      - name: Summary
+        env:
+          OPERATION: ${{ steps.pr.outputs.pull-request-operation }}
+          PR_URL: ${{ steps.pr.outputs.pull-request-url }}
+        run: |
+          printf 'Pull request: %s %s\n' "$OPERATION" "$PR_URL" >> "$GITHUB_STEP_SUMMARY"

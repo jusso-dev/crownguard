@@ -1,7 +1,16 @@
-# Check ids in Prowler azure at tag 5.44.0 (2026-09-29), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.44.0/prowler/providers/azure/services.
+# Check ids in Prowler azure at tag 5.47.0 (2026-10-29), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.47.0/prowler/providers/azure/services.
 # One id per line. Regenerate when content/imports/prowler-azure.yaml moves to a newer Prowler.
 aisearch_service_not_publicly_accessible
+aiservices_account_diagnostic_logging_enabled
+aiservices_account_encrypted_with_cmk
+aiservices_account_local_auth_disabled
+aiservices_account_managed_identity_enabled
+aiservices_account_network_acls_default_action_deny
+aiservices_account_outbound_network_restricted
+aiservices_account_public_network_access_disabled
+aiservices_account_uses_private_endpoint
+aiservices_deployment_content_filter_prompt_shield_enabled
 aks_cluster_auto_upgrade_enabled
 aks_cluster_azure_monitor_enabled
 aks_cluster_defender_enabled
@@ -93,6 +102,7 @@ entra_user_with_vm_access_has_mfa
 entra_users_cannot_create_microsoft_365_groups
 iam_custom_role_has_permissions_to_administer_resource_locks
 iam_role_user_access_admin_restricted
+iam_subscription_owners_between_2_and_3
 iam_subscription_roles_owner_custom_not_created
 keyvault_access_only_through_private_endpoints
 keyvault_key_expiration_set_in_non_rbac
@@ -126,6 +136,8 @@ mysql_flexible_server_geo_redundant_backup_enabled
 mysql_flexible_server_high_availability_enabled
 mysql_flexible_server_minimum_tls_version_12
 mysql_flexible_server_ssl_connection_enabled
+network_application_gateway_http2_enabled
+network_application_gateway_waf_enabled
 network_bastion_host_exists
 network_flow_log_captured_sent
 network_flow_log_more_than_90_days
