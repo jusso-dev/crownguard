@@ -144,7 +144,8 @@ describe("mapping Prowler findings to questions", () => {
 
   it("warns when the scan came from a different major version of Prowler", () => {
     const rows = readProwlerCsv(fixture("prowler-aws.csv")).map((f) => ({ ...f, toolVersion: "6.0.0" }));
-    expect(readProwler(rows, awsMapping).warnings?.join(" ")).toMatch(/came from Prowler 6\.0\.0.*checked against 5\.44\.0/);
+    expect(readProwler(rows, awsMapping).warnings?.join(" ")).toMatch(/came from Prowler 6\.0\.0.*checked against/);
+    expect(readProwler(rows, awsMapping).warnings?.join(" ")).toContain(`checked against ${awsMapping.checkedAgainst}`);
     expect(read("prowler-aws.csv").warnings).toBeUndefined();
   });
 
@@ -192,6 +193,8 @@ describe("the pinned Prowler check list", () => {
       const used = mapping.mappings.flatMap((m) => m.checks);
       expect(used.length).toBeGreaterThan(50);
       expect(used.filter((c) => !known.has(c)), `${mapping.id}: check ids Prowler ${prov} doesn't have`).toEqual([]);
+      // The list and checkedAgainst move together (pnpm guidance:update), so the list is the release checked against.
+      expect(fixture(`prowler-checks-${prov}.txt`)).toMatch(new RegExp(`^# .* at tag ${mapping.checkedAgainst!.replaceAll(".", "\\.")} \\(`));
     }
   });
 });

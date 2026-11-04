@@ -45,7 +45,8 @@ describe("ScubaGoggles JSON", () => {
   it("warns when the report carries different policy versions, but still lines the policies up", () => {
     const older = example.replaceAll("GWS.GMAIL.4.2v1", "GWS.GMAIL.4.2v0.1");
     const result = read(older);
-    expect(result.warnings?.join(" ")).toMatch(/different SCuBA policy versions.*checked against v1\.0\.1/);
+    expect(result.warnings?.join(" ")).toMatch(/different SCuBA policy versions.*checked against/);
+    expect(result.warnings?.join(" ")).toContain(`checked against ${mapping.checkedAgainst}`);
     expect(result.warnings?.join(" ")).toContain("GWS.GMAIL.4.2v0.1 here against GWS.GMAIL.4.2v1");
     expect(result.suggestions.find((s) => s.question === "GO-GML-001")?.evidence.checks[0].id).toBe("GWS.GMAIL.4.2v0.1");
     expect(read(example).warnings).toBeUndefined();
@@ -145,8 +146,9 @@ describe("the pinned ScubaGoggles control list", () => {
   it("has every control id the mapping uses, so a ScubaGoggles bump shows up as a rename", () => {
     const used = mapping.mappings.flatMap((m) => m.checks);
     expect(used.length).toBeGreaterThan(60);
-    expect(used.filter((c) => !pinned.has(c)), "control ids the SCuBA baselines at v1.0.1 don't have").toEqual([]);
-    expect(mapping.checkedAgainst).toBe("v1.0.1");
+    expect(used.filter((c) => !pinned.has(c)), `control ids the SCuBA baselines at ${mapping.checkedAgainst} don't have`).toEqual([]);
+    // The list and checkedAgainst move together (pnpm guidance:update), so the list is the release checked against.
+    expect(fixture("scubagoggles-controls.txt")).toContain(`ScubaGoggles tag ${mapping.checkedAgainst} (`);
   });
 
   it("covers at least half of the Gmail, Drive, Common Controls and Gemini policies", () => {

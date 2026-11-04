@@ -419,6 +419,10 @@ unresolved" in later PRs without reopening one on its own. Page text is never co
 section names and word counts, and the text needed for diffs stays in the Actions cache. `pnpm validate:content`
 separately rejects sources that nothing cites. See [Source watch](docs/content-guide.md#source-watch).
 
+A second nightly workflow ([`guidance-update.yml`](.github/workflows/guidance-update.yml)) regenerates the ISM controls
+and the Prowler and ScubaGoggles check id lists when upstream publishes a new release, and opens a pull request with
+the changes. See [Guidance update](docs/content-guide.md#guidance-update).
+
 CIS Benchmarks are referenced by recommendation number and title only, under CIS's CC BY-NC-SA 4.0 terms. Get the
 benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit and remediation steps.
 
