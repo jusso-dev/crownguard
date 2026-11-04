@@ -329,7 +329,6 @@
   sources: [gcp-secops-mitre-coverage]
   refs:
     - { framework: nist-csf-2, ref: ID.IM-01 }
-    - { framework: ism, ref: ISM-1617 }
   essentials:
     - { action: IT.DET-05.1, domains: [VR], coverage: partial }
     - { action: CL.DET-05.x1, domains: [VR], coverage: partial }

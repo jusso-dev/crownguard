@@ -322,7 +322,7 @@
   sources: [gcp-ngfw-threat-intelligence, gcp-ngfw-overview]
   refs:
     - { framework: nist-csf-2, ref: PR.IR-01 }
-    - { framework: ism, ref: ISM-0963 }
+    - { framework: ism, ref: ISM-1416 }
   essentials:
     - { action: IT.PRO-09.2, domains: [BS, CPS], coverage: partial }
     - { action: CL.PRO-09.x1, domains: [BS, CPS], coverage: partial }
