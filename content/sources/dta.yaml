@@ -1,10 +1,10 @@
 # Australian Government AI policy and guidance, used by the optional AI use-case register (content/ai-register/).
 # Content on digital.gov.au is licensed CC BY 4.0 (the Commonwealth Coat of Arms excepted). Summaries are crownguard's own.
 - id: dta-ai-policy
-  title: Policy for the responsible use of AI in government (version 2.0, effective 15 December 2025)
+  title: Policy for the responsible use of AI in government (version 2.1; version 2.0 took effect 15 December 2025)
   publisher: Digital Transformation Agency
-  url: https://www.digital.gov.au/policy/ai/policy
-  retrieved: 2026-10-09
+  url: https://www.digital.gov.au/ai/ai-in-government-policy
+  retrieved: 2026-11-04
   highAttention: true
 - id: dta-ai-policy-strategy
   title: "Policy for the responsible use of AI in government: strategy and oversight"
@@ -16,11 +16,16 @@
   publisher: Digital Transformation Agency
   url: https://www.digital.gov.au/ai/ai-in-government-policy/preparedness-and-operations
   retrieved: 2026-10-10
-- id: dta-ai-policy-appendices
-  title: "Policy for the responsible use of AI in government: appendices (including Appendix C, in-scope criteria)"
+- id: dta-ai-appendix-b
+  title: "Policy for the responsible use of AI in government, Appendix B: definitions (AI use case, general-purpose AI)"
   publisher: Digital Transformation Agency
-  url: https://www.digital.gov.au/ai/ai-in-government-policy/appendices
-  retrieved: 2026-10-09
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/policy-responsible-use-ai-government-version-21-appendix-b-definitions
+  retrieved: 2026-11-04
+- id: dta-ai-appendix-c
+  title: "Policy for the responsible use of AI in government, Appendix C: in-scope AI use cases (criteria)"
+  publisher: Digital Transformation Agency
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/policy-responsible-use-ai-government-version-20-appendix-c-scope-ai-use-cases
+  retrieved: 2026-11-04
 - id: dta-ai-accountability
   title: Standard for accountability (internal use case register and accountable use case owners)
   publisher: Digital Transformation Agency
@@ -33,10 +38,10 @@
   url: https://www.digital.gov.au/ai/ai-in-government-policy/standard-ai-transparency-statements
   retrieved: 2026-10-09
 - id: dta-ai-classification
-  title: Classification system for AI use (version 2.0, usage patterns and domains)
+  title: "Policy for the responsible use of AI in government, Appendix D: classification system for AI use (version 2.1, usage patterns and domains)"
   publisher: Digital Transformation Agency
-  url: https://www.digital.gov.au/policy/ai/resources/use-classification
-  retrieved: 2026-10-09
+  url: https://www.digital.gov.au/ai/ai-in-government-policy/policy-responsible-use-ai-government-version-21-appendix-d-classification-system-ai-use
+  retrieved: 2026-11-04
 - id: dta-ai-impact-assessment
   title: AI use case impact assessment (requirements under the policy)
   publisher: Digital Transformation Agency

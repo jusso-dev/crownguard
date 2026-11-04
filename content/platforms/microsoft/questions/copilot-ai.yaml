@@ -18,7 +18,7 @@
     one group only.
   effort: M
   licence: [copilot, sharepoint-advanced-management]
-  sources: [ms-copilot-secure-govern, ms-copilot-configure-foundation, ms-restricted-content-discovery]
+  sources: [ms-copilot-secure-govern, ms-restricted-content-discovery, asd-essentials-ai]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: DP-1 }
@@ -83,7 +83,7 @@
     unsanctioned generative AI apps.
   effort: M
   licence: []
-  sources: [ms-dspm, ms-audit-solutions, ms-mdca-discovered-apps]
+  sources: [ms-dspm, ms-audit-solutions, ms-mdca-discovered-apps, asd-essentials-ai]
   refs:
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: mcsb, ref: AI-6 }

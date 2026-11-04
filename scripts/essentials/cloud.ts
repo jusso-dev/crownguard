@@ -64,7 +64,7 @@ export function cloudYaml(c: CloudCatalogue): string {
     "shortName: Essentials (cloud)",
     "publisher: Australian Signals Directorate",
     "source: asd-essentials-cloud",
-    "sources: [asd-essentials-assessment-process, asd-essentials-transition, asd-essentials-what, asd-essentials-faq]",
+    "sources: [asd-essentials-assessment-process, asd-essentials-transition, asd-essentials-what, asd-essentials-faq, asd-essentials-cloud-scoping]",
     "closed: true",
     "note: >-",
     "  ASD's Essentials for cloud is the chapter for organisations running entirely on SaaS and PaaS. ASD has not",

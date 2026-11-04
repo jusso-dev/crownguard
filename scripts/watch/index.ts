@@ -62,6 +62,7 @@ const fetcher = createFetcher({
   concurrencyFor: (host) => profileFor(host).concurrency,
   delayFor: (host) => profileFor(host).delayMs ?? 0,
   retriesFor: (host) => profileFor(host).retries,
+  userAgentFor: (host) => profileFor(host).userAgent,
 });
 
 /** Live M365 check catalogue plus the committed Prowler/Scuba pins (tests inject fixtures instead). */

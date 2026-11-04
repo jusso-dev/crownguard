@@ -336,7 +336,7 @@ function AddPanel({ kinds, onAdded }: { kinds: AiKind[]; onAdded: () => void }) 
         Pick the closest match. It fills in the usual technology type, usage pattern and access, which you can change. For a
         general-purpose tool such as Copilot you can register one use case at its highest risk, or one for each distinct use.
       </p>
-      <Cite ids={["dta-ai-policy-appendices"]} label="Appendix B" />
+      <Cite ids={["dta-ai-appendix-b"]} label="Appendix B" />
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {kinds.map((k) => (
           <Card key={k.id} className="flex flex-col">

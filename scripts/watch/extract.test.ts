@@ -81,6 +81,16 @@ describe("extractHtml on Learn", () => {
     expect(extractHtml(html, profileFor("knowledge.workspace.google.com")).retired).toBe('a notice at the top says "this feature is deprecated"');
   });
 
+  it("falls back to og:locale when a page has no html lang, as AWS blog posts do", () => {
+    const aws = profileFor("aws.amazon.com");
+    const page = (head: string, lang = "") =>
+      `<html${lang}><head>${head}</head><body><main id="aws-page-content-main"><h2>Steps</h2><p>Grant temporary elevated access.</p></main></body></html>`;
+    expect(extractHtml(page('<meta property="og:locale" content="en_US">'), aws).lang).toBe("en-US");
+    expect(aws.lang?.test("en-US")).toBe(true);
+    expect(extractHtml(page('<meta property="og:locale" content="fr_FR">', ' lang="en-US"'), aws).lang).toBe("en-US");
+    expect(extractHtml(page(""), aws).lang).toBeUndefined();
+  });
+
   it("flags hub pages as landing pages", () => {
     const e = extractHtml(learnHtml('<ul><li><a href="a">Alpha</a></li><li><a href="b">Beta</a></li></ul>', { meta: '<meta name="ms.topic" content="landing-page">' }), learn);
     expect(e.isLanding).toBe(true);

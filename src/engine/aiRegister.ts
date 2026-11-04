@@ -31,7 +31,7 @@ export type AiField = keyof typeof aiFieldLabels;
 export const aiFieldSources = {
   register: ["dta-ai-accountability"],
   classification: ["dta-ai-classification", "dta-ai-transparency"],
-  criteria: ["dta-ai-policy-appendices"],
+  criteria: ["dta-ai-appendix-c"],
   risk: ["dta-ai-impact-assessment", "dta-aiia-inherent-risk"],
   autonomy: ["dta-agentic-key-terms", "dta-agentic-lifecycle"],
   access: ["dta-agentic-design", "asd-agentic-ai"],

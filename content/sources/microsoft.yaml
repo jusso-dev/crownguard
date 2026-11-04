@@ -57,8 +57,8 @@
 - id: ms-ir-playbooks
   title: Incident response playbooks
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/security/operations/incident-response-playbooks
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/security/zero-trust/security-operations-incident-response-playbooks
+  retrieved: 2026-11-04
 - id: ms-entra-secops-privileged
   title: Security operations for privileged accounts in Microsoft Entra ID
   publisher: Microsoft
@@ -304,11 +304,6 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/microsoft-365/copilot/secure-govern-copilot-foundational-deployment-guidance
   retrieved: 2026-10-08
-- id: ms-copilot-configure-foundation
-  title: Configure a secure and governed foundation for Microsoft Copilot
-  publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/configure-secure-governed-data-foundation-microsoft-365-copilot
-  retrieved: 2026-10-08
 - id: ms-copilot-studio-security
   title: Security and governance in Microsoft Copilot Studio
   publisher: Microsoft
@@ -327,8 +322,8 @@
 - id: ms-agent-registry
   title: Manage agent registry in Microsoft 365 admin center
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry?view=o365-worldwide
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/microsoft-agent-365/admin/agent-registry-overview
+  retrieved: 2026-11-04
 - id: ms-mdca-discovered-apps
   title: Discover and manage cloud apps (Microsoft Defender for Cloud Apps)
   publisher: Microsoft
@@ -1343,10 +1338,10 @@
   url: https://learn.microsoft.com/en-us/graph/permissions-reference
   retrieved: 2026-10-10
 - id: ms-copilot-overview
-  title: Microsoft 365 Copilot documentation
+  title: Microsoft Copilot overview
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/copilot/microsoft-365/
-  retrieved: 2026-10-10
+  url: https://learn.microsoft.com/en-us/copilot/plan/copilot-overview
+  retrieved: 2026-11-04
 - id: ms-copilot-studio
   title: Microsoft Copilot Studio documentation
   publisher: Microsoft

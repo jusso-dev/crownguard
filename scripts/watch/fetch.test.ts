@@ -1,7 +1,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createFetcher } from "./fetch";
+import { createFetcher, PLAIN_USER_AGENT } from "./fetch";
+import { profileFor } from "./hosts";
 
 let server: Server;
 let base = "";
@@ -119,5 +120,13 @@ describe("fetchPage", () => {
   it("identifies itself and asks for English", async () => {
     const r = await fetcher().fetchPage(`${base}/ua`);
     expect(r.body).toMatch(/^Mozilla\/5\.0 \(compatible; crownguard-source-watch\/1\.0\)\|en-US/);
+  });
+
+  it("uses a host's own user agent when its profile sets one", async () => {
+    const host = new URL(base).hostname;
+    const r = await createFetcher({ userAgentFor: (h) => (h === host ? PLAIN_USER_AGENT : undefined) }).fetchPage(`${base}/ua`);
+    expect(r.body).toMatch(/^crownguard-source-watch\/1\.0\|en-US/);
+    expect(profileFor("www.soc-cmm.com").userAgent).toBe(PLAIN_USER_AGENT);
+    expect(profileFor("learn.microsoft.com").userAgent).toBeUndefined();
   });
 });

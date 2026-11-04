@@ -1,3 +1,4 @@
+import { PLAIN_USER_AGENT } from "./fetch";
 import type { HostProfile } from "./types";
 
 /** Fallback for hosts without a profile: the usual main-content containers, no quoting. */
@@ -184,8 +185,9 @@ PROFILES.push(
   {
     host: "www.soc-cmm.com",
     label: "SOC-CMM",
-    // Answers 403 to non-browser user agents (checked 2026-10-09). The watch never pretends to be a browser, so these
-    // sources stay "unverifiable" until SOC-CMM allows its user agent; the community feed below covers new releases.
+    // Its firewall drops connections whose user agent starts "Mozilla/5.0 (compatible; ...)" but serves the plain
+    // watch name (checked 2026-11-04). The watch still never pretends to be a browser.
+    userAgent: PLAIN_USER_AGENT,
     content: ["div.content[id^=content_]"],
     expectRoots: 1,
     strip: ["#cookiemelding", ".survey_banner", "#main_nav", ".breadcrumb", "#newsletter", "#cta", "#footer", "#bottom_placeholder"],

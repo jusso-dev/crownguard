@@ -21,7 +21,7 @@ export type AiLifecycle = keyof typeof aiLifecycles;
 export const aiStandardUse = { "not-applied": "Not applied", "partially-applied": "Partially applied", "fully-applied": "Fully applied" } as const;
 export type AiStandardUse = keyof typeof aiStandardUse;
 
-/** Domains, Classification system for AI use v2.0. */
+/** Domains, Classification system for AI use (Appendix D of the policy, v2.1). */
 export const aiDomains = {
   "service-delivery": "Service delivery",
   "compliance-fraud": "Compliance and fraud detection",
@@ -32,10 +32,13 @@ export const aiDomains = {
 } as const;
 export type AiDomain = keyof typeof aiDomains;
 
-/** Usage patterns, Classification system for AI use v2.0. */
+/**
+ * Usage patterns, Classification system for AI use (Appendix D of the policy, v2.1). v2.1 also lists Strategic support,
+ * Workflow automation and Coding; adding them needs a saved-file schema bump, so they aren't offered yet.
+ */
 export const aiUsagePatterns = {
-  "decision-making": "Decision making and administrative action",
-  analytics: "Analytics for insights",
+  "decision-making": "Decision-making and administrative action",
+  analytics: "Analytics",
   "workplace-productivity": "Workplace productivity",
   "image-processing": "Image processing",
 } as const;

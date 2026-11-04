@@ -234,8 +234,15 @@ export function classifyChange(baseline: SourceState, current: SourceState, diff
   };
 }
 
+/**
+ * A title about a version going away ("PowerShell 2.0 removal from Windows") names the version as its subject, not
+ * as the edition of the guidance, so the newer versions such a page recommends aren't updates to the source.
+ */
+const VERSION_IS_SUBJECT = /\b(?:removal|removed|retire(?:d|ment)?|deprecat(?:ed|ion)|end of (?:support|life))\b/i;
+
 /** Version written in a source title, e.g. `v7.0.0` in "CIS Microsoft 365 Foundations Benchmark v7.0.0". */
 export function citedVersion(title: string): { product: string; version: string } | undefined {
+  if (VERSION_IS_SUBJECT.test(title)) return undefined;
   const m = title.match(/^(.*?)\s+v(\d+(?:\.\d+)*)\b/i) ?? title.match(/^(.*?)\s+(\d+\.\d+(?:\.\d+)?)\b/);
   if (!m) return undefined;
   const words = m[1].split(/\s+/).filter(Boolean);
@@ -289,7 +296,7 @@ function sameFamily(a: string, b: string): boolean {
 }
 
 /** Query parameters sites add on redirect that don't change which page is served. */
-const NOISE_PARAMS = new Set(["hl", "sjid", "visit_id", "rd", "ref_topic", "authuser", "co", "utm_source", "utm_medium", "utm_campaign"]);
+const NOISE_PARAMS = new Set(["hl", "sjid", "visit_id", "rd", "ref_topic", "authuser", "co", "utm_source", "utm_medium", "utm_campaign", "cms_guid"]);
 
 function comparable(url: string): string {
   try {

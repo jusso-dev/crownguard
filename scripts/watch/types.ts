@@ -47,6 +47,8 @@ export interface HostProfile {
   delayMs?: number;
   /** Retries after a network error, 5xx or 429 (default 2). */
   retries?: number;
+  /** User agent for this host when the default one is refused. It must still name the watch: never a browser's. */
+  userAgent?: string;
   /** The host's firewall drops unwanted clients by resetting or hanging the connection, so a network error means "blocked", not "down". */
   blockedOnNetworkError?: boolean;
   /** Element holding the page's own "last reviewed/updated" date (its datetime attribute or text). */

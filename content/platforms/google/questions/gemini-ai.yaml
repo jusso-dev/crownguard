@@ -17,7 +17,7 @@
     turn Gemini on by organisational unit in the Admin console's generative AI settings, starting
     with lower-risk teams.
   effort: M
-  sources: [gws-gemini-privacy-hub, gws-gemini-app-toggle, gws-investigation-tool]
+  sources: [gws-gemini-privacy-hub, gws-gemini-app-toggle, gws-investigation-tool, asd-essentials-ai]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: nist-csf-2, ref: ID.AM-07 }
@@ -136,16 +136,17 @@
   yesLooksLike: >-
     Gemini conversation history is turned on, conversation retention is set to at least 18 months
     or whatever your record-keeping requires, users cannot switch their own history off, and Gemini
-    conversations fall under your Vault retention rules.
+    app conversations fall under your Vault retention rules.
   remediation: >-
     In the Admin console under Generative AI > Gemini app > Gemini conversation history and
     management, turn on Gemini conversation history and set conversation retention to at least 18
-    months or your records period, then confirm in Vault that Gemini conversations are covered by a
-    retention rule. Conversation history and retention are Gemini app settings; keeping the
-    conversations in Vault needs the Vault feature (Business Plus and above).
+    months or your records period, then confirm in Vault that Gemini app conversations are covered
+    by a retention rule. Conversation history and retention are Gemini app settings; keeping the
+    conversations in Vault needs the Vault feature (Business Plus and above). Vault can export Gemini
+    in Workspace conversations (in Gmail, Docs, Drive and Meet) but can't retain or hold them yet.
   effort: S
   licence: [vault]
-  sources: [gws-gemini-conversation-history, gws-vault-retention]
+  sources: [gws-gemini-conversation-history, gws-vault-retention, gws-vault-gemini]
   refs:
     - { framework: nist-csf-2, ref: GV.OC-03 }
     - { framework: google-security-guidance, ref: "Gemini Privacy Hub" }

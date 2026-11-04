@@ -392,9 +392,10 @@ items. Small edits don't change the baseline, so they add up until they become a
 Small edits are listed under "For information" and don't open a PR on their own. Pages that couldn't be checked (bot
 protection, a one-off network error, a page served in another language) are listed too and never count as broken.
 Other failures count as broken only after two nights in a row, and never when at least 80% of a site's sources
-(three or more) fail at once. www.soc-cmm.com refuses automated requests, so the SOC-CMM sources show as not being
-monitored until SOC-CMM allows the watch's user agent (the watch never pretends to be a browser); the SOC-CMM user
-community feed covers new model and tool releases in the meantime.
+(three or more) fail at once. www.soc-cmm.com drops connections whose user agent starts "Mozilla/5.0 (compatible;
+...)", so its host profile sends the plain `crownguard-source-watch/1.0` instead (`userAgent` in
+`scripts/watch/hosts.ts`). A host profile may change how the watch names itself, but never to a browser's user
+agent. The SOC-CMM user community feed also reports new model and tool releases.
 
 **Handling the PR.** Merging it accepts what it reports (and any URL updates), so the next run compares against it.
 Issues accepted but not yet fixed (a broken page, a retired page, an outdated version) appear in later PRs under

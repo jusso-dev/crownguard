@@ -44,7 +44,7 @@ const HOST_FAILURE_RATE = 0.8;
 const MASS_CHANGE_RATE = 0.3;
 
 /** Tracking and language parameters dropped from a moved page's new URL. */
-const TRACKING = /^(?:utm_[a-z]+|sjid|visit_id|rd|ref_topic|authuser|co|hl)$/;
+const TRACKING = /^(?:utm_[a-z]+|sjid|visit_id|rd|ref_topic|authuser|co|hl|cms_guid)$/;
 
 function cleanMovedUrl(url: string): string {
   const u = new URL(url);
