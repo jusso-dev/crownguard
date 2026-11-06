@@ -2,15 +2,16 @@
  * Build-time content: YAML → validated JSON virtual modules.
  * Browser never sees the yaml package or raw YAML.
  */
-import { resolve } from "node:path";
 import type { Plugin } from "vite";
 import { contentDigest, loadCatalogue } from "../src/content/loader";
 import type { Catalogue, Framework, ImportMapping, PlatformBundle, Source } from "../src/content/schema";
+import { repoPath } from "./lib/repo";
 import { readContentFiles } from "./read-content";
 
 export const SHARED_ID = "virtual:crownguard-content/shared";
 export const REPORT_ID = "virtual:crownguard-content/report";
-export const platformVirtualId = (id: string) => `virtual:crownguard-content/platform/${id}`;
+const PLATFORM_PREFIX = "virtual:crownguard-content/platform/";
+export const platformVirtualId = (id: string) => `${PLATFORM_PREFIX}${id}`;
 
 const RESOLVED = "\0";
 
@@ -96,7 +97,6 @@ function asModule(data: unknown): string {
 }
 
 export function crownguardContent(): Plugin {
-  const root = resolve(import.meta.dirname, "..");
   let cached: ReturnType<typeof buildContentModules> | undefined;
 
   const get = () => {
@@ -111,7 +111,7 @@ export function crownguardContent(): Plugin {
       get();
     },
     configureServer(server) {
-      const dir = resolve(root, "content");
+      const dir = repoPath("content");
       server.watcher.add(dir);
       server.watcher.on("all", (_event, file) => {
         if (!file || !file.replace(/\\/g, "/").includes("/content/") || !file.endsWith(".yaml")) return;
@@ -123,15 +123,15 @@ export function crownguardContent(): Plugin {
       });
     },
     resolveId(id) {
-      if (id === SHARED_ID || id === REPORT_ID || id.startsWith("virtual:crownguard-content/platform/")) {
+      if (id === SHARED_ID || id === REPORT_ID || id.startsWith(PLATFORM_PREFIX)) {
         return RESOLVED + id;
       }
     },
     load(id) {
       if (id === RESOLVED + SHARED_ID) return asModule(get().shared);
       if (id === RESOLVED + REPORT_ID) return asModule(get().report);
-      if (id.startsWith(RESOLVED + "virtual:crownguard-content/platform/")) {
-        const pid = id.slice((RESOLVED + "virtual:crownguard-content/platform/").length);
+      if (id.startsWith(RESOLVED + PLATFORM_PREFIX)) {
+        const pid = id.slice((RESOLVED + PLATFORM_PREFIX).length);
         const chunk = get().platforms[pid];
         if (!chunk) throw new Error(`Unknown platform content module: ${pid}`);
         return asModule(chunk);
