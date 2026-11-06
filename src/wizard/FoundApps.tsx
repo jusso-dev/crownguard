@@ -31,7 +31,6 @@ export function scrollToFoundApps(attempts = 10) {
   else if (attempts > 0) requestAnimationFrame(() => scrollToFoundApps(attempts - 1));
 }
 
-/** Open the export instructions and scroll to them. */
 function openHow() {
   const how = document.getElementById("found-apps-how") as HTMLDetailsElement | null;
   if (how) {

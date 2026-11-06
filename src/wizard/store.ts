@@ -13,7 +13,7 @@ import { clampStep, currentStep, migrateProgress, modeOf, reachableStep, STEP_LA
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
 
-/** True when this browser lets us keep progress between visits (false in some private windows or locked-down profiles). */
+/** True when the platform can keep progress between visits (false in some private windows or locked-down browser profiles). */
 export function storageAvailable(): boolean {
   try {
     const k = `${STORAGE_KEY}:probe`;
@@ -31,10 +31,8 @@ export function storageAvailable(): boolean {
 export const hasProgress = (a: Assessment) =>
   a.org.name.trim() !== "" || a.jewels.length > 0 || Object.keys(a.answers).length > 0 || (a.aiRegister?.entries.length ?? 0) > 0;
 
-/** The SOC block, or an empty one to change. */
 const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
 
-/** A blank assessment, positioned at the first step of the current step list. */
 const blank = (): Assessment => ({ ...emptyAssessment(), progress: { step: 0, layout: STEP_LAYOUT } });
 
 /** Move within the saved position, which always records the current step layout. */
@@ -42,7 +40,6 @@ const at = (a: Assessment, patch: Partial<NonNullable<Assessment["progress"]>>):
   progress: { ...a.progress, step: a.progress?.step ?? 0, ...patch, layout: STEP_LAYOUT },
 });
 
-/** Change one AI register entry. */
 const editEntry = (a: Assessment, id: string, fn: (e: AiUseCase) => AiUseCase): Partial<Assessment> => ({
   aiRegister: { entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
 });

@@ -365,7 +365,6 @@ describe("cg validate", () => {
       expect(issue).toMatch(/:/);
       expect(r.stderr).toContain(issue);
     }
-    // paths should appear
     expect(body.issues.some((i: string) => i.startsWith("org.name") || i.startsWith("platforms") || i.startsWith("answers"))).toBe(true);
   });
 });

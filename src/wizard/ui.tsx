@@ -15,7 +15,6 @@ const variants: Record<Variant, string> = {
   danger: "border-field bg-surface text-danger [@media(hover:hover)]:hover:border-danger/50 [@media(hover:hover)]:hover:bg-danger-soft",
 };
 
-/** Button with default, hover, focus, active, disabled and loading states. */
 export function Button({
   variant = "primary",
   loading = false,

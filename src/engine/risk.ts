@@ -104,10 +104,8 @@ export const scoreOf = (s: GapStats): number | null => (s.weight === 0 ? null : 
 /** Share of question weight with a real answer (not unknown/unanswered), 0–1. */
 export const confidenceOf = (s: GapStats): number => (s.weight === 0 ? 0 : 1 - s.unknownWeight / s.weight);
 
-/** Most severe first, then by id. */
 export const bySeverity = (a: Weighted, b: Weighted) => severities[b.severity] - severities[a.severity] || a.id.localeCompare(b.id);
 
-/** The worst of a crown jewel's confidentiality, integrity and availability impact. */
 export const maxImpact = (j: Pick<CrownJewel, "confidentiality" | "integrity" | "availability">) => Math.max(j.confidentiality, j.integrity, j.availability);
 
 const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)));

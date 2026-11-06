@@ -122,7 +122,6 @@ describe("opening a file", () => {
     expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
     expect(saved.version).toBeUndefined();
     expect(saved.savedBy).toEqual({ app: "crownguard", appVersion: expect.any(String), contentHash: "abc", savedAt: "2026-10-09T00:00:00.000Z" });
-    // Every answer and jewel survives the trip.
     expect(saved.answers).toEqual(opened.assessment.answers);
     expect(saved.jewels).toEqual(opened.assessment.jewels);
     expect(saved.org.name).toBe("Legacy Health");

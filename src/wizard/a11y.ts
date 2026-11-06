@@ -1,4 +1,3 @@
-/** Move focus to the current step heading after wizard navigation. */
 function focusStepHeading() {
   document.getElementById("step-heading")?.focus();
 }

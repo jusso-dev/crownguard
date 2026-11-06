@@ -25,7 +25,6 @@ const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-oper
 export const e8Title = (catalogue: Pick<Catalogue, "frameworks">, strategy: string) =>
   catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === strategy)?.title ?? strategy;
 
-/** The questions tagged as evidence for one Essential Eight strategy at one maturity level. */
 export const e8Tagged = (questions: Question[], strategy: E8Strategy, level: number) =>
   questions.filter((q) => q.e8.some((t) => t.strategy === strategy && t.level === level));
 

@@ -9,7 +9,7 @@ import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from ".
 export const STORAGE_KEY = "crownguard:v1";
 /** Where a stored assessment is moved when it can't be read, so the user can still download it. */
 export const UNREADABLE_KEY = `${STORAGE_KEY}:unreadable`;
-/** Mode flag only: assessment itself stays out of localStorage when this is "1". */
+/** Mode flag only: assessment itself stays out of the autosave store when this is "1". */
 const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
 
 /**
@@ -27,7 +27,7 @@ export const setStorageReadOnly = (value: boolean) => {
  */
 let encryptGeneration = 0;
 
-/** The last write of the assessment to localStorage failed (usually full); cleared by the next one that works. */
+/** The last write of the assessment to the autosave store failed (usually full); cleared by the next one that works. */
 let writeFailed = false;
 export const storageWriteFailed = () => writeFailed;
 
@@ -102,11 +102,9 @@ const writeFlag = (name: string, value: string) => {
   }
 };
 
-/** Keys that hold assessment content. In ephemeral mode they live in memory only. */
 const memoryOnly = (name: string) => ephemeral() && (name === STORAGE_KEY || name === UNREADABLE_KEY);
 
 const read = (name: string): string | null => {
-  // Ephemeral: assessment never comes back from disk after a reload.
   if (memoryOnly(name)) {
     return memory.get(name) ?? null;
   }
@@ -149,7 +147,6 @@ export const dropProgress = (name: string) => {
   if (name === STORAGE_KEY) drop(UNREADABLE_KEY);
 };
 
-/** The stored value kept aside when progress couldn't be read, if there is one. */
 export const unreadableBackup = (): string | null => read(UNREADABLE_KEY);
 
 interface Persisted {

@@ -6,7 +6,6 @@ import { Card, Field, inputClass, StepHeader } from "../ui";
 export function EnvironmentStep() {
   const { assessment, update } = useStore();
   const bundles = [...catalogue.platforms.values()];
-  // Keep selected platforms' question chunks warm while on this step.
   useEnsurePlatforms(assessment.platforms);
 
   const togglePlatform = (id: string, on: boolean) => {

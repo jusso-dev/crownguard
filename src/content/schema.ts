@@ -2,7 +2,6 @@ import { z } from "zod";
 import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "./aiOptions";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
-/** A `YYYY-MM-DD` calendar date. */
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const date = isoDate;
 

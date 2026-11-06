@@ -36,7 +36,6 @@ export function parseOklch(input: string): RGB {
   ];
 }
 
-/** An oklch() design token as hex, for `contrast` and friends. */
 export const oklchToHex = (input: string) => toHex(parseOklch(input));
 
 function luminance([r, g, b]: RGB): number {

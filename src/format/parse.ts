@@ -29,7 +29,7 @@ const asRecord = (v: unknown): Record<string, unknown> | undefined =>
 /**
  * Read a parsed `.crownguard.json`: migrate it forward, validate it, and report anything the user should know.
  *
- * This is the one place that turns untrusted JSON into an `Assessment`. The "Open file" flow, the localStorage
+ * This is the one place that turns untrusted JSON into an `Assessment`. The "Open file" flow, the autosave
  * rehydrate and the headless CLI all go through it, so a file behaves the same however it arrives.
  */
 export function parseAssessment(raw: unknown, opts: ParseOptions = {}): ParseResult {

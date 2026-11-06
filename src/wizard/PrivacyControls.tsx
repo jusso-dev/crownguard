@@ -185,7 +185,7 @@ export function EphemeralToggle({
   );
 }
 
-/** Unlock card when localStorage holds an envelope and no session passphrase is set. */
+/** Unlock card when autosaved progress is an encryption envelope and no session passphrase is set. */
 export function UnlockCard({
   onUnlocked,
   onForget,

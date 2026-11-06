@@ -141,7 +141,6 @@ function SaveStatus({
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Keep the tab title in sync with the current screen, step and organisation. */
 function useDocumentTitle(screen: "start" | "resume" | "wizard", stepName: string, orgName: string) {
   useEffect(() => {
     const org = orgName.trim() || "New assessment";
@@ -364,7 +363,6 @@ export function App() {
   const pendingFile = useRef<OpenedFile | undefined>(undefined);
   const readOnly = useStore((s) => s.readOnly);
   const View = views[stepsOf(mode)[step]];
-  // Opening a saved assessment (or resuming) preloads the platforms it uses.
   useEnsurePlatforms(assessment.platforms);
 
   useDocumentTitle(screen, steps[step], assessment.org.name);

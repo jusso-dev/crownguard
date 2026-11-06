@@ -478,7 +478,6 @@ function cmdMigrate(argv: string[]): number {
     return EXIT.INVALID;
   }
   const { raw: migrated } = migrate(record, from);
-  // Validate the migrated shape so callers get a usable file.
   const parsed = assessmentSchema.safeParse(migrated);
   if (!parsed.success) {
     const issues = formatIssues(parsed.error.issues, Number.POSITIVE_INFINITY);

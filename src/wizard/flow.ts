@@ -35,9 +35,7 @@ export const STEP_LAYOUT = layouts.full.length;
 export const modeOf = (a: Assessment): Mode => a.mode ?? "full";
 
 export const stepsOf = (mode: Mode = "full"): readonly StepId[] => layouts[mode][STEP_LAYOUT - 1];
-/** The step labels for a flow, in order. */
 export const stepsFor = (mode: Mode = "full"): readonly string[] => stepsOf(mode).map((id) => stepLabels[id]);
-/** Where a step sits in a flow, or -1 when the flow doesn't have it. */
 export const stepIndex = (mode: Mode, id: StepId) => stepsOf(mode).indexOf(id);
 
 /** Move a saved position onto the current step list, keeping the user on the same step. */

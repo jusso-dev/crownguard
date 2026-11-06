@@ -6,7 +6,6 @@ import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { AutosaveStore, FileSaver, OpenedFile, Platform, RecentAssessment, SaveAsResult, SaveResult } from "./types";
 
-/** The file filter for every `.crownguard.json` dialog. */
 const ASSESSMENT_FILTER = { name: "crownguard assessment", extensions: ["json"] };
 
 /** Sent by the Rust side when the operating system asks the running app to open a file (see src-tauri/src/lib.rs). */
@@ -213,7 +212,6 @@ function onOpenRequest(handler: (file: OpenedFile) => void): () => void {
   };
 }
 
-/** Resolves once every autosave write so far has reached SQLite. */
 export const flushAutosave = () => autosaveStore?.flush() ?? Promise.resolve();
 
 export async function createTauriPlatform(): Promise<Platform> {

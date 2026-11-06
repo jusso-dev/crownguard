@@ -786,7 +786,6 @@ function NotificationDraft({ entry }: { entry: AiUseCase }) {
   );
 }
 
-/** Copy the draft to the clipboard, reporting success inline and any failure without losing the caught error. */
 async function copyText(text: string, setCopied: (v: boolean) => void, setCopyError: (v: string) => void) {
   try {
     await navigator.clipboard.writeText(text);
@@ -887,7 +886,6 @@ function KillSwitchWorksheet({ entry, showReason, missingReason }: { entry: AiUs
 }
 
 function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis: (b: GapFilter) => void }) {
-  // Only the bases that actually have an open gap are worth offering as a filter.
   const offered = [...new Set(r.gaps.map((g) => g.question.basis).filter((b): b is AiBasis => !!b))];
   const shown = basis === "all" ? r.gaps : r.gaps.filter((g) => g.question.basis === basis);
   return (

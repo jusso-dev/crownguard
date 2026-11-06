@@ -252,7 +252,6 @@ export type Branding = Assessment["branding"];
 export type Evidence = NonNullable<Assessment["evidence"]>[string];
 /** An answer whose question is no longer in the catalogue. Kept, never deleted. */
 export type OrphanAnswer = NonNullable<Assessment["orphans"]>[string];
-/** One entry in the AI use-case register. */
 export type AiUseCase = NonNullable<Assessment["aiRegister"]>["entries"][number];
 /** Per-domain overrides of the SOC model's default targets. */
 export type SocTargets = NonNullable<NonNullable<Assessment["soc"]>["targets"]>;
