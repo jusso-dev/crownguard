@@ -29,7 +29,7 @@ const shipped = [
   ...files("src/report", /\.tsx?$/),
   "src/engine/essentials.ts",
   "src/wizard/EssentialsOption.tsx",
-  "src/lib/score.ts",
+  "src/cli/views.ts",
   ...files("content/frameworks", /^asd-essentials-.*\.yaml$/),
   ...files("docs", /\.md$/),
   "README.md",

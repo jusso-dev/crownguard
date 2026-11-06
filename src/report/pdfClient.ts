@@ -1,78 +1,44 @@
 import type { Assessment } from "../format/schema";
 import type { PdfWorkerRequest, PdfWorkerResponse } from "./pdf.worker";
+import type { PdfKind } from "./render";
 
-export type PdfRenderRequest =
-  | { kind: "report"; assessment: Assessment; generatedAt?: Date }
-  | { kind: "ai-register"; assessment: Assessment; generatedAt?: Date };
+type PdfRenderPath = "worker" | "main-thread";
 
-/** How the last successful (or attempted) render ran. Exposed for tests. */
-export type PdfRenderPath = "worker" | "main-thread";
-
-let lastPath: PdfRenderPath = "main-thread";
-let workerFailedReason: string | undefined;
 let worker: Worker | null | undefined;
 let nextId = 1;
 
-export function lastPdfRenderPath(): PdfRenderPath {
-  return lastPath;
-}
-
-export function pdfWorkerFailureReason(): string | undefined {
-  return workerFailedReason;
-}
-
+/** The worker, or null once it has failed to start or crashed: after that every render runs on the main thread. */
 function getWorker(): Worker | null {
   if (worker !== undefined) return worker;
   try {
     worker = new Worker(new URL("./pdf.worker.ts", import.meta.url), { type: "module" });
-    worker.addEventListener("error", (event) => {
-      workerFailedReason = event.message || "Worker error event";
-      try {
-        worker?.terminate();
-      } catch {
-        /* ignore */
-      }
-      worker = null;
-    });
-    return worker;
-  } catch (e) {
-    // Spike result: construction failed (CSP, unsupported, or yoga/WASM not usable in a module worker).
-    workerFailedReason = e instanceof Error ? e.message : String(e);
+  } catch {
+    // Construction fails under a strict CSP, or where module workers aren't supported.
     worker = null;
-    return null;
   }
+  return worker;
 }
 
-function renderInWorker(req: PdfRenderRequest): Promise<Blob> {
+function renderInWorker(kind: PdfKind, assessment: Assessment, generatedAt: Date): Promise<Blob> {
   const w = getWorker();
-  if (!w) return Promise.reject(new Error(workerFailedReason ?? "PDF worker unavailable"));
-
-  const id = nextId++;
-  const generatedAt = (req.generatedAt ?? new Date()).toISOString();
-  const message: PdfWorkerRequest =
-    req.kind === "ai-register"
-      ? { id, kind: "ai-register", assessment: req.assessment, generatedAt }
-      : { id, kind: "report", assessment: req.assessment, generatedAt };
-
+  if (!w) return Promise.reject(new Error("PDF worker unavailable"));
+  const message: PdfWorkerRequest = { id: nextId++, kind, assessment, generatedAt: generatedAt.toISOString() };
   return new Promise<Blob>((resolve, reject) => {
-    const onMessage = (event: MessageEvent<PdfWorkerResponse>) => {
-      if (event.data.id !== id) return;
+    const done = () => {
       w.removeEventListener("message", onMessage);
       w.removeEventListener("error", onError);
+    };
+    const onMessage = (event: MessageEvent<PdfWorkerResponse>) => {
+      if (event.data.id !== message.id) return;
+      done();
       if (event.data.ok) resolve(event.data.blob);
       else reject(new Error(event.data.error));
     };
     const onError = (event: ErrorEvent) => {
-      w.removeEventListener("message", onMessage);
-      w.removeEventListener("error", onError);
-      workerFailedReason = event.message || "PDF worker crashed";
-      try {
-        w.terminate();
-      } catch {
-        /* ignore */
-      }
+      done();
+      w.terminate();
       worker = null;
-      reject(new Error(workerFailedReason));
+      reject(new Error(event.message || "PDF worker crashed"));
     };
     w.addEventListener("message", onMessage);
     w.addEventListener("error", onError);
@@ -80,36 +46,23 @@ function renderInWorker(req: PdfRenderRequest): Promise<Blob> {
   });
 }
 
-async function renderOnMainThread(req: PdfRenderRequest): Promise<Blob> {
-  const { renderPdf, renderAiRegisterPdf } = await import("./generate");
-  const { buildAiRegisterReport, buildReport } = await import("./model");
-  const { catalogue } = await import("../content/catalogue");
-  const { ensurePlatforms, ensureReportContent } = await import("../content/catalogue");
-  await Promise.all([ensurePlatforms(req.assessment.platforms), ensureReportContent()]);
-  const at = req.generatedAt ?? new Date();
-  return req.kind === "ai-register"
-    ? renderAiRegisterPdf(buildAiRegisterReport(catalogue, req.assessment, at))
-    : renderPdf(buildReport(catalogue, req.assessment, at));
-}
-
-/**
- * Prefer a module worker for PDF layout. Fall back to the main thread if Worker construction
- * fails or the first worker render errors (e.g. yoga WASM). Comment records the failure reason.
- */
+/** Where the last PDF rendered, for the e2e performance check. */
 function publishPath(path: PdfRenderPath) {
-  lastPath = path;
   (globalThis as unknown as { __crownguardPdfPath?: PdfRenderPath }).__crownguardPdfPath = path;
 }
 
-export async function renderPdfInWorker(req: PdfRenderRequest): Promise<Blob> {
+/**
+ * Render a PDF, in a module worker when possible so the page stays responsive. Falls back to the main thread when the
+ * worker can't start or a worker render fails (react-pdf's layout engine doesn't run in every worker).
+ */
+export async function renderPdf(kind: PdfKind, assessment: Assessment, generatedAt = new Date()): Promise<Blob> {
   try {
-    const blob = await renderInWorker(req);
+    const blob = await renderInWorker(kind, assessment, generatedAt);
     publishPath("worker");
     return blob;
-  } catch (e) {
-    // Fallback: react-pdf/yoga did not run cleanly in a Vite module worker (or Worker was stubbed).
-    if (!workerFailedReason) workerFailedReason = e instanceof Error ? e.message : String(e);
+  } catch {
     publishPath("main-thread");
-    return renderOnMainThread(req);
+    const { renderPdfBlob } = await import("./browserPdf");
+    return renderPdfBlob(kind, assessment, generatedAt);
   }
 }

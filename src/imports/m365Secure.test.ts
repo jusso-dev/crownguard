@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readContentFiles } from "../../scripts/read-content";
+import { readContentFiles } from "../content/disk";
 import type { ImportMapping } from "../content/schema";
 import { loadCatalogue } from "../content/loader";
 import { aggregate, suggestFor } from "./aggregate";

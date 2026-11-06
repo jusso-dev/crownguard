@@ -2,8 +2,7 @@ import { useRef, useState } from "react";
 import { catalogue } from "../content/catalogue";
 import { activeQuestions } from "../engine/risk";
 import { answerLabels, type ScanStatus } from "../format/vocab";
-import { type Assessment } from "../format/schema";
-import { detectImporter, importers, type ScanImporter, type ScanResult } from "../imports";
+import { detectImporter, importers, readScan, unusable, type ScanImporter, type ScanResult } from "../imports";
 import { useStore } from "./store";
 import { relativeTime } from "./time";
 import { Button } from "./ui";
@@ -21,16 +20,6 @@ export const statusStyle: Record<ScanStatus, string> = {
 export const stamp = (iso: string) =>
   new Date(iso).toLocaleString("en-AU", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** Why an importer can't be used with this assessment, in the assessor's words. Undefined when it can be. */
-function unusable(importer: ScanImporter, assessment: Assessment): string | undefined {
-  const platform = catalogue.platforms.get(importer.platform)?.platform;
-  const name = platform?.name ?? importer.platform;
-  if (!assessment.platforms.includes(importer.platform)) return `${name} isn't in scope for this assessment`;
-  if (importer.requiresModule && !Object.values(assessment.modules).some((m) => m.includes(importer.requiresModule!)))
-    return `${platform?.modules.find((m) => m.id === importer.requiresModule)?.name ?? importer.requiresModule} isn't turned on for ${name}`;
-  return undefined;
-}
-
 /** Optional: pre-fill answers from an automated scan (M365-Secure, Prowler). The file is read in your browser only. */
 export function ScanImport() {
   const assessment = useStore((s) => s.assessment);
@@ -43,7 +32,7 @@ export function ScanImport() {
   const [setLicence, setSetLicence] = useState(true);
   const [done, setDone] = useState<string>();
 
-  const usable = importers.filter((i) => catalogue.imports.has(i.id) && !unusable(i, assessment));
+  const usable = importers.filter((i) => !unusable(catalogue, i, assessment));
   if (!usable.length) return null;
 
   const last = assessment.imports?.at(-1);
@@ -57,22 +46,10 @@ export function ScanImport() {
       const found = detectImporter(text);
       if (!found) {
         // Nothing recognises it. Let a scanner say why, so the message names the file that was expected.
-        for (const i of usable) {
-          const mapping = catalogue.imports.get(i.id);
-          if (!mapping) continue;
-          try {
-            i.read(text, mapping);
-          } catch (e) {
-            throw new Error((e as Error).message, { cause: e });
-          }
-        }
+        for (const i of usable) i.read(text, catalogue.imports.get(i.id)!);
         throw new Error("this file isn't output from a scanner crownguard can read");
       }
-      const mapping = catalogue.imports.get(found.id);
-      const reason = unusable(found, assessment);
-      if (!mapping || reason) throw new Error(`This is a ${found.label} scan. ${reason ?? "crownguard has no mapping for it"}, so nothing was applied`);
-      const result = found.read(text, mapping);
-      if (!result.suggestions.length) throw new Error("none of the checks in this scan match a question");
+      const result = readScan(catalogue, found, text, assessment);
       setPreview(result);
       setPreviewer(found);
       setOverwrite(false);

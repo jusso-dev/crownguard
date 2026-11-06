@@ -1,5 +1,5 @@
+import { allQuestionIds } from "../content/catalogue";
 import type { Assessment } from "../format/schema";
-import { questionIdSet } from "../content/questionIds";
 import { decrypt, isEncryptedEnvelope } from "./crypto";
 import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
@@ -41,7 +41,7 @@ export async function unlockProgress(passphrase: string): Promise<UnlockResult> 
   const assessment = stored.state?.assessment;
   if (!assessment) return { ok: false, error: "Encrypted progress had no assessment." };
 
-  const result = parseAssessment(assessment, { questionIds: questionIdSet() });
+  const result = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (result.kind === "error") {
     return { ok: false, error: `Encrypted progress couldn't be read (${result.issues[0] ?? result.message}).` };
   }

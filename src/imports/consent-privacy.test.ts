@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readContentFiles } from "../../scripts/read-content";
+import { readContentFiles } from "../content/disk";
 import { loadCatalogue } from "../content/loader";
 import { importedUseCase, readGoogleConsent, readGraphConsent } from "./consent";
 

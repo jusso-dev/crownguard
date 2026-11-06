@@ -1,5 +1,6 @@
 import { percent } from "../engine/percent";
 import { needsReason } from "../engine/risk";
+import type { Catalogue } from "../content/schema";
 import type { ReportModel } from "../report/model";
 
 /** Compact, JSON-serialisable score summary, with SOC, IDCF and AI register results when present. */
@@ -138,4 +139,19 @@ export function scoreText(model: ReportModel): string {
   if (s.aiRegister) lines.push(`AI register: ${s.aiRegister.entries} entries, ${s.aiRegister.openGaps} open gaps`);
   if (s.idcf) lines.push(`IDCF: ${s.idcf.jewels.length} jewel DSL checks across ${s.idcf.platforms.length} platform(s)`);
   return lines.join("\n");
+}
+
+/** JSON-serialisable catalogue view for `cg catalogue`. */
+export function catalogueView(catalogue: Catalogue, platform?: string) {
+  const bundles = platform
+    ? ([catalogue.platforms.get(platform)].filter(Boolean) as NonNullable<ReturnType<Catalogue["platforms"]["get"]>>[])
+    : [...catalogue.platforms.values()];
+  return bundles.map((b) => ({
+    platform: { id: b.platform.id, name: b.platform.name, modules: b.platform.modules },
+    licenceTiers: b.platform.licenceTiers,
+    licenceFeatures: b.platform.licenceFeatures,
+    domains: b.platform.domains,
+    assetTypes: b.assetTypes,
+    questions: b.questions,
+  }));
 }

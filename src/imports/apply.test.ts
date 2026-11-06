@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Answer } from "../format/vocab";
 import { emptyAssessment } from "../format/empty";
-import { applyScan, type ScanResult } from "./scan";
+import { applyScan } from "./apply";
+import type { ScanResult } from "./types";
 
 const scan = (source: string, suggestions: [string, Answer | undefined][]): ScanResult => ({
   tool: source,

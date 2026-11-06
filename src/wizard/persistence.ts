@@ -1,7 +1,7 @@
+import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 import { SCHEMA_VERSION, type Assessment } from "../format/schema";
 import { platform, type AutosaveStore } from "../platform";
-import { questionIdSet } from "../content/questionIds";
 import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
 import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
@@ -195,7 +195,7 @@ async function validateStored(stored: StorageValue<Persisted>, raw: string, name
   const assessment = state.assessment;
   if (!assessment) return stored;
 
-  const parsed = parseAssessment(assessment, { questionIds: questionIdSet() });
+  const parsed = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (parsed.kind === "error") {
     setAside(name, raw, `The progress saved in this browser couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
     return null;

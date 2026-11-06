@@ -27,16 +27,11 @@ export function ReportStep() {
     setError(undefined);
     try {
       await Promise.all([ensurePlatforms(assessment.platforms), ensureReportContent()]);
-      // PDF render runs in a worker when possible (see renderPdfInWorker).
-      const { renderPdfInWorker } = await import("../../report/pdfClient");
+      const { renderPdf } = await import("../../report/pdfClient");
       const now = new Date();
       const p2 = (n: number) => String(n).padStart(2, "0");
       const date = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
-      const blob = await renderPdfInWorker({
-        kind: standalone ? "ai-register" : "report",
-        assessment,
-        generatedAt: now,
-      });
+      const blob = await renderPdf(standalone ? "ai-register" : "report", assessment, now);
       const result = await download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
       // On desktop the save dialog can be cancelled, or the write can fail (the user has already been told why).
       if (result === "cancelled" || result === "failed") {

@@ -8,34 +8,21 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import {
-  aboutRows,
-  applyScan,
-  assessmentSchema,
-  buildAiRegisterReport,
-  buildReport,
-  buildXlsx,
-  catalogueView,
-  detectSchemaVersion,
-  emptyAssessment,
-  formatIssues,
-  loadCatalogueFromDisk,
-  migrate,
-  parseAssessment,
-  questionIdsOf,
-  readScan,
-  registerTable,
-  renderAiRegisterToFile,
-  renderReportToFile,
-  resolveImporter,
-  SCHEMA_VERSION,
-  scoreSummary,
-  scoreText,
-  toCsv,
-  toSaveFile,
-  type Assessment,
-  type ToolChoice,
-} from "../lib/index";
+import { loadCatalogueFromDisk } from "../content/disk";
+import { answerableQuestionIds } from "../content/schema";
+import { aboutRows, registerTable, toCsv } from "../engine/aiExport";
+import { emptyAssessment } from "../format/empty";
+import { detectSchemaVersion, migrate } from "../format/migrations";
+import { parseAssessment } from "../format/parse";
+import { toSaveFile } from "../format/saveFile";
+import { assessmentSchema, formatIssues, SCHEMA_VERSION, type Assessment } from "../format/schema";
+import { applyScan } from "../imports/apply";
+import { readScan, resolveImporter, toolChoices } from "../imports";
+import { buildReport } from "../report/model";
+import { renderPdfToFile } from "../report/nodePdf";
+import { documentFor } from "../report/render";
+import { buildXlsx } from "../wizard/xlsx";
+import { catalogueView, scoreSummary, scoreText } from "./views";
 
 export const EXIT = { OK: 0, INVALID: 1, CONTENT: 2, UNEXPECTED: 3 } as const;
 
@@ -52,7 +39,7 @@ Usage:
 Commands:
   catalogue [--platform aws|microsoft|google] [--out file.json]
   new --org "Name" --platforms microsoft,aws [--out a.crownguard.json] [--force]
-  import <assessment> <scan-file> [--tool auto|m365-secure|prowler|scubagoggles] [--overwrite] [--licence]
+  import <assessment> <scan-file> [--tool ${toolChoices.join("|")}] [--overwrite] [--licence]
   score <assessment> [--format json|text]
   render <assessment> <out.pdf> [--kind full|ai-register]
   ai-register export <assessment> --format csv|xlsx --out file
@@ -68,7 +55,7 @@ const helpFor: Record<string, string> = {
   Dump questions, asset types, licence tiers and domains as JSON.`,
   new: `cg new --org "Name" --platforms microsoft,aws [--out a.crownguard.json] [--force]
   Write an empty assessment that parseAssessment accepts. Refuses to replace an existing file without --force.`,
-  import: `cg import <assessment> <scan-file> [--tool auto|m365-secure|prowler|scubagoggles] [--overwrite] [--licence]
+  import: `cg import <assessment> <scan-file> [--tool ${toolChoices.join("|")}] [--overwrite] [--licence]
   Pre-fill answers from a local scan file. Writes the assessment back in place, so a file saved by a newer
   build (higher schemaVersion) is refused rather than rewritten as this build's schema.`,
   score: `cg score <assessment> [--format json|text]
@@ -303,16 +290,16 @@ function cmdImport(argv: string[]): number {
   }
   const [assessmentPath, scanPath] = positionals;
   if (!assessmentPath || !scanPath) {
-    err("usage: cg import <assessment> <scan-file> [--tool auto|m365-secure|prowler|scubagoggles] [--overwrite] [--licence]");
+    err(`usage: cg import <assessment> <scan-file> [--tool ${toolChoices.join("|")}] [--overwrite] [--licence]`);
     return EXIT.INVALID;
   }
-  const tool = (values.tool ?? "auto") as ToolChoice;
-  if (!["auto", "m365-secure", "prowler", "scubagoggles"].includes(tool)) {
+  const tool = values.tool ?? "auto";
+  if (!toolChoices.includes(tool)) {
     err(`unknown --tool '${tool}'`);
     return EXIT.INVALID;
   }
   const { catalogue, contentHash } = catalogueOrThrow();
-  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue), { writesBack: true });
+  const assessment = loadAssessment(assessmentPath, new Set(answerableQuestionIds(catalogue)), { writesBack: true });
   let text: string;
   try {
     text = readText(scanPath);
@@ -321,11 +308,7 @@ function cmdImport(argv: string[]): number {
     return EXIT.INVALID;
   }
   const importer = resolveImporter(tool, text, assessment);
-  if (importer.platform && !assessment.platforms.includes(importer.platform)) {
-    err(`${importer.label} targets ${importer.platform}, which is not in this assessment's platforms`);
-    return EXIT.INVALID;
-  }
-  const scan = readScan(catalogue, importer, text);
+  const scan = readScan(catalogue, importer, text, assessment);
   const { assessment: next, applied } = applyScan(assessment, scan, {
     platform: importer.platform,
     overwrite: !!values.overwrite,
@@ -369,7 +352,7 @@ function cmdScore(argv: string[]): number {
     return EXIT.INVALID;
   }
   const { catalogue } = catalogueOrThrow();
-  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue));
+  const assessment = loadAssessment(assessmentPath, new Set(answerableQuestionIds(catalogue)));
   const model = buildReport(catalogue, assessment);
   if (format === "text") out(scoreText(model));
   else out(scoreSummary(model));
@@ -400,17 +383,13 @@ async function cmdRender(argv: string[]): Promise<number> {
     return EXIT.INVALID;
   }
   const { catalogue } = catalogueOrThrow();
-  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue));
+  const assessment = loadAssessment(assessmentPath, new Set(answerableQuestionIds(catalogue)));
   const dest = resolve(outPdf);
-  if (kind === "ai-register") {
-    if (!assessment.aiRegister?.entries.length) {
-      err("assessment has no AI register entries");
-      return EXIT.INVALID;
-    }
-    await renderAiRegisterToFile(buildAiRegisterReport(catalogue, assessment), dest);
-  } else {
-    await renderReportToFile(buildReport(catalogue, assessment), dest);
+  if (kind === "ai-register" && !assessment.aiRegister?.entries.length) {
+    err("assessment has no AI register entries");
+    return EXIT.INVALID;
   }
+  await renderPdfToFile(documentFor(catalogue, kind === "full" ? "report" : "ai-register", assessment), dest);
   err(`Wrote ${dest}`);
   out({ out: dest, kind });
   return EXIT.OK;
@@ -440,7 +419,7 @@ function cmdAiRegisterExport(argv: string[]): number {
     return EXIT.INVALID;
   }
   const { catalogue } = catalogueOrThrow();
-  const assessment = loadAssessment(assessmentPath, questionIdsOf(catalogue));
+  const assessment = loadAssessment(assessmentPath, new Set(answerableQuestionIds(catalogue)));
   if (!assessment.aiRegister?.entries.length) {
     err("assessment has no AI register entries");
     return EXIT.INVALID;

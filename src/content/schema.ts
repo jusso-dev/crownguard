@@ -415,3 +415,9 @@ export interface Catalogue {
     scopes: OAuthScope[];
   };
 }
+
+/** Every question id an assessment's answers can name: all platforms' questions and the SOC questions. */
+export const answerableQuestionIds = (catalogue: Pick<Catalogue, "platforms" | "soc">): string[] => [
+  ...[...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)),
+  ...(catalogue.soc?.questions.map((q) => q.id) ?? []),
+];

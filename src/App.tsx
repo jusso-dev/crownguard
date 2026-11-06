@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import { catalogue, contentHash, ensurePlatforms } from "./content/catalogue";
-import { questionIdSet } from "./content/questionIds";
+import { catalogue, contentHash, ensurePlatforms, allQuestionIds } from "./content/catalogue";
 import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Mode } from "./format/vocab";
@@ -495,7 +494,7 @@ export function App() {
   }
 
   function openAssessmentJson(raw: unknown, opened?: OpenedFile) {
-    const parsed = parseAssessment(raw, { questionIds: questionIdSet() });
+    const parsed = parseAssessment(raw, { questionIds: allQuestionIds });
     if (parsed.kind === "error") {
       setNotice({ kind: "error", text: `Couldn't open that file: ${parsed.message}`, details: parsed.issues });
       return;

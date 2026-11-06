@@ -5,13 +5,11 @@ import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { exampleEntries } from "../engine/aiExamples";
-import {
-  buildReport,
-  fixtureAssessment,
-  loadCatalogueFromDisk,
-  scoreSummary,
-  toSaveFile,
-} from "../lib/index";
+import { loadCatalogueFromDisk } from "../content/disk";
+import { toSaveFile } from "../format/saveFile";
+import { fixtureAssessment } from "../report/fixture";
+import { buildReport } from "../report/model";
+import { scoreSummary } from "./views";
 import { EXIT, run } from "./index";
 
 const dir = () => mkdtempSync(join(tmpdir(), "cg-cli-"));
