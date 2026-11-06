@@ -1,6 +1,6 @@
 import { allQuestionIds } from "../content/catalogue";
 import type { Assessment } from "../format/schema";
-import { decrypt, isEncryptedEnvelope } from "./crypto";
+import { decrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";

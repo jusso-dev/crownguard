@@ -21,7 +21,7 @@ import { readScan, resolveImporter, toolChoices } from "../imports";
 import { buildReport } from "../report/model";
 import { renderPdfToFile } from "../report/nodePdf";
 import { documentFor } from "../report/render";
-import { buildXlsx } from "../wizard/xlsx";
+import { buildXlsx } from "../lib/xlsx";
 import { catalogueView, scoreSummary, scoreText } from "./views";
 
 export const EXIT = { OK: 0, INVALID: 1, CONTENT: 2, UNEXPECTED: 3 } as const;

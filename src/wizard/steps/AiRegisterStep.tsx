@@ -36,7 +36,7 @@ import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore, modeOf } from "../store";
 import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
-import { buildXlsx } from "../xlsx";
+import { buildXlsx } from "../../lib/xlsx";
 
 const ADD = "add";
 const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];

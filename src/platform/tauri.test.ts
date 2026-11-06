@@ -72,7 +72,7 @@ vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn(async () => undefin
 import { invoke } from "@tauri-apps/api/core";
 import { ask, save } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { encrypt } from "../wizard/crypto";
+import { encrypt } from "../format/crypto";
 import { basename, confirmAndOpen, createNativeFileSaver, createTauriPlatform, saveAs, SqliteAutosave } from "./tauri";
 
 beforeEach(() => {

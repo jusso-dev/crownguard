@@ -2,7 +2,7 @@ import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 import { SCHEMA_VERSION, type Assessment } from "../format/schema";
 import { platform, type AutosaveStore } from "../platform";
-import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
+import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
 

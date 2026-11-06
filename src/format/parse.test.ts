@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { assessmentSchema, formatIssues, SCHEMA_VERSION, type Assessment } from "./schema";
-import * as crypto from "../wizard/crypto";
+import * as crypto from "../format/crypto";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
 import { parseAssessment } from "./parse";
 import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "../wizard/persistence";

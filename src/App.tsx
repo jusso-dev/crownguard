@@ -5,7 +5,7 @@ import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Mode } from "./format/vocab";
 import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
-import { decrypt, isEncryptedEnvelope } from "./wizard/crypto";
+import { decrypt, isEncryptedEnvelope } from "./format/crypto";
 import { parseAssessment } from "./format/parse";
 import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY, storageWriteFailed } from "./wizard/persistence";
 import {
