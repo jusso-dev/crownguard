@@ -45,7 +45,7 @@ export interface CheckRow {
 }
 
 /** What a scanner's file says about the scan as a whole. */
-export interface ScanFacts {
+interface ScanFacts {
   toolVersion?: string;
   /** Tenant or account label, shown before the import is applied and recorded on the evidence. */
   tenant: string;

@@ -13,7 +13,7 @@ import { parseCsv, readTable, yesNo } from "./csv";
  */
 
 /** Which platform's export a file came from. */
-export type ConsentSource = "microsoft" | "google";
+type ConsentSource = "microsoft" | "google";
 
 /** How the app got its access. Admin consent covers the whole tenant; user consent is one person at a time. */
 type ConsentType = "admin" | "user" | "both";
