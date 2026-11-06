@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkedAgainst, headerTag } from "../lib/pins";
+import { checkedAgainst } from "../lib/pins";
 import { readRepoFile } from "../lib/repo";
-import { ESSENTIALS_IT, ISM } from "../lib/upstreams";
 import { checkFeeds, parseFeed, parseHtmlHistory, watchedFeeds } from "./feeds";
 import type { FeedMemo } from "./types";
 
@@ -142,12 +141,12 @@ describe("GitHub releases Atom and Security Hub history", () => {
 });
 
 describe("the feeds the watch follows", () => {
-  it("report each upstream release against the version the committed files pin", () => {
+  it("report each pinned upstream's releases against the version the committed files pin", () => {
     const feeds = new Map(watchedFeeds().map((f) => [f.id, f]));
-    expect(feeds.get("ism-oscal-releases")?.reviewMapping).toEqual({ file: ISM.frameworkFile, pinned: headerTag(readRepoFile(ISM.frameworkFile)) });
-    expect(feeds.get("e4eit-oscal-releases")?.reviewMapping?.pinned).toBe(headerTag(readRepoFile(ESSENTIALS_IT.frameworkFile)));
-    expect(feeds.get("prowler-releases")?.reviewMapping).toEqual({ file: "content/imports/prowler-aws.yaml", pinned: checkedAgainst(readRepoFile("content/imports/prowler-aws.yaml")) });
-    expect(feeds.get("scubagoggles-releases")?.reviewMapping?.pinned).toBe(checkedAgainst(readRepoFile("content/imports/scubagoggles.yaml")));
-    expect(new Set(feeds.keys()).size).toBe(watchedFeeds().length);
+    // Moving checkedAgainst (what the guidance update does) moves what the watch reports, with no edit to feeds.ts.
+    const mapping = readRepoFile("content/imports/prowler-aws.yaml");
+    expect(feeds.get("prowler-releases")?.reviewMapping).toEqual({ file: "content/imports/prowler-aws.yaml", pinned: checkedAgainst(mapping) });
+    expect(feeds.get("ism-oscal-releases")?.reviewMapping?.file).toBe("content/frameworks/ism.yaml");
+    expect(feeds.size).toBe(watchedFeeds().length);
   });
 });

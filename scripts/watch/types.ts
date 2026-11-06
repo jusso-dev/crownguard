@@ -8,7 +8,7 @@
  */
 
 /** How much of a page the report may quote. */
-export type ExcerptPolicy = "cc-by-4.0" | "public-domain" | "none";
+type ExcerptPolicy = "cc-by-4.0" | "public-domain" | "none";
 
 /** Per-host rules for fetching and extracting a page. */
 export interface HostProfile {
@@ -168,7 +168,7 @@ export interface Extracted {
 }
 
 /** "unmonitored": the page couldn't be checked for a week of nights in a row (blocked or failing). */
-export type SourceStatus = "ok" | "broken" | "unmonitored";
+type SourceStatus = "ok" | "broken" | "unmonitored";
 
 /** Committed fingerprint of one source. Deterministic: no fields that change when the page doesn't. */
 export interface SourceState {
@@ -285,7 +285,7 @@ export interface ChangeDetail {
   triage?: Triage;
 }
 
-export interface CandidateDetail {
+interface CandidateDetail {
   origin: "learn-toc" | "feed";
   feedId?: string;
   feedName?: string;

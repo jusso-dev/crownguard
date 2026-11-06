@@ -6,10 +6,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
+import { cliArgs } from "../lib/cli";
 import { repoPath } from "../lib/repo";
 import { UPDATERS } from "./registry";
 
-const dir = process.argv[2];
+const dir = cliArgs()[0];
 if (!dir) {
   console.error("usage: pnpm guidance:apply <guidance:update output dir>");
   process.exit(2);

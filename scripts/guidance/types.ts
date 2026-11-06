@@ -19,7 +19,7 @@ export interface ReviewItem {
   reason: string;
 }
 
-export interface UpdateResult {
+interface UpdateResult {
   /** Full intended text of every file the updater touches; the run drops the ones that come out unchanged. */
   files: Record<string, string>;
   /** False when the pins (`checkedAgainst`) stayed put because something needs review first. */

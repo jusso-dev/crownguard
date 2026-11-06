@@ -3,7 +3,7 @@ import type { Release, ReleaseGitHub } from "../lib/github";
 import { compareTags } from "../lib/versions";
 import type { GuidanceUpdater, ReviewItem, Workspace } from "./types";
 
-export interface UpdateSummary {
+interface UpdateSummary {
   id: string;
   name: string;
   label: string;
@@ -31,7 +31,7 @@ export interface RunResult {
   files: Record<string, string>;
 }
 
-export interface RunOptions {
+interface RunOptions {
   updaters: GuidanceUpdater[];
   ws: Workspace;
   gh: ReleaseGitHub;

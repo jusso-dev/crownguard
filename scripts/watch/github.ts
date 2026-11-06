@@ -66,6 +66,7 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
       const buf = await readCapped(res, maxBytes);
       return buf ? (JSON.parse(new TextDecoder().decode(buf)) as T) : undefined;
     } catch {
+      // A truncated or non-JSON body is a miss like any other.
       return undefined;
     }
   }
@@ -81,6 +82,7 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
       const buf = await readCapped(res, maxBytes);
       return buf && new TextDecoder().decode(buf);
     } catch {
+      // Network errors are misses: a mirror that can't be read just means no Markdown diff.
       return undefined;
     }
   }

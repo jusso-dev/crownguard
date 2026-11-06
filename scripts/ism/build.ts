@@ -26,7 +26,7 @@ import { ISM_APPLICABILITY, ISM_E8_LEVELS, isWithdrawn, oscalCatalogFileSchema, 
 export const displayId = (oscalId: string): string => oscalId.toUpperCase();
 
 /** One control in the generated framework file. */
-export interface IsmRow {
+interface IsmRow {
   id: string;
   group: string;
   title: string;
@@ -35,7 +35,7 @@ export interface IsmRow {
   e8?: string[];
 }
 
-export interface IsmExtract {
+interface IsmExtract {
   rows: IsmRow[];
   withdrawn: string[];
   /** OSCAL ids in ASD's own spelling, in catalog order; the pinned fixture sorts them. */
@@ -159,7 +159,7 @@ export function ismYaml(file: OscalCatalogFile, extract: IsmExtract, opts: { tag
 }
 
 /** The pinned control id list, in the style of the Prowler and ScubaGoggles fixture lists. */
-export function pinnedIdsText(extract: IsmExtract, opts: { tag: string; version: string }): string {
+function pinnedIdsText(extract: IsmExtract, opts: { tag: string; version: string }): string {
   const header = [
     `# Control ids in the ASD ISM OSCAL catalog at release tag ${opts.tag} (catalog version ${opts.version}),`,
     `# taken from ISM_catalog.json in https://github.com/${ISM.repo}/tree/${opts.tag}.`,
@@ -170,7 +170,6 @@ export function pinnedIdsText(extract: IsmExtract, opts: { tag: string; version:
   return `${[...header, ...[...extract.oscalIds].sort()].join("\n")}\n`;
 }
 
-/** Both files' text for a catalog. */
 function buildIsm(file: OscalCatalogFile, opts: { tag: string; retrieved: string }): { yaml: string; ids: string } {
   const extract = extractControls(file);
   return { yaml: ismYaml(file, extract, opts), ids: pinnedIdsText(extract, { tag: opts.tag, version: file.catalog.metadata.version }) };

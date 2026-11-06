@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ISO_DATE } from "../lib/dates";
 import type { FeedMemo, SourceMemo, WatchCache } from "./types";
 import { stableStringify } from "./util";
 
@@ -27,7 +28,7 @@ function readRecord<T>(path: string, accept: (v: unknown, key: string) => T | un
 }
 
 const count = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? (v as number) : undefined);
-const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+const date = (v: unknown) => (typeof v === "string" && ISO_DATE.test(v) ? v : undefined);
 
 function sourceMemo(v: unknown): SourceMemo | undefined {
   if (!v || typeof v !== "object") return undefined;

@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
+import { ISO_DATE } from "../lib/dates";
 import { repoPath } from "../lib/repo";
 import { escapeRegExp } from "../lib/text";
 import type { WatchState } from "./types";
@@ -41,7 +42,7 @@ export function applyUrlUpdates(files: Record<string, string>, updates: UrlUpdat
   const changed: Record<string, string> = {};
   for (const update of updates) {
     if (!isHttpUrl(update.url) || !update.url.startsWith("https://")) throw new Error(`${update.id}: refusing non-https URL ${update.url}`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(update.retrieved)) throw new Error(`${update.id}: bad retrieved date ${update.retrieved}`);
+    if (!ISO_DATE.test(update.retrieved)) throw new Error(`${update.id}: bad retrieved date ${update.retrieved}`);
     const path = Object.keys(files).find((p) => new RegExp(`^\\s*-\\s+id:\\s*["']?${escapeRegExp(update.id)}["']?\\s*(#.*)?$`, "m").test(changed[p] ?? files[p]));
     if (!path) throw new Error(`${update.id}: not found in content/sources`);
     const before = changed[path] ?? files[path];
@@ -123,7 +124,7 @@ const sourceState = z
     terms: z.array(z.string()).optional(),
     versions: z.array(z.string()).optional(),
     retired: z.string().optional(),
-    passed: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
+    passed: z.array(z.string().regex(ISO_DATE)).optional(),
   })
   .strict();
 

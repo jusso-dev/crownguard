@@ -40,7 +40,7 @@ const MAPPINGS = "E4EIT_mapping-collection.json";
 const SLUGS = Object.keys(DOMAIN_SLUGS) as DomainSlug[];
 const profileName = (slug: DomainSlug) => `E4EIT_${slug}-domain_profile.json`;
 
-export interface EssentialsInputs {
+interface EssentialsInputs {
   catalog: CatalogFile;
   mappings: MappingFile;
   profiles: Record<DomainSlug, ProfileFile>;
@@ -245,8 +245,7 @@ function pinnedActionsText(x: EssentialsExtract, tag: string): string {
   ].join("\n") + "\n";
 }
 
-/** Both files' text. */
-export function buildEssentials(inputs: EssentialsInputs, opts: { tag: string; retrieved: string }): { yaml: string; ids: string } {
+function buildEssentials(inputs: EssentialsInputs, opts: { tag: string; retrieved: string }): { yaml: string; ids: string } {
   const x = extractEssentials(inputs);
   return { yaml: essentialsYaml(x, opts), ids: pinnedActionsText(x, opts.tag) };
 }

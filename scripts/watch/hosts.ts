@@ -7,7 +7,7 @@ export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)
 export const PLAIN_USER_AGENT = "crownguard-source-watch/1.0";
 
 /** Fallback for hosts without a profile: the usual main-content containers, no quoting. */
-export const DEFAULT_PROFILE: HostProfile = {
+const DEFAULT_PROFILE: HostProfile = {
   host: "*",
   label: "Other",
   content: ["main article", "article", "main", "[role=main]", "#content", ".content"],
@@ -18,7 +18,7 @@ export const DEFAULT_PROFILE: HostProfile = {
   concurrency: 2,
 };
 
-export const PROFILES: HostProfile[] = [
+const PROFILES: HostProfile[] = [
   {
     host: "learn.microsoft.com",
     label: "Microsoft Learn",
@@ -53,7 +53,7 @@ export const PROFILES: HostProfile[] = [
 ];
 
 /** Licences of the public MicrosoftDocs mirrors (checked October 2026). Pages from other Learn repos aren't quoted. */
-export const LEARN_MIRROR_LICENCES: Record<string, { label: string; url: string }> = {
+const LEARN_MIRROR_LICENCES: Record<string, { label: string; url: string }> = {
   "MicrosoftDocs/entra-docs": { label: "MIT licence, © Microsoft Corporation", url: "https://github.com/MicrosoftDocs/entra-docs/blob/main/LICENSE" },
   "MicrosoftDocs/azure-docs": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },
   "MicrosoftDocs/power-platform": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },

@@ -293,7 +293,6 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
       continue;
     }
 
-    // The page loaded.
     delete cache.failures[s.id];
     delete cache.unverified[s.id];
     const { ex, current, redirect } = r;
@@ -626,6 +625,7 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
           try {
             nodes = res.outcome === "ok" && res.body ? parseToc(JSON.parse(res.body), tocUrl) : undefined;
           } catch {
+            // Malformed JSON is handled like a failed fetch, just below.
             nodes = undefined;
           }
           if (!nodes) {

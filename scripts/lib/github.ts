@@ -1,17 +1,18 @@
+import { ISO_DATE } from "./dates";
 import { isTag } from "./versions";
 
 export const API_BASE = "https://api.github.com";
-export const RAW_BASE = "https://raw.githubusercontent.com";
+const RAW_BASE = "https://raw.githubusercontent.com";
 
 const REPO = /^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/;
 export const isRepo = (repo: string): boolean => REPO.test(repo);
 
 /** A repo path with each segment URL-encoded and the slashes kept. */
-export const encodePath = (path: string): string => path.split("/").map(encodeURIComponent).join("/");
+const encodePath = (path: string): string => path.split("/").map(encodeURIComponent).join("/");
 
 export const rawUrl = (repo: string, ref: string, path: string): string => `${RAW_BASE}/${repo}/${encodePath(ref)}/${encodePath(path)}`;
 
-export const releaseUrl = (repo: string, tag: string): string => `https://github.com/${repo}/releases/tag/${tag}`;
+const releaseUrl = (repo: string, tag: string): string => `https://github.com/${repo}/releases/tag/${tag}`;
 
 /** Headers for api.github.com. Without a token the API allows 60 requests an hour. */
 export const apiHeaders = (userAgent: string, token?: string): Record<string, string> => ({
@@ -29,7 +30,7 @@ export interface Release {
   url: string;
 }
 
-export interface TreeEntry {
+interface TreeEntry {
   path: string;
   type: string;
 }
@@ -80,7 +81,7 @@ export function createReleaseGitHub(opts: { token?: string; fetchImpl?: typeof f
       const tag = typeof r.tag_name === "string" ? r.tag_name : "";
       if (!isTag(tag)) throw new Error(`${repo}: latest release tag ${JSON.stringify(r.tag_name)} is not a version tag`);
       const date = typeof r.published_at === "string" ? r.published_at.slice(0, 10) : "";
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`${repo}: release ${tag} has no publication date`);
+      if (!ISO_DATE.test(date)) throw new Error(`${repo}: release ${tag} has no publication date`);
       return { tag, date, url: releaseUrl(repo, tag) };
     },
     async dir(repo, path, ref) {

@@ -8,7 +8,7 @@
 import { z } from "zod";
 import { oscalPropSchema, type OscalProp } from "../lib/oscal";
 
-export interface OscalPart {
+interface OscalPart {
   id?: string;
   name: string;
   prose?: string;
@@ -26,7 +26,7 @@ export interface OscalControl {
   controls?: OscalControl[];
 }
 
-export interface OscalGroup {
+interface OscalGroup {
   title: string;
   props?: OscalProp[];
   parts?: OscalPart[];

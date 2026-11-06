@@ -29,20 +29,19 @@ const CHALLENGE_MARKERS = [
 
 const TEXT_TYPES = /^(?:text\/|application\/(?:xhtml\+xml|xml|atom\+xml|rss\+xml|json|ld\+json))/i;
 
-export interface FetcherOptions {
+interface FetcherOptions {
   /** Per-host request concurrency. */
   concurrencyFor?: (host: string) => number;
   /** Per-host pause after each request, in milliseconds (robots.txt crawl-delay). */
   delayFor?: (host: string) => number;
   /** Per-host retries; falls back to `retries`. */
   retriesFor?: (host: string) => number | undefined;
-  /** Per-host user agent; falls back to `userAgent`. */
+  /** Per-host user agent; falls back to the watch's own. */
   userAgentFor?: (host: string) => string | undefined;
   timeoutMs?: number;
   /** Extra attempts after a network error, 5xx or 429. */
   retries?: number;
   maxBytes?: number;
-  userAgent?: string;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -56,7 +55,6 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
     timeoutMs = 30_000,
     retries = 2,
     maxBytes = 20 * 1024 * 1024,
-    userAgent = USER_AGENT,
     fetchImpl = fetch,
     sleep = defaultSleep,
   } = opts;
@@ -89,7 +87,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         res = await fetchImpl(current, {
           redirect: "manual",
           signal: AbortSignal.timeout(timeoutMs),
-          headers: { "user-agent": userAgentFor(hostOf(current)) ?? userAgent, accept, "accept-language": "en-US,en;q=0.9" },
+          headers: { "user-agent": userAgentFor(hostOf(current)) ?? USER_AGENT, accept, "accept-language": "en-US,en;q=0.9" },
         });
       } catch (e) {
         const err = e as Error & { cause?: { code?: string; message?: string } };

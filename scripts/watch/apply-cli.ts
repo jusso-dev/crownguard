@@ -7,13 +7,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { loadCatalogue } from "../../src/content/loader";
+import { cliArgs } from "../lib/cli";
 import { ISO_DATE } from "../lib/dates";
 import { repoPath } from "../lib/repo";
 import { readContentFiles } from "../read-content";
 import { applyUrlUpdates, readSourceFiles, stateSchema, writeState } from "./apply";
 import type { WatchState } from "./types";
 
-const dir = process.argv[2];
+const dir = cliArgs()[0];
 if (!dir) {
   console.error("usage: pnpm watch:apply <scan output dir>");
   process.exit(2);

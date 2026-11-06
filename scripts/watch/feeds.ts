@@ -3,7 +3,8 @@ import { readRepoFile } from "../lib/repo";
 import { ESSENTIALS_IT, ISM, pinnedRelease, PROWLER, SCUBAGOGGLES, type OscalUpstream, type ScannerUpstream } from "../lib/upstreams";
 import { currentHost } from "./hosts";
 import type { FeedMemo, Fetcher, Finding, WatchState } from "./types";
-import { collapse, isHttpUrl, normalizeUrl, shortHash, truncate } from "./util";
+import { withoutQuery } from "./learn";
+import { collapse, isHttpUrl, shortHash, truncate } from "./util";
 
 export interface FeedDef {
   id: string;
@@ -30,13 +31,13 @@ export interface FeedDef {
   reviewMapping?: { file: string; pinned: string };
 }
 
-export interface FeedNote {
+interface FeedNote {
   type: string;
   text: string;
   links: string[];
 }
 
-export interface FeedEntry {
+interface FeedEntry {
   id: string;
   title: string;
   url: string;
@@ -57,12 +58,8 @@ function stripTags(html: string): string {
 function hrefs(html: string, base: string): string[] {
   const out = new Set<string>();
   for (const m of html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
-    try {
-      const u = new URL(m[1].replace(/&amp;/g, "&"), base);
-      if (u.protocol === "https:" || u.protocol === "http:") out.add(u.toString());
-    } catch {
-      // ignore malformed links
-    }
+    const u = URL.parse(m[1].replace(/&amp;/g, "&"), base);
+    if (u && isHttpUrl(u.toString())) out.add(u.toString());
   }
   return [...out];
 }
@@ -95,7 +92,7 @@ export function parseHtmlHistory(html: string, pageUrl: string): FeedEntry[] {
     const cells = [...tr.querySelectorAll("td")].map((td) => collapse(td.textContent ?? ""));
     if (cells.length < 2) continue;
     const [change, description, dateCell] = cells.length >= 3 ? cells : [cells[0], cells[0], cells[1]];
-    const published = parseHistoryDate(dateCell);
+    const published = iso(dateCell);
     if (!published) continue;
     const title = change || truncate(description, 120);
     const summary = description || change;
@@ -114,12 +111,6 @@ export function parseHtmlHistory(html: string, pageUrl: string): FeedEntry[] {
   return entries.sort((a, b) => b.published.localeCompare(a.published));
 }
 
-/** Best-effort ISO timestamp from a document-history date cell ("August 20, 2026"). */
-function parseHistoryDate(raw: string): string | undefined {
-  const t = Date.parse(raw);
-  if (!Number.isNaN(t)) return new Date(t).toISOString();
-  return iso(raw);
-}
 
 /** Entries of an Atom or RSS 2.0 feed, newest first. Entries without a parseable date or http(s) link are dropped. */
 export function parseFeed(xml: string): FeedEntry[] {
@@ -165,17 +156,13 @@ export function parseFeed(xml: string): FeedEntry[] {
 
 /** A link in a feed as a cited-page key: on the host the site lives on now, without its query. */
 function citedKey(url: string): string {
-  try {
-    const u = new URL(url);
-    u.hostname = currentHost(u.hostname);
-    u.search = "";
-    return normalizeUrl(u.toString());
-  } catch {
-    return url;
-  }
+  const u = URL.parse(url);
+  if (!u) return url;
+  u.hostname = currentHost(u.hostname);
+  return withoutQuery(u.toString());
 }
 
-export interface FeedRun {
+interface FeedRun {
   findings: Finding[];
   /** Proposed cursors: the baseline's, advanced only past entries this run reports. */
   feeds: WatchState["feeds"];
