@@ -126,6 +126,16 @@ function hasHelp(argv: string[]) {
   return argv.includes("--help") || argv.includes("-h");
 }
 
+const commands: Record<string, ((argv: string[]) => number | Promise<number>) | undefined> = {
+  catalogue: (argv) => cmdCatalogue(argv),
+  new: (argv) => cmdNew(argv),
+  import: (argv) => cmdImport(argv),
+  score: (argv) => cmdScore(argv),
+  render: (argv) => cmdRender(argv),
+  migrate: (argv) => cmdMigrate(argv),
+  validate: (argv) => cmdValidate(argv),
+};
+
 export async function run(argv: string[]): Promise<number> {
   try {
     if (!argv.length || argv[0] === "--help" || argv[0] === "-h" || argv[0] === "help") {
@@ -137,7 +147,7 @@ export async function run(argv: string[]): Promise<number> {
     const rest = argv.slice(1);
 
     if (command === "ai-register") {
-      if (!rest.length || rest[0] === "--help" || rest[0] === "-h") {
+      if (!rest.length || hasHelp(rest)) {
         err(helpFor["ai-register"]);
         return EXIT.OK;
       }
@@ -149,45 +159,22 @@ export async function run(argv: string[]): Promise<number> {
       return cmdAiRegisterExport(rest.slice(1));
     }
 
-    if (!(command in helpFor) && command !== "ai-register") {
+    const handler = commands[command];
+    if (!handler) {
       err(`unknown command '${command}'`);
       err(helpTop);
       return EXIT.INVALID;
-    }
-
-    if (hasHelp(rest) || (rest.length === 0 && command !== "catalogue" && command !== "new")) {
-      // catalogue/new can run with only flags; others need positionals — show help when bare.
-      if (hasHelp(rest) || command === "import" || command === "score" || command === "render" || command === "migrate" || command === "validate") {
-        if (hasHelp(rest) || rest.length === 0) {
-          err(helpFor[command]);
-          return hasHelp(rest) ? EXIT.OK : EXIT.INVALID;
-        }
-      }
     }
     if (hasHelp(rest)) {
       err(helpFor[command]);
       return EXIT.OK;
     }
-
-    switch (command) {
-      case "catalogue":
-        return cmdCatalogue(rest);
-      case "new":
-        return cmdNew(rest);
-      case "import":
-        return cmdImport(rest);
-      case "score":
-        return cmdScore(rest);
-      case "render":
-        return await cmdRender(rest);
-      case "migrate":
-        return cmdMigrate(rest);
-      case "validate":
-        return cmdValidate(rest);
-      default:
-        err(`unknown command '${command}'`);
-        return EXIT.INVALID;
+    // catalogue and new run on flags alone; the others need a file, so running them bare shows how to use them.
+    if (rest.length === 0 && command !== "catalogue" && command !== "new") {
+      err(helpFor[command]);
+      return EXIT.INVALID;
     }
+    return await handler(rest);
   } catch (e) {
     const raw = typeof e === "object" && e && "code" in e ? (e as { code: unknown }).code : undefined;
     // node:util parseArgs rejects unknown or malformed options with ERR_PARSE_ARGS_* codes: that's bad input.
@@ -203,14 +190,9 @@ function cmdCatalogue(argv: string[]): number {
     options: {
       platform: { type: "string" },
       out: { type: "string" },
-      help: { type: "boolean", short: "h" },
     },
     allowPositionals: false,
   });
-  if (values.help) {
-    err(helpFor.catalogue);
-    return EXIT.OK;
-  }
   const { catalogue } = catalogueOrThrow();
   if (values.platform && !catalogue.platforms.has(values.platform)) {
     err(`unknown platform '${values.platform}' (want aws|microsoft|google)`);
@@ -233,14 +215,9 @@ function cmdNew(argv: string[]): number {
       platforms: { type: "string" },
       out: { type: "string", default: "assessment.crownguard.json" },
       force: { type: "boolean", default: false },
-      help: { type: "boolean", short: "h" },
     },
     allowPositionals: false,
   });
-  if (values.help) {
-    err(helpFor.new);
-    return EXIT.OK;
-  }
   if (!values.org?.trim()) {
     err("missing --org");
     return EXIT.INVALID;
@@ -280,14 +257,9 @@ function cmdImport(argv: string[]): number {
       tool: { type: "string", default: "auto" },
       overwrite: { type: "boolean", default: false },
       licence: { type: "boolean", default: false },
-      help: { type: "boolean", short: "h" },
     },
     allowPositionals: true,
   });
-  if (values.help) {
-    err(helpFor.import);
-    return EXIT.OK;
-  }
   const [assessmentPath, scanPath] = positionals;
   if (!assessmentPath || !scanPath) {
     err(`usage: cg import <assessment> <scan-file> [--tool ${toolChoices.join("|")}] [--overwrite] [--licence]`);
@@ -333,14 +305,9 @@ function cmdScore(argv: string[]): number {
     args: argv,
     options: {
       format: { type: "string", default: "json" },
-      help: { type: "boolean", short: "h" },
     },
     allowPositionals: true,
   });
-  if (values.help) {
-    err(helpFor.score);
-    return EXIT.OK;
-  }
   const [assessmentPath] = positionals;
   if (!assessmentPath) {
     err("usage: cg score <assessment> [--format json|text]");
@@ -364,14 +331,9 @@ async function cmdRender(argv: string[]): Promise<number> {
     args: argv,
     options: {
       kind: { type: "string", default: "full" },
-      help: { type: "boolean", short: "h" },
     },
     allowPositionals: true,
   });
-  if (values.help) {
-    err(helpFor.render);
-    return EXIT.OK;
-  }
   const [assessmentPath, outPdf] = positionals;
   if (!assessmentPath || !outPdf) {
     err("usage: cg render <assessment> <out.pdf> [--kind full|ai-register]");
@@ -444,49 +406,36 @@ function cmdAiRegisterExport(argv: string[]): number {
   return EXIT.OK;
 }
 
+/**
+ * Read a file, bring it up to the current schema and check it, listing every issue on stderr and stdout. Undefined
+ * when the file can't be used; the caller returns EXIT.INVALID.
+ */
+function readCurrent(path: string, { allowNewer }: { allowNewer: boolean }): Assessment | undefined {
+  const fail = (issues: string[]) => {
+    for (const i of issues) err(i);
+    out({ ok: false, issues });
+    return undefined;
+  };
+  const raw = readJson(path);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return fail(["file: not a crownguard assessment"]);
+  const from = detectSchemaVersion(raw);
+  if (from === undefined) return fail(["file: no schemaVersion (or version: 1)"]);
+  if (from > SCHEMA_VERSION && !allowNewer) return fail([`file: schema ${from}; this build only knows schema ${SCHEMA_VERSION}`]);
+  const parsed = assessmentSchema.safeParse(migrate(raw as Record<string, unknown>, from).raw);
+  if (!parsed.success) return fail(formatIssues(parsed.error.issues, Number.POSITIVE_INFINITY));
+  return parsed.data;
+}
+
 function cmdMigrate(argv: string[]): number {
-  const { values, positionals } = parseArgs({
-    args: argv,
-    options: {
-      out: { type: "string" },
-      help: { type: "boolean", short: "h" },
-    },
-    allowPositionals: true,
-  });
-  if (values.help) {
-    err(helpFor.migrate);
-    return EXIT.OK;
-  }
+  const { values, positionals } = parseArgs({ args: argv, options: { out: { type: "string" } }, allowPositionals: true });
   const [assessmentPath] = positionals;
   if (!assessmentPath) {
     err("usage: cg migrate <assessment> [--out file]");
     return EXIT.INVALID;
   }
-  const raw = readJson(assessmentPath);
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    err("not a crownguard assessment");
-    return EXIT.INVALID;
-  }
-  const record = raw as Record<string, unknown>;
-  const from = detectSchemaVersion(record);
-  if (from === undefined) {
-    err("unrecognised format: no schemaVersion (or version: 1)");
-    return EXIT.INVALID;
-  }
-  if (from > SCHEMA_VERSION) {
-    err(`file is schema ${from}; this build only knows schema ${SCHEMA_VERSION}`);
-    return EXIT.INVALID;
-  }
-  const { raw: migrated } = migrate(record, from);
-  const parsed = assessmentSchema.safeParse(migrated);
-  if (!parsed.success) {
-    const issues = formatIssues(parsed.error.issues, Number.POSITIVE_INFINITY);
-    for (const i of issues) err(i);
-    out({ ok: false, issues });
-    return EXIT.INVALID;
-  }
-  const { contentHash } = catalogueOrThrow();
-  const text = toSaveFile(parsed.data, { contentHash });
+  const assessment = readCurrent(assessmentPath, { allowNewer: false });
+  if (!assessment) return EXIT.INVALID;
+  const text = toSaveFile(assessment, { contentHash: catalogueOrThrow().contentHash });
   if (values.out) {
     writeFileSync(values.out, text);
     err(`Wrote ${values.out}`);
@@ -497,43 +446,15 @@ function cmdMigrate(argv: string[]): number {
 }
 
 function cmdValidate(argv: string[]): number {
-  const { values, positionals } = parseArgs({
-    args: argv,
-    options: { help: { type: "boolean", short: "h" } },
-    allowPositionals: true,
-  });
-  if (values.help) {
-    err(helpFor.validate);
-    return EXIT.OK;
-  }
+  const { positionals } = parseArgs({ args: argv, options: {}, allowPositionals: true });
   const [assessmentPath] = positionals;
   if (!assessmentPath) {
     err("usage: cg validate <assessment>");
     return EXIT.INVALID;
   }
-  const raw = readJson(assessmentPath);
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    err("file: not a crownguard assessment");
-    out({ ok: false, issues: ["file: not a crownguard assessment"] });
-    return EXIT.INVALID;
-  }
-  const record = raw as Record<string, unknown>;
-  const from = detectSchemaVersion(record);
-  if (from === undefined) {
-    const issues = ["file: no schemaVersion (or version: 1)"];
-    for (const i of issues) err(i);
-    out({ ok: false, issues });
-    return EXIT.INVALID;
-  }
-  const { raw: migrated } = migrate(record, from);
-  const parsed = assessmentSchema.safeParse(migrated);
-  if (!parsed.success) {
-    const issues = formatIssues(parsed.error.issues, Number.POSITIVE_INFINITY);
-    for (const i of issues) err(i);
-    out({ ok: false, issues });
-    return EXIT.INVALID;
-  }
-  out({ ok: true, schemaVersion: parsed.data.schemaVersion });
+  const assessment = readCurrent(assessmentPath, { allowNewer: true });
+  if (!assessment) return EXIT.INVALID;
+  out({ ok: true, schemaVersion: assessment.schemaVersion });
   return EXIT.OK;
 }
 

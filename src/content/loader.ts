@@ -26,7 +26,6 @@ import {
   type SocQuestion,
 } from "./schema";
 
-export { aiRegisterSources } from "./aiRegisterSources";
 
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
 export type ContentFiles = Record<string, string>;

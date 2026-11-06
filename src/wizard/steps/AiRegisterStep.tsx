@@ -30,7 +30,7 @@ import {
   type AiReadiness,
   type KillSwitchNote,
 } from "../../engine/aiRegister";
-import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
+import { aboutRows, basisLabel, dayText, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll, needsReason } from "../../engine/risk";
 import { answerLabels } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
@@ -47,7 +47,6 @@ const ADD = "add";
 /** The open-gaps filter: one basis of readiness question, or all of them. */
 type GapFilter = "all" | AiBasis;
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
-const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 export function ExampleBadge() {
   return <span className="mono-label rounded-[4px] bg-warn-soft px-1.5 py-0.5 text-warn">Example</span>;

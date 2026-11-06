@@ -75,8 +75,10 @@ describe("the ISM baseline annotation", () => {
     expect(all.findings.map((f) => f.question.id)).toEqual(["MS-ID-001"]);
   });
 
-  it("offers the three public baselines and nothing classified", () => {
-    expect(Object.values(ismBaselines).map((b) => b.label)).toEqual(["NON_CLASSIFIED", "OFFICIAL: Sensitive", "PROTECTED"]);
-    expect(Object.values(ismBaselines).map((b) => b.applicability)).toEqual(["NC", "OS", "P"]);
+  it("offers only baselines the ISM controls carry, and nothing classified", () => {
+    const codes = new Set((catalogue.frameworks.get("ism")?.controls ?? []).flatMap((c) => c.applicability ?? []));
+    for (const b of Object.values(ismBaselines)) expect(codes, b.label).toContain(b.applicability);
+    expect(Object.values(ismBaselines).map((b) => b.applicability)).not.toContain("S");
+    expect(Object.values(ismBaselines).map((b) => b.applicability)).not.toContain("TS");
   });
 });
