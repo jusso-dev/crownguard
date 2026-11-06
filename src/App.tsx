@@ -13,16 +13,14 @@ import {
   LegacyOriginBanner,
   PassphraseFields,
   UnlockCard,
-  getSessionPassphrase,
-  hasSessionPassphrase,
 } from "./wizard/PrivacyControls";
 import { toEncryptedSaveFile, toSaveFile } from "./format/saveFile";
-import { setSessionPassphrase, hasLockedEnvelope } from "./wizard/sessionSecrets";
+import { getSessionPassphrase, hasLockedEnvelope, hasSessionPassphrase, setSessionPassphrase } from "./wizard/sessionSecrets";
 import { hasProgress, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
 import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/flow";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
 import { forgetProgress } from "./wizard/unlock";
-import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
+import { OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { isDesktop, platform, type OpenedFile } from "./platform";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
@@ -339,7 +337,7 @@ function noticeFromRehydrate(): Notice | undefined {
     text: first.text,
     details: notices.filter((n) => n !== first).map((n) => n.text),
     actions: backup
-      ? [{ label: "Download the unreadable data", onClick: () => download("crownguard-unreadable.json", backup, "application/json") }]
+      ? [{ label: "Download the unreadable data", onClick: () => platform.saveAs("crownguard-unreadable.json", backup, "application/json") }]
       : undefined,
   };
 }
@@ -360,7 +358,7 @@ export function App() {
   const [pendingEncrypted, setPendingEncrypted] = useState<unknown>(null);
   const [screen, setScreen] = useState<"start" | "resume" | "wizard">("start");
   const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
-  const [saver] = useState(createFileSaver);
+  const [saver] = useState(() => platform.createFileSaver());
   const fileSavedThisSession = useRef(false);
   /** The encrypted file waiting for its passphrase, so a later save can go back to it. */
   const pendingFile = useRef<OpenedFile | undefined>(undefined);

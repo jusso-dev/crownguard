@@ -35,7 +35,8 @@ import { assessAll, needsReason } from "../../engine/risk";
 import { answerLabels } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
 import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
-import { download, slug } from "../download";
+import { platform } from "../../platform";
+import { slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore } from "../store";
 import { modeOf } from "../flow";
@@ -975,7 +976,7 @@ function Exports() {
         columns follow, so you can keep or drop them. The spreadsheet adds an About sheet with the dates, notes and sources. Files are made in your browser.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="secondary" disabled={!entries} onClick={() => download(file("csv"), toCsv(registerTable(catalogue, assessment)), "text/csv;charset=utf-8")}>
+        <Button variant="secondary" disabled={!entries} onClick={() => platform.saveAs(file("csv"), toCsv(registerTable(catalogue, assessment)), "text/csv;charset=utf-8")}>
           Download CSV
         </Button>
         <Button
@@ -987,7 +988,7 @@ function Exports() {
               { name: "Register", rows: [t.headers, ...t.rows], header: true, widths: t.headers.map((h) => (/Description|gaps|missing/i.test(h) ? 48 : 22)) },
               { name: "About", rows: aboutRows(catalogue, assessment), widths: [18, 110] },
             ]);
-            download(file("xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            platform.saveAs(file("xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
           }}
         >
           Download XLSX

@@ -281,6 +281,3 @@ export function LegacyOriginBanner() {
     </div>
   );
 }
-
-/** Current passphrase if set — for encrypting a save without re-prompting. */
-export { getSessionPassphrase, hasSessionPassphrase };
