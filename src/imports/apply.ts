@@ -4,12 +4,13 @@ import type { ScanResult } from "./types";
 /**
  * Merge scan suggestions into an assessment: the wizard's import and `cg import` share this. An answer is kept unless
  * the scan is decisive and the user chose to replace answers. A kept answer keeps the evidence it was given too, so a
- * later scan's checks never sit under an answer they didn't produce.
+ * later scan's checks never sit under an answer they didn't produce. `platform` is the importer's, for the licence tier;
+ * `now` stamps the import and defaults to the current time.
  */
 export function applyScan(
   assessment: Assessment,
   scan: ScanResult,
-  opts: { platform: string; overwrite: boolean; licence: boolean },
+  opts: { platform: string; overwrite: boolean; licence: boolean; now?: Date },
 ): { assessment: Assessment; applied: number } {
   const answers = { ...assessment.answers };
   const evidence = { ...assessment.evidence };
@@ -22,7 +23,7 @@ export function applyScan(
       applied++;
     }
   }
-  const now = new Date().toISOString();
+  const now = (opts.now ?? new Date()).toISOString();
   return {
     applied,
     assessment: {
