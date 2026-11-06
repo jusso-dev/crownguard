@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button, Field, inputClass } from "./ui";
 import { isEphemeralMode, setEphemeralMode } from "./persistence";
-import { getSessionPassphrase, hasSessionPassphrase, setSessionPassphrase } from "./sessionSecrets";
+import { hasSessionPassphrase, setSessionPassphrase } from "./sessionSecrets";
 import { useStore } from "./store";
 import { unlockProgress } from "./unlock";
 
