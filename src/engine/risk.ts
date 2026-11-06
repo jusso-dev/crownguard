@@ -2,7 +2,17 @@ import { severities, type Catalogue, type Question, type Severity } from "../con
 import type { Answer } from "../format/vocab";
 import type { Assessment, CrownJewel } from "../format/schema";
 
-export type Band = "Low" | "Medium" | "High" | "Extreme";
+export const bands = ["Low", "Medium", "High", "Extreme"] as const;
+export type Band = (typeof bands)[number];
+
+/** Impact and likelihood are each rated 1 to this; a risk score is their product. */
+export const RISK_SCALE = 5;
+
+/** The lowest score in each band, lowest band first. */
+export const bandFloors: Record<Band, number> = { Low: 1, Medium: 5, High: 10, Extreme: 20 };
+
+/** Likelihood = 1 + `gapWeight` × weighted gap ratio + `perExposure` per exposure, at least `criticalFloor` while a critical control is open. */
+export const likelihoodRule = { gapWeight: 4, perExposure: 0.5, criticalFloor: 3 } as const;
 
 /** Score credited for an answer. Unknown and unanswered never count as compliant. N/A is excluded. */
 export function answerValue(a: Answer | undefined): number | null {
@@ -108,12 +118,12 @@ export const bySeverity = (a: Weighted, b: Weighted) => severities[b.severity] -
 
 export const maxImpact = (j: Pick<CrownJewel, "confidentiality" | "integrity" | "availability">) => Math.max(j.confidentiality, j.integrity, j.availability);
 
-const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)));
+const clamp = (n: number) => Math.min(RISK_SCALE, Math.max(1, Math.round(n)));
 
 export function impactOf(j: CrownJewel): number {
   const base = maxImpact(j);
   const uplift = j.regulations.length > 0 || j.classification === "highly-confidential" ? 1 : 0;
-  return Math.min(5, base + uplift);
+  return Math.min(RISK_SCALE, base + uplift);
 }
 
 /**
@@ -122,14 +132,14 @@ export function impactOf(j: CrownJewel): number {
  */
 export function likelihoodOf(stats: Pick<GapStats, "weight" | "gap">, exposureCount: number, openCritical: boolean): number {
   const ratio = stats.weight === 0 ? 0 : stats.gap / stats.weight;
-  const raw = 1 + 4 * ratio + 0.5 * exposureCount;
-  return clamp(openCritical ? Math.max(raw, 3) : raw);
+  const raw = 1 + likelihoodRule.gapWeight * ratio + likelihoodRule.perExposure * exposureCount;
+  return clamp(openCritical ? Math.max(raw, likelihoodRule.criticalFloor) : raw);
 }
 
 export function bandOf(score: number): Band {
-  if (score >= 20) return "Extreme";
-  if (score >= 10) return "High";
-  if (score >= 5) return "Medium";
+  if (score >= bandFloors.Extreme) return "Extreme";
+  if (score >= bandFloors.High) return "High";
+  if (score >= bandFloors.Medium) return "Medium";
   return "Low";
 }
 

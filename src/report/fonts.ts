@@ -1,15 +1,16 @@
 import { Font } from "@react-pdf/renderer";
 import { join } from "node:path";
 
-export interface FontFiles {
+interface FontFiles {
   regular: string;
   italic: string;
   semibold: string;
   bold: string;
 }
 
-/** Absolute paths to the Inter TTFs shipped beside this module. Browser still passes asset URLs into `registerFonts`. */
-export function fontFilesOnDisk(dir = join(import.meta.dirname, "fonts")): FontFiles {
+/** The Inter TTFs shipped beside this module. */
+function fontFilesOnDisk(): FontFiles {
+  const dir = join(import.meta.dirname, "fonts");
   return {
     regular: join(dir, "Inter_400Regular.ttf"),
     italic: join(dir, "Inter_400Regular_Italic.ttf"),
@@ -18,7 +19,7 @@ export function fontFilesOnDisk(dir = join(import.meta.dirname, "fonts")): FontF
   };
 }
 
-/** Registers the report font. Browser passes asset URLs; Node and tests pass file paths (see `fontFilesOnDisk`). */
+/** Registers the report font. The browser passes asset URLs; Node registers the files on disk (`registerFontsFromDisk`). */
 export function registerFonts(f: FontFiles) {
   Font.register({
     family: "Inter",
@@ -51,8 +52,8 @@ export function breakLongWords(word: string): string[] {
 let diskRegistered = false;
 
 /** Idempotent Node registration from the on-disk TTFs. Safe to call before every render. */
-export function registerFontsFromDisk(dir?: string) {
+export function registerFontsFromDisk() {
   if (diskRegistered) return;
-  registerFonts(fontFilesOnDisk(dir));
+  registerFonts(fontFilesOnDisk());
   diskRegistered = true;
 }

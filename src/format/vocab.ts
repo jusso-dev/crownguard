@@ -12,6 +12,11 @@ export const answerLabels = {
   na: "N/A",
 } as const;
 export type Answer = keyof typeof answerLabels;
+/** An answer's label, or "Unanswered". */
+export const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
+
+/** "a, b and c", the en-AU way (no serial comma). */
+export const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
 /** In the order the answer buttons show them. */
 export const answers = Object.keys(answerLabels) as Answer[];
 

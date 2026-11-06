@@ -14,7 +14,7 @@ export const ratingLabels = {
 export type EssentialsRating = keyof typeof ratingLabels;
 
 /** Weight of each assessed rating in ASD's domain percentage. Not assessed has none: it is left out, not scored 0. */
-const weight = { "not-effective": 0, "partially-effective": 0.5, "fully-effective": 1 } as const;
+export const ratingWeights = { "not-effective": 0, "partially-effective": 0.5, "fully-effective": 1 } as const;
 
 export interface EssentialsEvidence {
   question: Question;
@@ -41,7 +41,7 @@ interface PrincipleResult {
 
 type RatingCounts = Record<EssentialsRating, number>;
 
-interface DomainResult {
+export interface DomainResult {
   id: EssentialsDomain;
   name: string;
   type: "capability" | "technical";
@@ -100,8 +100,8 @@ export function principleRating(ratings: (EssentialsRating | null)[]): Essential
 export function domainPercentage(ratings: EssentialsRating[]): { percentage: number | null; counts: RatingCounts } {
   const counts: RatingCounts = { "not-assessed": 0, "not-effective": 0, "partially-effective": 0, "fully-effective": 0 };
   for (const r of ratings) counts[r]++;
-  const assessed = ratings.filter((r): r is keyof typeof weight => r !== "not-assessed");
-  const percentage = assessed.length ? Math.round((assessed.reduce((sum, r) => sum + weight[r], 0) / assessed.length) * 100) : null;
+  const assessed = ratings.filter((r): r is keyof typeof ratingWeights => r !== "not-assessed");
+  const percentage = assessed.length ? Math.round((assessed.reduce((sum, r) => sum + ratingWeights[r], 0) / assessed.length) * 100) : null;
   return { percentage, counts };
 }
 

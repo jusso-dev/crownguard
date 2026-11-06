@@ -1,4 +1,4 @@
-/** Renders PDFs off the main thread. Takes the assessment, not the report model, which holds functions. */
+/** Renders PDFs off the main thread. Takes the assessment and builds the document the same way the main thread does. */
 import type { Assessment } from "../format/schema";
 import { renderPdfBlob } from "./browserPdf";
 import type { PdfKind } from "./render";

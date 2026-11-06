@@ -88,7 +88,7 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, opts
   return { headers: [...headers, ...extraHeaders], rows, standardColumns: headers.length };
 }
 
-/** A `YYYY-MM-DD` date in words, e.g. "14 August 2026". The date is a calendar day, so it's read as UTC. */
+/** A YYYY-MM-DD date as "15 September 2026", read as a calendar day so the time zone never shifts it. */
 export const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 /** The "About" sheet: what the columns are, any example data, the dates and caveats, and the sources. */

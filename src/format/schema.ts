@@ -250,6 +250,8 @@ export type CrownJewel = Assessment["jewels"][number];
 export type Branding = Assessment["branding"];
 /** Automated-scan results attached to a question when an import pre-filled (or tried to pre-fill) it. */
 export type Evidence = NonNullable<Assessment["evidence"]>[string];
+/** One scan import, recorded when its answers were applied. */
+export type ImportRecord = NonNullable<Assessment["imports"]>[number];
 /** An answer whose question is no longer in the catalogue. Kept, never deleted. */
 export type OrphanAnswer = NonNullable<Assessment["orphans"]>[string];
 export type AiUseCase = NonNullable<Assessment["aiRegister"]>["entries"][number];

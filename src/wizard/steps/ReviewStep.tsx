@@ -4,7 +4,7 @@ import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReaso
 import { e8Title, essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
-import { answerLabels } from "../../format/vocab";
+import { answerText } from "../../format/vocab";
 import { useStore } from "../store";
 import { modeOf, stepIndex } from "../flow";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
@@ -125,7 +125,7 @@ export function ReviewStep() {
               <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
                 <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                 <span className="text-ink">
-                  {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                  {g.question.question} <span className="text-muted">({answerText(g.answer)})</span>
                   {ism?.findings.some((f) => f.question.id === g.question.id) && (
                     <span className="mono-label ml-2 rounded-[4px] bg-sunken px-1.5 py-0.5 text-muted">ISM {ism.label}</span>
                   )}
@@ -275,7 +275,7 @@ function AiRegisterReview() {
                           <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
                             <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                             <span className="text-ink">
-                              {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                              {g.question.question} <span className="text-muted">({answerText(g.answer)})</span>
                             </span>
                           </li>
                         ))}

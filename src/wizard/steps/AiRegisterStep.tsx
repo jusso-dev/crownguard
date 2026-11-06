@@ -32,7 +32,7 @@ import {
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, dayText, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll, needsReason } from "../../engine/risk";
-import { answerLabels } from "../../format/vocab";
+import { answerText } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
 import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
 import { platform } from "../../platform";
@@ -676,7 +676,7 @@ function Entry({
                       <li key={question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-3">
                         <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{question.id}</span>
                         <span className="text-ink-2">{question.question}</span>
-                        <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answer ? answerLabels[answer] : "Unanswered"}</span>
+                        <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answerText(answer)}</span>
                       </li>
                     ))}
                   </ul>
@@ -937,7 +937,7 @@ function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis
                 <span className="text-ink">
                   {g.question.question}{" "}
                   <span className="text-muted">
-                    ({g.answer ? answerLabels[g.answer] : "Unanswered"} · {g.question.severity}
+                    ({answerText(g.answer)} · {g.question.severity}
                     {basisLabel(g.question.basis) ? ` · ${basisLabel(g.question.basis)}` : ""})
                   </span>
                 </span>

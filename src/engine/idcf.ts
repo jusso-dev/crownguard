@@ -1,7 +1,7 @@
 import type { Question } from "../content/schema";
 import { addsNothing, e8Tagged, type E8Result } from "./maturity";
 import { isSatisfied, maxImpact } from "./risk";
-import type { Answer, Dsl } from "../format/vocab";
+import { andList, type Answer, type Dsl } from "../format/vocab";
 import type { CrownJewel } from "../format/schema";
 
 /** The IDCF levels a cloud configuration review can say something about. */
@@ -87,7 +87,6 @@ export function idcfRows(questions: Question[], answers: Record<string, Answer>,
   }));
 }
 
-const and = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
 
 /** "Not verified" items with their reasons grouped: "A, B and C (not covered by this assessment); D (...)". */
 export function notVerifiedText(items: string[]): string {
@@ -97,7 +96,7 @@ export function notVerifiedText(items: string[]): string {
     const [name, why] = m ? [m[1], m[2]] : [item, ""];
     groups.set(why, [...(groups.get(why) ?? []), name]);
   }
-  return [...groups].map(([why, names]) => (why ? `${and(names)} (${why})` : names.join("; "))).join("; ");
+  return [...groups].map(([why, names]) => (why ? `${andList(names)} (${why})` : names.join("; "))).join("; ");
 }
 
 const dslLevel = (dsl: Dsl): number | "5+" => (dsl === "dsl-5-plus" ? "5+" : Number(dsl.slice(4)));
@@ -140,7 +139,7 @@ export function jewelDsl(jewel: CrownJewel, rows: IdcfRow[], system?: IdcfCell):
       ? `This assessment found ${g.length} gap${g.length === 1 ? "" : "s"} at or below ${label}: ${g.map((q) => q.id).join(", ")}.`
       : `The questions mapped to ${label} and below found no gaps.`,
     notVerified.size ? `Not verified: ${notVerifiedText([...notVerified])}.` : "",
-    notAssessed.length ? `Not assessed for this crown jewel: ${and(notAssessed)}.` : "",
+    notAssessed.length ? `Not assessed for this crown jewel: ${andList(notAssessed)}.` : "",
     jewel.exposures?.includes("unmanaged-devices")
       ? "It is recorded as reachable from unmanaged or personal devices; under the IDCF, devices that hold or sync the data are part of the system and need the same protection."
       : "",

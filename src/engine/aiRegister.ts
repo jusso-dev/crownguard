@@ -137,7 +137,7 @@ function exposureSuggestions(catalogue: Catalogue, assessment: Assessment, e: Ai
     });
 }
 
-type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
+export type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
 
 export interface AiReadiness {
   entry: AiUseCase;
@@ -309,12 +309,12 @@ export function highRiskNotification(e: AiUseCase): string {
   ].join("\n\n");
 }
 
-/** The switch-off question, whose note carries the kill-switch worksheet instead of free text. */
+/** The readiness question asking how a use case is switched off. Its note carries the kill-switch worksheet. */
 export const KILL_SWITCH_QUESTION = "AIR-OFF-001";
 
 /**
  * The kill-switch worksheet the switch-off question's note carries. It's stored as plain labelled lines in
- * `notes["AIR-OFF-001"]` so older files and any hand-edited note still read, and it needs no schema change.
+ * `notes[KILL_SWITCH_QUESTION]` so older files and any hand-edited note still read, and it needs no schema change.
  */
 export interface KillSwitchNote {
   stop: string;
