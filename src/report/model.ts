@@ -324,8 +324,10 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const aiRegister = aiModule ? aiRegisterOf(catalogue, assessment, aiModule.model, risks, generatedAt) : undefined;
   if (aiModule) for (const id of aiRegisterSources(aiModule)) sourceIds.add(id);
 
-  const essentialsFramework = assessment.essentials ? catalogue.frameworks.get(`asd-essentials-${assessment.essentials.chapter}`) : undefined;
-  const essentials = essentialsFramework?.essentials
+  const chapterFramework = assessment.essentials ? catalogue.frameworks.get(`asd-essentials-${assessment.essentials.chapter}`) : undefined;
+  // Only a framework file that carries the chapter structure gives the section anything to show.
+  const essentialsFramework = chapterFramework?.essentials ? chapterFramework : undefined;
+  const essentials = essentialsFramework
     ? (() => {
         const result = essentialsResult(essentialsFramework, questions, answers);
         for (const id of [essentialsFramework.source, ...essentialsFramework.sources]) sourceIds.add(id);
@@ -336,7 +338,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
         };
       })()
     : undefined;
-  const essentialsActions = new Set(essentials ? essentialsFramework!.controls.map((c) => c.id) : []);
+  const essentialsActions = new Set(essentialsFramework?.controls.map((c) => c.id));
 
   const used = new Set(questions.flatMap((q) => q.refs.map((r) => r.framework)));
   if (questions.some((q) => q.e8.length)) used.add(E8);
@@ -370,7 +372,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     .filter((f) => !!f)
     .map((f) => ({ name: f.name, publisher: f.publisher, role: roleOf(f) }))
     .sort((x, y) => Number(y.role === VENDOR_ROLE) - Number(x.role === VENDOR_ROLE) || x.name.localeCompare(y.name));
-  if (essentials && essentialsFramework)
+  if (essentialsFramework)
     frameworksUsed.push({ name: essentialsFramework.name, publisher: essentialsFramework.publisher, role: roleOf(essentialsFramework) });
   if (soc)
     frameworksUsed.push({
