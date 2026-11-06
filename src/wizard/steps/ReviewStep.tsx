@@ -4,7 +4,7 @@ import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReaso
 import { essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
-import { answerLabels } from "../../engine/types";
+import { answerLabels } from "../../format/vocab";
 import { modeOf, stepsFor, useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { bandOf } from "../../engine/risk";

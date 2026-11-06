@@ -1,4 +1,4 @@
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { redactEmails, type ScanResult } from "./types";
 
 /**

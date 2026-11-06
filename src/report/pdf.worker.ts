@@ -5,7 +5,7 @@
 import { pdf } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { catalogue, ensurePlatforms, ensureReportContent } from "../content/catalogue";
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { AiRegisterDocument, ReportDocument } from "./Document";
 import { registerFonts } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";

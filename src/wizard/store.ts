@@ -1,15 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SocAnswer, SocProvider } from "../engine/soc";
+import type { SocAnswer, SocProvider } from "../format/vocab";
 import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
-import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
+import type { Answer, Mode } from "../format/vocab";
+import type { AiUseCase, Assessment, Branding, CrownJewel, OrgProfile } from "../format/schema";
 import { applyScan as mergeScan } from "../imports/apply";
 import type { ScanResult } from "../imports/types";
 import { isDesktop, platform } from "../platform";
-import { NOTE_MAX } from "./assessmentSchema";
-import { emptyAssessment, STEP_LAYOUT } from "./empty";
+import { NOTE_MAX } from "../format/schema";
+import { emptyAssessment, STEP_LAYOUT } from "../format/empty";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
 export { STORAGE_KEY, emptyAssessment, STEP_LAYOUT };

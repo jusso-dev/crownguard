@@ -4,16 +4,8 @@ import { useEnsurePlatforms } from "../../content/useCatalogue";
 import { exposures, tiers, type AssetType, type Tier } from "../../content/schema";
 import { suggestDsl } from "../../engine/idcf";
 import { impactOf } from "../../engine/risk";
-import {
-  classifications,
-  dsls,
-  regulations,
-  type Classification,
-  type CrownJewel,
-  type Dsl,
-  type ImpactRating,
-  type Regulation,
-} from "../../engine/types";
+import { classifications, dsls, regulations, type Classification, type Dsl, type ImpactRating, type Regulation } from "../../format/vocab";
+import { type CrownJewel } from "../../format/schema";
 import { useStore } from "../store";
 import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, radioKeys, radioTab, StepHeader } from "../ui";
 

@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { Question } from "../content/schema";
 import { buildReport } from "../report/model";
-import { emptyAssessment } from "../wizard/empty";
+import { emptyAssessment } from "../format/empty";
 import { essentialEight } from "./maturity";
 import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf } from "./risk";
 import { buildRoadmap } from "./roadmap";
-import type { Answer, Assessment, CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { Assessment, CrownJewel } from "../format/schema";
 
 const q = (id: string, over: Partial<Question> = {}): Question => ({
   id,

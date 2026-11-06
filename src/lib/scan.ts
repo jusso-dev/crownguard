@@ -1,5 +1,5 @@
 import type { Catalogue } from "../content/schema";
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { detectImporter, importerFor, importers, type ScanImporter, type ScanResult } from "../imports/index";
 
 export { applyScan } from "../imports/apply";

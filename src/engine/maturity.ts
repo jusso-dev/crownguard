@@ -1,5 +1,5 @@
 import { e8Strategies, type E8Strategy, type Question } from "../content/schema";
-import type { Answer } from "./types";
+import type { Answer } from "../format/vocab";
 
 export interface E8Result {
   strategy: E8Strategy;

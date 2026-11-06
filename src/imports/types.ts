@@ -1,5 +1,6 @@
 import type { ImportMapping } from "../content/schema";
-import type { Evidence, ScanStatus } from "../engine/types";
+import type { ScanStatus } from "../format/vocab";
+import type { Evidence } from "../format/schema";
 
 /** A question an import can pre-fill, with the evidence behind it. */
 export interface Suggestion {

@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { catalogue } from "../content/catalogue";
 import { activeQuestions } from "../engine/risk";
-import { answerLabels, type Assessment, type ScanStatus } from "../engine/types";
+import { answerLabels, type ScanStatus } from "../format/vocab";
+import { type Assessment } from "../format/schema";
 import { detectImporter, importers, type ScanImporter, type ScanResult } from "../imports";
 import { useStore } from "./store";
 import { relativeTime } from "./time";

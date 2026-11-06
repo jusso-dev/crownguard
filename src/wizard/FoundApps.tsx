@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { catalogue } from "../content/catalogue";
-import type { AiUseCase } from "../engine/types";
+import type { AiUseCase } from "../format/schema";
 import {
   categoryLabel,
   consentText,

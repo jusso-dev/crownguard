@@ -1,5 +1,5 @@
 import type { ImportMapping } from "../content/schema";
-import type { Answer, ScanStatus } from "../engine/types";
+import type { Answer, ScanStatus } from "../format/vocab";
 import { clip, redactEmails, type Finding, type Suggestion } from "./types";
 
 /** Statuses that actually say whether the control is in place. Review, info, unknown and not-licensed don't. */

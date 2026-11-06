@@ -1,5 +1,5 @@
 import type { E8Strategy, EssentialsChapter, EssentialsDomain, Framework, Question } from "../content/schema";
-import type { Answer } from "./types";
+import type { Answer } from "../format/vocab";
 
 /**
  * ASD's four-tier effectiveness scale (Essentials assessment process guide). `not-assessed` is neutral and is kept

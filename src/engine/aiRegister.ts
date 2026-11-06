@@ -1,7 +1,8 @@
 import { severities, type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
-import { aiCriteria, aiRiskRatings, aiTechnologies } from "./aiOptions";
+import { aiCriteria, aiRiskRatings, aiTechnologies } from "../content/aiOptions";
 import { activeQuestions, answerValue, effectiveAnswers, isGap, type JewelRisk } from "./risk";
-import type { AiUseCase, Answer, Assessment, CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { AiUseCase, Assessment, CrownJewel } from "../format/schema";
 
 /**
  * Register field names, in the Standard for accountability's order and close to its wording. The owner's name and

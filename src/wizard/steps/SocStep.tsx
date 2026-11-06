@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import type { SocQuestion } from "../../content/schema";
-import { isRating, levelFor, socMaturity, socProviders, type SocAnswer, type SocProvider } from "../../engine/soc";
-import { NOTE_MAX } from "../assessmentSchema";
+import { isRating, levelFor, socMaturity } from "../../engine/soc";
+import { socProviders, type SocAnswer, type SocProvider } from "../../format/vocab";
+import { NOTE_MAX } from "../../format/schema";
 import { useStore } from "../store";
 import { Button, Card, FieldGroup, Progress, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
 

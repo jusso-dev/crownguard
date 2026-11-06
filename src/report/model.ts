@@ -17,11 +17,13 @@ import {
   type JewelRisk,
 } from "../engine/risk";
 import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
-import { socMaturity, type SocProvider, type SocResult } from "../engine/soc";
+import { socMaturity, type SocResult } from "../engine/soc";
+import { type SocProvider } from "../format/vocab";
 import { idcfRows, jewelDsl, systemCell, type IdcfCell, type IdcfRow, type JewelDsl } from "../engine/idcf";
 import { ismBaselineReport, type IsmBaselineSummary } from "../engine/ism";
 import { essentials as essentialsResult, transitionGaps, type EssentialsResult, type TransitionGap } from "../engine/essentials";
-import type { Answer, Assessment } from "../engine/types";
+import type { Answer } from "../format/vocab";
+import type { Assessment } from "../format/schema";
 import { readableOn, textOn, tint } from "../theme/color";
 
 export interface ReportTheme {

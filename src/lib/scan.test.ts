@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Answer } from "../engine/types";
-import { emptyAssessment } from "../wizard/empty";
+import type { Answer } from "../format/vocab";
+import { emptyAssessment } from "../format/empty";
 import { applyScan, type ScanResult } from "./scan";
 
 const scan = (source: string, suggestions: [string, Answer | undefined][]): ScanResult => ({

@@ -1,6 +1,6 @@
-import type { Assessment } from "../engine/types";
-import { APP_VERSION, SCHEMA_VERSION } from "./assessmentSchema";
-import { encrypt } from "./crypto";
+import type { Assessment } from "./schema";
+import { APP_VERSION, SCHEMA_VERSION } from "./schema";
+import { encrypt } from "../wizard/crypto";
 
 /** Published JSON Schema for this file format. Written into every saved file as `$schema`. */
 export const SCHEMA_URL = `https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v${SCHEMA_VERSION}.json`;

@@ -1,17 +1,6 @@
 import type { Catalogue, Question } from "../content/schema";
-import type { Answer } from "./types";
+import { ismBaselines, type Answer, type IsmBaseline } from "../format/vocab";
 
-/**
- * The ISM baselines an assessor can annotate a report with, matching ASD's OSCAL baseline profiles. Each maps to the
- * ISM's own `applicability` code on every control in `content/frameworks/ism.yaml`. Annotation only: choosing a
- * baseline never changes a score, it marks which findings touch controls the baseline includes.
- */
-export const ismBaselines = {
-  NON_CLASSIFIED: { label: "NON_CLASSIFIED", applicability: "NC" },
-  OFFICIAL_SENSITIVE: { label: "OFFICIAL: Sensitive", applicability: "OS" },
-  PROTECTED: { label: "PROTECTED", applicability: "P" },
-} as const;
-export type IsmBaseline = keyof typeof ismBaselines;
 
 /** One open finding and the ISM controls in the chosen baseline it relates to. */
 export interface IsmFinding {

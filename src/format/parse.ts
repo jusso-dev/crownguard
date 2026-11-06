@@ -1,5 +1,5 @@
-import type { Assessment, OrphanAnswer } from "../engine/types";
-import { assessmentSchema, formatIssues, knownKeys, SCHEMA_VERSION } from "./assessmentSchema";
+import type { Assessment, OrphanAnswer } from "./schema";
+import { assessmentSchema, formatIssues, knownKeys, SCHEMA_VERSION } from "./schema";
 import { detectSchemaVersion, migrate } from "./migrations";
 
 export interface ParseNotice {

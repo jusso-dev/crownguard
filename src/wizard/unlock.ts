@@ -1,7 +1,7 @@
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { questionIdSet } from "../content/questionIds";
 import { decrypt, isEncryptedEnvelope } from "./crypto";
-import { parseAssessment } from "./parseAssessment";
+import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
 import { migrateProgress, modeOf, clampStep, useStore } from "./store";

@@ -1,5 +1,5 @@
-import type { Assessment } from "../engine/types";
-import { SCHEMA_VERSION } from "./assessmentSchema";
+import type { Assessment } from "./schema";
+import { SCHEMA_VERSION } from "./schema";
 
 /** Version of the step list. Layout 2 added "SOC maturity" after Controls; layout 3 added "AI register" after it. */
 export const STEP_LAYOUT = 3;

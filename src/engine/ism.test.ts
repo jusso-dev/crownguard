@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Catalogue, Framework, Question } from "../content/schema";
-import { ismBaselineReport, ismBaselines } from "./ism";
-import type { Answer } from "./types";
+import { ismBaselineReport } from "./ism";
+import { ismBaselines } from "../format/vocab";
+import type { Answer } from "../format/vocab";
 
 const control = (id: string, applicability?: string[], e8?: string[]): Framework["controls"][number] => ({
   id,

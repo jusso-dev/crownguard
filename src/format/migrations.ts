@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from "./assessmentSchema";
+import { SCHEMA_VERSION } from "./schema";
 
 export interface Migration {
   from: number;

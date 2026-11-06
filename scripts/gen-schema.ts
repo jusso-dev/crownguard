@@ -8,8 +8,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { assessmentSchema, SCHEMA_VERSION } from "../src/wizard/assessmentSchema";
-import { SCHEMA_URL } from "../src/wizard/saveFile";
+import { assessmentSchema, SCHEMA_VERSION } from "../src/format/schema";
+import { SCHEMA_URL } from "../src/format/saveFile";
 
 export const SCHEMA_FILENAME = `crownguard-assessment.v${SCHEMA_VERSION}.json`;
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

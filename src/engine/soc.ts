@@ -1,20 +1,6 @@
 import type { SocModel, SocQuestion } from "../content/schema";
-
-/** A rating against a question's level descriptions: 0-5 for maturity, 0-3 for capability. */
-export type SocRating = 0 | 1 | 2 | 3 | 4 | 5;
-export type SocAnswer = SocRating | "unknown";
-/** Who runs the organisation's security operations. */
-export type SocProvider = "in-house" | "outsourced" | "hybrid" | "none";
-
-export const socProviders: Record<SocProvider, string> = {
-  "in-house": "In house",
-  outsourced: "Managed provider (MSSP or MDR)",
-  hybrid: "Hybrid (in house and a provider)",
-  none: "We don't have a SOC",
-};
-
-/** Per-domain overrides of the model's default targets. */
-export type SocTargets = Record<string, { maturity?: number; capability?: number }>;
+import type { SocAnswer, SocRating } from "../format/vocab";
+import type { SocTargets } from "../format/schema";
 
 export interface SocInput {
   answers: Record<string, SocAnswer>;

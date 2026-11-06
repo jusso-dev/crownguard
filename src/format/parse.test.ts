@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import type { Assessment } from "../engine/types";
-import { assessmentSchema, formatIssues, SCHEMA_VERSION } from "./assessmentSchema";
-import * as crypto from "./crypto";
+import type { Assessment } from "./schema";
+import { assessmentSchema, formatIssues, SCHEMA_VERSION } from "./schema";
+import * as crypto from "../wizard/crypto";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
-import { parseAssessment } from "./parseAssessment";
-import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "./persistence";
+import { parseAssessment } from "./parse";
+import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "../wizard/persistence";
 import { toSaveFile } from "./saveFile";
-import { setSessionPassphrase } from "./sessionSecrets";
-import { emptyAssessment } from "./store";
+import { setSessionPassphrase } from "../wizard/sessionSecrets";
+import { emptyAssessment } from "../wizard/store";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8")) as Record<string, unknown>;
 const questionIds = new Set(["MS-ID-001", "MS-ID-002"]);

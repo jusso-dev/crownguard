@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
-import { assessmentSchema } from "../wizard/assessmentSchema";
+import { assessmentSchema } from "../format/schema";
 import { fixtureAssessment } from "../report/fixture";
 import { exampleEntries } from "./aiExamples";
 import { aboutRows, registerTable, toCsv } from "./aiExport";
 import { addMonths, groupWarning, highRiskNotification, shareWithDta } from "./aiRegister";
 import { aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
 import { assessAll } from "./risk";
-import type { AiUseCase } from "./types";
+import type { AiUseCase } from "../format/schema";
 
 const module = catalogue.aiRegister!;
 const kind = (id: string) => module.model.kinds.find((k) => k.id === id)!;

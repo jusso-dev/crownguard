@@ -1,6 +1,7 @@
 import type { Question } from "../content/schema";
 import { addsNothing, type E8Result } from "./maturity";
-import type { Answer, CrownJewel, Dsl } from "./types";
+import type { Answer, Dsl } from "../format/vocab";
+import type { CrownJewel } from "../format/schema";
 
 /** The IDCF levels a cloud configuration review can say something about. */
 export const IDCF_LEVELS = [2, 3, 4] as const;

@@ -5,13 +5,13 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import { SOURCES_LAST_CHECKED } from "../content/sourcesChecked";
-import type { SocAnswer } from "../engine/soc";
+import type { SocAnswer } from "../format/vocab";
 import { exampleEntries } from "../engine/aiExamples";
 import { AiRegisterDocument, ReportDocument } from "./Document";
 import { fixtureAssessment } from "./fixture";
 import { breakLongWords, registerFontsFromDisk } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { emptyAssessment } from "../wizard/store";
 
 beforeAll(() => {

@@ -1,5 +1,5 @@
 import type { ImportMapping } from "../content/schema";
-import type { ScanStatus } from "../engine/types";
+import type { ScanStatus } from "../format/vocab";
 import { suggestAll, type CheckRow } from "./aggregate";
 import { clip, redactEmails, type ScanImporter, type ScanResult } from "./types";
 

@@ -16,7 +16,7 @@ import {
   aiUsagePatterns,
   type AiBasis,
   type AiCriterion,
-} from "../../engine/aiOptions";
+} from "../../content/aiOptions";
 import {
   aiFieldLabels,
   aiFieldSources,
@@ -31,8 +31,9 @@ import {
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll } from "../../engine/risk";
-import { answerLabels, type AiUseCase, type Answer } from "../../engine/types";
-import { NOTE_MAX } from "../assessmentSchema";
+import { answerLabels, type Answer } from "../../format/vocab";
+import { type AiUseCase } from "../../format/schema";
+import { NOTE_MAX } from "../../format/schema";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore, modeOf } from "../store";

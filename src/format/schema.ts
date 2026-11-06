@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { essentialsChapters, exposures, type ExposureId } from "../content/schema";
-import { socProviders, type SocProvider } from "../engine/soc";
+import { version } from "../../package.json";
+import { essentialsChapters, exposures, isoDate } from "../content/schema";
 import {
   aiAccess,
   aiAutonomy,
@@ -12,26 +12,20 @@ import {
   aiStandardUse,
   aiTechnologies,
   aiUsagePatterns,
-  type AiAccess,
-  type AiAutonomy,
-  type AiCriterion,
-  type AiDataKind,
-  type AiDomain,
-  type AiLifecycle,
-  type AiRiskRating,
-  type AiStandardUse,
-  type AiTechnology,
-  type AiUsagePattern,
-} from "../engine/aiOptions";
+} from "../content/aiOptions";
 import {
+  answers,
   classifications,
   dsls,
+  impactRatings,
+  ismBaselines,
+  logoBackdrops,
+  modes,
   regulations,
-  type Assessment,
-  type Classification,
-  type Dsl,
-  type Regulation,
-} from "../engine/types";
+  scanStatuses,
+  socProviders,
+  socRatings,
+} from "./vocab";
 
 const keys = <K extends string>(o: Record<K, unknown>) => Object.keys(o) as [K, ...K[]];
 /** Notes are capped at NOTE_MAX when typed; longer ones in older files are shortened rather than refused. */
@@ -43,10 +37,9 @@ const note = z
   // The pipe keeps the published JSON Schema honest: a saved note is at most NOTE_MAX, even though a longer one in
   // an older file is shortened on open rather than refused.
   .pipe(z.string().max(NOTE_MAX));
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const rating = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]);
-const regulation = z.enum(keys<Regulation>(regulations));
-const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
+const rating = z.union(impactRatings.map((n) => z.literal(n)));
+const regulation = z.enum(keys(regulations));
+const answer = z.enum(answers);
 
 /**
  * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
@@ -54,8 +47,8 @@ const answer = z.enum(["yes", "partial", "no", "unknown", "na"]);
  */
 export const SCHEMA_VERSION = 5;
 
-/** Version of the app that wrote the file. Kept in sync with package.json. */
-export const APP_VERSION = "1.0.0";
+/** Version of the app that wrote the file. */
+export const APP_VERSION = version;
 
 /** Answers and notes kept for questions this build no longer asks. */
 const orphans = z.record(z.string().max(80), z.looseObject({ answer: answer.optional(), note: note.optional() }));
@@ -72,7 +65,7 @@ export const assessmentSchema = z.looseObject({
   version: z.literal(1).optional(),
   schemaVersion: z.number().int().min(1).max(100_000).default(SCHEMA_VERSION),
   // "ai-register" for the standalone AI use-case register flow. Absent, and meaning "full", in every older file.
-  mode: z.enum(["full", "ai-register"]).optional(),
+  mode: z.enum(modes).optional(),
   savedBy: z
     .looseObject({
       app: z.string().max(40),
@@ -100,13 +93,13 @@ export const assessmentSchema = z.looseObject({
         platform: z.string().max(50),
         assetType: z.string().max(80),
         description: z.string().max(2000),
-        classification: z.enum(keys<Classification>(classifications)),
-        dsl: z.enum(keys<Dsl>(dsls)).optional(),
+        classification: z.enum(keys(classifications)),
+        dsl: z.enum(keys(dsls)).optional(),
         confidentiality: rating,
         integrity: rating,
         availability: rating,
         regulations: z.array(regulation),
-        exposures: z.array(z.enum(keys<ExposureId>(exposures))),
+        exposures: z.array(z.enum(keys(exposures))),
         businessProcesses: z.string().max(2000),
       }),
     )
@@ -115,7 +108,7 @@ export const assessmentSchema = z.looseObject({
   notes: z.record(z.string(), note),
   orphans: orphans.optional(),
   // Optional ISM baseline shown in the report. Annotates findings and adds a summary count; never changes a score.
-  ismBaseline: z.enum(["NON_CLASSIFIED", "OFFICIAL_SENSITIVE", "PROTECTED"]).optional(),
+  ismBaseline: z.enum(keys(ismBaselines)).optional(),
   // Optional ASD Essentials section in the report. Indicative; sits beside the Essential Eight and changes no score.
   essentials: z.object({ chapter: z.enum(essentialsChapters) }).optional(),
   branding: z.object({
@@ -125,7 +118,7 @@ export const assessmentSchema = z.looseObject({
       .regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/)
       .max(3_000_000)
       .optional(),
-    logoBackdrop: z.enum(["none", "white"]).optional(),
+    logoBackdrop: z.enum(logoBackdrops).optional(),
     primary: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     marking: z.string().max(80),
@@ -147,7 +140,7 @@ export const assessmentSchema = z.looseObject({
           .array(
             z.object({
               id: z.string().max(80),
-              status: z.enum(["pass", "fail", "warning", "review", "info", "unknown", "notlicensed"]),
+              status: z.enum(scanStatuses),
               setting: z.string().max(500),
               current: z.string().max(2000),
               expected: z.string().max(2000),
@@ -165,7 +158,7 @@ export const assessmentSchema = z.looseObject({
     .optional(),
   soc: z
     .looseObject({
-      answers: z.record(z.string().max(20), z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal("unknown")])),
+      answers: z.record(z.string().max(20), z.union([...socRatings.map((n) => z.literal(n)), z.literal("unknown")])),
       notes: z.record(z.string().max(20), note).optional(),
       outOfScope: z.array(z.string().max(60)).max(60),
       targets: z
@@ -174,7 +167,7 @@ export const assessmentSchema = z.looseObject({
           z.object({ maturity: z.number().min(1).max(5).multipleOf(0.5).optional(), capability: z.number().min(1).max(3).multipleOf(0.5).optional() }),
         )
         .optional(),
-      provider: z.enum(keys<SocProvider>(socProviders)).optional(),
+      provider: z.enum(keys(socProviders)).optional(),
     })
     .optional(),
   aiRegister: z
@@ -196,24 +189,24 @@ export const assessmentSchema = z.looseObject({
             reference: z.string().max(100),
             description: z.string().max(4000),
             product: z.string().max(200),
-            technology: z.array(z.enum(keys<AiTechnology>(aiTechnologies))),
-            lifecycle: z.enum(keys<AiLifecycle>(aiLifecycles)).optional(),
-            technicalStandard: z.enum(keys<AiStandardUse>(aiStandardUse)).optional(),
-            domains: z.array(z.enum(keys<AiDomain>(aiDomains))),
-            usagePatterns: z.array(z.enum(keys<AiUsagePattern>(aiUsagePatterns))),
+            technology: z.array(z.enum(keys(aiTechnologies))),
+            lifecycle: z.enum(keys(aiLifecycles)).optional(),
+            technicalStandard: z.enum(keys(aiStandardUse)).optional(),
+            domains: z.array(z.enum(keys(aiDomains))),
+            usagePatterns: z.array(z.enum(keys(aiUsagePatterns))),
             ownerName: z.string().max(200),
             ownerEmail: z.string().max(254),
-            criteria: z.array(z.enum(keys<AiCriterion>(aiCriteria))),
-            inherentRisk: z.enum(keys<AiRiskRating>(aiRiskRatings)).optional(),
-            residualRisk: z.enum(keys<AiRiskRating>(aiRiskRatings)).optional(),
+            criteria: z.array(z.enum(keys(aiCriteria))),
+            inherentRisk: z.enum(keys(aiRiskRatings)).optional(),
+            residualRisk: z.enum(keys(aiRiskRatings)).optional(),
             impactAssessmentDate: isoDate.optional(),
             lastReview: isoDate.optional(),
             nextReview: isoDate.optional(),
-            autonomy: z.enum(keys<AiAutonomy>(aiAutonomy)).optional(),
-            access: z.enum(keys<AiAccess>(aiAccess)).optional(),
-            data: z.array(z.enum(keys<AiDataKind>(aiData))),
+            autonomy: z.enum(keys(aiAutonomy)).optional(),
+            access: z.enum(keys(aiAccess)).optional(),
+            data: z.array(z.enum(keys(aiData))),
             jewels: z.array(z.string().max(50)).max(200),
-            answers: z.record(z.string().max(20), z.enum(["yes", "partial", "no", "unknown", "na"])),
+            answers: z.record(z.string().max(20), answer),
             notes: z.record(z.string().max(20), note),
           }),
         )
@@ -231,7 +224,7 @@ export const assessmentSchema = z.looseObject({
     .optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
-}) satisfies z.ZodType<Assessment, unknown>;
+});
 
 /** Every key the schema declares, so unknown ones can be reported rather than ignored. */
 export const knownKeys = new Set(Object.keys(assessmentSchema.shape));
@@ -240,3 +233,28 @@ export const knownKeys = new Set(Object.keys(assessmentSchema.shape));
 export const formatIssues = (issues: { path: PropertyKey[]; message: string }[], max = 5) =>
   issues.slice(0, max).map((i) => `${i.path.length ? i.path.join(".") : "file"}: ${i.message}`);
 
+
+/** Drops the index signature a loose object adds, so a typo'd field name is a type error rather than an unknown. */
+type Declared<T> = T extends readonly (infer U)[]
+  ? Declared<U>[]
+  : T extends object
+    ? keyof { [K in keyof T as string extends K ? never : K]: 1 } extends never
+      ? { [K in keyof T]: Declared<T[K]> }
+      : { [K in keyof T as string extends K ? never : K]: Declared<T[K]> }
+    : T;
+
+/** One assessment, as the app holds it and as a `.crownguard.json` file stores it. */
+export type Assessment = Declared<z.output<typeof assessmentSchema>>;
+export type OrgProfile = Assessment["org"];
+export type CrownJewel = Assessment["jewels"][number];
+export type Branding = Assessment["branding"];
+/** Automated-scan results attached to a question when an import pre-filled (or tried to pre-fill) it. */
+export type Evidence = NonNullable<Assessment["evidence"]>[string];
+export type ImportRecord = NonNullable<Assessment["imports"]>[number];
+export type SavedBy = NonNullable<Assessment["savedBy"]>;
+/** An answer whose question is no longer in the catalogue. Kept, never deleted. */
+export type OrphanAnswer = NonNullable<Assessment["orphans"]>[string];
+/** One entry in the AI use-case register. */
+export type AiUseCase = NonNullable<Assessment["aiRegister"]>["entries"][number];
+/** Per-domain overrides of the SOC model's default targets. */
+export type SocTargets = NonNullable<NonNullable<Assessment["soc"]>["targets"]>;

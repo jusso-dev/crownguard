@@ -1,10 +1,10 @@
 import type { PersistStorage, StorageValue } from "zustand/middleware";
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import { platform, type AutosaveStore } from "../platform";
 import { questionIdSet } from "../content/questionIds";
 import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
-import { SCHEMA_VERSION } from "./assessmentSchema";
-import { parseAssessment } from "./parseAssessment";
+import { SCHEMA_VERSION } from "../format/schema";
+import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
 
 export const STORAGE_KEY = "crownguard:v1";

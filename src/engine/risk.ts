@@ -1,5 +1,6 @@
 import { severities, type Catalogue, type Question } from "../content/schema";
-import type { Answer, Assessment, CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { Assessment, CrownJewel } from "../format/schema";
 
 export type Band = "Low" | "Medium" | "High" | "Extreme";
 

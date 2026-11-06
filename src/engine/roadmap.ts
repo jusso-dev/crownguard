@@ -1,6 +1,7 @@
 import { severities, type Question } from "../content/schema";
 import { answerValue, impactOf, isGap, questionsForJewel } from "./risk";
-import type { Answer, CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { CrownJewel } from "../format/schema";
 
 export type Phase = "0–30 days" | "31–60 days" | "61–90 days";
 

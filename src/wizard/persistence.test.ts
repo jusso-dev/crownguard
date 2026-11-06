@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Assessment } from "../engine/types";
+import type { Assessment } from "../format/schema";
 import * as crypto from "./crypto";
 import {
   checkedStorage,

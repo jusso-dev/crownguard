@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { assessmentSchema, SCHEMA_VERSION } from "./assessmentSchema";
-import type { CrownJewel } from "../engine/types";
+import { assessmentSchema, SCHEMA_VERSION } from "../format/schema";
+import type { CrownJewel } from "../format/schema";
 import { clampStep, currentStep, emptyAssessment, hasProgress, migrateProgress, reachableStep, stepsFor } from "./store";
 import { relativeTime } from "./time";
 
@@ -147,7 +147,7 @@ describe("SOC maturity in the store", () => {
 
   it("caps notes at the length a saved file allows, and shortens longer notes in older files instead of refusing them", async () => {
     const { useStore } = await import("./store");
-    const { NOTE_MAX } = await import("./assessmentSchema");
+    const { NOTE_MAX } = await import("../format/schema");
     const s = useStore.getState();
     s.reset();
     s.setNote("MS-ID-001", "x".repeat(NOTE_MAX + 50));
@@ -183,7 +183,7 @@ describe("AI register in the store", () => {
     expect(entries.filter((e) => e.example)).toHaveLength(3);
     const mine = entries.find((e) => e.id === id)!;
     expect(mine).toMatchObject({ ownerName: "Jo", criteria: ["c4"], answers: { "AIR-ACC-001": "yes" } });
-    const { NOTE_MAX } = await import("./assessmentSchema");
+    const { NOTE_MAX } = await import("../format/schema");
     expect(mine.notes["AIR-ACC-001"]).toHaveLength(NOTE_MAX);
     s.removeAiExamples();
     entries = useStore.getState().assessment.aiRegister!.entries;
@@ -250,8 +250,8 @@ describe("the standalone AI register mode", () => {
 
   it("carries the mode through a save and reopen, and opens older files in the full assessment", async () => {
     const { useStore } = await import("./store");
-    const { toSaveFile } = await import("./saveFile");
-    const { parseAssessment } = await import("./parseAssessment");
+    const { toSaveFile } = await import("../format/saveFile");
+    const { parseAssessment } = await import("../format/parse");
     const s = useStore.getState();
     s.reset();
     s.setMode("ai-register", 2);

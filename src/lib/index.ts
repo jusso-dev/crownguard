@@ -28,11 +28,11 @@ export {
 export { loadCatalogue, contentDigest, type ContentFiles } from "../content/loader";
 export type { Catalogue } from "../content/schema";
 
-export { parseAssessment, type ParseResult, type ParseNotice, type ParseOptions } from "../wizard/parseAssessment";
-export { migrate, detectSchemaVersion, type MigrationResult } from "../wizard/migrations";
-export { assessmentSchema, formatIssues, SCHEMA_VERSION, APP_VERSION } from "../wizard/assessmentSchema";
-export { toSaveFile, SCHEMA_URL } from "../wizard/saveFile";
-export { emptyAssessment, STEP_LAYOUT } from "../wizard/empty";
+export { parseAssessment, type ParseResult, type ParseNotice, type ParseOptions } from "../format/parse";
+export { migrate, detectSchemaVersion, type MigrationResult } from "../format/migrations";
+export { assessmentSchema, formatIssues, SCHEMA_VERSION, APP_VERSION } from "../format/schema";
+export { toSaveFile, SCHEMA_URL } from "../format/saveFile";
+export { emptyAssessment, STEP_LAYOUT } from "../format/empty";
 export { buildXlsx, type Sheet } from "../wizard/xlsx";
 
 export { buildReport, buildAiRegisterReport, type ReportModel, type AiRegisterReportModel } from "../report/model";
@@ -40,4 +40,4 @@ export { fixtureAssessment } from "../report/fixture";
 export { fontFilesOnDisk, registerFonts, registerFontsFromDisk, type FontFiles } from "../report/fonts";
 
 export { registerTable, toCsv, aboutRows } from "../engine/aiExport";
-export type { Assessment } from "../engine/types";
+export type { Assessment } from "../format/schema";
