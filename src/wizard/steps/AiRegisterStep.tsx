@@ -22,6 +22,7 @@ import {
   aiFieldSources,
   aiRegisterSummary,
   composeKillSwitchNote,
+  groupWarning,
   KILL_SWITCH_QUESTION,
   highRiskNotification,
   parseKillSwitchNote,
@@ -124,6 +125,7 @@ export function AiRegisterStep() {
   const risks = assessAll(catalogue, assessment);
   const summary = aiRegisterSummary(catalogue, assessment, risks);
   const entries = summary.entries;
+  const grouping = groupWarning(entries.map((r) => r.entry));
   const current = active === ADD ? undefined : (entries.find((r) => r.entry.id === active) ?? entries[0]);
   const index = current ? entries.indexOf(current) : -1;
 
@@ -171,6 +173,11 @@ export function AiRegisterStep() {
           + Add a use case
         </button>
       </nav>
+      {grouping && (
+        <p role="status" className="mt-3 max-w-[72ch] rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-3 py-2 text-sm text-warn">
+          {grouping}
+        </p>
+      )}
 
       {current ? (
         <Entry
@@ -493,7 +500,9 @@ function Entry({
           <Field label="Underpinning product" hint="Part of the description in the Standard, if it's built on a product">
             <input className={inputClass} value={e.product} maxLength={200} onChange={(x) => set({ product: x.target.value })} />
           </Field>
-          <div />
+          <Field label="Grouped under" hint="When this is one of several entries for a general-purpose AI, the AI it's part of">
+            <input className={inputClass} value={e.groupOf ?? ""} maxLength={200} placeholder="e.g. Microsoft 365 Copilot" onChange={(x) => set({ groupOf: x.target.value || undefined })} />
+          </Field>
           <div className="sm:col-span-2">
             <FieldGroup label={aiFieldLabels.technology} hint="Tick all that apply. There's no separate type for agents: record the technology they use.">
               <Pills options={aiTechnologies} value={e.technology} onChange={(technology) => set({ technology })} />
