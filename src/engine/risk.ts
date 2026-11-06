@@ -74,7 +74,7 @@ export function questionsForJewel(jewel: CrownJewel, questions: Question[]): Que
 /** Anything scored by severity: platform control questions and AI readiness questions. */
 type Weighted = { id: string; severity: Severity };
 
-export interface GapStats {
+interface GapStats {
   /** Total severity weight of non-N/A questions. */
   weight: number;
   /** Weighted shortfall: sum of weight × (1 − value). */

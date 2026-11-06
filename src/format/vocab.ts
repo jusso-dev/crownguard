@@ -57,7 +57,6 @@ export type ScanStatus = (typeof scanStatuses)[number];
 
 /** Panel behind the logo on the cover. "white" helps transparent logos that would vanish on the cover colour. */
 export const logoBackdrops = ["none", "white"] as const;
-export type LogoBackdrop = (typeof logoBackdrops)[number];
 
 /**
  * The ISM baselines an assessor can annotate a report with, matching ASD's OSCAL baseline profiles. Each maps to the

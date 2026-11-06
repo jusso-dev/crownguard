@@ -2,9 +2,9 @@
 
 export const KDF = "PBKDF2-SHA-256" as const;
 export const ITERATIONS = 600_000;
-export const ENVELOPE_VERSION = 1 as const;
+const ENVELOPE_VERSION = 1 as const;
 
-export interface EncryptedEnvelope {
+interface EncryptedEnvelope {
   crownguardEncrypted: typeof ENVELOPE_VERSION;
   kdf: typeof KDF;
   iterations: number;

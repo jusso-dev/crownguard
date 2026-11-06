@@ -41,7 +41,7 @@ export const aiFieldSources = {
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-export const kindOf = (catalogue: Catalogue, e: Pick<AiUseCase, "kind">): AiKind | undefined => catalogue.aiRegister?.model.kinds.find((k) => k.id === e.kind);
+const kindOf = (catalogue: Catalogue, e: Pick<AiUseCase, "kind">): AiKind | undefined => catalogue.aiRegister?.model.kinds.find((k) => k.id === e.kind);
 
 /** Anything that can take actions, or might: unrecorded and "Not sure" count, so the agent questions aren't skipped by default. */
 export const isAgentic = (e: AiUseCase) => e.autonomy !== "assists";
@@ -119,13 +119,13 @@ export function aiFlags(e: AiUseCase, asAt = new Date()): string[] {
 export const suggestsCriterion4 = (e: AiUseCase) =>
   e.data.some((d) => d === "personal" || d === "sensitive" || d === "classified") && !e.criteria.includes("c4");
 
-export interface ExposureSuggestion {
+interface ExposureSuggestion {
   jewel: CrownJewel;
   exposure: ExposureId;
 }
 
 /** Exposures this kind of AI usually creates on the crown jewels it can reach, where the jewel's type has them and they aren't ticked. */
-export function exposureSuggestions(catalogue: Catalogue, assessment: Assessment, e: AiUseCase): ExposureSuggestion[] {
+function exposureSuggestions(catalogue: Catalogue, assessment: Assessment, e: AiUseCase): ExposureSuggestion[] {
   const kind = kindOf(catalogue, e);
   if (!kind) return [];
   const assetTypes = [...catalogue.platforms.values()].flatMap((b) => b.assetTypes);
@@ -137,7 +137,7 @@ export function exposureSuggestions(catalogue: Catalogue, assessment: Assessment
     });
 }
 
-export type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
+type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
 
 export interface AiReadiness {
   entry: AiUseCase;
@@ -338,7 +338,7 @@ const killSwitchLabels: [keyof KillSwitchNote, string][] = [
   ["reason", "Why it doesn't apply"],
 ];
 
-export const emptyKillSwitchNote = (): KillSwitchNote => ({ stop: "", who: "", targetTime: "", tested: "", rollback: "", reason: "", other: "" });
+const emptyKillSwitchNote = (): KillSwitchNote => ({ stop: "", who: "", targetTime: "", tested: "", rollback: "", reason: "", other: "" });
 
 /** Read a worksheet back out of the note's labelled lines. Unlabelled lines continue the field above them. */
 export function parseKillSwitchNote(text: string | undefined): KillSwitchNote {

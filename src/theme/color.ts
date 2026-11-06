@@ -1,8 +1,8 @@
-export type RGB = [number, number, number];
+type RGB = [number, number, number];
 
-export const toHex = ([r, g, b]: RGB) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+const toHex = ([r, g, b]: RGB) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 
-export function fromHex(hex: string): RGB {
+function fromHex(hex: string): RGB {
   const h = hex.replace("#", "");
   const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as RGB;

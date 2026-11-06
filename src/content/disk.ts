@@ -17,7 +17,7 @@ export function readContentFiles(): ContentFiles {
   return Object.fromEntries(walk(join(root, "content")).map((p) => [relative(root, p), readFileSync(p, "utf8")]));
 }
 
-export interface LoadedCatalogue {
+interface LoadedCatalogue {
   catalogue: Catalogue;
   contentHash: string;
   errors: string[];

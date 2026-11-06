@@ -4,7 +4,7 @@ import { ismBaselines, type Answer, type IsmBaseline } from "../format/vocab";
 
 
 /** One open finding and the ISM controls in the chosen baseline it relates to. */
-export interface IsmFinding {
+interface IsmFinding {
   question: Question;
   /** Display ids, e.g. ISM-1504. */
   controls: string[];

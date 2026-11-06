@@ -166,7 +166,7 @@ export async function confirmAndOpen(href: string): Promise<boolean> {
 }
 
 /** Catch clicks on links that leave the app, before the webview tries to follow them. */
-export function interceptExternalLinks(doc: Document) {
+function interceptExternalLinks(doc: Document) {
   const onClick = (e: MouseEvent) => {
     const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
     if (!a) return;

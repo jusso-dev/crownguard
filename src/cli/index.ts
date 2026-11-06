@@ -72,7 +72,7 @@ const helpFor: Record<string, string> = {
 };
 
 /** A local file as text, without the UTF-8 byte order mark Windows tools (PowerShell, Excel) often write. */
-export function readText(path: string): string {
+function readText(path: string): string {
   const text = readFileSync(path, "utf8");
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }

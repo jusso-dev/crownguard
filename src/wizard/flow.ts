@@ -1,7 +1,7 @@
 import type { Assessment } from "../format/schema";
 import type { Mode } from "../format/vocab";
 
-export const stepLabels = {
+const stepLabels = {
   org: "Organisation",
   environment: "Environment",
   jewels: "Crown jewels",

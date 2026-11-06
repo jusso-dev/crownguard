@@ -96,7 +96,7 @@ export function columnName(i: number): string {
   return s;
 }
 
-export interface Sheet {
+interface Sheet {
   /** Up to 31 characters, without : \ / ? * [ ] */
   name: string;
   rows: string[][];

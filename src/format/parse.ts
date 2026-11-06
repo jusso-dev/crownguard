@@ -1,12 +1,12 @@
 import { assessmentSchema, formatIssues, knownKeys, SCHEMA_VERSION, type Assessment, type OrphanAnswer } from "./schema";
 import { detectSchemaVersion, migrate } from "./migrations";
 
-export interface ParseNotice {
+interface ParseNotice {
   kind: "info" | "warn";
   text: string;
 }
 
-export type ParseResult =
+type ParseResult =
   /** The file is current and valid. */
   | { kind: "ok"; assessment: Assessment; notices: ParseNotice[] }
   /** The file was written by a newer crownguard. `assessment` is only set when this build could still make sense of it. */
@@ -14,7 +14,7 @@ export type ParseResult =
   /** The file isn't a crownguard assessment, or isn't one this build can read. */
   | { kind: "error"; message: string; issues: string[] };
 
-export interface ParseOptions {
+interface ParseOptions {
   /**
    * Ids of every question in this build's catalogue. Answers that name a question outside this set are moved to
    * `orphans` and reported, so they survive into the next save instead of being quietly ignored. Omit to skip.

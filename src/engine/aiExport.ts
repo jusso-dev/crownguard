@@ -5,7 +5,7 @@ import { pct } from "./percent";
 import { assessAll } from "./risk";
 import type { Assessment } from "../format/schema";
 
-export interface RegisterTable {
+interface RegisterTable {
   headers: string[];
   rows: string[][];
   /** The first `standardColumns` columns are the Standard for accountability's minimum fields; the rest are crownguard's. */
@@ -51,7 +51,7 @@ const extraHeaders = [
   "Register fields missing",
 ];
 
-export interface RegisterOptions {
+interface RegisterOptions {
   asAt?: Date;
   /**
    * Write the owner as one `Name <email>` column, which is how the Standard for accountability words it, instead of

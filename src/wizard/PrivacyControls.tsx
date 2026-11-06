@@ -6,7 +6,7 @@ import { useStore } from "./store";
 import { unlockProgress } from "./unlock";
 
 /** Touch the assessment so zustand persist rewrites (plain or encrypted) under the current session settings. */
-export function repersist() {
+function repersist() {
   useStore.getState().update(() => ({}));
 }
 

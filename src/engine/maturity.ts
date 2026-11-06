@@ -19,7 +19,7 @@ export interface E8Result {
  * they are met whenever the level below is: patching operating systems has identical requirements at Maturity Levels
  * One and Two.
  */
-export const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-operating-systems": [2] };
+const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-operating-systems": [2] };
 
 /** A strategy's title from the Essential Eight framework file, or its id when the file isn't loaded. */
 export const e8Title = (catalogue: Pick<Catalogue, "frameworks">, strategy: string) =>

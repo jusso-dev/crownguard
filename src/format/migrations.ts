@@ -1,6 +1,6 @@
 import { SCHEMA_VERSION } from "./schema";
 
-export interface Migration {
+interface Migration {
   from: number;
   to: number;
   up: (raw: Record<string, unknown>) => Record<string, unknown>;
@@ -63,7 +63,7 @@ export function detectSchemaVersion(raw: unknown): number | undefined {
   return undefined;
 }
 
-export interface MigrationResult {
+interface MigrationResult {
   raw: Record<string, unknown>;
   /** Version the file was written at, before any migration ran. */
   from: number;

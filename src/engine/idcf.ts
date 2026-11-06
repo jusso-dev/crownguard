@@ -5,8 +5,8 @@ import type { Answer, Dsl } from "../format/vocab";
 import type { CrownJewel } from "../format/schema";
 
 /** The IDCF levels a cloud configuration review can say something about. */
-export const IDCF_LEVELS = [2, 3, 4] as const;
-export type IdcfLevel = (typeof IDCF_LEVELS)[number];
+const IDCF_LEVELS = [2, 3, 4] as const;
+type IdcfLevel = (typeof IDCF_LEVELS)[number];
 
 export interface IdcfCell {
   /** "gaps": a mapped question isn't answered Yes or N/A; "clear": none found in what was asked; "not-verified": the
@@ -100,7 +100,7 @@ export function notVerifiedText(items: string[]): string {
   return [...groups].map(([why, names]) => (why ? `${and(names)} (${why})` : names.join("; "))).join("; ");
 }
 
-export const dslLevel = (dsl: Dsl): number | "5+" => (dsl === "dsl-5-plus" ? "5+" : Number(dsl.slice(4)));
+const dslLevel = (dsl: Dsl): number | "5+" => (dsl === "dsl-5-plus" ? "5+" : Number(dsl.slice(4)));
 
 export interface JewelDsl {
   jewel: CrownJewel;

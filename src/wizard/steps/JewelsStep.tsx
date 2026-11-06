@@ -9,7 +9,7 @@ import { type CrownJewel } from "../../format/schema";
 import { useStore } from "../store";
 import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, radioKeys, radioTab, StepHeader } from "../ui";
 
-export const tierLabels: Record<Tier, string> = {
+const tierLabels: Record<Tier, string> = {
   identity: "Identity plane",
   privileged: "Privileged access",
   data: "Business data",

@@ -5,15 +5,13 @@ import type { Answer } from "../format/vocab";
  * ASD's four-tier effectiveness scale (Essentials assessment process guide). `not-assessed` is neutral and is kept
  * apart from `not-effective` everywhere: in types, counts, table cells and JSON.
  */
-export const essentialsRatings = ["not-assessed", "not-effective", "partially-effective", "fully-effective"] as const;
-export type EssentialsRating = (typeof essentialsRatings)[number];
-
-export const ratingLabels: Record<EssentialsRating, string> = {
+export const ratingLabels = {
   "not-assessed": "Not assessed",
   "not-effective": "Not effective",
   "partially-effective": "Partially effective",
   "fully-effective": "Fully effective",
-};
+} as const;
+export type EssentialsRating = keyof typeof ratingLabels;
 
 /** Weight of each assessed rating in ASD's domain percentage. Not assessed has none: it is left out, not scored 0. */
 const weight = { "not-effective": 0, "partially-effective": 0.5, "fully-effective": 1 } as const;
@@ -24,7 +22,7 @@ export interface EssentialsEvidence {
   coverage: "full" | "partial";
 }
 
-export interface ActionResult {
+interface ActionResult {
   id: string;
   title: string;
   /** False for a provisional id (the cloud chapter) that ASD hasn't published. */
@@ -34,16 +32,16 @@ export interface ActionResult {
   evidence: EssentialsEvidence[];
 }
 
-export interface PrincipleResult {
+interface PrincipleResult {
   id: string;
   name: string;
   rating: EssentialsRating;
   actions: ActionResult[];
 }
 
-export type RatingCounts = Record<EssentialsRating, number>;
+type RatingCounts = Record<EssentialsRating, number>;
 
-export interface DomainResult {
+interface DomainResult {
   id: EssentialsDomain;
   name: string;
   type: "capability" | "technical";
@@ -151,16 +149,15 @@ export function essentials(framework: Framework, questions: Question[], answers:
  * ASD's transition gap classes. They are gap analysis findings, not ratings, so they get their own type and can't be
  * put in a ratings column by mistake.
  */
-export const gapClasses = ["already-effectively-addressed", "partially-addressed", "not-addressed"] as const;
-export type GapClass = (typeof gapClasses)[number];
-export const gapLabels: Record<GapClass, string> = {
+export const gapLabels = {
   "already-effectively-addressed": "Already effectively addressed",
   "partially-addressed": "Partially addressed",
   "not-addressed": "Not addressed",
-};
+} as const;
+type GapClass = keyof typeof gapLabels;
 
 /** Table 2 of ASD's "Transitioning from the Essential Eight": each strategy and the principles it maps to. */
-export const E8_TO_PRINCIPLES: Record<E8Strategy, string[]> = {
+const E8_TO_PRINCIPLES: Record<E8Strategy, string[]> = {
   "application-control": ["PRO-07", "PRO-04"],
   "patch-applications": ["PRO-06", "IDE-01", "GOV-14"],
   "patch-operating-systems": ["PRO-06", "IDE-01", "GOV-14"],
@@ -170,9 +167,6 @@ export const E8_TO_PRINCIPLES: Record<E8Strategy, string[]> = {
   "user-application-hardening": ["PRO-04"],
   "regular-backups": ["PRO-10", "PRO-12"],
 };
-
-/** Principles ASD lists as having no Essential Eight equivalent. */
-export const NO_E8_EQUIVALENT = ["GOV-01", "GOV-03", "GOV-04", "GOV-08", "GOV-11", "IDE-04", "PRO-01", "PRO-09", "PRO-14", "PRO-16"];
 
 export interface TransitionGap {
   principle: string;

@@ -6,7 +6,7 @@ import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
 import { useStore } from "./store";
 
-export type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
+type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
 
 /**
  * Decrypt locked (or on-disk encrypted) progress with the passphrase, load it into the store, and keep the

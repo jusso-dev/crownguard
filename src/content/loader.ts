@@ -31,7 +31,7 @@ export { aiRegisterSources } from "./aiRegisterSources";
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
 export type ContentFiles = Record<string, string>;
 
-export interface LoadResult {
+interface LoadResult {
   catalogue: Catalogue;
   errors: string[];
   /** Things worth a maintainer's attention that don't make the content unusable: withdrawn refs, E8 mapping gaps. */

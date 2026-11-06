@@ -11,15 +11,12 @@ export const aiTechnologies = {
   "natural-language-processing": "Natural Language Processing",
   "computer-vision": "Computer Vision",
 } as const;
-export type AiTechnology = keyof typeof aiTechnologies;
 
 /** "Lifecycle stage", Standard for accountability (the AI technical standard's lifecycle). */
 export const aiLifecycles = { discover: "Discover", operate: "Operate", retire: "Retire" } as const;
-export type AiLifecycle = keyof typeof aiLifecycles;
 
 /** "Use of Technical standard for government's use of artificial intelligence", Standard for accountability. */
 export const aiStandardUse = { "not-applied": "Not applied", "partially-applied": "Partially applied", "fully-applied": "Fully applied" } as const;
-export type AiStandardUse = keyof typeof aiStandardUse;
 
 /** Domains, Classification system for AI use (Appendix D of the policy, v2.1). */
 export const aiDomains = {
@@ -30,7 +27,6 @@ export const aiDomains = {
   scientific: "Scientific",
   corporate: "Corporate and enabling",
 } as const;
-export type AiDomain = keyof typeof aiDomains;
 
 /**
  * Usage patterns, Classification system for AI use (Appendix D of the policy, v2.1), in its order. Strategic support,
@@ -46,7 +42,6 @@ export const aiUsagePatterns = {
   "image-processing": "Image processing",
   coding: "Coding",
 } as const;
-export type AiUsagePattern = keyof typeof aiUsagePatterns;
 
 /** Appendix C of the policy: a use case is in scope if any of these apply. "none" records that none do. */
 export const aiCriteria = {
@@ -61,7 +56,6 @@ export type AiCriterion = keyof typeof aiCriteria;
 
 /** Inherent and residual risk ratings, from the AI impact assessment tool. */
 export const aiRiskRatings = { low: "Low", medium: "Medium", high: "High" } as const;
-export type AiRiskRating = keyof typeof aiRiskRatings;
 
 /** Oversight model, using the addendum's key terms. */
 export const aiAutonomy = {
@@ -71,7 +65,6 @@ export const aiAutonomy = {
   hootl: { label: "Acts unsupervised (human out of the loop)", detail: "It takes actions on its own, checked only by periodic audits." },
   unknown: { label: "Not sure", detail: "Treated as an agent until you find out, so the agent questions are shown." },
 } as const;
-export type AiAutonomy = keyof typeof aiAutonomy;
 
 export const aiAccess = {
   none: { label: "No access to your systems", detail: "It only sees what people type, paste or upload into it." },
@@ -81,7 +74,6 @@ export const aiAccess = {
   privileged: { label: "Administrative access", detail: "It can change configuration, permissions or other identities." },
   unknown: { label: "Not sure", detail: "Counts as a gap in the register until someone checks." },
 } as const;
-export type AiAccess = keyof typeof aiAccess;
 
 export const aiData = {
   public: "Public information",
@@ -104,7 +96,6 @@ export const aiConditions = {
   "high-risk": "Use cases with a high inherent risk rating",
   "public-tool": "Public generative AI tools",
 } as const;
-export type AiCondition = keyof typeof aiConditions;
 
 /** Where a readiness question's expectation comes from, and how firm it is. */
 export const aiBases = {

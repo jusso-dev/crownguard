@@ -15,7 +15,7 @@ const frameworkFor = (chapter: EssentialsChapter) => catalogue.frameworks.get(`a
 const available = () => (Object.keys(chapters) as EssentialsChapter[]).filter((c) => frameworkFor(c)?.essentials);
 
 /** The indicative result behind the review card, when a chapter is chosen and the full content has loaded. */
-export function useEssentialsSummary(): EssentialsResult | undefined {
+function useEssentialsSummary(): EssentialsResult | undefined {
   const assessment = useStore((s) => s.assessment);
   const platformsReady = useEnsurePlatforms(assessment.platforms);
   const reportReady = useEnsureReportContent();

@@ -6,7 +6,7 @@ const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const date = isoDate;
 
-export const sourceSchema = z.strictObject({
+const sourceSchema = z.strictObject({
   id,
   title: z.string().min(3),
   publisher: z.string().min(2),
@@ -17,14 +17,14 @@ export const sourceSchema = z.strictObject({
 });
 
 /** Values of the ISM's own `essential-eight-applicability` prop, carried on generated ISM controls. */
-export const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
+const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
 
 /**
  * ASD Essentials domains, keyed the way ASD abbreviates them and the same as the shared catalogue in GRiCk and
  * Alignr: GC Governance and culture, VR Visibility and response, BS Boundary services, IS Identity services, CPS
  * Critical processes and services, PE Privileged environments, BUS Business systems, UD User devices.
  */
-export const essentialsDomains = ["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"] as const;
+const essentialsDomains = ["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"] as const;
 export type EssentialsDomain = (typeof essentialsDomains)[number];
 export const essentialsChapters = ["enterprise-it", "cloud"] as const;
 export type EssentialsChapter = (typeof essentialsChapters)[number];
@@ -32,7 +32,7 @@ export type EssentialsChapter = (typeof essentialsChapters)[number];
 const responsibility = z.enum(["C", "S", "P"]);
 
 /** The chapter structure an ASD Essentials framework file carries on top of its controls (the actions). */
-export const essentialsMetaSchema = z.strictObject({
+const essentialsMetaSchema = z.strictObject({
   chapter: z.enum(essentialsChapters),
   /** OSCAL release tag, or the publication month for a chapter transcribed from its web page. */
   release: z.string().min(4),
@@ -51,7 +51,6 @@ export const essentialsMetaSchema = z.strictObject({
     .min(1),
   principles: z.array(z.strictObject({ id: z.string().regex(/^[A-Z]{3}-\d{2}$/), name: z.string().min(3) })).min(1),
 });
-export type EssentialsMeta = z.infer<typeof essentialsMetaSchema>;
 
 export const frameworkSchema = z.strictObject({
   id,
@@ -131,7 +130,7 @@ export const platformSchema = z.strictObject({
   sources: z.array(id).default([]),
 });
 
-export const assetTypeSchema = z.strictObject({
+const assetTypeSchema = z.strictObject({
   id,
   module: id,
   tier: z.enum(tiers),
@@ -158,7 +157,7 @@ export const e8Strategies = [
 ] as const;
 export type E8Strategy = (typeof e8Strategies)[number];
 
-export const questionSchema = z.strictObject({
+const questionSchema = z.strictObject({
   id: z.string().regex(/^[A-Z]{2,4}-[A-Z]{2,5}-\d{3}$/, "e.g. MS-ID-001"),
   module: id,
   domain: id,
@@ -350,7 +349,7 @@ export const aiAppCategories = {
 export type AiAppCategory = keyof typeof aiAppCategories;
 
 /** One well-known AI app, matched offline against the apps in an exported consent inventory. */
-export const knownAiAppSchema = z.strictObject({
+const knownAiAppSchema = z.strictObject({
   id,
   name: z.string().min(2),
   publisher: z.string().min(2),
@@ -371,7 +370,7 @@ export const knownAiAppsFileSchema = z.strictObject({
 });
 
 /** One OAuth scope in plain English, for reading consent imports (content/ai-register/oauth-scopes.yaml). */
-export const oauthScopeSchema = z.strictObject({
+const oauthScopeSchema = z.strictObject({
   id,
   provider: z.enum(["microsoft", "google"]),
   /** The scope as the platform writes it. Full URLs are shortened to this before matching. */

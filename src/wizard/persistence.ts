@@ -10,7 +10,7 @@ export const STORAGE_KEY = "crownguard:v1";
 /** Where a stored assessment is moved when it can't be read, so the user can still download it. */
 export const UNREADABLE_KEY = `${STORAGE_KEY}:unreadable`;
 /** Mode flag only: assessment itself stays out of localStorage when this is "1". */
-export const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
+const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
 
 /**
  * Opened a file this build must not overwrite: every write to storage is dropped until the page is reloaded.
@@ -31,7 +31,7 @@ let encryptGeneration = 0;
 let writeFailed = false;
 export const storageWriteFailed = () => writeFailed;
 
-export interface RehydrateNotice {
+interface RehydrateNotice {
   kind: "error" | "warn" | "info";
   text: string;
   /** The stored value, kept verbatim when it couldn't be read, so the user can still download it. */
@@ -152,31 +152,14 @@ export const dropProgress = (name: string) => {
 /** The stored value kept aside when progress couldn't be read, if there is one. */
 export const unreadableBackup = (): string | null => read(UNREADABLE_KEY);
 
-/** True when localStorage holds an encrypted envelope (locked or not). */
-export function peekEncryptedProgress(): boolean {
-  const raw = (() => {
-    try {
-      return disk()?.getItem(STORAGE_KEY) ?? memory.get(STORAGE_KEY) ?? null;
-    } catch {
-      return memory.get(STORAGE_KEY) ?? null;
-    }
-  })();
-  if (!raw) return false;
-  try {
-    return isEncryptedEnvelope(JSON.parse(raw));
-  } catch {
-    return false;
-  }
-}
-
-export interface Persisted {
+interface Persisted {
   assessment?: Assessment;
   /** Only ever set on the way in, for progress written by a newer crownguard; merged into the store's flag. */
   readOnly?: boolean;
 }
 
 /** The storage is async when a passphrase is set (WebCrypto); plain path stays a resolved promise. */
-export type CheckedStorage = PersistStorage<Persisted>;
+type CheckedStorage = PersistStorage<Persisted>;
 
 const decode = (value: string | null): StorageValue<Persisted> | null => {
   if (!value) return null;

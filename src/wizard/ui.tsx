@@ -54,7 +54,7 @@ export function radioKeys(e: KeyboardEvent<HTMLElement>) {
 /** Roving tab stop for a radio group: only the checked option (or the first, when none is) is in the tab order. */
 export const radioTab = (checked: boolean, index: number, anyChecked: boolean) => (checked || (!anyChecked && index === 0) ? 0 : -1);
 
-export function Spinner() {
+function Spinner() {
   return (
     <span
       aria-hidden
