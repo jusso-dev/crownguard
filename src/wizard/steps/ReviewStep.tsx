@@ -1,7 +1,7 @@
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
 import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, type JewelRisk } from "../../engine/risk";
-import { essentialEight } from "../../engine/maturity";
+import { e8Title, essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../format/vocab";
@@ -102,7 +102,7 @@ export function ReviewStep() {
             <tbody className="divide-y divide-rule">
               {e8.map((r) => (
                 <tr key={r.strategy}>
-                  <td className="py-2 pr-3 text-ink">{catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === r.strategy)?.title ?? r.strategy}</td>
+                  <td className="py-2 pr-3 text-ink">{e8Title(catalogue, r.strategy)}</td>
                   <td className="text-right font-mono text-sm font-medium text-ink">ML{r.level}</td>
                   <td className="w-28 pl-3 text-right font-mono text-[0.6875rem] text-muted">of ML{r.ceiling} asked</td>
                 </tr>

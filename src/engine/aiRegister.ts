@@ -309,6 +309,9 @@ export function highRiskNotification(e: AiUseCase): string {
   ].join("\n\n");
 }
 
+/** The switch-off question, whose note carries the kill-switch worksheet instead of free text. */
+export const KILL_SWITCH_QUESTION = "AIR-OFF-001";
+
 /**
  * The kill-switch worksheet the switch-off question's note carries. It's stored as plain labelled lines in
  * `notes["AIR-OFF-001"]` so older files and any hand-edited note still read, and it needs no schema change.

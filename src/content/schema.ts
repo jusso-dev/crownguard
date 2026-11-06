@@ -116,7 +116,17 @@ export const platformSchema = z.strictObject({
     .array(z.strictObject({ id, name: z.string(), features: z.array(id) }))
     .min(1),
   licenceFeatures: z.array(z.strictObject({ id, name: z.string() })),
-  domains: z.array(z.strictObject({ id, name: z.string(), description: z.string() })).min(1),
+  domains: z
+    .array(
+      z.strictObject({
+        id,
+        name: z.string(),
+        description: z.string(),
+        /** Covers third-party app grants, so the Controls step points to the AI register's "Found apps" panel. */
+        appGrants: z.boolean().default(false),
+      }),
+    )
+    .min(1),
   /** Vendor pages that back the licence tiers and features (edition comparisons, nonprofit offers). */
   sources: z.array(id).default([]),
 });

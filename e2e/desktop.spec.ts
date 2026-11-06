@@ -125,7 +125,7 @@ const savePdf = (d: Desktop) => async (page: Page) => {
  * inlined WebAssembly from a data: URL, which connect-src refuses, and then decodes the same bytes itself.
  */
 const cspViolations = (page: Page) =>
-  page.evaluate(() => (window as unknown as { __csp: string[] }).__csp.filter((v) => !/^connect-src data .*\/assets\/generate-/.test(v)));
+  page.evaluate(() => (window as unknown as { __csp: string[] }).__csp.filter((v) => !/^connect-src data .*\/assets\/browserPdf-/.test(v)));
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
 for (const platform of ["Microsoft 365", "Google Workspace", "Amazon Web Services"]) {

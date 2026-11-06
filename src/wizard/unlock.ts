@@ -57,8 +57,9 @@ export async function unlockProgress(passphrase: string): Promise<UnlockResult> 
 
 /** Drop the assessment kept here, encrypted or not, with its passphrase, and start blank. */
 export function forgetProgress() {
-  dropProgress(STORAGE_KEY);
-  setLockedEnvelope(null);
   setSessionPassphrase(null);
+  setLockedEnvelope(null);
+  // Reset first: resetting saves the blank assessment, and dropping afterwards leaves nothing behind.
   useStore.getState().reset();
+  dropProgress(STORAGE_KEY);
 }

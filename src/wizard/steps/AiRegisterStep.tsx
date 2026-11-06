@@ -22,6 +22,7 @@ import {
   aiFieldSources,
   aiRegisterSummary,
   composeKillSwitchNote,
+  KILL_SWITCH_QUESTION,
   highRiskNotification,
   parseKillSwitchNote,
   shareWithDta,
@@ -30,8 +31,9 @@ import {
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll, needsReason } from "../../engine/risk";
-import { answerLabels, type Answer } from "../../format/vocab";
-import { NOTE_MAX, type AiUseCase } from "../../format/schema";
+import { answerLabels } from "../../format/vocab";
+import type { AiUseCase } from "../../format/schema";
+import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore } from "../store";
@@ -40,10 +42,8 @@ import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, Sev
 import { buildXlsx } from "../../lib/xlsx";
 
 const ADD = "add";
-const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 /** The open-gaps filter: one basis of readiness question, or all of them. */
 type GapFilter = "all" | AiBasis;
-const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
 const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
@@ -242,7 +242,7 @@ function Cite({ ids, label = "Source" }: { ids: readonly string[]; label?: strin
       {sources.map((s, i) => (
         <span key={s.id}>
           {i > 0 && " · "}
-          <a className={link} href={s.url} target="_blank" rel="noreferrer noopener">
+          <a className={linkClass} href={s.url} target="_blank" rel="noreferrer noopener">
             {s.title}
           </a>
         </span>
@@ -311,7 +311,7 @@ function KeyDates() {
                 <span className="text-ink-2">
                   {d.text}{" "}
                   {src && (
-                    <a className={`${link} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
+                    <a className={`${linkClass} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
                       {src.title}
                     </a>
                   )}
@@ -767,7 +767,7 @@ function NotificationDraft({ entry }: { entry: AiUseCase }) {
       <p className="mt-2 max-w-[68ch] text-xs text-muted">
         Send it to ai@dta.gov.au by typing that address into your own email.{" "}
         {src && (
-          <a className={link} href={src.url} target="_blank" rel="noreferrer noopener">
+          <a className={linkClass} href={src.url} target="_blank" rel="noreferrer noopener">
             {src.title}
           </a>
         )}
@@ -794,57 +794,27 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
   const setAiNote = useStore((s) => s.setAiNote);
   const answer = entry.answers[q.id];
   const missingReason = needsReason(entry, q.id);
-  const reasonId = `${entry.id}-${q.id}-na-reason`;
   // The switch-off question carries the kill-switch worksheet in its note, instead of the free-text note below.
-  const isKillSwitch = q.id === "AIR-OFF-001";
+  const isKillSwitch = q.id === KILL_SWITCH_QUESTION;
   return (
     <article className="rounded-[var(--radius-card)] border border-rule bg-surface p-5 sm:p-6" data-ai-question={q.id}>
       <div className="flex flex-wrap items-center gap-2.5">
         <SeverityBadge severity={q.severity} />
         <span className="font-mono text-[0.6875rem] text-muted">{q.id}</span>
         <span className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">{aiBases[q.basis]}</span>
-        {answer && !missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>✓ answered</span>}
-        {missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-warn" aria-hidden>reason needed</span>}
+        <AnswerState answer={answer} missingReason={missingReason} />
       </div>
       <h5 className="mt-3 font-sans text-base font-medium leading-snug tracking-normal">{q.question}</h5>
-      <div className="mt-4 grid max-w-md grid-cols-5 gap-px overflow-hidden rounded-[var(--radius-control)] border border-field bg-field" role="radiogroup" aria-label={q.question} onKeyDown={radioKeys}>
-        {answerOrder.map((a, i) => (
-          <button
-            key={a}
-            type="button"
-            role="radio"
-            aria-checked={answer === a}
-            tabIndex={radioTab(answer === a, i, answer !== undefined)}
-            onClick={() => setAiAnswer(entry.id, q.id, a)}
-            className={`min-h-9 px-1 py-1.5 text-[0.8125rem] transition-colors duration-150 focus-visible:-outline-offset-2 sm:px-3 sm:text-sm ${
-              answer === a ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink"
-            }`}
-          >
-            {answerLabels[a]}
-          </button>
-        ))}
-      </div>
+      <AnswerButtons label={q.question} answer={answer} onAnswer={(a) => setAiAnswer(entry.id, q.id, a)} />
       {isKillSwitch && <KillSwitchWorksheet entry={entry} showReason={answer === "na"} missingReason={missingReason} />}
       {!isKillSwitch && answer === "na" && (
-        <div className="mt-4 max-w-[72ch]">
-          <label htmlFor={reasonId} className="text-sm font-medium text-ink">
-            Why doesn&apos;t this apply? <span className="font-normal text-muted">(required)</span>
-          </label>
-          <textarea
-            id={reasonId}
-            rows={2}
-            required
-            aria-required="true"
-            aria-invalid={missingReason}
-            className={`${inputClass} mt-1.5 ${missingReason ? "border-warn!" : ""}`}
-            value={entry.notes[q.id] ?? ""}
-            maxLength={NOTE_MAX}
-            onChange={(x) => setAiNote(entry.id, q.id, x.target.value)}
-          />
-          <p className={`mt-1 text-xs ${missingReason ? "text-warn" : "text-muted"}`}>
-            {missingReason ? "Until you give a reason this counts as unanswered and is scored as a gap." : "Shown in the report with this use case."}
-          </p>
-        </div>
+        <NaReason
+          id={`${entry.id}-${q.id}-na-reason`}
+          value={entry.notes[q.id] ?? ""}
+          onChange={(note) => setAiNote(entry.id, q.id, note)}
+          missing={missingReason}
+          shownIn="Shown in the report with this use case."
+        />
       )}
       <details className="group mt-4 border-t border-rule pt-3 text-sm">
         <summary className="text-muted transition-colors [@media(hover:hover)]:hover:text-ink">Why this matters and what good looks like</summary>
@@ -852,36 +822,8 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
           <p>{q.why}</p>
           <p><span className="font-medium text-ink">Yes looks like: </span>{q.yesLooksLike}</p>
           <p><span className="font-medium text-ink">How to fix: </span>{q.remediation}</p>
-          <div className="text-xs text-muted">
-            <div className="flex flex-wrap gap-1.5">
-              {q.refs.map((ref) => (
-                <span key={`${ref.framework}:${ref.ref}`} className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">
-                  {catalogue.frameworks.get(ref.framework)?.shortName ?? ref.framework} {ref.ref}
-                </span>
-              ))}
-            </div>
-            <ul className="mt-2 space-y-0.5">
-              {q.sources.map((s) => {
-                const src = catalogue.sources.get(s);
-                return src ? (
-                  <li key={s}>
-                    <a className={link} href={src.url} target="_blank" rel="noreferrer noopener">{src.title}</a> · {src.publisher}
-                  </li>
-                ) : null;
-              })}
-            </ul>
-          </div>
-          {!isKillSwitch && answer !== "na" && (
-            <textarea
-              className={inputClass}
-              rows={2}
-              maxLength={NOTE_MAX}
-              aria-label={`Notes for the report on ${q.id}`}
-              placeholder="Notes for the report (optional)"
-              value={entry.notes[q.id] ?? ""}
-              onChange={(x) => setAiNote(entry.id, q.id, x.target.value)}
-            />
-          )}
+          <References refs={q.refs} sources={q.sources} />
+          {!isKillSwitch && answer !== "na" && <ReportNote questionId={q.id} value={entry.notes[q.id] ?? ""} onChange={(note) => setAiNote(entry.id, q.id, note)} />}
         </div>
       </details>
     </article>
@@ -894,9 +836,9 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
  */
 function KillSwitchWorksheet({ entry, showReason, missingReason }: { entry: AiUseCase; showReason: boolean; missingReason: boolean }) {
   const updateAiUseCase = useStore((s) => s.updateAiUseCase);
-  const n = parseKillSwitchNote(entry.notes?.["AIR-OFF-001"]);
+  const n = parseKillSwitchNote(entry.notes?.[KILL_SWITCH_QUESTION]);
   const set = (key: keyof KillSwitchNote, value: string) =>
-    updateAiUseCase(entry.id, { notes: { ...entry.notes, "AIR-OFF-001": composeKillSwitchNote({ ...n, [key]: value }) } });
+    updateAiUseCase(entry.id, { notes: { ...entry.notes, [KILL_SWITCH_QUESTION]: composeKillSwitchNote({ ...n, [key]: value }) } });
   const fields: [keyof KillSwitchNote, string][] = [
     ["stop", "How to stop it (identity, tokens, connectors)"],
     ["who", "Who may stop it"],

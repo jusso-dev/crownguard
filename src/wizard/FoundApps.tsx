@@ -12,9 +12,9 @@ import {
   type FoundInventory,
 } from "../imports/consent";
 import { useStore } from "./store";
+import { linkClass } from "./AnswerFields";
 import { Button } from "./ui";
 
-const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const mono = "rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2";
 
 /** The Graph cmdlets the panel documents. Shown verbatim so the export can be made with the least privilege. */
@@ -104,7 +104,7 @@ export function FoundApps({ state, setState }: { state: FoundAppsState; setState
           <p className="mt-0.5 text-xs text-muted">
             Optional. Export the list of apps people have granted access to — Microsoft Entra ID or Google Workspace — and crownguard sorts
             out the AI tools, note-takers and agents from it, entirely in your browser.{" "}
-            <button type="button" className={link} onClick={openHow}>
+            <button type="button" className={linkClass} onClick={openHow}>
               How to export the list
             </button>
           </p>
@@ -256,7 +256,7 @@ function ExportHow() {
             What the file holds: each grant&apos;s <span className={mono}>clientId</span>, <span className={mono}>consentType</span> (AllPrincipals or
             Principal), <span className={mono}>scope</span>, and each app&apos;s display name, publisher and{" "}
             <span className={mono}>appOwnerOrganizationId</span>.{" "}
-            <a className={link} href="https://learn.microsoft.com/en-us/graph/api/resources/oauth2permissiongrant" target="_blank" rel="noreferrer noopener">
+            <a className={linkClass} href="https://learn.microsoft.com/en-us/graph/api/resources/oauth2permissiongrant" target="_blank" rel="noreferrer noopener">
               Microsoft Graph consent grants
             </a>
           </p>
@@ -272,7 +272,7 @@ function ExportHow() {
             <li>Pick the CSV here.</li>
           </ol>
           <p className="mt-1.5 text-xs text-muted">
-            <a className={link} href="https://support.google.com/a/answer/6124308" target="_blank" rel="noreferrer noopener">
+            <a className={linkClass} href="https://support.google.com/a/answer/6124308" target="_blank" rel="noreferrer noopener">
               Google: OAuth log events
             </a>
           </p>

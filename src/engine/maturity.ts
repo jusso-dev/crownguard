@@ -1,4 +1,4 @@
-import { e8Strategies, type E8Strategy, type Question } from "../content/schema";
+import { e8Strategies, type Catalogue, type E8Strategy, type Question } from "../content/schema";
 import type { Answer } from "../format/vocab";
 import { isSatisfied } from "./risk";
 
@@ -20,6 +20,10 @@ export interface E8Result {
  * One and Two.
  */
 export const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-operating-systems": [2] };
+
+/** A strategy's title from the Essential Eight framework file, or its id when the file isn't loaded. */
+export const e8Title = (catalogue: Pick<Catalogue, "frameworks">, strategy: string) =>
+  catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === strategy)?.title ?? strategy;
 
 /** The questions tagged as evidence for one Essential Eight strategy at one maturity level. */
 export const e8Tagged = (questions: Question[], strategy: E8Strategy, level: number) =>
