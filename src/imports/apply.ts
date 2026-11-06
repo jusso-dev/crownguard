@@ -1,5 +1,5 @@
 import type { Assessment } from "../format/schema";
-import { redactEmails, type ScanResult } from "./types";
+import type { ScanResult } from "./types";
 
 /**
  * Merge scan suggestions into an assessment: the wizard's import and `cg import` share this. An answer is kept unless
@@ -32,7 +32,7 @@ export function applyScan(
       licence: opts.licence && scan.licence ? { ...assessment.licence, [opts.platform]: scan.licence } : assessment.licence,
       imports: [
         ...(assessment.imports ?? []),
-        { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant && redactEmails(scan.tenant), scannedAt: scan.scannedAt, importedAt: now, applied },
+        { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied },
       ],
       updatedAt: now,
     },
