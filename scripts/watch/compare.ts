@@ -1,10 +1,13 @@
 import { diffLines, diffWords } from "diff";
 import type { Catalogue } from "../../src/content/schema";
+import { escapeRegExp } from "../lib/text";
+import { compareVersions } from "../lib/versions";
+import { currentHost } from "./hosts";
 import type { ChangeDetail, Extracted, Section, SourceState } from "./types";
-import { cleanTitle, collapse, escapeRegExp, hostOf, isLifecycleTerm, normalizeUrl, titleSimilarity, truncate, wordCount } from "./util";
+import { cleanTitle, collapse, hostOf, isLifecycleTerm, normalizeUrl, titleSimilarity, truncate, wordCount } from "./util";
 
 /** Thresholds for calling a change "major" (worth a maintainer's look). */
-export const MAJOR = {
+const MAJOR = {
   /** Share of words added or removed relative to old + new word counts. */
   ratio: 0.08,
   /** Absolute words added + removed. */
@@ -15,7 +18,7 @@ export const MAJOR = {
   titleSimilarity: 0.7,
 };
 
-export interface DiffLine {
+interface DiffLine {
   op: " " | "+" | "-";
   text: string;
 }
@@ -147,7 +150,7 @@ export function newLifecycleWording(diff: TextDiff): string[] {
   return [...added].filter(([phrase, n]) => n > (removed.get(phrase) ?? 0)).map(([phrase]) => phrase).sort();
 }
 
-export interface Classified {
+interface Classified {
   severity: "major" | "minor";
   detail: ChangeDetail;
   /** Lifecycle wording the change introduced. */
@@ -271,37 +274,27 @@ export function versionsOnPage(title: string, text: string): string[] {
   return [...found].sort(compareVersions);
 }
 
-export function compareVersions(a: string, b: string): number {
-  const pa = a.split(".").map(Number);
-  const pb = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (d) return d;
-  }
-  return 0;
-}
-
-/** Hosts that serve the same documentation set, so a redirect between them can still be the same page. */
+/** Hosts that serve the same documentation set, so a redirect between them can still be the same page. Moved hosts come from the host profiles. */
 const FAMILIES = [
   ["learn.microsoft.com", "docs.microsoft.com"],
   ["support.google.com", "knowledge.workspace.google.com"],
-  ["cloud.google.com", "docs.cloud.google.com"],
   ["www.microsoft.com", "microsoft.com"],
   ["www.cyber.gov.au", "cyber.gov.au"],
   ["www.cisecurity.org", "cisecurity.org"],
 ];
 
 function sameFamily(a: string, b: string): boolean {
+  [a, b] = [currentHost(a), currentHost(b)];
   return a === b || FAMILIES.some((f) => f.includes(a) && f.includes(b));
 }
 
-/** Query parameters sites add on redirect that don't change which page is served. */
-const NOISE_PARAMS = new Set(["hl", "sjid", "visit_id", "rd", "ref_topic", "authuser", "co", "utm_source", "utm_medium", "utm_campaign", "cms_guid"]);
+/** Tracking and language parameters sites add on redirect that don't change which page is served. */
+export const isNoiseParam = (name: string): boolean => /^(?:utm_[a-z]+|sjid|visit_id|rd|ref_topic|authuser|co|hl|cms_guid)$/.test(name);
 
 function comparable(url: string): string {
   try {
     const u = new URL(normalizeUrl(url));
-    for (const k of [...u.searchParams.keys()]) if (NOISE_PARAMS.has(k)) u.searchParams.delete(k);
+    for (const k of [...u.searchParams.keys()]) if (isNoiseParam(k)) u.searchParams.delete(k);
     u.searchParams.sort();
     u.protocol = "https:";
     if (u.hostname.startsWith("www.")) u.hostname = u.hostname.slice(4);

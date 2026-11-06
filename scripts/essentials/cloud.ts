@@ -12,11 +12,12 @@
  * The chapter is © Commonwealth of Australia 2026, licensed CC BY 4.0 (Coat of Arms and ASD logo excepted).
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { z } from "zod";
-import { shorten } from "../ism/build";
+import { cliArgs, isMain } from "../lib/cli";
+import { repoPath } from "../lib/repo";
+import { shorten } from "../lib/text";
+import { inlineList as list, quoted } from "../lib/yaml-text";
 
 const domainKey = z.enum(["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"]);
 const marker = z.enum(["C", "S", "P"]).nullable();
@@ -42,10 +43,7 @@ export const cloudCatalogueSchema = z.looseObject({
     }),
   ),
 });
-export type CloudCatalogue = z.infer<typeof cloudCatalogueSchema>;
-
-const quoted = (s: string) => JSON.stringify(s);
-const list = (xs: (string | number)[]) => `[${xs.join(", ")}]`;
+type CloudCatalogue = z.infer<typeof cloudCatalogueSchema>;
 
 export function cloudYaml(c: CloudCatalogue): string {
   const { expected } = c;
@@ -99,8 +97,7 @@ export function cloudYaml(c: CloudCatalogue): string {
 }
 
 function main() {
-  const argv = process.argv.slice(2).filter((a) => a !== "--");
-  const { values } = parseArgs({ args: argv, options: { catalogue: { type: "string" } } });
+  const { values } = parseArgs({ args: cliArgs(), options: { catalogue: { type: "string" } } });
   if (!values.catalogue) {
     console.error("usage: pnpm essentials:cloud -- --catalogue path/to/cloud.json");
     process.exit(1);
@@ -110,9 +107,9 @@ function main() {
     console.error(parsed.error.issues.slice(0, 10).map((i) => `${i.path.join(".")}: ${i.message}`).join("\n"));
     process.exit(1);
   }
-  const out = join(fileURLToPath(import.meta.url), "..", "..", "..", "content", "frameworks", "asd-essentials-cloud.yaml");
+  const out = repoPath("content", "frameworks", "asd-essentials-cloud.yaml");
   writeFileSync(out, cloudYaml(parsed.data));
   console.log(`${out}: ${parsed.data.actions.length} actions`);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+if (isMain(import.meta.url)) main();

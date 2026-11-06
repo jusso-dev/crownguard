@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { escapeRegExp } from "../lib/text";
+import { profileFor } from "./hosts";
 
 /** JSON with object keys sorted at every level, two-space indent and a trailing newline, so diffs stay stable. */
 export function stableStringify(value: unknown): string {
@@ -39,7 +41,7 @@ export function collapse(text: string): string {
 
 /**
  * Canonical form of a URL for comparisons: lowercase scheme and host, no default port, no fragment, no trailing
- * slash (except the root). Learn and www.microsoft.com paths are case-insensitive, so they are lowercased too. Query
+ * slash (except the root). Paths on hosts whose profile says they are case-insensitive are lowercased too. Query
  * strings are kept because Google Help uses them for locale. Returns the input unchanged when it isn't a URL.
  */
 export function normalizeUrl(raw: string): string {
@@ -52,7 +54,7 @@ export function normalizeUrl(raw: string): string {
   u.hash = "";
   let path = u.pathname;
   if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
-  if (u.hostname === "learn.microsoft.com" || u.hostname === "www.microsoft.com") path = path.toLowerCase();
+  if (profileFor(u.hostname).caseInsensitivePaths) path = path.toLowerCase();
   const port = u.port && !((u.protocol === "https:" && u.port === "443") || (u.protocol === "http:" && u.port === "80")) ? `:${u.port}` : "";
   return `${u.protocol.toLowerCase()}//${u.hostname.toLowerCase()}${port}${path}${u.search}`;
 }
@@ -214,10 +216,6 @@ export function isLifecycleTerm(term: string): boolean {
   return TRACKED_TERMS.lifecycle.includes(term);
 }
 
-export function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
@@ -238,11 +236,6 @@ export function toIsoDate(raw: string | undefined | null): string | undefined {
   else return undefined;
   if (!m || m > 12 || d < 1 || d > 31 || y < 1990 || y > 2100) return undefined;
   return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-}
-
-/** Today's date as YYYY-MM-DD in UTC, or `WATCH_DATE` when set (tests). */
-export function runDate(env: NodeJS.ProcessEnv = process.env): string {
-  return env.WATCH_DATE && /^\d{4}-\d{2}-\d{2}$/.test(env.WATCH_DATE) ? env.WATCH_DATE : new Date().toISOString().slice(0, 10);
 }
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

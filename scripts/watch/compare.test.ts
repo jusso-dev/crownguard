@@ -3,7 +3,6 @@ import {
   citedVersion,
   classifyChange,
   compareSections,
-  compareVersions,
   diffTexts,
   equivalentUrls,
   excerpt,
@@ -124,8 +123,6 @@ describe("versions", () => {
     expect(versionsOnPage("CIS Google Cloud Platform Foundation Benchmark v5.0.0", gcp)).toEqual(["5.0.0"]);
     expect(versionsOnPage("CIS Google Cloud Platform Foundations Benchmark v5.0.0", gcp.replace("5.0.0", "6.0.0"))).toEqual(["6.0.0"]);
     expect(versionsOnPage("CIS Google Workspace Foundations Benchmark v1.4.0", "Google Workspace Foundations  (1.4.0)")).toEqual(["1.4.0"]);
-    expect(compareVersions("1.10.0", "1.9.9")).toBeGreaterThan(0);
-    expect(compareVersions("2", "2.0")).toBe(0);
   });
 });
 

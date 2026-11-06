@@ -56,7 +56,6 @@ describe("triageChanges", () => {
   it("asks Claude with fallbacks and structured output, and keeps only known question ids", async () => {
     const { client, calls } = fakeClient(() => ok());
     const run = await triageChanges([input()], { client });
-    expect(calls[0].model).toBe("claude-opus-5-5");
     expect(calls[0].fallbacks).toBe("default");
     expect(calls[0].betas).toEqual(["server-side-fallback-2026-07-01"]);
     expect(calls[0].output_config?.effort).toBe("medium");

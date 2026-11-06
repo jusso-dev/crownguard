@@ -1,18 +1,19 @@
 import { createHash } from "node:crypto";
+import { API_BASE, apiHeaders, isRepo, rawUrl } from "../lib/github";
 import type { Commit } from "./types";
 import { collapse, readCapped, truncate } from "./util";
 
-export interface GitHubOptions {
+interface GitHubOptions {
   /** Token for api.github.com (GITHUB_TOKEN in Actions). Without one the API allows 60 requests an hour. */
   token?: string;
-  /** Most API calls one run may make; raw file downloads don't count. */
-  maxCalls?: number;
   fetchImpl?: typeof fetch;
   /** Largest API response or raw file read; anything bigger is treated as a miss. */
   maxBytes?: number;
-  apiBase?: string;
-  rawBase?: string;
 }
+
+/** Most API calls one run may make; raw file downloads don't count. */
+const MAX_CALLS = 400;
+const USER_AGENT = "crownguard-source-watch";
 
 /**
  * Read access to the public MicrosoftDocs mirrors behind some Microsoft Learn pages. Most Learn repos have no public
@@ -30,35 +31,26 @@ export interface GitHub {
   limited(): string | undefined;
 }
 
-const REPO = /^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/;
+/** Learn mirror branches can contain slashes. */
 const REF = /^[A-Za-z0-9._/-]+$/;
 
-const encodePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
-
 export function createGitHub(opts: GitHubOptions = {}): GitHub {
-  const { token, maxCalls = 400, fetchImpl = fetch, maxBytes = 20 * 1024 * 1024, apiBase = "https://api.github.com", rawBase = "https://raw.githubusercontent.com" } = opts;
+  const { token, fetchImpl = fetch, maxBytes = 20 * 1024 * 1024 } = opts;
   let calls = 0;
   let limited: string | undefined;
 
   async function api<T>(path: string): Promise<T | undefined> {
     if (limited) return undefined;
-    if (calls >= maxCalls) {
-      limited = `GitHub API call budget of ${maxCalls} reached`;
+    if (calls >= MAX_CALLS) {
+      limited = `GitHub API call budget of ${MAX_CALLS} reached`;
       return undefined;
     }
     calls++;
     let res: Response;
     try {
-      res = await fetchImpl(`${apiBase}${path}`, {
-        signal: AbortSignal.timeout(30_000),
-        headers: {
-          accept: "application/vnd.github+json",
-          "x-github-api-version": "2022-11-28",
-          "user-agent": "crownguard-source-watch",
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      res = await fetchImpl(`${API_BASE}${path}`, { signal: AbortSignal.timeout(30_000), headers: apiHeaders(USER_AGENT, token) });
     } catch {
+      // Network errors are misses: every caller already copes with a mirror it can't read.
       return undefined;
     }
     if ((res.status === 403 || res.status === 429) && (res.headers.get("x-ratelimit-remaining") === "0" || res.headers.has("retry-after"))) {
@@ -74,17 +66,15 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
       const buf = await readCapped(res, maxBytes);
       return buf ? (JSON.parse(new TextDecoder().decode(buf)) as T) : undefined;
     } catch {
+      // A truncated or non-JSON body is a miss like any other.
       return undefined;
     }
   }
 
   async function fileAt(repo: string, ref: string, path: string): Promise<string | undefined> {
-    if (!REPO.test(repo) || !REF.test(ref) || path.includes("..")) return undefined;
+    if (!isRepo(repo) || !REF.test(ref) || path.includes("..")) return undefined;
     try {
-      const res = await fetchImpl(`${rawBase}/${repo}/${encodePath(ref)}/${encodePath(path)}`, {
-        signal: AbortSignal.timeout(30_000),
-        headers: { "user-agent": "crownguard-source-watch" },
-      });
+      const res = await fetchImpl(rawUrl(repo, ref, path), { signal: AbortSignal.timeout(30_000), headers: { "user-agent": USER_AGENT } });
       if (!res.ok) {
         await res.body?.cancel().catch(() => {});
         return undefined;
@@ -92,6 +82,7 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
       const buf = await readCapped(res, maxBytes);
       return buf && new TextDecoder().decode(buf);
     } catch {
+      // Network errors are misses: a mirror that can't be read just means no Markdown diff.
       return undefined;
     }
   }
@@ -100,7 +91,7 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
 
   return {
     repoExists(repo) {
-      if (!REPO.test(repo)) return Promise.resolve(false);
+      if (!isRepo(repo)) return Promise.resolve(false);
       let known = repos.get(repo);
       if (!known) {
         known = api<{ private?: boolean }>(`/repos/${repo}`).then((r) => !!r && r.private === false);
@@ -110,7 +101,7 @@ export function createGitHub(opts: GitHubOptions = {}): GitHub {
     },
     fileAt,
     async commitsBetween(repo, path, since, until) {
-      if (!REPO.test(repo) || !REF.test(until)) return undefined;
+      if (!isRepo(repo) || !REF.test(until)) return undefined;
       type C = { sha: string; html_url: string; commit: { message: string; committer?: { date?: string }; author?: { date?: string } } };
       const list = await api<C[]>(`/repos/${repo}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(until)}&per_page=20`);
       if (!list) return undefined;

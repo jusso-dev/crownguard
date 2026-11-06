@@ -124,7 +124,6 @@ jobs:
             e2e/fixtures/prowler-checks-azure.txt
             e2e/fixtures/scubagoggles-controls.txt
             content/imports/*.yaml
-            scripts/watch/feeds.ts
           commit-message: Update generated guidance to the latest upstream releases
           title: ${{ needs.update.outputs.title }}
           body-path: ${{ runner.temp }}/guidance-update/pr-body.md

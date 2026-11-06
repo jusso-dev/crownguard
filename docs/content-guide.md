@@ -135,8 +135,7 @@ Essentials domains the question's subject sits in (only ones the action lists), 
   admin access Privileged environments (PE), network edge Boundary services (BS), endpoints User devices (UD) and
   logging Visibility and response (VR) or the domain being logged.
 - `pnpm validate:content` warns when a question's ISM refs are evidence ASD lists for an action the question isn't
-  tagged with. Tag it, or record why not in `essentialsReviewed: <reason>`.
-  `pnpm exec tsx scripts/essentials-candidates.ts` lists the candidates per question.
+  tagged with, naming the candidate actions. Tag it, or record why not in `essentialsReviewed: <reason>`.
 - Never change an `e8:` tag to make an Essentials result look better, and never tag from an E8 level. Nothing in the
   Essentials results reads `e8:`.
 
@@ -439,7 +438,8 @@ profile is covered by a saved HTML fixture in `scripts/watch/fixtures/` rather t
 **Feeds.** Besides Workspace Updates, Cloud release notes, ASD, CIS, NIST and SOC-CMM, the watch follows GitHub
 releases Atom feeds for `AustralianCyberSecurityCentre/ism-oscal`, `prowler-cloud/prowler` and
 `cisagov/ScubaGoggles`. A new release is reported as "mapping may need review" with the pinned version from the
-mapping or ISM header (`checkedAgainst` / ism-oscal tag). AWS Security Hub CSPM's document history page is scraped
+mapping or ISM header (`checkedAgainst` / ism-oscal tag), read from the committed files on each run, so it moves
+when the guidance update moves them. The upstreams themselves are described once, in `scripts/lib/upstreams.ts`. AWS Security Hub CSPM's document history page is scraped
 for Bedrock, AgentCore and FSBP rows. M365-Secure does not tag releases yet, so crownguard cannot pin to a tag; the
 drift check reads `docs/CHECKS.md` on `main` instead until upstream tags exist.
 
@@ -475,11 +475,14 @@ is newer, regenerates the files. It keeps one pull request open from the `bot/gu
 
 | Source | Regenerated | Pins moved |
 | --- | --- | --- |
-| ISM OSCAL catalog | `content/frameworks/ism.yaml`, `scripts/ism/fixtures/ism-controls.txt` (through `buildIsm`) | the tag in both headers, the `ism-oscal-releases` feed pin, the `asd-ism-oscal` source |
-| Prowler | `e2e/fixtures/prowler-checks-aws.txt` and `-azure.txt` | `checkedAgainst` in `prowler-aws.yaml` and `prowler-azure.yaml`, the `prowler-releases` feed pin |
-| ScubaGoggles | `e2e/fixtures/scubagoggles-controls.txt` | `checkedAgainst` in `scubagoggles.yaml`, the `scubagoggles-releases` feed pin |
+| ISM OSCAL catalog | `content/frameworks/ism.yaml`, `scripts/ism/fixtures/ism-controls.txt` (through `ismGenerator`) | the tag in both headers, the `asd-ism-oscal` source |
+| Essentials for enterprise IT | `content/frameworks/asd-essentials-enterprise-it.yaml`, `scripts/essentials/fixtures/e4eit-actions.txt` | the tag in both headers |
+| Prowler | `e2e/fixtures/prowler-checks-aws.txt` and `-azure.txt` | `checkedAgainst` in `prowler-aws.yaml` and `prowler-azure.yaml` |
+| ScubaGoggles | `e2e/fixtures/scubagoggles-controls.txt` | `checkedAgainst` in `scubagoggles.yaml` |
 
-The scanner lists always move to the new release. `checkedAgainst` and the feed pin move only when every check id the
+The source watch's release feeds read these pins from the files, so they follow without an edit of their own.
+
+The scanner lists always move to the new release. `checkedAgainst` moves only when every check id the
 mapping uses still exists upstream. When one has gone, the PR opens as a draft, lists each removed id with the
 questions that use it under "Needs review", and `pnpm test` fails on it until the mapping is fixed. Fix the mapping on
 a branch of your own and merge that; the next nightly run then moves the pins. For the ISM, a question citing a
@@ -491,7 +494,7 @@ PR points out in families a mapping already uses. Merge when the diff matches th
 
 **How it runs.** The `update` job has a read-only token: it reads the releases and uploads the regenerated files with
 `summary.json` and `pr-body.md`. The `propose` job applies them with `pnpm guidance:apply`, which writes only the
-updaters' own paths and re-derives the `feeds.ts` pins from validated tags, then runs `pnpm validate:content`,
+updaters' own paths, then runs `pnpm validate:content`,
 `pnpm lint`, `pnpm typecheck` and `pnpm test` before it opens or updates the PR. A source that can't be read fails the
 run rather than closing a PR that is still needed. When only the retrieval date would move, the open PR is left as it
 is.
@@ -499,10 +502,11 @@ is.
 Run it locally with `pnpm guidance:update --dry-run` to see what would change, `--only prowler,ism` to limit it, and
 `--out <dir>` to write the PR body and summary. Set `GITHUB_TOKEN` to avoid the API's limit of 60 requests an hour.
 
-**Adding a source.** An OSCAL catalog is one `oscalUpdater({...})` entry in `scripts/guidance/registry.ts`: its repo,
-catalog file name, framework id, the generated framework file and id list, the feed in `scripts/watch/feeds.ts` and the
-`content/sources` entry linking the release. Its generator needs a `build(catalog, { tag, retrieved, previousYaml })`
-function like `buildIsm`, and both files' headers must say `at release tag <tag>`. ASD's Essentials for enterprise IT
-(`AustralianCyberSecurityCentre/e4eit-oscal`, `pnpm essentials:build -- --tag <tag>`) fits this shape. Then add its
-two files to `add-paths` in the workflow; `scripts/guidance/run.test.ts` fails until the workflow and the registry
-agree. A new scanner list is a `scannerUpdater` entry with a function that lists the ids at a tag.
+**Adding a source.** Describe the upstream once in `scripts/lib/upstreams.ts`: its repo, framework id, the generated
+framework file and id list, and the `content/sources` entry linking the release if one does. An OSCAL catalog then
+needs an `OscalGenerator` (the release files it reads and a `build(files, { tag, retrieved })` returning both files'
+text, with headers that say `at release tag <tag>`), like `ismGenerator` and `essentialsGenerator`, and one
+`oscalUpdater({...})` entry in `scripts/guidance/registry.ts`. Give it a `releaseFeed` in `scripts/watch/feeds.ts` so
+the source watch reports its releases. Then add its two files to `add-paths` in the workflow;
+`scripts/guidance/run.test.ts` fails until the workflow and the registry agree. A new scanner list is a
+`scannerUpdater` entry with a function that lists the ids at a tag.

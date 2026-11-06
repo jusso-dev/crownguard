@@ -114,7 +114,6 @@ keyvault_rbac_enabled
 keyvault_rbac_key_expiration_set
 keyvault_rbac_secret_expiration_set
 keyvault_recoverable
-lib
 monitor_alert_create_policy_assignment
 monitor_alert_create_update_nsg
 monitor_alert_create_update_public_ip_address_rule

@@ -12,20 +12,19 @@
  * after writing its report, so a network error never closes a pull request that is still needed.
  */
 import { execFileSync } from "node:child_process";
-import { appendFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { loadCatalogue } from "../../src/content/loader";
-import { readContentFiles } from "../read-content";
-import { createGuidanceGitHub } from "./github";
+import { actionsRunUrl, cliArgs, contentGuideUrl, githubToken, setOutputs } from "../lib/cli";
+import { loadContentOrExit, questionsCiting } from "../lib/content";
+import { today } from "../lib/dates";
+import { createReleaseGitHub } from "../lib/github";
+import { readRepoFile, repoPath, ROOT } from "../lib/repo";
 import { UPDATERS } from "./registry";
 import { renderPrBody, runUpdates } from "./run";
-import type { Workspace } from "./types";
 
-const root = join(import.meta.dirname, "..", "..");
-// `pnpm guidance:update -- --dry-run` passes the `--` separator through; it isn't ours.
 const { values: args } = parseArgs({
-  args: process.argv.slice(2).filter((a) => a !== "--"),
+  args: cliArgs(),
   options: {
     out: { type: "string" },
     "dry-run": { type: "boolean", default: false },
@@ -42,55 +41,31 @@ for (const id of only ?? []) {
   }
 }
 
-const { catalogue, errors } = loadCatalogue(readContentFiles());
-if (errors.length) {
-  console.error(`content has ${errors.length} error(s); run pnpm validate:content`);
-  process.exit(1);
-}
-
-const citing = (framework: string): Map<string, string[]> => {
-  const out = new Map<string, string[]>();
-  for (const bundle of catalogue.platforms.values())
-    for (const q of bundle.questions)
-      for (const ref of [
-        ...q.refs.filter((r) => r.framework === framework).map((r) => r.ref),
-        // Essentials questions cite actions through `essentials:` tags rather than `refs:`.
-        ...(catalogue.frameworks.get(framework)?.essentials ? q.essentials.map((t) => t.action) : []),
-      ])
-        out.set(ref, [...new Set([...(out.get(ref) ?? []), q.id])]);
-  return out;
-};
-
-const ws: Workspace = {
-  read: (path) => readFileSync(join(root, path), "utf8"),
-  citing,
-  today: new Date().toISOString().slice(0, 10),
-};
+const catalogue = loadContentOrExit();
+const ws = { read: readRepoFile, citing: (framework: string) => questionsCiting(catalogue, framework), today: today() };
 
 const previousRef = args["previous-ref"];
 const previous = previousRef
   ? (path: string): string | undefined => {
       try {
-        return execFileSync("git", ["show", `${previousRef}:${path}`], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+        return execFileSync("git", ["show", `${previousRef}:${path}`], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
       } catch {
+        // No open pull request, or the file is new on this run: nothing to keep dates from.
         return undefined;
       }
     }
   : undefined;
 
-const env = process.env;
 const result = await runUpdates({
   updaters: UPDATERS,
   ws,
-  gh: createGuidanceGitHub({ token: env.GITHUB_TOKEN || env.GH_TOKEN || undefined }),
+  gh: createReleaseGitHub({ token: githubToken() }),
   only,
   previous,
   log: console.log,
 });
 
-const runUrl = env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY && env.GITHUB_RUN_ID ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` : undefined;
-const guideUrl = `${env.GITHUB_SERVER_URL ?? "https://github.com"}/${env.GITHUB_REPOSITORY ?? "jusso-dev/crownguard"}/blob/main/docs/content-guide.md#guidance-update`;
-const body = renderPrBody(result, { runUrl, guideUrl });
+const body = renderPrBody(result, { runUrl: actionsRunUrl(), guideUrl: contentGuideUrl("guidance-update") });
 
 for (const u of result.updates) {
   const head = `${u.id}: ${u.status}${u.from ? ` (${u.from}${u.latest && u.status !== "current" ? ` → ${u.latest.tag}` : `, latest ${u.latest?.tag ?? "?"}`})` : ""}`;
@@ -103,11 +78,11 @@ for (const u of result.updates) {
 }
 console.log(result.changed ? `title: ${result.title}` : "nothing to change");
 
-if (!args["dry-run"]) for (const [path, text] of Object.entries(result.files)) writeFileSync(join(root, path), text);
+if (!args["dry-run"]) for (const [path, text] of Object.entries(result.files)) writeFileSync(repoPath(path), text);
 
 if (args.out) {
   // resolve(), not join(): the workflow passes an absolute path under $RUNNER_TEMP.
-  const out = resolve(root, args.out);
+  const out = resolve(ROOT, args.out);
   rmSync(join(out, "files"), { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   const { files, ...summary } = result;
@@ -121,5 +96,5 @@ if (args.out) {
 
 // Blocked: a list moved but its pins could not, so the pinned-list tests fail until a maintainer fixes the mapping.
 const blocked = result.updates.some((u) => u.pinsMoved === false && u.files.length > 0);
-if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `changed=${result.changed}\nblocked=${blocked}\ntitle=${result.title.replace(/[\r\n]+/g, " ")}\n`);
+setOutputs({ changed: result.changed, blocked, title: result.title.replace(/[\r\n]+/g, " ") });
 if (result.updates.some((u) => u.status === "error")) process.exit(1);

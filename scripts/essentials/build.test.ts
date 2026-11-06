@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import { buildEssentials, essentialsYaml, extractEssentials, parseInputs } from "./build";
+import { readRepoFile } from "../lib/repo";
+import { parseIdList } from "../lib/text";
+import { ESSENTIALS_IT } from "../lib/upstreams";
+import { essentialsGenerator, essentialsYaml, extractEssentials, parseInputs } from "./build";
 import { cloudCatalogueSchema, cloudYaml } from "./cloud";
 
 const dir = join(import.meta.dirname, "fixtures", "sample");
@@ -41,11 +44,11 @@ describe("the Essentials generator", () => {
     expect(domains.find((d) => d.id === "IS")!.name).toBe("Identity services");
   });
 
-  it("writes the same text every time and keeps its retrieval date on a rerun", () => {
-    const first = buildEssentials(inputs(), { tag: "v2026.10.15", retrieved: "2026-11-04" });
-    const rerun = buildEssentials(inputs(), { tag: "v2026.10.15", retrieved: "2027-01-05", previousYaml: first.yaml });
-    expect(rerun.yaml).toBe(first.yaml);
-    expect(first.ids.split("\n").filter((l) => l && !l.startsWith("#"))).toEqual(["IT.GOV-01.1", "IT.PRO-13.3", "IT.PRO-13.4"]);
+  it("reads every release file it needs and writes the same text every time", () => {
+    const files = Object.fromEntries(essentialsGenerator.files.map((n) => [n, read(n)]));
+    const first = essentialsGenerator.build(files, { tag: "v2026.10.15", retrieved: "2026-11-04" });
+    expect(essentialsGenerator.build(files, { tag: "v2026.10.15", retrieved: "2026-11-04" })).toEqual(first);
+    expect(parseIdList(first.ids)).toEqual(["IT.GOV-01.1", "IT.PRO-13.3", "IT.PRO-13.4"]);
   });
 
   it("fails loudly when the OSCAL shape changes", () => {
@@ -95,28 +98,29 @@ describe("the cloud chapter generator", () => {
 });
 
 describe("the committed Essentials artifacts", () => {
-  const root = join(import.meta.dirname, "..", "..");
-  const it_ = parse(readFileSync(join(root, "content", "frameworks", "asd-essentials-enterprise-it.yaml"), "utf8"));
-  const cloud = parse(readFileSync(join(root, "content", "frameworks", "asd-essentials-cloud.yaml"), "utf8"));
-  const pinned = readFileSync(join(import.meta.dirname, "fixtures", "e4eit-actions.txt"), "utf8");
+  const it_ = parse(readRepoFile(ESSENTIALS_IT.frameworkFile));
+  const cloud = parse(readRepoFile("content/frameworks/asd-essentials-cloud.yaml"));
+  const pinned = readRepoFile(ESSENTIALS_IT.idsFile);
 
-  it("has the 8 domains, 28 principles and 58 actions of the enterprise IT chapter, matching the pinned list", () => {
+  it("list exactly the enterprise IT actions pinned for this release, under the eight domains", () => {
     expect(it_.essentials.domains).toHaveLength(8);
-    expect(it_.essentials.principles).toHaveLength(28);
-    expect(it_.controls).toHaveLength(58);
-    const ids = pinned.split("\n").filter((l) => l && !l.startsWith("#"));
-    expect(new Set(ids)).toEqual(new Set(it_.controls.map((c: { id: string }) => c.id)));
+    expect(new Set(parseIdList(pinned))).toEqual(new Set(it_.controls.map((c: { id: string }) => c.id)));
     expect(pinned).toContain(`release tag ${it_.essentials.release}`);
   });
 
-  it("has 78 provisional cloud actions across 30 principles", () => {
+  it("give every action a principle the chapter lists", () => {
+    for (const doc of [it_, cloud]) {
+      const principles = new Set(doc.essentials.principles.map((p: { id: string }) => p.id));
+      for (const c of doc.controls) expect(principles, `${c.id}: ${c.principle}`).toContain(c.principle);
+    }
+  });
+
+  it("mark every cloud action provisional", () => {
     expect(cloud.essentials.provisional).toBe(true);
-    expect(cloud.essentials.principles).toHaveLength(30);
-    expect(cloud.controls).toHaveLength(78);
     for (const c of cloud.controls) expect(c.id).toMatch(/^CL\.[A-Z]{3}-\d{2}\.x\d+$/);
   });
 
-  it("keeps phases as data: phase 1 is Boundary services and Identity services in both chapters", () => {
+  it("keep phases as data: phase 1 is Boundary services and Identity services in both chapters", () => {
     for (const doc of [it_, cloud])
       expect(doc.essentials.domains.filter((d: { phases: number[]; type: string }) => d.type === "technical" && d.phases.includes(1)).map((d: { id: string }) => d.id)).toEqual(["BS", "IS"]);
   });

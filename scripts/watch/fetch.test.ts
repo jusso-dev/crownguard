@@ -1,8 +1,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createFetcher, PLAIN_USER_AGENT } from "./fetch";
-import { profileFor } from "./hosts";
+import { createFetcher } from "./fetch";
+import { PLAIN_USER_AGENT, profileFor } from "./hosts";
 
 let server: Server;
 let base = "";

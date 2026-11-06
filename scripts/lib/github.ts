@@ -1,4 +1,26 @@
-import { isTag } from "./pins";
+import { ISO_DATE } from "./dates";
+import { isTag } from "./versions";
+
+export const API_BASE = "https://api.github.com";
+const RAW_BASE = "https://raw.githubusercontent.com";
+
+const REPO = /^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/;
+export const isRepo = (repo: string): boolean => REPO.test(repo);
+
+/** A repo path with each segment URL-encoded and the slashes kept. */
+const encodePath = (path: string): string => path.split("/").map(encodeURIComponent).join("/");
+
+export const rawUrl = (repo: string, ref: string, path: string): string => `${RAW_BASE}/${repo}/${encodePath(ref)}/${encodePath(path)}`;
+
+const releaseUrl = (repo: string, tag: string): string => `https://github.com/${repo}/releases/tag/${tag}`;
+
+/** Headers for api.github.com. Without a token the API allows 60 requests an hour. */
+export const apiHeaders = (userAgent: string, token?: string): Record<string, string> => ({
+  accept: "application/vnd.github+json",
+  "x-github-api-version": "2022-11-28",
+  "user-agent": userAgent,
+  ...(token ? { authorization: `Bearer ${token}` } : {}),
+});
 
 /** A published upstream release. `url` is built from the repo and tag, never taken from the API response. */
 export interface Release {
@@ -8,13 +30,16 @@ export interface Release {
   url: string;
 }
 
-export interface TreeEntry {
+interface TreeEntry {
   path: string;
   type: string;
 }
 
-/** The few GitHub reads the updaters need. Unlike the source watch client, every miss throws: a half-read release must not become a commit. */
-export interface GuidanceGitHub {
+/**
+ * The GitHub reads that regenerate pinned guidance from upstream releases (`pnpm guidance:update`, `pnpm ism:build`).
+ * Unlike the source watch client, every miss throws: a half-read release must not become a commit.
+ */
+export interface ReleaseGitHub {
   /** The repo's latest release (GitHub skips drafts and pre-releases). */
   latestRelease(repo: string): Promise<Release>;
   /** Entries of one directory at a ref. */
@@ -25,33 +50,21 @@ export interface GuidanceGitHub {
   raw(repo: string, ref: string, path: string): Promise<string>;
 }
 
-export interface GuidanceGitHubOptions {
-  /** Token for api.github.com (GITHUB_TOKEN in Actions). Without one the API allows 60 requests an hour, which is enough. */
-  token?: string;
-  fetchImpl?: typeof fetch;
-  apiBase?: string;
-  rawBase?: string;
-}
-
-const REPO = /^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/;
 const REF = /^[A-Za-z0-9._-]+$/;
 const SHA = /^[0-9a-f]{40}$/;
+const USER_AGENT = "crownguard-guidance-update";
 
-const encodePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
-
-export const releaseUrl = (repo: string, tag: string) => `https://github.com/${repo}/releases/tag/${tag}`;
-
-export function createGuidanceGitHub(opts: GuidanceGitHubOptions = {}): GuidanceGitHub {
-  const { token, fetchImpl = fetch, apiBase = "https://api.github.com", rawBase = "https://raw.githubusercontent.com" } = opts;
+export function createReleaseGitHub(opts: { token?: string; fetchImpl?: typeof fetch } = {}): ReleaseGitHub {
+  const { token, fetchImpl = fetch } = opts;
 
   const check = (repo: string, ref?: string, path?: string) => {
-    if (!REPO.test(repo)) throw new Error(`not a GitHub repo: ${repo}`);
+    if (!isRepo(repo)) throw new Error(`not a GitHub repo: ${repo}`);
     if (ref !== undefined && !REF.test(ref)) throw new Error(`not a ref: ${ref}`);
     if (path !== undefined && (path.includes("..") || path.startsWith("/"))) throw new Error(`not a repo path: ${path}`);
   };
 
   async function get(url: string, headers: Record<string, string>): Promise<Response> {
-    const res = await fetchImpl(url, { signal: AbortSignal.timeout(60_000), headers: { "user-agent": "crownguard-guidance-update", ...headers } });
+    const res = await fetchImpl(url, { signal: AbortSignal.timeout(60_000), headers });
     if (!res.ok) {
       await res.body?.cancel().catch(() => {});
       throw new Error(`${url}: ${res.status} ${res.statusText}`);
@@ -59,14 +72,7 @@ export function createGuidanceGitHub(opts: GuidanceGitHubOptions = {}): Guidance
     return res;
   }
 
-  async function api<T>(path: string): Promise<T> {
-    const res = await get(`${apiBase}${path}`, {
-      accept: "application/vnd.github+json",
-      "x-github-api-version": "2022-11-28",
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-    });
-    return (await res.json()) as T;
-  }
+  const api = async <T>(path: string): Promise<T> => (await (await get(`${API_BASE}${path}`, apiHeaders(USER_AGENT, token))).json()) as T;
 
   return {
     async latestRelease(repo) {
@@ -75,7 +81,7 @@ export function createGuidanceGitHub(opts: GuidanceGitHubOptions = {}): Guidance
       const tag = typeof r.tag_name === "string" ? r.tag_name : "";
       if (!isTag(tag)) throw new Error(`${repo}: latest release tag ${JSON.stringify(r.tag_name)} is not a version tag`);
       const date = typeof r.published_at === "string" ? r.published_at.slice(0, 10) : "";
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`${repo}: release ${tag} has no publication date`);
+      if (!ISO_DATE.test(date)) throw new Error(`${repo}: release ${tag} has no publication date`);
       return { tag, date, url: releaseUrl(repo, tag) };
     },
     async dir(repo, path, ref) {
@@ -93,8 +99,7 @@ export function createGuidanceGitHub(opts: GuidanceGitHubOptions = {}): Guidance
     },
     async raw(repo, ref, path) {
       check(repo, ref, path);
-      const res = await get(`${rawBase}/${repo}/${encodeURIComponent(ref)}/${encodePath(path)}`, {});
-      return res.text();
+      return (await get(rawUrl(repo, ref, path), { "user-agent": USER_AGENT })).text();
     },
   };
 }

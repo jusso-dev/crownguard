@@ -1,6 +1,10 @@
 import { DOMParser } from "linkedom";
+import { readRepoFile } from "../lib/repo";
+import { ESSENTIALS_IT, ISM, pinnedRelease, PROWLER, SCUBAGOGGLES, type OscalUpstream, type ScannerUpstream } from "../lib/upstreams";
+import { currentHost } from "./hosts";
 import type { FeedMemo, Fetcher, Finding, WatchState } from "./types";
-import { collapse, isHttpUrl, normalizeUrl, shortHash, truncate } from "./util";
+import { withoutQuery } from "./learn";
+import { collapse, isHttpUrl, shortHash, truncate } from "./util";
 
 export interface FeedDef {
   id: string;
@@ -23,17 +27,17 @@ export interface FeedDef {
   excerpts?: boolean;
   /** Licence of the feed's text, shown with any quote. Quotes are only made when this is set. */
   licence?: { label: string; url: string };
-  /** When set, matching posts are reported as a mapping / catalogue review with the pinned version. */
+  /** Matching posts are reported as a mapping / catalogue review naming the release the repo is on and where it is recorded. */
   reviewMapping?: { file: string; pinned: string };
 }
 
-export interface FeedNote {
+interface FeedNote {
   type: string;
   text: string;
   links: string[];
 }
 
-export interface FeedEntry {
+interface FeedEntry {
   id: string;
   title: string;
   url: string;
@@ -54,12 +58,8 @@ function stripTags(html: string): string {
 function hrefs(html: string, base: string): string[] {
   const out = new Set<string>();
   for (const m of html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
-    try {
-      const u = new URL(m[1].replace(/&amp;/g, "&"), base);
-      if (u.protocol === "https:" || u.protocol === "http:") out.add(u.toString());
-    } catch {
-      // ignore malformed links
-    }
+    const u = URL.parse(m[1].replace(/&amp;/g, "&"), base);
+    if (u && isHttpUrl(u.toString())) out.add(u.toString());
   }
   return [...out];
 }
@@ -92,7 +92,7 @@ export function parseHtmlHistory(html: string, pageUrl: string): FeedEntry[] {
     const cells = [...tr.querySelectorAll("td")].map((td) => collapse(td.textContent ?? ""));
     if (cells.length < 2) continue;
     const [change, description, dateCell] = cells.length >= 3 ? cells : [cells[0], cells[0], cells[1]];
-    const published = parseHistoryDate(dateCell);
+    const published = iso(dateCell);
     if (!published) continue;
     const title = change || truncate(description, 120);
     const summary = description || change;
@@ -111,12 +111,6 @@ export function parseHtmlHistory(html: string, pageUrl: string): FeedEntry[] {
   return entries.sort((a, b) => b.published.localeCompare(a.published));
 }
 
-/** Best-effort ISO timestamp from a document-history date cell ("August 20, 2026"). */
-function parseHistoryDate(raw: string): string | undefined {
-  const t = Date.parse(raw);
-  if (!Number.isNaN(t)) return new Date(t).toISOString();
-  return iso(raw);
-}
 
 /** Entries of an Atom or RSS 2.0 feed, newest first. Entries without a parseable date or http(s) link are dropped. */
 export function parseFeed(xml: string): FeedEntry[] {
@@ -160,19 +154,15 @@ export function parseFeed(xml: string): FeedEntry[] {
   return entries.sort((a, b) => b.published.localeCompare(a.published));
 }
 
-/** Google Cloud links in release notes still use cloud.google.com; cited pages live on docs.cloud.google.com. */
+/** A link in a feed as a cited-page key: on the host the site lives on now, without its query. */
 function citedKey(url: string): string {
-  try {
-    const u = new URL(url);
-    if (u.hostname === "cloud.google.com") u.hostname = "docs.cloud.google.com";
-    u.search = "";
-    return normalizeUrl(u.toString());
-  } catch {
-    return url;
-  }
+  const u = URL.parse(url);
+  if (!u) return url;
+  u.hostname = currentHost(u.hostname);
+  return withoutQuery(u.toString());
 }
 
-export interface FeedRun {
+interface FeedRun {
   findings: Finding[];
   /** Proposed cursors: the baseline's, advanced only past entries this run reports. */
   feeds: WatchState["feeds"];
@@ -364,6 +354,12 @@ const releaseNotes = (slug: string, name: string): FeedDef => ({
   max: 5,
 });
 
+/** The GitHub releases feed of an upstream crownguard pins, reporting the release the committed files are on. */
+function releaseFeed(id: string, name: string, upstream: OscalUpstream | ScannerUpstream, include: RegExp[]): FeedDef {
+  const { file, tag } = pinnedRelease(upstream, readRepoFile);
+  return { id, name, url: `https://github.com/${upstream.repo}/releases.atom`, kind: "posts", include, reviewMapping: { file, pinned: tag }, max: 3 };
+}
+
 /**
  * Announcement feeds checked for new guidance. Google Workspace Updates is filtered to security and admin topics, or
  * posts that link to a page we cite. Google Cloud release notes are filtered to deprecations, breaking changes,
@@ -372,7 +368,7 @@ const releaseNotes = (slug: string, name: string): FeedDef => ({
  * October 2026, and the Microsoft 365 roadmap is a 1,900-item snapshot of mostly future features, so they aren't used;
  * new Microsoft Learn pages are found through the tables of contents instead.)
  */
-export const FEEDS: FeedDef[] = [
+export const watchedFeeds = (): FeedDef[] => [
   {
     id: "workspace-updates",
     name: "Google Workspace Updates",
@@ -415,46 +411,13 @@ export const FEEDS: FeedDef[] = [
     include: [/\b(?:Essential Eight|Essentials|maturity model|ISM|Information Security Manual)\b/i],
     max: 5,
   },
-  {
-    // A new ISM release: regenerate content/frameworks/ism.yaml (docs/content-guide.md).
-    id: "ism-oscal-releases",
-    name: "ISM OSCAL releases",
-    url: "https://github.com/AustralianCyberSecurityCentre/ism-oscal/releases.atom",
-    kind: "posts",
-    include: [/^v\d{4}\.\d{2}/],
-    reviewMapping: { file: "content/frameworks/ism.yaml", pinned: "v2026.09.4" },
-    max: 3,
-  },
-  {
-    // A new Essentials for enterprise IT release: regenerate content/frameworks/asd-essentials-enterprise-it.yaml.
-    id: "e4eit-oscal-releases",
-    name: "Essentials for enterprise IT OSCAL releases",
-    url: "https://github.com/AustralianCyberSecurityCentre/e4eit-oscal/releases.atom",
-    kind: "posts",
-    include: [/^v\d{4}\.\d{2}/],
-    reviewMapping: { file: "content/frameworks/asd-essentials-enterprise-it.yaml", pinned: "v2026.10.15" },
-    max: 3,
-  },
-  {
-    // A new Prowler release may rename checks; review content/imports/prowler-*.yaml against checkedAgainst.
-    id: "prowler-releases",
-    name: "Prowler releases",
-    url: "https://github.com/prowler-cloud/prowler/releases.atom",
-    kind: "posts",
-    include: [/^\s*Prowler\s+\d+\.\d+/i, /^\d+\.\d+\.\d+\s*$/],
-    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.47.0" },
-    max: 3,
-  },
-  {
-    // A new ScubaGoggles release may bump SCuBA policy version suffixes.
-    id: "scubagoggles-releases",
-    name: "ScubaGoggles releases",
-    url: "https://github.com/cisagov/ScubaGoggles/releases.atom",
-    kind: "posts",
-    include: [/^v?\d+\.\d+/],
-    reviewMapping: { file: "content/imports/scubagoggles.yaml", pinned: "v1.1.0" },
-    max: 3,
-  },
+  // A new release: `pnpm guidance:update` regenerates the pinned files (docs/content-guide.md#guidance-update).
+  releaseFeed("ism-oscal-releases", "ISM OSCAL releases", ISM, [/^v\d{4}\.\d{2}/]),
+  releaseFeed("e4eit-oscal-releases", "Essentials for enterprise IT OSCAL releases", ESSENTIALS_IT, [/^v\d{4}\.\d{2}/]),
+  // A new Prowler release may rename checks.
+  releaseFeed("prowler-releases", "Prowler releases", PROWLER, [/^\s*Prowler\s+\d+\.\d+/i, /^\d+\.\d+\.\d+\s*$/]),
+  // A new ScubaGoggles release may bump SCuBA policy version suffixes.
+  releaseFeed("scubagoggles-releases", "ScubaGoggles releases", SCUBAGOGGLES, [/^v?\d+\.\d+/]),
   {
     // Security Hub CSPM control changes for Bedrock, AgentCore and FSBP.
     id: "aws-securityhub-doc-history",

@@ -6,30 +6,36 @@
  * workflow's propose job needs: state.json, url-updates.json, report.md and pr-body.md. In GitHub Actions it sets the
  * `actionable` and `title` step outputs that decide whether a pull request is opened.
  */
-import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { loadCatalogue } from "../../src/content/loader";
-import { readContentFiles } from "../read-content";
-import { applyUrlUpdates, readState, writeState, type UrlUpdate } from "./apply";
+import { actionsRunUrl, cliArgs, contentGuideUrl, githubToken, setOutputs } from "../lib/cli";
+import { loadContentOrExit } from "../lib/content";
+import { today } from "../lib/dates";
+import { rawUrl } from "../lib/github";
+import { readRepoFile, ROOT } from "../lib/repo";
+import { parseIdList } from "../lib/text";
+import { M365_SECURE, PROWLER, SCUBAGOGGLES } from "../lib/upstreams";
+import { readContentFiles } from "../../src/content/disk";
+import { applyUrlUpdates, readSourceFiles, readState, writeState, type UrlUpdate } from "./apply";
 import { openCache } from "./cache";
 import { createFetcher } from "./fetch";
-import { FEEDS } from "./feeds";
+import { watchedFeeds } from "./feeds";
 import { createGitHub } from "./github";
 import { profileFor } from "./hosts";
-import { parseIdList, parseM365ChecksMd, type UpstreamChecks } from "./mappings";
-import { DEFAULT_GUIDE_URL, PR_BODY_LIMIT, prTitle, renderReport, summaryLine } from "./report";
+import { parseM365ChecksMd, type UpstreamChecks } from "./mappings";
+import { PR_BODY_LIMIT, prTitle, renderReport, summaryLine } from "./report";
 import { runWatch } from "./run";
 import { triageChanges } from "./triage";
-import { runDate, stableStringify } from "./util";
+import { stableStringify } from "./util";
 
-const root = join(import.meta.dirname, "..", "..");
 const { values: args } = parseArgs({
+  args: cliArgs(),
   options: {
     state: { type: "string", default: "watch/state.json" },
     cache: { type: "string", default: ".watch-cache" },
     report: { type: "string", default: "watch-report.md" },
-    "pr-body": { type: "string" },
     out: { type: "string" },
     "dry-run": { type: "boolean", default: false },
     simulate: { type: "boolean", default: false },
@@ -41,20 +47,13 @@ const { values: args } = parseArgs({
 
 const env = process.env;
 // resolve(), not join(): the workflow passes absolute paths under $RUNNER_TEMP.
-const statePath = resolve(root, args.state!);
-const reportPath = resolve(root, args.report!);
-const runUrl = env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY && env.GITHUB_RUN_ID ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` : undefined;
-const guideUrl =
-  env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/blob/main/docs/content-guide.md#source-watch` : DEFAULT_GUIDE_URL;
+const statePath = resolve(ROOT, args.state!);
+const reportPath = resolve(ROOT, args.report!);
+const reportOpts = { runUrl: actionsRunUrl(), guideUrl: contentGuideUrl("source-watch") };
 
-const { catalogue, errors } = loadCatalogue(readContentFiles());
-if (errors.length) {
-  console.error(`content has ${errors.length} error(s); run pnpm validate:content`);
-  process.exit(1);
-}
-
-const cache = openCache(resolve(root, args.cache!));
-const github = createGitHub({ token: env.GITHUB_TOKEN || env.GH_TOKEN || undefined });
+const catalogue = loadContentOrExit();
+const cache = openCache(resolve(ROOT, args.cache!));
+const github = createGitHub({ token: githubToken() });
 const apiKey = env.ANTHROPIC_API_KEY || undefined;
 
 const baseline = readState(statePath);
@@ -68,22 +67,12 @@ const fetcher = createFetcher({
 /** Live M365 check catalogue plus the committed Prowler/Scuba pins (tests inject fixtures instead). */
 async function loadUpstreamChecks(): Promise<UpstreamChecks[]> {
   const out: UpstreamChecks[] = [];
-  const m365 = await fetcher.fetchPage("https://raw.githubusercontent.com/jusso-dev/M365-Secure/main/docs/CHECKS.md", {
+  const m365 = await fetcher.fetchPage(rawUrl(M365_SECURE.repo, M365_SECURE.ref, M365_SECURE.checksPath), {
     accept: "text/plain, text/markdown;q=0.9, */*;q=0.5",
   });
-  if (m365.outcome === "ok" && m365.body) out.push({ mappingId: "m365-secure", ids: parseM365ChecksMd(m365.body) });
-  else console.error(`m365-secure checks: ${m365.error ?? m365.outcome}`);
-  for (const [mappingId, file] of [
-    ["prowler-aws", "e2e/fixtures/prowler-checks-aws.txt"],
-    ["prowler-azure", "e2e/fixtures/prowler-checks-azure.txt"],
-    ["scubagoggles", "e2e/fixtures/scubagoggles-controls.txt"],
-  ] as const) {
-    try {
-      out.push({ mappingId, ids: parseIdList(readFileSync(join(root, file), "utf8")) });
-    } catch (e) {
-      console.error(`${mappingId} checks: ${(e as Error).message}`);
-    }
-  }
+  if (m365.outcome === "ok" && m365.body) out.push({ mappingId: M365_SECURE.mapping, ids: parseM365ChecksMd(m365.body) });
+  else console.error(`${M365_SECURE.mapping} checks: ${m365.error ?? m365.outcome}`);
+  for (const { file, mapping } of [...PROWLER.lists, ...SCUBAGOGGLES.lists]) out.push({ mappingId: mapping, ids: parseIdList(readRepoFile(file)) });
   return out;
 }
 
@@ -95,12 +84,12 @@ try {
     cache,
     fetcher,
     github,
-    date: runDate(),
-    feeds: args["no-feeds"] ? [] : FEEDS,
+    date: today(),
+    feeds: args["no-feeds"] ? [] : watchedFeeds(),
     upstreamChecks: args.only ? undefined : await loadUpstreamChecks(),
     simulate: args.simulate || env.WATCH_SIMULATE === "true",
     only: args.only ? new Set(args.only.split(",").map((s) => s.trim())) : undefined,
-    triage: apiKey ? (inputs) => triageChanges(inputs, { apiKey, max: Number(env.WATCH_TRIAGE_MAX) || 8, log: console.log }) : undefined,
+    triage: apiKey ? (inputs) => triageChanges(inputs, { apiKey, log: console.log }) : undefined,
     log: args.verbose ? console.log : undefined,
   });
 } catch (e) {
@@ -113,14 +102,13 @@ if (!args["dry-run"]) {
   // `retrieved` is the night the move was first seen, so an unmerged fix doesn't change (and force-push) nightly.
   const updates = Object.entries(result.urlUpdates).map(([id, url]) => ({ id, url, retrieved: cache.firstSeen(`moved:${id}:${url}`, result.date) }));
   if (updates.length) {
-    const dir = join(root, "content", "sources");
-    const files = Object.fromEntries(readdirSync(dir).filter((f) => f.endsWith(".yaml")).map((f) => [join(dir, f), readFileSync(join(dir, f), "utf8")]));
+    const files = readSourceFiles();
     for (const update of updates) {
       const f = result.findings.find((x) => x.kind === "moved" && x.sourceId === update.id);
       try {
         const edited = applyUrlUpdates(files, [update]);
         // Backstop: the edited content must still validate (for example, no two sources on one page).
-        const check = loadCatalogue({ ...readContentFiles(), ...Object.fromEntries(Object.entries({ ...files, ...edited }).map(([p, t]) => [relative(root, p), t])) });
+        const check = loadCatalogue({ ...readContentFiles(), ...Object.fromEntries(Object.entries({ ...files, ...edited }).map(([p, t]) => [relative(ROOT, p), t])) });
         if (check.errors.length) throw new Error(check.errors[0]);
         for (const [path, text] of Object.entries(edited)) {
           files[path] = text;
@@ -141,12 +129,11 @@ if (!args["dry-run"]) {
 // Actionable means the PR would have a diff: a failed URL update can leave a move finding with nothing to commit.
 result.actionable = applied.length > 0 || stableStringify(result.state) !== stableStringify(baseline);
 
-const report = renderReport(result, { runUrl, guideUrl });
-const prBody = renderReport(result, { runUrl, guideUrl, maxChars: PR_BODY_LIMIT });
+const report = renderReport(result, reportOpts);
+const prBody = renderReport(result, { ...reportOpts, maxChars: PR_BODY_LIMIT });
 writeFileSync(reportPath, report);
-if (args["pr-body"]) writeFileSync(resolve(root, args["pr-body"]), prBody);
 if (args.out) {
-  const out = resolve(root, args.out);
+  const out = resolve(ROOT, args.out);
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "state.json"), stableStringify(result.state));
   writeFileSync(join(out, "url-updates.json"), stableStringify(applied));
@@ -154,12 +141,10 @@ if (args.out) {
   writeFileSync(join(out, "pr-body.md"), prBody);
 }
 if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, report.slice(0, 1_000_000));
-if (env.GITHUB_OUTPUT) {
-  // Only values built from counts and dates reach step outputs; the title is checked against that shape.
-  const title = prTitle(result);
-  if (!/^[\w ,:()[\]-]+$/.test(title)) throw new Error(`unexpected PR title: ${title}`);
-  appendFileSync(env.GITHUB_OUTPUT, `actionable=${result.actionable}\ntitle=${title}\n`);
-}
+// Only values built from counts and dates reach step outputs; the title is checked against that shape.
+const title = prTitle(result);
+if (!/^[\w ,:()[\]-]+$/.test(title)) throw new Error(`unexpected PR title: ${title}`);
+setOutputs({ actionable: result.actionable, title });
 // Dry and simulated runs don't advance failure counters or first-seen dates.
 if (!args["dry-run"] && !result.simulated) cache.save();
 

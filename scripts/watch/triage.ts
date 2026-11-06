@@ -37,7 +37,7 @@ export interface TriageInput {
   diffText?: string;
 }
 
-export interface TriageOptions {
+interface TriageOptions {
   apiKey?: string;
   /** Most pages to triage in one run. */
   max?: number;
@@ -110,6 +110,7 @@ export async function triageChanges(inputs: TriageInput[], opts: TriageOptions =
           const r = TriageSchema.safeParse(JSON.parse(text));
           if (r.success) parsed = r.data;
         } catch {
+          // Not JSON: reported as no usable answer, just below.
           parsed = undefined;
         }
         if (response.stop_reason !== "end_turn" || !parsed) {

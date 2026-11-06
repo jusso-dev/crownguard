@@ -3,18 +3,17 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import { buildIsm } from "../ism/build";
-import { oscalCatalogFileSchema, type OscalCatalogFile } from "../ism/oscal";
-import { createGuidanceGitHub, type GuidanceGitHub } from "./github";
-import { oscalUpdater } from "./oscal";
-import { feedPin, headerTag, sourceReleaseTag } from "./pins";
+import { ismGenerator } from "../ism/build";
+import { createReleaseGitHub, type ReleaseGitHub } from "../lib/github";
+import { headerTag, sourceReleaseTag } from "../lib/pins";
+import { readRepoFile as repo, repoPath } from "../lib/repo";
+import { ESSENTIALS_IT, ISM } from "../lib/upstreams";
 import { UPDATERS } from "./registry";
 import { currentVersion, renderPrBody, runUpdates } from "./run";
 import type { GuidanceUpdater, Workspace } from "./types";
 
-const root = join(import.meta.dirname, "..", "..");
-const repo = (path: string) => readFileSync(join(root, path), "utf8");
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, "fixtures", name), "utf8");
+const updater = (id: string) => UPDATERS.find((u) => u.id === id)!;
 
 const workspace = (files: Record<string, string>, citing: Record<string, string[]> = {}): Workspace => ({
   read: (p) => {
@@ -25,7 +24,7 @@ const workspace = (files: Record<string, string>, citing: Record<string, string[
   today: "2026-11-04",
 });
 
-const offline = (latest: Record<string, string>, raw: Record<string, string> = {}): GuidanceGitHub => ({
+const offline = (latest: Record<string, string>, raw: Record<string, string> = {}): ReleaseGitHub => ({
   latestRelease: async (r) => {
     if (!latest[r]) throw new Error(`${r}: 503 Service Unavailable`);
     return { tag: latest[r], date: "2026-10-29", url: `https://github.com/${r}/releases/tag/${latest[r]}` };
@@ -79,7 +78,7 @@ describe("a guidance run", () => {
   });
 
   it("starts from the oldest pin, so a half-landed bump is finished", () => {
-    expect(currentVersion({ list: "5.47.0", mapping: "5.44.0", feed: "5.47.0" })).toBe("5.44.0");
+    expect(currentVersion({ list: "5.47.0", mapping: "5.44.0" })).toBe("5.44.0");
   });
 
   it("reports an upstream it can't read without touching anything, and carries on", async () => {
@@ -125,79 +124,52 @@ describe("the pull request body", () => {
   });
 });
 
-describe("the OSCAL updater", () => {
+describe("the ISM updater", () => {
+  const ism = updater("ism");
   const sampleText = fixture("../../ism/fixtures/oscal-sample.json");
-  const parseSample = (t: string): OscalCatalogFile => oscalCatalogFileSchema.parse(JSON.parse(t));
-  const repoName = "AustralianCyberSecurityCentre/ism-oscal";
-  const ism = oscalUpdater({
-    id: "ism",
-    label: "ISM",
-    name: "ISM",
-    repo: repoName,
-    files: ["ISM_catalog.json"],
-    framework: "ism",
-    frameworkFile: "content/frameworks/ism.yaml",
-    idsFile: "scripts/ism/fixtures/ism-controls.txt",
-    feed: "ism-oscal-releases",
-    source: { file: "content/sources/standards.yaml", id: "asd-ism-oscal" },
-    build: (f, o) => buildIsm(parseSample(f["ISM_catalog.json"]), o),
-  });
   // The committed state at v2026.09.4, built from the sample plus one control the next release drops.
   const withExtra = JSON.parse(sampleText);
   withExtra.catalog.groups[0].groups[0].groups[0].controls.push({ id: "ism-0001", class: "ISM-control", parts: [{ name: "statement", prose: "An old control." }] });
-  const old = buildIsm(parseSample(JSON.stringify(withExtra)), { tag: "v2026.09.4", retrieved: "2026-10-10" });
-  const files = {
-    "content/frameworks/ism.yaml": old.yaml,
-    "scripts/ism/fixtures/ism-controls.txt": old.ids,
-    "scripts/watch/feeds.ts": repo("scripts/watch/feeds.ts"),
-    "content/sources/standards.yaml": repo("content/sources/standards.yaml"),
-  };
+  const old = ismGenerator.build({ "ISM_catalog.json": JSON.stringify(withExtra) }, { tag: "v2026.09.4", retrieved: "2026-10-10" });
+  const files = { [ISM.frameworkFile]: old.yaml, [ISM.idsFile]: old.ids, [ISM.source!.file]: repo(ISM.source!.file) };
+  const release = (catalog: string) => offline({ [ISM.repo]: "v2026.12.1" }, { [`${ISM.repo}@v2026.12.1:ISM_catalog.json`]: catalog });
 
-  it("moves the generated files, the feed pin and the cited release together", async () => {
-    const gh = offline({ [repoName]: "v2026.12.1" }, { [`${repoName}@v2026.12.1:ISM_catalog.json`]: sampleText });
-    const r = await runUpdates({ updaters: [ism], ws: workspace(files, { "ISM-0001": ["GO-ID-002"], "ISM-1504": ["MS-ID-001"] }), gh });
+  it("moves the generated files and the cited release together", async () => {
+    const r = await runUpdates({ updaters: [ism], ws: workspace(files, { "ISM-0001": ["GO-ID-002"], "ISM-1504": ["MS-ID-001"] }), gh: release(sampleText) });
     expect(r.updates[0]).toMatchObject({ status: "updated", from: "v2026.09.4" });
-    expect(headerTag(r.files["content/frameworks/ism.yaml"])).toBe("v2026.12.1");
-    expect(headerTag(r.files["scripts/ism/fixtures/ism-controls.txt"])).toBe("v2026.12.1");
-    expect(parse(r.files["content/frameworks/ism.yaml"]).name).toContain("December 2026");
-    expect(feedPin(r.files["scripts/watch/feeds.ts"], "ism-oscal-releases")).toBe("v2026.12.1");
-    expect(sourceReleaseTag(r.files["content/sources/standards.yaml"], "asd-ism-oscal")).toBe("v2026.12.1");
+    expect(headerTag(r.files[ISM.frameworkFile])).toBe("v2026.12.1");
+    expect(headerTag(r.files[ISM.idsFile])).toBe("v2026.12.1");
+    expect(parse(r.files[ISM.frameworkFile]).name).toContain("December 2026");
+    expect(sourceReleaseTag(r.files[ISM.source!.file], ISM.source!.id)).toBe("v2026.12.1");
     // Only the question citing a control the release drops is listed; ISM controls the release keeps are fine.
-    expect(r.updates[0].review).toEqual([{ id: "ISM-0001", file: "content/frameworks/ism.yaml", questions: ["GO-ID-002"], reason: "gone from the catalog" }]);
+    expect(r.updates[0].review).toEqual([{ id: "ISM-0001", file: ISM.frameworkFile, questions: ["GO-ID-002"], reason: "gone from the catalog" }]);
   });
 
   it("stops on a catalog whose shape changed", async () => {
     const odd = JSON.parse(sampleText);
     odd.catalog.groups[0].brandNewKey = true;
-    const gh = offline({ [repoName]: "v2026.12.1" }, { [`${repoName}@v2026.12.1:ISM_catalog.json`]: JSON.stringify(odd) });
-    const r = await runUpdates({ updaters: UPDATERS.filter((u) => u.id === "ism"), ws: workspace(files), gh });
+    const r = await runUpdates({ updaters: [ism], ws: workspace(files), gh: release(JSON.stringify(odd)) });
     expect(r.updates[0]).toMatchObject({ status: "error", error: expect.stringMatching(/expected OSCAL shape/) });
     expect(r.files).toEqual({});
   });
 });
 
 describe("the Essentials updater", () => {
-  const essentials = UPDATERS.find((u) => u.id === "essentials")!;
-  const repoName = "AustralianCyberSecurityCentre/e4eit-oscal";
-  const sampleDir = join(root, "scripts", "essentials", "fixtures", "sample");
+  const essentials = updater("essentials");
+  const sampleDir = repoPath("scripts", "essentials", "fixtures", "sample");
   const names = readdirSync(sampleDir).filter((n) => n.endsWith(".json"));
-  const raw = Object.fromEntries(names.map((n) => [`${repoName}@v2027.01.20:${n}`, readFileSync(join(sampleDir, n), "utf8")]));
-  const files = {
-    "content/frameworks/asd-essentials-enterprise-it.yaml": repo("content/frameworks/asd-essentials-enterprise-it.yaml"),
-    "scripts/essentials/fixtures/e4eit-actions.txt": repo("scripts/essentials/fixtures/e4eit-actions.txt"),
-    "scripts/watch/feeds.ts": repo("scripts/watch/feeds.ts"),
-  };
+  const raw = Object.fromEntries(names.map((n) => [`${ESSENTIALS_IT.repo}@v2099.01.20:${n}`, readFileSync(join(sampleDir, n), "utf8")]));
+  const files = { [ESSENTIALS_IT.frameworkFile]: repo(ESSENTIALS_IT.frameworkFile), [ESSENTIALS_IT.idsFile]: repo(ESSENTIALS_IT.idsFile) };
 
-  it("reads every release file it needs and moves the chapter, its pinned list and the feed pin together", async () => {
-    expect(names).toHaveLength(10);
-    const gh = offline({ [repoName]: "v2027.01.20" }, raw);
+  it("reads every release file it needs and moves the chapter and its pinned list together", async () => {
+    // The gh stub throws on any file the generator asks for that the sample doesn't have.
+    const gh = offline({ [ESSENTIALS_IT.repo]: "v2099.01.20" }, raw);
     const r = await runUpdates({ updaters: [essentials], ws: workspace(files, { "IT.PRO-13.4": ["MS-ID-001"], "IT.PRO-13.5": ["MS-ID-002"] }), gh });
-    expect(r.updates[0]).toMatchObject({ status: "updated", from: "v2026.10.15" });
-    expect(headerTag(r.files["content/frameworks/asd-essentials-enterprise-it.yaml"])).toBe("v2027.01.20");
-    expect(r.files["scripts/essentials/fixtures/e4eit-actions.txt"]).toContain("release tag v2027.01.20");
-    expect(feedPin(r.files["scripts/watch/feeds.ts"], "e4eit-oscal-releases")).toBe("v2027.01.20");
+    expect(r.updates[0]).toMatchObject({ status: "updated", from: headerTag(files[ESSENTIALS_IT.frameworkFile]) });
+    expect(headerTag(r.files[ESSENTIALS_IT.frameworkFile])).toBe("v2099.01.20");
+    expect(headerTag(r.files[ESSENTIALS_IT.idsFile])).toBe("v2099.01.20");
     // The sample keeps IT.PRO-13.4 and drops IT.PRO-13.5, so only the question tagged with the dropped action is listed.
-    expect(r.updates[0].review).toEqual([{ id: "IT.PRO-13.5", file: "content/frameworks/asd-essentials-enterprise-it.yaml", questions: ["MS-ID-002"], reason: "gone from the catalog" }]);
+    expect(r.updates[0].review).toEqual([{ id: "IT.PRO-13.5", file: ESSENTIALS_IT.frameworkFile, questions: ["MS-ID-002"], reason: "gone from the catalog" }]);
   });
 });
 
@@ -207,7 +179,7 @@ describe("the GitHub client", () => {
 
   it("reads the latest release and builds the link itself", async () => {
     const seen: { url: string; auth?: string }[] = [];
-    const gh = createGuidanceGitHub({
+    const gh = createReleaseGitHub({
       token: "t0ken",
       fetchImpl: async (url, init) => {
         seen.push({ url: String(url), auth: (init?.headers as Record<string, string>).authorization });
@@ -219,7 +191,7 @@ describe("the GitHub client", () => {
   });
 
   it("throws on anything it can't trust, instead of returning a partial answer", async () => {
-    const gh = (body: string, status = 200) => createGuidanceGitHub({ fetchImpl: async () => respond(body, status) });
+    const gh = (body: string, status = 200) => createReleaseGitHub({ fetchImpl: async () => respond(body, status) });
     await expect(gh(JSON.stringify({ tag_name: "nightly", published_at: "2026-10-29T00:00:00Z" })).latestRelease("a/b")).rejects.toThrow(/not a version tag/);
     await expect(gh("{}", 404).latestRelease("a/b")).rejects.toThrow(/404/);
     await expect(gh(JSON.stringify({ truncated: true, tree: [] })).tree("a/b", "0".repeat(40))).rejects.toThrow(/truncated/);
