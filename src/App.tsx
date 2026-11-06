@@ -7,7 +7,7 @@ import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
 import { decrypt, isEncryptedEnvelope } from "./format/crypto";
 import { parseAssessment } from "./format/parse";
-import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY, storageWriteFailed } from "./wizard/persistence";
+import { isEphemeralMode, rehydrateNotices, storageWriteFailed } from "./wizard/persistence";
 import {
   EphemeralToggle,
   LegacyOriginBanner,
@@ -18,9 +18,10 @@ import {
 } from "./wizard/PrivacyControls";
 import { toEncryptedSaveFile, toSaveFile } from "./format/saveFile";
 import { setSessionPassphrase, hasLockedEnvelope } from "./wizard/sessionSecrets";
-import { currentStep, hasProgress, modeOf, stepsFor, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
+import { hasProgress, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
+import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/flow";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
-import { forgetLockedProgress } from "./wizard/unlock";
+import { forgetProgress } from "./wizard/unlock";
 import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
 import { isDesktop, platform, type OpenedFile } from "./platform";
 import { OrgStep } from "./wizard/steps/OrgStep";
@@ -41,10 +42,17 @@ const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./p
 const THIS = isDesktop ? "this device" : "this browser";
 const HERE = isDesktop ? `on ${THIS}` : `in ${THIS}`;
 
-// One view per entry in each step list (wizard/store.ts), in the same order.
-const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
-const aiViews = [OrgStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
-const viewsFor = (mode: Mode) => (mode === "ai-register" ? aiViews : views);
+const views: Record<StepId, () => React.JSX.Element | null> = {
+  org: OrgStep,
+  environment: EnvironmentStep,
+  jewels: JewelsStep,
+  controls: ControlsStep,
+  soc: SocStep,
+  "ai-register": AiRegisterStep,
+  review: ReviewStep,
+  branding: BrandingStep,
+  report: ReportStep,
+};
 
 const saveFileName = (a: Assessment) =>
   modeOf(a) === "ai-register" ? `${slug(a.org.name)}-ai-register.crownguard.json` : `${slug(a.org.name)}.crownguard.json`;
@@ -337,7 +345,7 @@ function noticeFromRehydrate(): Notice | undefined {
 }
 
 export function App() {
-  const { assessment, setStep, load, reset } = useStore();
+  const { assessment, setStep, load } = useStore();
   const step = useStep();
   const reachable = useReachable();
   const mode = modeOf(assessment);
@@ -357,11 +365,11 @@ export function App() {
   /** The encrypted file waiting for its passphrase, so a later save can go back to it. */
   const pendingFile = useRef<OpenedFile | undefined>(undefined);
   const readOnly = useStore((s) => s.readOnly);
-  const View = viewsFor(mode)[step] ?? OrgStep;
+  const View = views[stepsOf(mode)[step]];
   // Opening a saved assessment (or resuming) preloads the platforms it uses.
   useEnsurePlatforms(assessment.platforms);
 
-  useDocumentTitle(screen, steps[step] ?? "Organisation", assessment.org.name);
+  useDocumentTitle(screen, steps[step], assessment.org.name);
 
   // Focused elements scroll clear of the sticky header (WCAG 2.2 SC 2.4.11): the scroll margin on content (see
   // index.css) matches the header's height, including when it wraps on a narrow screen.
@@ -570,40 +578,30 @@ export function App() {
     }
   }
 
+  /** Forget the assessment, its passphrase and the file it came from, then show `next`. */
+  function closeAssessment(next: "start" | "wizard") {
+    forgetProgress();
+    saver.reset();
+    setFileSave(undefined);
+    setLocked(false);
+    setScreen(next);
+    setNotice(undefined);
+  }
+
   function startNew() {
-    if (!hasProgress(assessment) || window.confirm(`Start a new assessment? The current one will be removed from ${THIS}. Choose Cancel, then Save file, if you want to keep it.`)) {
-      reset();
-      dropProgress(STORAGE_KEY);
-      setSessionPassphrase(null);
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("start");
-      setNotice(undefined);
-    }
+    if (!hasProgress(assessment) || window.confirm(`Start a new assessment? The current one will be removed from ${THIS}. Choose Cancel, then Save file, if you want to keep it.`)) closeAssessment("start");
   }
 
   /** The deep link on a resumed assessment: start the standalone register only after the user confirms it. */
   function startLinkedRegister() {
     if (window.confirm(`Start a fresh AI use-case register? The assessment saved in ${THIS} will be removed. Choose Cancel, then Save file, if you want to keep it.`)) {
+      closeAssessment("wizard");
       startAssessment("ai-register");
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("wizard");
-      setNotice(undefined);
     }
   }
 
   function onClear() {
-    if (window.confirm(`Remove this assessment from ${THIS}? Use Save file first if you want to keep it.`)) {
-      reset();
-      dropProgress(STORAGE_KEY);
-      setSessionPassphrase(null);
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("start");
-      setNotice(undefined);
-      setLocked(false);
-    }
+    if (window.confirm(`Remove this assessment from ${THIS}? Use Save file first if you want to keep it.`)) closeAssessment("start");
   }
 
   /** The platform's file picker: a native dialog on desktop, the page's hidden file input on the web. */
@@ -646,12 +644,7 @@ export function App() {
               setScreen("resume");
               setNotice(undefined);
             }}
-            onForget={() => {
-              forgetLockedProgress();
-              setLocked(false);
-              setScreen("start");
-              setNotice(undefined);
-            }}
+            onForget={() => closeAssessment("start")}
           />
         </div>
       </div>

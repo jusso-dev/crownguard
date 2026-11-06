@@ -5,7 +5,8 @@ import { essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../format/vocab";
-import { modeOf, stepsFor, useStore } from "../store";
+import { useStore } from "../store";
+import { modeOf, stepIndex } from "../flow";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
 import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { EssentialsCard } from "../EssentialsOption";
@@ -45,7 +46,7 @@ export function ReviewStep() {
             {unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps
             {naWithoutReason > 0 && ` (including ${naWithoutReason} N/A without a reason)`}.
           </span>
-          <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(3)}>Go back to answer them</button>
+          <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(stepIndex("full", "controls"))}>Go back to answer them</button>
         </div>
       )}
 
@@ -150,7 +151,7 @@ function SocCard() {
     <Card className="mt-4" data-testid="soc-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold">SOC maturity (indicative)</h2>
-        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(4)}>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("full", "soc"))}>
           Edit SOC answers
         </button>
       </div>
@@ -193,7 +194,7 @@ function AiRegisterCard() {
     <Card className="mt-4" data-testid="ai-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold">AI use-case register</h2>
-        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(5)}>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("full", "ai-register"))}>
           Edit AI register
         </button>
       </div>
@@ -232,7 +233,6 @@ function AiRegisterReview() {
   const setStep = useStore((s) => s.setStep);
   const module = catalogue.aiRegister;
   const summary = module ? aiRegisterSummary(catalogue, assessment) : undefined;
-  const registerStep = stepsFor("ai-register").indexOf("AI register");
   return (
     <>
       <StepHeader title="Review your register">
@@ -252,7 +252,7 @@ function AiRegisterReview() {
           <Card className="mt-4" data-testid="ai-review-gaps">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-base font-semibold">Open gaps</h2>
-              <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(registerStep)}>
+              <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("ai-register", "ai-register"))}>
                 Edit the register
               </button>
             </div>

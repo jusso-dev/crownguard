@@ -5,7 +5,8 @@ import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCat
 import { buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
 import { download, requestOpenFile, slug } from "../download";
-import { modeOf, stepsFor, useStore } from "../store";
+import { useStore } from "../store";
+import { modeOf, stepIndex } from "../flow";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
 import { EssentialsPicker } from "../EssentialsOption";
 import { Button, Card, StepHeader } from "../ui";
@@ -163,7 +164,7 @@ export function ReportStep() {
             <Button
               variant="secondary"
               className="mt-3"
-              onClick={() => setMode("full", stepsFor("full").indexOf("Environment"))}
+              onClick={() => setMode("full", stepIndex("full", "environment"))}
             >
               Turn this into a full crown-jewel assessment
             </Button>

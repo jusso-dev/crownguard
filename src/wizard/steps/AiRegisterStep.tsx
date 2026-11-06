@@ -34,7 +34,8 @@ import { answerLabels, type Answer } from "../../format/vocab";
 import { NOTE_MAX, type AiUseCase } from "../../format/schema";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
-import { useStore, modeOf } from "../store";
+import { useStore } from "../store";
+import { modeOf } from "../flow";
 import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
 import { buildXlsx } from "../../lib/xlsx";
 

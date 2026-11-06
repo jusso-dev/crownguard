@@ -12,7 +12,7 @@ import { fixtureAssessment } from "./fixture";
 import { breakLongWords, registerFontsFromDisk } from "./fonts";
 import { buildAiRegisterReport, buildReport } from "./model";
 import type { Assessment } from "../format/schema";
-import { emptyAssessment } from "../wizard/store";
+import { emptyAssessment } from "../format/empty";
 
 beforeAll(() => {
   // Browser path uses asset URLs in generate.ts; Node/tests share registerFontsFromDisk.

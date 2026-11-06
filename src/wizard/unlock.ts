@@ -4,7 +4,7 @@ import { decrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
-import { migrateProgress, modeOf, clampStep, useStore } from "./store";
+import { useStore } from "./store";
 
 export type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
 
@@ -51,15 +51,12 @@ export async function unlockProgress(passphrase: string): Promise<UnlockResult> 
 
   setSessionPassphrase(passphrase);
   setLockedEnvelope(null);
-  const loaded = result.assessment;
-  const mode = modeOf(loaded);
-  const progress = migrateProgress(loaded.progress ?? { step: 0 }, mode)!;
-  useStore.getState().load({ ...loaded, progress: { ...progress, step: clampStep(progress.step, mode) } });
+  useStore.getState().load(result.assessment);
   return { ok: true, assessment: useStore.getState().assessment };
 }
 
-/** Drop encrypted progress from this browser without unlocking it. */
-export function forgetLockedProgress() {
+/** Drop the assessment kept here, encrypted or not, with its passphrase, and start blank. */
+export function forgetProgress() {
   dropProgress(STORAGE_KEY);
   setLockedEnvelope(null);
   setSessionPassphrase(null);

@@ -7,7 +7,7 @@ import { parseAssessment } from "./parse";
 import { checkedStorage, dropProgress, setStorageReadOnly, STORAGE_KEY, unreadableBackup, writeProgress } from "../wizard/persistence";
 import { toSaveFile } from "./saveFile";
 import { setSessionPassphrase } from "../wizard/sessionSecrets";
-import { emptyAssessment } from "../wizard/store";
+import { emptyAssessment } from "./empty";
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8")) as Record<string, unknown>;
 const questionIds = new Set(["MS-ID-001", "MS-ID-002"]);

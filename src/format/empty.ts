@@ -1,8 +1,5 @@
 import { SCHEMA_VERSION, type Assessment } from "./schema";
 
-/** Version of the step list. Layout 2 added "SOC maturity" after Controls; layout 3 added "AI register" after it. */
-export const STEP_LAYOUT = 3;
-
 /** A blank assessment the schema accepts: current `schemaVersion`, empty org, no platforms. */
 export const emptyAssessment = (): Assessment => {
   const now = new Date().toISOString();
@@ -16,7 +13,6 @@ export const emptyAssessment = (): Assessment => {
     answers: {},
     notes: {},
     branding: { primary: "#1f3a5f", accent: "#d97706", marking: "OFFICIAL: Sensitive", preparedBy: "", preparedFor: "" },
-    progress: { step: 0, layout: STEP_LAYOUT },
     createdAt: now,
     updatedAt: now,
   };

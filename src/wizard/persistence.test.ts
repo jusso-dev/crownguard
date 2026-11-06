@@ -15,7 +15,7 @@ import {
   writeProgress,
 } from "./persistence";
 import { setSessionPassphrase } from "./sessionSecrets";
-import { emptyAssessment } from "./store";
+import { emptyAssessment } from "../format/empty";
 
 const named = (name: string): Assessment => ({ ...emptyAssessment(), org: { ...emptyAssessment().org, name } });
 
