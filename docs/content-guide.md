@@ -135,8 +135,7 @@ Essentials domains the question's subject sits in (only ones the action lists), 
   admin access Privileged environments (PE), network edge Boundary services (BS), endpoints User devices (UD) and
   logging Visibility and response (VR) or the domain being logged.
 - `pnpm validate:content` warns when a question's ISM refs are evidence ASD lists for an action the question isn't
-  tagged with. Tag it, or record why not in `essentialsReviewed: <reason>`.
-  `pnpm exec tsx scripts/essentials-candidates.ts` lists the candidates per question.
+  tagged with, naming the candidate actions. Tag it, or record why not in `essentialsReviewed: <reason>`.
 - Never change an `e8:` tag to make an Essentials result look better, and never tag from an E8 level. Nothing in the
   Essentials results reads `e8:`.
 
