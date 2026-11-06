@@ -1,6 +1,6 @@
-import { severities, type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
+import { type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
 import { aiCriteria, aiRiskRatings, aiTechnologies } from "../content/aiOptions";
-import { activeQuestions, answerValue, effectiveAnswers, isGap, type JewelRisk } from "./risk";
+import { activeQuestions, bySeverity, confidenceOf, effectiveAnswers, gapStats, isGap, metStatus, scoreOf, type JewelRisk } from "./risk";
 import type { Answer } from "../format/vocab";
 import type { AiUseCase, Assessment, CrownJewel } from "../format/schema";
 
@@ -74,15 +74,6 @@ export function applies(q: AiQuestion, e: AiUseCase, kind: AiKind | undefined): 
   }
 }
 
-/** As on the Controls step, N/A needs a reason; without one it counts as unanswered. */
-export const aiNeedsReason = (e: AiUseCase, questionId: string) => e.answers[questionId] === "na" && !e.notes[questionId]?.trim();
-
-export function aiEffectiveAnswers(e: AiUseCase): Record<string, Answer> {
-  const out: Record<string, Answer> = {};
-  for (const [id, a] of Object.entries(e.answers)) if (!aiNeedsReason(e, id)) out[id] = a;
-  return out;
-}
-
 /** Register fields still empty. Risk ratings and the assessment date count once it's in scope; review dates once it's high risk. */
 export function missingFields(e: AiUseCase): AiField[] {
   const scoped = inScope(e) === true;
@@ -146,7 +137,7 @@ export function exposureSuggestions(catalogue: Catalogue, assessment: Assessment
     });
 }
 
-export type ThemeStatus = "Met" | "Partly met" | "Not met" | "Not applicable" | "Not asked";
+export type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
 
 export interface AiReadiness {
   entry: AiUseCase;
@@ -172,36 +163,14 @@ export interface AiReadiness {
   related: { question: Question; answer: Answer | undefined }[];
 }
 
-const themeStatus = (values: (number | null)[]): ThemeStatus => {
-  if (values.length === 0) return "Not asked";
-  const v = values.filter((x): x is number => x !== null);
-  if (!v.length) return "Not applicable";
-  if (v.every((x) => x === 1)) return "Met";
-  if (v.some((x) => x > 0)) return "Partly met";
-  return "Not met";
-};
-
-const bySeverity = (a: AiQuestion, b: AiQuestion) => severities[b.severity] - severities[a.severity] || a.id.localeCompare(b.id);
+const themeStatus = (answers: (Answer | undefined)[]): ThemeStatus => (answers.length === 0 ? "Not asked" : metStatus(answers));
 
 export function aiReadiness(catalogue: Catalogue, assessment: Assessment, e: AiUseCase, risks: JewelRisk[] = [], asAt = new Date()): AiReadiness {
   const module = catalogue.aiRegister;
   const kind = kindOf(catalogue, e);
   const questions = (module?.questions ?? []).filter((q) => applies(q, e, kind));
-  const answers = aiEffectiveAnswers(e);
-  let weight = 0;
-  let gap = 0;
-  let unknown = 0;
-  let answeredWeight = 0;
-  for (const q of questions) {
-    const a = answers[q.id];
-    const v = answerValue(a);
-    if (v === null) continue;
-    const w = severities[q.severity];
-    weight += w;
-    gap += w * (1 - v);
-    if (a === undefined || a === "unknown") unknown += w;
-    if (a !== undefined) answeredWeight += w;
-  }
+  const answers = effectiveAnswers(e);
+  const stats = gapStats(questions, answers);
   const controls = new Map(activeQuestions(catalogue, assessment).map((q) => [q.id, q]));
   const controlAnswers = effectiveAnswers(assessment);
   return {
@@ -210,15 +179,15 @@ export function aiReadiness(catalogue: Catalogue, assessment: Assessment, e: AiU
     questions,
     answers,
     answered: questions.filter((q) => answers[q.id]).length,
-    score: weight === 0 || answeredWeight === 0 ? null : 1 - gap / weight,
-    confidence: weight === 0 ? 0 : 1 - unknown / weight,
+    score: stats.answeredWeight === 0 ? null : scoreOf(stats),
+    confidence: confidenceOf(stats),
     gaps: questions
       .filter((q) => isGap(answers[q.id]))
       .sort(bySeverity)
       .map((question) => ({ question, answer: answers[question.id] })),
     themes: (module?.model.themes ?? []).map((t) => {
       const qs = questions.filter((q) => q.theme === t.id);
-      return { id: t.id, name: t.name, status: themeStatus(qs.map((q) => answerValue(answers[q.id]))), questions: qs.length, gaps: qs.filter((q) => isGap(answers[q.id])).length };
+      return { id: t.id, name: t.name, status: themeStatus(qs.map((q) => answers[q.id])), questions: qs.length, gaps: qs.filter((q) => isGap(answers[q.id])).length };
     }),
     missing: missingFields(e),
     flags: aiFlags(e, asAt),

@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import type { Assessment } from "./schema";
-import { assessmentSchema, formatIssues, SCHEMA_VERSION } from "./schema";
+import { assessmentSchema, formatIssues, SCHEMA_VERSION, type Assessment } from "./schema";
 import * as crypto from "../wizard/crypto";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
 import { parseAssessment } from "./parse";

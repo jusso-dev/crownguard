@@ -1,7 +1,8 @@
 import { percent } from "../engine/percent";
+import { needsReason } from "../engine/risk";
 import type { ReportModel } from "../report/model";
 
-/** Compact, JSON-serialisable score summary (Hermes helper shape + SOC / IDCF / AI when present). */
+/** Compact, JSON-serialisable score summary, with SOC, IDCF and AI register results when present. */
 export function scoreSummary(model: ReportModel) {
   return {
     posture: model.posture,
@@ -10,9 +11,7 @@ export function scoreSummary(model: ReportModel) {
     assessed: model.strengths.assessed,
     inScope: model.questions.length,
     unanswered: model.questions.filter((q) => !model.answers[q.id]).map((q) => q.id),
-    naMissingReason: Object.keys(model.assessment.answers).filter(
-      (id) => model.assessment.answers[id] === "na" && !model.assessment.notes[id]?.trim(),
-    ),
+    naMissingReason: Object.keys(model.assessment.answers).filter((id) => needsReason(model.assessment, id)),
     risks: model.risks.map((r) => ({
       jewel: r.jewel.name,
       impact: r.impact,

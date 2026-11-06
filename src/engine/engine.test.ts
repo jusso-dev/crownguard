@@ -4,7 +4,7 @@ import type { Question } from "../content/schema";
 import { buildReport } from "../report/model";
 import { emptyAssessment } from "../format/empty";
 import { essentialEight } from "./maturity";
-import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf } from "./risk";
+import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf, scoreOf } from "./risk";
 import { buildRoadmap } from "./roadmap";
 import type { Answer } from "../format/vocab";
 import type { Assessment, CrownJewel } from "../format/schema";
@@ -55,7 +55,8 @@ describe("scoring", () => {
 
   it("excludes N/A from the denominator", () => {
     const s = gapStats([q("MS-ID-001"), q("MS-ID-002")], { "MS-ID-001": "yes", "MS-ID-002": "na" });
-    expect(s).toEqual({ weight: 3, gap: 0, unknownWeight: 0 });
+    expect(scoreOf(s)).toBe(1);
+    expect(scoreOf(gapStats([q("MS-ID-002")], { "MS-ID-002": "na" }))).toBeNull();
   });
 
   it("uplifts impact for regulated or highly confidential data, capped at 5", () => {
@@ -65,10 +66,10 @@ describe("scoring", () => {
   });
 
   it("maps gap ratio and exposures onto likelihood", () => {
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, false)).toBe(1);
-    expect(likelihoodOf({ weight: 10, gap: 10, unknownWeight: 0 }, 0, false)).toBe(5);
-    expect(likelihoodOf({ weight: 10, gap: 5, unknownWeight: 0 }, 2, false)).toBe(4);
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, true)).toBe(3);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, false)).toBe(1);
+    expect(likelihoodOf({ weight: 10, gap: 10}, 0, false)).toBe(5);
+    expect(likelihoodOf({ weight: 10, gap: 5}, 2, false)).toBe(4);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, true)).toBe(3);
   });
 
   it("bands the 5x5 matrix", () => {

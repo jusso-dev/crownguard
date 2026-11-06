@@ -2,10 +2,9 @@ import { Circle, Document, Image, Line, Link, Page, Polygon, StyleSheet, Svg, Te
 import { createContext, useContext, type ReactNode } from "react";
 import { exposures } from "../content/schema";
 import { formatAbn, isValidAbn } from "../engine/abn";
-import { bandOf } from "../engine/risk";
+import { bandOf, isGap } from "../engine/risk";
 import { levelFor, type SocResult } from "../engine/soc";
-import { socProviders } from "../format/vocab";
-import { answerLabels, classifications, dsls, regulations, type Answer } from "../format/vocab";
+import { socProviders, answerLabels, classifications, dsls, regulations, type Answer } from "../format/vocab";
 import { type Evidence } from "../format/schema";
 import { notVerifiedText, type IdcfCell } from "../engine/idcf";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../content/aiOptions";
@@ -456,7 +455,7 @@ export function ReportDocument({ model }: { model: ReportModel }) {
             ))}
           </View>
           {model.domains.map((d) => {
-            const gaps = model.questions.filter((q) => q.domain === d.domain && model.platformOf(q) === d.platform && !["yes", "na"].includes(model.answers[q.id] ?? ""));
+            const gaps = model.questions.filter((q) => q.domain === d.domain && model.platformOf(q) === d.platform && isGap(model.answers[q.id]));
             if (!gaps.length) return null;
             return (
               <View key={`${d.platform}:${d.domain}`}>

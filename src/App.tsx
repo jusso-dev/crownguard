@@ -4,9 +4,8 @@ import { questionIdSet } from "./content/questionIds";
 import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Mode } from "./format/vocab";
-import type { Assessment } from "./format/schema";
+import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
-import { SCHEMA_VERSION } from "./format/schema";
 import { decrypt, isEncryptedEnvelope } from "./wizard/crypto";
 import { parseAssessment } from "./format/parse";
 import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY, storageWriteFailed } from "./wizard/persistence";
@@ -19,7 +18,7 @@ import {
   hasSessionPassphrase,
 } from "./wizard/PrivacyControls";
 import { toEncryptedSaveFile, toSaveFile } from "./format/saveFile";
-import { setSessionPassphrase } from "./wizard/sessionSecrets";
+import { setSessionPassphrase, hasLockedEnvelope } from "./wizard/sessionSecrets";
 import { currentStep, hasProgress, modeOf, stepsFor, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
 import { forgetLockedProgress } from "./wizard/unlock";
@@ -35,7 +34,6 @@ import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
-import { hasLockedEnvelope } from "./wizard/sessionSecrets";
 
 /** Desktop-only settings and recent files. Folded away at build time on the web, so the web bundle doesn't carry it. */
 const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./platform/DesktopPanel")) : null;

@@ -1,13 +1,12 @@
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
-import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
+import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, type JewelRisk } from "../../engine/risk";
 import { essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
 import { answerLabels } from "../../format/vocab";
 import { modeOf, stepsFor, useStore } from "../store";
 import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
-import { bandOf } from "../../engine/risk";
 import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { EssentialsCard } from "../EssentialsOption";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";

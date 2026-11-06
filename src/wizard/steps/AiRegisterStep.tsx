@@ -20,7 +20,6 @@ import {
 import {
   aiFieldLabels,
   aiFieldSources,
-  aiNeedsReason,
   aiRegisterSummary,
   composeKillSwitchNote,
   highRiskNotification,
@@ -30,10 +29,9 @@ import {
   type KillSwitchNote,
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
-import { assessAll } from "../../engine/risk";
+import { assessAll, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer } from "../../format/vocab";
-import { type AiUseCase } from "../../format/schema";
-import { NOTE_MAX } from "../../format/schema";
+import { NOTE_MAX, type AiUseCase } from "../../format/schema";
 import { download, slug } from "../download";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore, modeOf } from "../store";
@@ -794,7 +792,7 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
   const setAiAnswer = useStore((s) => s.setAiAnswer);
   const setAiNote = useStore((s) => s.setAiNote);
   const answer = entry.answers[q.id];
-  const missingReason = aiNeedsReason(entry, q.id);
+  const missingReason = needsReason(entry, q.id);
   const reasonId = `${entry.id}-${q.id}-na-reason`;
   // The switch-off question carries the kill-switch worksheet in its note, instead of the free-text note below.
   const isKillSwitch = q.id === "AIR-OFF-001";

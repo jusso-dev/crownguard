@@ -1,5 +1,6 @@
 import type { Question } from "../content/schema";
-import { addsNothing, type E8Result } from "./maturity";
+import { addsNothing, e8Tagged, type E8Result } from "./maturity";
+import { isSatisfied, maxImpact } from "./risk";
 import type { Answer, Dsl } from "../format/vocab";
 import type { CrownJewel } from "../format/schema";
 
@@ -22,13 +23,11 @@ export interface IdcfRow {
   person: IdcfCell;
 }
 
-const satisfied = (a: Answer | undefined) => a === "yes" || a === "na";
-
 /** Questions mapped to any of these IDCF refs, and which of them aren't answered Yes or N/A. */
 function mappedCell(questions: Question[], answers: Record<string, Answer>, refs: string[]): IdcfCell {
   const mapped = questions.filter((q) => q.refs.some((r) => r.framework === "idcf" && refs.includes(r.ref)));
   if (!mapped.length) return { status: "not-assessed", gaps: [], notVerified: [] };
-  const gaps = mapped.filter((q) => !satisfied(answers[q.id]));
+  const gaps = mapped.filter((q) => !isSatisfied(answers[q.id]));
   return { status: gaps.length ? "gaps" : "clear", gaps, notVerified: [] };
 }
 
@@ -65,8 +64,8 @@ function cyberCell(questions: Question[], answers: Record<string, Answer>, e8: (
       continue;
     }
     if (r.level >= required) continue;
-    const tagged = (l: number) => questions.filter((q) => q.e8.some((t) => t.strategy === r.strategy && t.level === l));
-    for (let l = 1; l <= required; l++) for (const q of tagged(l)) if (!satisfied(answers[q.id])) gaps.set(q.id, q);
+    const tagged = (l: number) => e8Tagged(questions, r.strategy, l);
+    for (let l = 1; l <= required; l++) for (const q of tagged(l)) if (!isSatisfied(answers[q.id])) gaps.set(q.id, q);
     const missing = [1, 2, 3].find((l) => l <= required && tagged(l).length === 0 && !addsNothing(r.strategy, l));
     if (missing) notVerified.push(`${r.title} (Maturity Level ${missing} not asked)`);
   }
@@ -152,7 +151,7 @@ export function jewelDsl(jewel: CrownJewel, rows: IdcfRow[], system?: IdcfCell):
 
 /** crownguard's suggested DSL for a crown jewel (a heuristic, not an IDCF table: the IDCF has none). */
 export function suggestDsl(j: Pick<CrownJewel, "classification" | "confidentiality" | "integrity" | "availability" | "regulations">): Dsl {
-  const impact = Math.max(j.confidentiality, j.integrity, j.availability);
+  const impact = maxImpact(j);
   let level = impact >= 5 ? 4 : impact >= 3 ? 3 : 2;
   const floor = { public: 0, internal: 2, confidential: 3, "highly-confidential": 4 }[j.classification];
   level = Math.max(level, floor);

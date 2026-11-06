@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessmentSchema, SCHEMA_VERSION } from "../format/schema";
-import type { CrownJewel } from "../format/schema";
+import { assessmentSchema, SCHEMA_VERSION, type CrownJewel } from "../format/schema";
 import { clampStep, currentStep, emptyAssessment, hasProgress, migrateProgress, reachableStep, stepsFor } from "./store";
 import { relativeTime } from "./time";
 

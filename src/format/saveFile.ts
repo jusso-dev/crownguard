@@ -1,5 +1,4 @@
-import type { Assessment } from "./schema";
-import { APP_VERSION, SCHEMA_VERSION } from "./schema";
+import { APP_VERSION, SCHEMA_VERSION, type Assessment } from "./schema";
 import { encrypt } from "../wizard/crypto";
 
 /** Published JSON Schema for this file format. Written into every saved file as `$schema`. */

@@ -1,4 +1,5 @@
 import type { Catalogue, Question } from "../content/schema";
+import { isGap } from "./risk";
 import { ismBaselines, type Answer, type IsmBaseline } from "../format/vocab";
 
 
@@ -20,8 +21,7 @@ export interface IsmBaselineSummary {
   controls: number;
 }
 
-/** Questions that appear in the findings section: anything not answered Yes or N/A. */
-const isFinding = (q: Question, answers: Record<string, Answer>) => !["yes", "na"].includes(answers[q.id] ?? "");
+const isFinding = (q: Question, answers: Record<string, Answer>) => isGap(answers[q.id]);
 
 /**
  * Which open findings touch the chosen ISM baseline. Reads only the `applicability` prop carried on each generated

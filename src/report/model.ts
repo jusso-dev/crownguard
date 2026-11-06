@@ -5,11 +5,13 @@ import { aiRegisterSources } from "../content/aiRegisterSources";
 import { essentialEight, type E8Result } from "../engine/maturity";
 import {
   activeQuestions,
-  answerValue,
+  bySeverity,
   effectiveAnswers,
   assessAll,
   domainPosture,
   gapStats,
+  metStatus,
+  scoreOf,
   overallPosture,
   questionPlatform,
   questionsForJewel,
@@ -18,11 +20,10 @@ import {
 } from "../engine/risk";
 import { buildRoadmap, type RoadmapItem } from "../engine/roadmap";
 import { socMaturity, type SocResult } from "../engine/soc";
-import { type SocProvider } from "../format/vocab";
+import type { SocProvider, Answer } from "../format/vocab";
 import { idcfRows, jewelDsl, systemCell, type IdcfCell, type IdcfRow, type JewelDsl } from "../engine/idcf";
 import { ismBaselineReport, type IsmBaselineSummary } from "../engine/ism";
 import { essentials as essentialsResult, transitionGaps, type EssentialsResult, type TransitionGap } from "../engine/essentials";
-import type { Answer } from "../format/vocab";
 import type { Assessment } from "../format/schema";
 import { readableOn, textOn, tint } from "../theme/color";
 
@@ -40,7 +41,7 @@ export interface FrameworkRow {
   ref: string;
   title?: string;
   questions: { question: Question; answer: Answer | undefined }[];
-  status: "Met" | "Partly met" | "Not met" | "Not applicable";
+  status: ReturnType<typeof metStatus>;
 }
 
 export interface ReportModel {
@@ -129,14 +130,6 @@ const themeOf = (b: Assessment["branding"]): ReportTheme => ({
   tint: tint(b.primary, 0.9),
 });
 
-const statusOf = (values: (number | null)[]): FrameworkRow["status"] => {
-  const v = values.filter((x): x is number => x !== null);
-  if (!v.length) return "Not applicable";
-  if (v.every((x) => x === 1)) return "Met";
-  if (v.some((x) => x > 0)) return "Partly met";
-  return "Not met";
-};
-
 export function buildReport(catalogue: Catalogue, assessment: Assessment, generatedAt = new Date()): ReportModel {
   const questions = activeQuestions(catalogue, assessment);
   const answers = effectiveAnswers(assessment);
@@ -161,7 +154,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
         rows.set(key, row);
       }
     return [...rows.values()]
-      .map((r) => ({ ...r, status: statusOf(r.questions.map((x) => answerValue(x.answer))) }))
+      .map((r) => ({ ...r, status: metStatus(r.questions.map((x) => x.answer)) }))
       .sort((a, b) => a.framework.localeCompare(b.framework) || a.ref.localeCompare(b.ref, undefined, { numeric: true }));
   };
 
@@ -171,7 +164,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
     const qs = questions.filter((q) => q.refs.some((r) => r.framework === "nist-csf-2" && ids.has(r.ref)));
     const s = gapStats(qs, answers);
     const subcategories = new Set(qs.flatMap((q) => q.refs.filter((r) => r.framework === "nist-csf-2" && ids.has(r.ref)).map((r) => r.ref))).size;
-    return { fn, score: s.weight ? 1 - s.gap / s.weight : null, subcategories };
+    return { fn, score: scoreOf(s), subcategories };
   });
 
   const e8Titles = catalogue.frameworks.get("essential-eight")?.controls ?? [];
@@ -270,12 +263,11 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
       }
 
   const domains = domainPosture(catalogue, assessment);
-  const severityRank = { critical: 0, high: 1, medium: 2, low: 3 } as const;
   const strengths = {
     inPlace: questions.filter((q) => answers[q.id] === "yes").length,
     partial: questions.filter((q) => answers[q.id] === "partial").length,
     assessed: questions.filter((q) => answers[q.id] && answers[q.id] !== "na").length,
-    passes: questions.filter((q) => answers[q.id] === "yes").sort((x, y) => severityRank[x.severity] - severityRank[y.severity] || x.id.localeCompare(y.id)),
+    passes: questions.filter((q) => answers[q.id] === "yes").sort(bySeverity),
     strongDomains: domains.filter((d) => d.score !== null && d.score >= 0.7).sort((x, y) => (y.score ?? 0) - (x.score ?? 0)),
   };
 
