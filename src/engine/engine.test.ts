@@ -4,7 +4,7 @@ import type { Question } from "../content/schema";
 import { buildReport } from "../report/model";
 import { emptyAssessment } from "../format/empty";
 import { essentialEight } from "./maturity";
-import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf, scoreOf } from "./risk";
+import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf, questionPlatform, scoreOf } from "./risk";
 import { buildRoadmap } from "./roadmap";
 import type { Answer } from "../format/vocab";
 import type { Assessment, CrownJewel } from "../format/schema";
@@ -188,7 +188,7 @@ describe("crown jewels across platforms", () => {
     const report = buildReport(catalogue, withPlatforms(["microsoft", "aws"]));
     expect(report.roadmap.length).toBeGreaterThan(0);
     for (const item of report.roadmap) {
-      expect(report.platformOf(item.question)).toBe("aws");
+      expect(questionPlatform(catalogue, ["microsoft", "aws"])(item.question)).toBe("aws");
       expect(item.jewels).toEqual([]);
     }
   });
