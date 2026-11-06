@@ -442,7 +442,7 @@ export const FEEDS: FeedDef[] = [
     url: "https://github.com/prowler-cloud/prowler/releases.atom",
     kind: "posts",
     include: [/^\s*Prowler\s+\d+\.\d+/i, /^\d+\.\d+\.\d+\s*$/],
-    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.47.0" },
+    reviewMapping: { file: "content/imports/prowler-aws.yaml", pinned: "5.48.0" },
     max: 3,
   },
   {

@@ -1,5 +1,5 @@
-# Check ids in Prowler azure at tag 5.47.0 (2026-10-29), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.47.0/prowler/providers/azure/services.
+# Check ids in Prowler azure at tag 5.48.0 (2026-11-06), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.48.0/prowler/providers/azure/services.
 # One id per line. Regenerate when content/imports/prowler-azure.yaml moves to a newer Prowler.
 aisearch_service_not_publicly_accessible
 aiservices_account_diagnostic_logging_enabled
