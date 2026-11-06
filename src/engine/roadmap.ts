@@ -3,7 +3,8 @@ import { answerValue, impactOf, isGap, questionsForJewel } from "./risk";
 import type { Answer } from "../format/vocab";
 import type { CrownJewel } from "../format/schema";
 
-export type Phase = "0–30 days" | "31–60 days" | "61–90 days";
+export const phases = ["0–30 days", "31–60 days", "61–90 days"] as const;
+export type Phase = (typeof phases)[number];
 
 export interface RoadmapItem {
   question: Question;
@@ -39,7 +40,7 @@ export function buildRoadmap(
   const n = items.length;
   return items.map((item, i) => {
     const urgent = item.question.severity === "critical" && item.question.effort !== "L";
-    const phase: Phase = i < n / 3 || urgent ? "0–30 days" : i < (2 * n) / 3 ? "31–60 days" : "61–90 days";
+    const phase = phases[i < n / 3 || urgent ? 0 : i < (2 * n) / 3 ? 1 : 2];
     return { ...item, phase };
   });
 }
