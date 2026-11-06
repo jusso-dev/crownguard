@@ -20,7 +20,7 @@ import { hasProgress, storageAvailable, useReachable, useStep, useStore } from "
 import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/flow";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
 import { forgetProgress } from "./wizard/unlock";
-import { OPEN_FILE_EVENT, slug } from "./wizard/download";
+import { fileNames, OPEN_FILE_EVENT } from "./wizard/files";
 import { isDesktop, platform, type OpenedFile } from "./platform";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
@@ -52,8 +52,7 @@ const views: Record<StepId, () => React.JSX.Element | null> = {
   report: ReportStep,
 };
 
-const saveFileName = (a: Assessment) =>
-  modeOf(a) === "ai-register" ? `${slug(a.org.name)}-ai-register.crownguard.json` : `${slug(a.org.name)}.crownguard.json`;
+const saveFileName = (a: Assessment) => fileNames.assessment(a.org.name, modeOf(a) === "ai-register");
 
 /** Start a fresh assessment in the flow given. The register itself is started on its step, as in the full assessment. */
 function startAssessment(mode: Mode) {

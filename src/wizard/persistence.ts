@@ -1,16 +1,14 @@
 import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 import { SCHEMA_VERSION, type Assessment } from "../format/schema";
-import { platform, type AutosaveStore } from "../platform";
+import { autosaveKeys, platform, type AutosaveStore } from "../platform";
 import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
 
-export const STORAGE_KEY = "crownguard:v1";
-/** Where a stored assessment is moved when it can't be read, so the user can still download it. */
-export const UNREADABLE_KEY = `${STORAGE_KEY}:unreadable`;
-/** Mode flag only: assessment itself stays out of the autosave store when this is "1". */
-const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
+export const STORAGE_KEY = autosaveKeys.progress;
+export const UNREADABLE_KEY = autosaveKeys.unreadable;
+const EPHEMERAL_FLAG_KEY = autosaveKeys.ephemeral;
 
 /**
  * Opened a file this build must not overwrite: every write to storage is dropped until the page is reloaded.

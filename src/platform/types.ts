@@ -3,6 +3,21 @@
  * build swaps in native dialogs, files and SQLite (`tauri.ts`). Nothing outside `src/platform/` knows which it got.
  */
 
+/**
+ * Every key the app writes to the autosave store. The desktop backend accepts only these (AUTOSAVE_KEYS in
+ * src-tauri/src/commands.rs; scripts/desktop-config.test.ts checks the two lists match).
+ */
+export const autosaveKeys = {
+  /** The assessment in progress. */
+  progress: "crownguard:v1",
+  /** Where a stored assessment is moved when it can't be read, so the user can still download it. */
+  unreadable: "crownguard:v1:unreadable",
+  /** "1" while the user has asked for nothing about the assessment to be kept on this device. */
+  ephemeral: "crownguard:v1:ephemeral",
+  /** Written and removed straight away to find out whether the store accepts writes. */
+  probe: "crownguard:v1:probe",
+} as const;
+
 /** Synchronous key/value storage for autosave. The shape of `localStorage`, so the web build can pass it straight in. */
 export interface AutosaveStore {
   getItem(key: string): string | null;

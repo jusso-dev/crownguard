@@ -5,7 +5,7 @@ import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCat
 import { buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
 import { platform } from "../../platform";
-import { requestOpenFile, slug } from "../download";
+import { fileNames, requestOpenFile } from "../files";
 import { useStore } from "../store";
 import { modeOf, stepIndex } from "../flow";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
@@ -31,10 +31,8 @@ export function ReportStep() {
       await Promise.all([ensurePlatforms(assessment.platforms), ensureReportContent()]);
       const { renderPdf } = await import("../../report/pdfClient");
       const now = new Date();
-      const p2 = (n: number) => String(n).padStart(2, "0");
-      const date = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
       const blob = await renderPdf(standalone ? "ai-register" : "report", assessment, now);
-      const result = await platform.saveAs(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
+      const result = await platform.saveAs(fileNames.report(assessment.org.name, standalone, now), blob, "application/pdf");
       // On desktop the save dialog can be cancelled, or the write can fail (the user has already been told why).
       if (result === "cancelled" || result === "failed") {
         setStatus("idle");

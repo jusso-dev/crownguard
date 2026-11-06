@@ -36,7 +36,7 @@ import { answerLabels } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
 import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
 import { platform } from "../../platform";
-import { slug } from "../download";
+import { fileNames } from "../files";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore } from "../store";
 import { modeOf } from "../flow";
@@ -960,11 +960,7 @@ function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis
 function Exports() {
   const assessment = useStore((s) => s.assessment);
   const entries = assessment.aiRegister?.entries.length ?? 0;
-  const file = (ext: string) => {
-    const d = new Date();
-    const p2 = (n: number) => String(n).padStart(2, "0");
-    return `${slug(assessment.org.name)}-ai-use-case-register-${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.${ext}`;
-  };
+  const file = (ext: "csv" | "xlsx") => fileNames.register(assessment.org.name, ext, new Date());
   return (
     <Card className="mt-10">
       <h2 className="text-base font-semibold">Download the register</h2>

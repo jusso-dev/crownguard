@@ -2,7 +2,7 @@ import { useState } from "react";
 import { abnDigits, formatAbn, isValidAbn } from "../../engine/abn";
 import { regulations, type Regulation } from "../../format/vocab";
 import { LogoField } from "../LogoField";
-import { requestOpenFile } from "../download";
+import { requestOpenFile } from "../files";
 import { useStore } from "../store";
 import { Button, CheckboxPill, Field, FieldGroup, inputClass, StepHeader } from "../ui";
 

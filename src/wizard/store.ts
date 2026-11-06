@@ -7,7 +7,7 @@ import { newUseCase } from "../engine/aiRegister";
 import { NOTE_MAX, type AiUseCase, type Assessment, type Branding, type CrownJewel, type OrgProfile } from "../format/schema";
 import { applyScan as mergeScan } from "../imports/apply";
 import type { ScanResult } from "../imports/types";
-import { isDesktop, platform } from "../platform";
+import { autosaveKeys, isDesktop, platform } from "../platform";
 import { emptyAssessment } from "../format/empty";
 import { clampStep, currentStep, migrateProgress, modeOf, reachableStep, STEP_LAYOUT } from "./flow";
 import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
@@ -16,7 +16,7 @@ import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 /** True when the platform can keep progress between visits (false in some private windows or locked-down browser profiles). */
 export function storageAvailable(): boolean {
   try {
-    const k = `${STORAGE_KEY}:probe`;
+    const k = autosaveKeys.probe;
     const store = platform.autosave();
     if (!store) return false;
     store.setItem(k, "1");
