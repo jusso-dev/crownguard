@@ -11,7 +11,7 @@ import type { ScanImporter, ScanResult } from "./types";
  */
 export const importers: ScanImporter[] = [m365SecureImporter, prowlerImporter("aws"), prowlerImporter("microsoft"), scubagogglesImporter];
 
-export const importerFor = (id: string): ScanImporter | undefined => importers.find((i) => i.id === id);
+const importerFor = (id: string): ScanImporter | undefined => importers.find((i) => i.id === id);
 
 /** The importer that recognises this file, whichever platform it belongs to. */
 export function detectImporter(text: string): ScanImporter | undefined {

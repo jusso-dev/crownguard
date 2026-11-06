@@ -31,4 +31,11 @@ describe("applying a scan to an assessment", () => {
     expect(replaced.evidence?.["MS-ID-001"]?.source).toBe("third");
     expect(replaced.evidence?.["MS-ID-002"]?.source).toBe("first");
   });
+
+  it("records the import with the time it is given", () => {
+    const now = new Date("2026-11-01T00:00:00Z");
+    const a = applyScan(emptyAssessment(), scan("first", [["MS-ID-001", "yes"]]), { ...opts(false), now }).assessment;
+    expect(a.imports).toEqual([{ source: "first", tenant: "Contoso", scannedAt: "2026-10-01T03:00:00Z", importedAt: now.toISOString(), applied: 1 }]);
+    expect(a.updatedAt).toBe(now.toISOString());
+  });
 });

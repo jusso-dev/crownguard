@@ -1,27 +1,17 @@
-import type { ImportMapping } from "../content/schema";
 import type { ScanStatus } from "../format/vocab";
-import { suggestAll, type CheckRow } from "./aggregate";
-import { clip, redactEmails, type ScanImporter, type ScanResult } from "./types";
+import { buildScanResult, type CheckRow } from "./aggregate";
+import type { ScanImporter } from "./types";
 
 /** One SCuBA policy's assessment result, read from `Results.<product>[].Controls[]`. */
-export interface ScubaControl {
+interface ScubaControl {
   /** Policy id, e.g. "GWS.GMAIL.7.3v1". */
   id: string;
-  /** What ScubaGoggles decided, as it wrote it. Normalised by `toStatus`. */
+  /** What ScubaGoggles decided, as it wrote it. */
   result: string;
   /** "Shall", "Should", "Shall/3rd Party", ... */
   criticality: string;
-  /** What the tool said about this tenant, with any HTML and email addresses stripped out. */
+  /** What the tool said about this tenant, as HTML. */
   details: string;
-}
-
-/** The parts of a `ScubaResults*.json` file crownguard uses. Everything else is ignored. */
-export interface ScubaReport {
-  toolVersion?: string;
-  /** The Google Workspace domain the report covers. */
-  domain: string;
-  scannedAt: string;
-  controls: ScubaControl[];
 }
 
 /**
@@ -51,7 +41,7 @@ function stripTags(s: string): string {
  * Strip the HTML ScubaGoggles writes into `Details` (line breaks, spans, annotation markup and
  * entities) down to plain text for the evidence field.
  */
-export function stripHtml(s: string): string {
+function stripHtml(s: string): string {
   const entities = new Map(Object.entries({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }));
   return stripTags(s.replace(/<br\s*\/?>/gi, " "))
     .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
@@ -75,7 +65,7 @@ export function stripHtml(s: string): string {
  * `Warning` is a failed SHOULD, so it fails but can only ever cap a question at Partial; everything
  * else (`N/A`, `Omitted`, `Incorrect Result`, `Error*`, `No events found`) needs the assessor.
  */
-export function toStatus(result: string): ScanStatus {
+function toStatus(result: string): ScanStatus {
   const r = result.trim().toLowerCase();
   if (r === "pass") return "pass";
   if (r === "fail") return "fail";
@@ -100,18 +90,18 @@ const products = new Map(Object.entries({
 
 /** Policy ids carry a version suffix (`GWS.GMAIL.7.3v1`); questions match on the id without it. */
 const baseId = (id: string) => id.replace(/v[\d.]+$/, "");
-const versionOf = (id: string) => id.match(/v[\d.]+$/)?.[0] ?? "";
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 /**
- * Read a `ScubaResults*.json` file: which tool wrote it and when, which domain it covers, and every
- * policy result under `Results.<product>[].Controls[]`.
+ * Read a `ScubaResults*.json` file and map every policy result under `Results.<product>[].Controls[]` onto questions.
+ * Policies match the mapping on the id without its version suffix, so a run of an older ScubaGoggles still lands; a
+ * suffix that differs from the one crownguard checked against is flagged.
  *
  * Privacy: `Raw` is never read. It holds super admin and break-glass email addresses, organisational
  * unit names and audit log events that have no business being in a crownguard assessment.
  */
-export function parseScubagoggles(text: string): ScubaReport {
+const read: ScanImporter["read"] = (text, mapping) => {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -138,28 +128,21 @@ export function parseScubagoggles(text: string): ScubaReport {
       for (const c of list) {
         const row = c as Record<string, unknown>;
         const id = str(row["Control ID"]).trim();
-        if (!id) continue;
-        controls.push({
-          id,
-          result: str(row.Result),
-          criticality: str(row.Criticality).trim(),
-          // Details can name accounts too ("The following super admins are configured: ..."), not only Raw.
-          details: redactEmails(stripHtml(str(row.Details))),
-        });
+        if (id) controls.push({ id, result: str(row.Result), criticality: str(row.Criticality).trim(), details: str(row.Details) });
       }
     }
   }
   if (!controls.length) throw new Error("this ScubaGoggles report has no policy results in it");
 
-  return {
+  const domain = str(doc.MetaData?.DomainName).trim() || "Google Workspace";
+  return buildScanResult(mapping, controls.map(toRow), {
     toolVersion: str(doc.MetaData?.ToolVersion).trim() || undefined,
-    domain: str(doc.MetaData?.DomainName).trim() || "Google Workspace",
+    tenant: domain,
+    domain,
     scannedAt: str(doc.MetaData?.TimestampZulu).trim() || new Date(0).toISOString(),
-    controls,
-  };
-}
+  }, baseId);
+};
 
-/** Turn one policy result into the evidence row crownguard stores against a question. */
 function toRow(c: ScubaControl): CheckRow {
   const status = toStatus(c.result);
   const product = products.get(c.id.split(".")[1] ?? "") ?? "SCuBA";
@@ -167,63 +150,10 @@ function toRow(c: ScubaControl): CheckRow {
     id: c.id,
     status,
     setting: c.criticality ? `${c.id} (${product}, ${c.criticality.toLowerCase()})` : `${c.id} (${product})`,
-    current: clip(c.details, 2000),
+    // Details can name accounts too ("The following super admins are configured: ..."), not only Raw; the result
+    // builder redacts them.
+    current: stripHtml(c.details),
     expected: status === "review" ? "reviewed by the assessor" : "this control passes",
-  };
-}
-
-/**
- * Map a parsed report onto questions. Policies match the mapping on the id without its version
- * suffix, so a run of an older ScubaGoggles still lands; a suffix that differs from the one
- * crownguard checked against is flagged.
- */
-export function readScuba(report: ScubaReport, mapping: ImportMapping): ScanResult {
-  const byCheck = new Map<string, CheckRow[]>();
-  const versions = new Map<string, string>();
-  const firstSeen = new Map<string, string>();
-  const statuses = new Map<string, ScanStatus>();
-  for (const c of report.controls) {
-    const key = baseId(c.id);
-    versions.set(key, versionOf(c.id));
-    firstSeen.set(key, c.id);
-    statuses.set(key, toStatus(c.result));
-    const rows = byCheck.get(key);
-    if (rows) rows.push(toRow(c));
-    else byCheck.set(key, [toRow(c)]);
-  }
-
-  const mapped = new Set(mapping.mappings.flatMap((m) => m.checks.map(baseId)));
-  const unmappedIds = [...byCheck.keys()].filter((id) => !mapped.has(id));
-
-  const checked = new Set(mapping.mappings.flatMap((m) => m.checks));
-  const changed = [...checked].filter((c) => byCheck.has(baseId(c)) && versions.get(baseId(c)) !== versionOf(c));
-  const warnings: string[] = [];
-  if (changed.length)
-    warnings.push(
-      `This report carries different SCuBA policy versions than crownguard's mappings, which were checked against ${mapping.checkedAgainst ?? mapping.name}: ` +
-        `${changed.map((c) => `${firstSeen.get(baseId(c))} here against ${c} in crownguard`).join("; ")}. ` +
-        `The questions still line up on the policy numbers, but a policy whose meaning changed may not.`,
-    );
-
-  const checkRows = mapping.mappings.map((m) => ({ ...m, checks: m.checks.map(baseId) }));
-  return {
-    tool: mapping.name,
-    toolVersion: report.toolVersion,
-    tenant: report.domain,
-    domain: report.domain,
-    scannedAt: report.scannedAt,
-    suggestions: suggestAll({ ...mapping, mappings: checkRows }, byCheck, {
-      tool: mapping.name,
-      toolVersion: report.toolVersion,
-      tenant: report.domain,
-      scannedAt: report.scannedAt,
-    }),
-    unmapped: unmappedIds.length,
-    unmappedFailing: unmappedIds
-      .filter((id) => statuses.get(id) === "fail" || statuses.get(id) === "warning")
-      .map((id) => firstSeen.get(id) ?? id)
-      .sort(),
-    warnings: warnings.length ? warnings : undefined,
   };
 }
 
@@ -238,5 +168,5 @@ export const scubagogglesImporter: ScanImporter = {
   url: "https://github.com/cisagov/ScubaGoggles",
   accept: ".json,application/json",
   detect: looksLike,
-  read: (text, mapping) => readScuba(parseScubagoggles(text), mapping),
+  read,
 };

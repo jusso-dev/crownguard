@@ -2,7 +2,7 @@ import { aiAppCategories, type AiAppCategory, type AiKind, type KnownAiApp, type
 import { newUseCase } from "../engine/aiRegister";
 import type { AiDataKind } from "../content/aiOptions";
 import type { AiUseCase } from "../format/schema";
-import { parseCsv } from "./prowler";
+import { parseCsv, readTable, yesNo } from "./csv";
 
 /**
  * Shadow AI discovery: read an app consent inventory the user exports themselves (Microsoft Graph PowerShell or the
@@ -13,10 +13,10 @@ import { parseCsv } from "./prowler";
  */
 
 /** Which platform's export a file came from. */
-export type ConsentSource = "microsoft" | "google";
+type ConsentSource = "microsoft" | "google";
 
 /** How the app got its access. Admin consent covers the whole tenant; user consent is one person at a time. */
-export type ConsentType = "admin" | "user" | "both";
+type ConsentType = "admin" | "user" | "both";
 
 /** One app found in a consent export, with counts instead of people. */
 export interface FoundApp {
@@ -63,14 +63,8 @@ export interface FoundInventory {
   warnings: string[];
 }
 
-/** The three groupings the results screen shows. */
-export interface AppGroups {
-  known: FoundApp[];
-  highReach: FoundApp[];
-  other: FoundApp[];
-}
-
-export const consentImportLabels: Record<ConsentSource, string> = {
+/** What a register entry says found it. */
+const importLabels: Record<ConsentSource, string> = {
   microsoft: "Microsoft consent inventory import",
   google: "Google OAuth log import",
 };
@@ -85,29 +79,18 @@ const checkSize = (text: string, what: string) => {
     throw new Error(`this ${what} is too large to be a consent export (${Math.round(text.length / 1_000_000)} MB; crownguard reads up to ${MAX_BYTES / 1_000_000} MB)`);
 };
 
-const truthy = (v: string | undefined) => {
-  const s = (v ?? "").trim();
-  return s !== "" && !/^(false|no|0|n|none|-|n\/a)$/i.test(s);
-};
-
 /** Short form of an OAuth scope: the last path segment of a URL, otherwise the token as written. */
-export const shortScope = (token: string) => {
+const shortScope = (token: string) => {
   const t = token.trim();
   if (!t.includes("/")) return t;
   return t.split("/").filter(Boolean).at(-1) ?? t;
 };
 
-/** A matched client id or name pattern, for the "why is this AI?" line. */
-export interface AiMatch {
-  app: KnownAiApp;
-  matchedBy: string;
-}
-
 /**
  * Classify one app against the curated list, offline. Client ids win over names; entries are checked in file order,
  * so a more specific entry (Copilot Studio) is listed before a broader one (Copilot).
  */
-export function classifyApp(name: string, clientId: string, known: KnownAiApp[]): AiMatch | undefined {
+function classifyApp(name: string, clientId: string, known: KnownAiApp[]): { app: KnownAiApp; matchedBy: string } | undefined {
   const id = clientId.trim().toLowerCase();
   if (id) {
     const byId = known.find((a) => a.clientIds.some((c) => c.trim().toLowerCase() === id));
@@ -121,15 +104,11 @@ export function classifyApp(name: string, clientId: string, known: KnownAiApp[])
   return undefined;
 }
 
-export interface ScopeSummary {
-  /** Plain English per distinct meaning; unrecognised scopes are listed by name so nothing is hidden. */
-  lines: string[];
-  highReach: boolean;
-  data: AiDataKind[];
-}
-
-/** Scopes in plain English, from `content/ai-register/oauth-scopes.yaml`. */
-export function summariseScopes(tokens: string[], table: OAuthScope[]): ScopeSummary {
+/**
+ * Scopes in plain English, from `content/ai-register/oauth-scopes.yaml`: one line per distinct meaning, with
+ * unrecognised scopes listed by name so nothing is hidden.
+ */
+function summariseScopes(tokens: string[], table: OAuthScope[]): { lines: string[]; highReach: boolean; data: AiDataKind[] } {
   const lines: string[] = [];
   const data = new Set<AiDataKind>();
   let highReach = false;
@@ -154,7 +133,7 @@ export function summariseScopes(tokens: string[], table: OAuthScope[]): ScopeSum
 }
 
 /** Group for the panel: known AI first, then anything high-reach, then the rest. Most-granted first in each. */
-export function groupApps(apps: FoundApp[]): AppGroups {
+export function groupApps(apps: FoundApp[]): { known: FoundApp[]; highReach: FoundApp[]; other: FoundApp[] } {
   const byReach = (a: FoundApp, b: FoundApp) => b.users - a.users || a.name.localeCompare(b.name);
   return {
     known: apps.filter((a) => a.category).sort(byReach),
@@ -164,7 +143,7 @@ export function groupApps(apps: FoundApp[]): AppGroups {
 }
 
 /** "3 users", "1 user", or "everyone (admin consent)". Counts only; the export's names never survive the parse. */
-export function userCountText(app: FoundApp): string {
+function userCountText(app: FoundApp): string {
   if (app.consent !== "user" && app.users === 0) return "everyone (admin consent)";
   return `${app.users} user${app.users === 1 ? "" : "s"}`;
 }
@@ -176,7 +155,6 @@ export function consentText(app: FoundApp): string {
   return app.consent === "both" ? `${admin}, and ${user.toLowerCase()}` : app.consent === "admin" ? admin : user;
 }
 
-/** The category label for the panel, e.g. "Meeting note-taker". */
 export const categoryLabel = (category: AiAppCategory) => aiAppCategories[category];
 
 /** What one app looks like while a file is being read. User principal ids are counted here and never leave it. */
@@ -193,21 +171,22 @@ interface MutableApp {
   principals: Set<string>;
 }
 
-/** Microsoft's first-party app owner organisation, so Microsoft apps show a publisher even with none recorded. */
-const MS_OWNER_ORG = "f8cdef31-a31e-4b4a-93e4-5f571e91255a";
+/**
+ * The tenant id Microsoft's own first-party apps record as their `appOwnerOrganizationId` (Microsoft Services). A
+ * service principal with it is Microsoft's, so the app shows Microsoft as publisher even with none recorded.
+ */
+const MICROSOFT_SERVICES_TENANT = "f8cdef31-a31e-4b4a-93e4-5f571e91255a";
+
+const newApp = (clientId: string): MutableApp => ({ clientId, admin: false, user: false, byAgent: false, scopes: new Set(), principals: new Set() });
+
+/** What a reader counted, before the apps are classified. */
+interface Counted extends Omit<FoundInventory, "apps" | "users"> {
+  byApp: Map<string, MutableApp>;
+  people: Set<string>;
+}
 
 /** Turn the counted apps into the inventory the panel shows, classifying and summarising each one. */
-function assemble(
-  source: ConsentSource,
-  label: string,
-  byApp: Map<string, MutableApp>,
-  people: Set<string>,
-  grants: number,
-  known: KnownAiApp[],
-  scopes: OAuthScope[],
-  warnings: string[],
-  agentColumn?: boolean,
-): FoundInventory {
+function assemble({ byApp, people, ...inventory }: Counted, known: KnownAiApp[], scopes: OAuthScope[]): FoundInventory {
   const apps = [...byApp.values()].map((a): FoundApp => {
     const name = a.name ?? a.clientId;
     const match = classifyApp(name, a.clientId, known);
@@ -219,7 +198,7 @@ function assemble(
       ownerOrgId: a.ownerOrgId,
       consent: a.admin && a.user ? "both" : a.admin ? "admin" : "user",
       users: a.principals.size,
-      byAgent: agentColumn ? a.byAgent : undefined,
+      byAgent: inventory.agentColumn ? a.byAgent : undefined,
       scopes: [...a.scopes].sort(),
       scopeSummary: summary.lines,
       highReach: summary.highReach,
@@ -228,12 +207,15 @@ function assemble(
       matchedBy: match?.matchedBy,
     };
   });
-  return { source, label, apps, grants, users: people.size, agentColumn, warnings };
+  return { ...inventory, apps, users: people.size };
 }
 
 type JsonObject = Record<string, unknown>;
 const lowerKeys = (o: JsonObject): JsonObject => Object.fromEntries(Object.entries(o).map(([k, v]) => [k.toLowerCase(), v]));
 const asString = (v: unknown): string => (typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "");
+
+/** A consent grant from `Get-MgOauth2PermissionGrant`; any other row collected is a service principal. */
+const isGrant = (o: JsonObject) => "consenttype" in o || ("clientid" in o && ("scope" in o || "principalid" in o));
 
 /**
  * Collect the grant and service principal rows out of whatever wrapper the file has: a bare array, `{"value": [...]}`
@@ -247,9 +229,7 @@ function collectItems(value: unknown, rows: JsonObject[], depth = 0): void {
   }
   if (!value || typeof value !== "object") return;
   const o = lowerKeys(value as JsonObject);
-  const isGrant = "consenttype" in o || ("clientid" in o && ("scope" in o || "principalid" in o));
-  const isSp = "appid" in o || "displayname" in o || "appownerorganizationid" in o;
-  if (isGrant || isSp) {
+  if (isGrant(o) || "appid" in o || "displayname" in o || "appownerorganizationid" in o) {
     rows.push(o);
     return;
   }
@@ -274,7 +254,6 @@ export function readGraphConsent(text: string | string[], known: KnownAiApp[], s
     }
     collectItems(json, rows);
   }
-  const isGrant = (o: JsonObject) => "consenttype" in o || ("clientid" in o && ("scope" in o || "principalid" in o));
   const grants = rows.filter(isGrant);
   const sps = rows.filter((o) => !isGrant(o));
   if (!grants.length && !sps.length)
@@ -288,8 +267,7 @@ export function readGraphConsent(text: string | string[], known: KnownAiApp[], s
   for (const g of grants) {
     const clientId = asString(g.clientid).trim();
     const key = clientId.toLowerCase();
-    const app =
-      byApp.get(key) ?? { clientId, admin: false, user: false, byAgent: false, scopes: new Set<string>(), principals: new Set<string>() };
+    const app = byApp.get(key) ?? newApp(clientId);
     byApp.set(key, app);
     if (/^allprincipals$/i.test(asString(g.consenttype).trim())) app.admin = true;
     else app.user = true;
@@ -315,7 +293,7 @@ export function readGraphConsent(text: string | string[], known: KnownAiApp[], s
     if (publisher) app.publisher = publisher;
     if (ownerOrgId) {
       app.ownerOrgId = ownerOrgId;
-      if (ownerOrgId.toLowerCase() === MS_OWNER_ORG && !app.publisher) app.publisher = "Microsoft";
+      if (ownerOrgId.toLowerCase() === MICROSOFT_SERVICES_TENANT && !app.publisher) app.publisher = "Microsoft";
     }
   }
   const unnamed = [...byApp.values()].filter((a) => !named.has(a.clientId.toLowerCase())).length;
@@ -325,11 +303,11 @@ export function readGraphConsent(text: string | string[], known: KnownAiApp[], s
       `${unnamed} ${unnamed === 1 ? "app has" : "apps have"} no matching service principal entry, so ${unnamed === 1 ? "it shows" : "they show"} the app id instead of a name. Pick the Get-MgServicePrincipal export alongside the grants export to name them.`,
     );
 
-  return assemble("microsoft", "Microsoft consent export", byApp, people, grants.length, known, scopes, warnings);
+  return assemble({ source: "microsoft", label: "Microsoft consent export", byApp, people, grants: grants.length, warnings }, known, scopes);
 }
 
 /** Google's CSV column names, mapped to what crownguard calls them. */
-const googleColumns: Record<string, string[]> = {
+const googleColumns = {
   name: ["APPLICATION NAME", "APP NAME"],
   id: ["APPLICATION ID", "CLIENT ID", "OAUTH CLIENT ID"],
   scope: ["SCOPE", "SCOPES", "PERMISSION SCOPE"],
@@ -360,50 +338,42 @@ export function readGoogleConsent(text: string, known: KnownAiApp[], scopes: OAu
   if (headerAt < 0)
     throw new Error("this isn't a Google OAuth log export: no header row with an Application name column. Export from Reporting > Audit and investigation > OAuth log events");
 
-  // parseCsv is the Prowler importer's: delimiter detection plus RFC 4180 quoting.
-  const rows = parseCsv(lines.slice(headerAt).join("\n"));
-  const index = new Map((rows[0] ?? []).map((c, i) => [c.trim().toUpperCase(), i] as const));
-  const pick = (names: string[]) => {
-    for (const n of names) {
-      const i = index.get(n);
-      if (i !== undefined) return i;
-    }
-    return -1;
-  };
-  const wanted = Object.fromEntries(Object.entries(googleColumns).map(([k, names]) => [k, pick(names)])) as Record<string, number>;
-  const agentColumn = wanted.byAgent >= 0;
+  const { found, records } = readTable(parseCsv(lines.slice(headerAt).join("\n")), googleColumns);
+  const agentColumn = found.has("byAgent");
 
   const byApp = new Map<string, MutableApp>();
   const people = new Set<string>();
   let grants = 0;
-  for (const cells of rows.slice(1)) {
+  for (const row of records) {
     if (grants > MAX_ITEMS) throw new Error(`this export has more than ${MAX_ITEMS} rows; narrow the date range and try again`);
-    const value = (i: number) => (i >= 0 ? (cells[i] ?? "") : "");
-    const event = value(wanted.event).trim();
+    const event = row.event.trim();
     if (/revok|remov|delet|block/i.test(event)) continue;
-    const name = value(wanted.name).trim();
-    const clientId = value(wanted.id).trim();
+    const name = row.name.trim();
+    const clientId = row.id.trim();
     if (!name && !clientId) continue;
     grants++;
     const key = (clientId || name).toLowerCase();
-    const app = byApp.get(key) ?? { clientId: clientId || name, admin: false, user: false, byAgent: false, scopes: new Set<string>(), principals: new Set<string>() };
+    const app = byApp.get(key) ?? newApp(clientId || name);
     byApp.set(key, app);
     if (name) app.name = name;
+    // An administrator granting for the whole domain is logged as an admin or domain-wide event; anything else is one
+    // user consenting for themselves.
     if (/admin|domain/i.test(event)) app.admin = true;
     else app.user = true;
-    for (const t of value(wanted.scope).split(/[\s,]+/)) if (t.trim()) app.scopes.add(shortScope(t));
-    const user = value(wanted.user).trim();
+    for (const t of row.scope.split(/[\s,]+/)) if (t.trim()) app.scopes.add(shortScope(t));
+    const user = row.user.trim();
     if (user) {
       app.principals.add(user);
       people.add(user);
     }
-    if (truthy(value(wanted.byAgent))) app.byAgent = true;
+    // An unfamiliar value in the column is read as yes: a grant possibly made by an agent is worth a look.
+    if (yesNo(row.byAgent) !== false) app.byAgent = true;
   }
   if (!byApp.size) throw new Error("this Google OAuth log export has no grant rows in it");
 
   const warnings: string[] = [];
   if (!agentColumn) warnings.push(`This export has no "By an agent" column. Add that attribute to the OAuth log events report to see which grants an AI agent made.`);
-  return assemble("google", "Google OAuth log export", byApp, people, grants, known, scopes, warnings, agentColumn);
+  return assemble({ source: "google", label: "Google OAuth log export", byApp, people, grants, warnings, agentColumn }, known, scopes);
 }
 
 /** What a register entry created from the panel carries. Never a readiness answer, never a user identity. */
@@ -420,8 +390,8 @@ export function importedUseCase(kind: AiKind, id: string, app: FoundApp, source:
     product: app.name,
     access: app.consent === "user" ? "delegated" : "org-wide",
     data: [...app.data],
-    description: `Found by the ${consentImportLabels[source]}. Publisher: ${app.publisher ?? "not recorded in the export"}. ${who.charAt(0).toUpperCase()}${who.slice(1)}. It holds: ${app.scopeSummary.join("; ") || "no permissions crownguard could name"}.`,
-    foundBy: consentImportLabels[source],
+    description: `Found by the ${importLabels[source]}. Publisher: ${app.publisher ?? "not recorded in the export"}. ${who.charAt(0).toUpperCase()}${who.slice(1)}. It holds: ${app.scopeSummary.join("; ") || "no permissions crownguard could name"}.`,
+    foundBy: importLabels[source],
     answers: {},
     notes: {},
   };
