@@ -808,8 +808,8 @@
 - id: ms-ir-planning
   title: Incident response planning
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/security/operations/incident-response-planning
-  retrieved: 2026-10-09
+  url: https://learn.microsoft.com/en-us/security/zero-trust/security-operations-incident-response-readiness
+  retrieved: 2026-11-03
 - id: ms-lsa-protection
   title: Configure added LSA protection
   publisher: Microsoft
@@ -1335,8 +1335,8 @@
 - id: ms-manage-generative-ai-apps
   title: Manage generative AI apps in Microsoft 365 Copilot
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/manage-generative-ai-apps
-  retrieved: 2026-10-10
+  url: https://learn.microsoft.com/en-us/copilot/manage/manage-generative-ai-apps
+  retrieved: 2026-11-04
 - id: ms-graph-permissions-reference
   title: Microsoft Graph permissions reference
   publisher: Microsoft
