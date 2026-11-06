@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { csp, securityHeaders } from "../vite.config";
 
 describe("docs/self-hosting.md matches securityHeaders", () => {
-  const doc = readFileSync(join("docs", "self-hosting.md"), "utf8");
+  const doc = readFileSync(join(import.meta.dirname, "..", "docs", "self-hosting.md"), "utf8");
 
   it("documents every header name and the full CSP string", () => {
     for (const [name, value] of Object.entries(securityHeaders)) {

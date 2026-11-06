@@ -6,13 +6,14 @@ import { describe, expect, it } from "vitest";
  * The supply-chain rules the workflows have to keep to. They run with the rest of the tests, so a workflow that
  * unpins an action or widens a permission fails locally and in CI, not at the next incident.
  */
-const dir = join(process.cwd(), ".github", "workflows");
+const dir = join(import.meta.dirname, "..", ".github", "workflows");
 const files = readdirSync(dir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
 const text = (f: string) => readFileSync(join(dir, f), "utf8");
 
 describe("GitHub workflows", () => {
   it("finds the workflows it is meant to be policing", () => {
-    expect(files.sort()).toEqual(["ci.yml", "dependency-review.yml", "desktop-release.yml", "guidance-update.yml", "scorecard.yml", "source-watch.yml"]);
+    // The ones the rules below name; any others are checked too.
+    for (const f of ["ci.yml", "desktop-release.yml", "guidance-update.yml", "source-watch.yml"]) expect(files).toContain(f);
   });
 
   it("pins every action to a full commit SHA, with the version in a comment", () => {

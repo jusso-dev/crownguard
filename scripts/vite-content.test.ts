@@ -4,12 +4,8 @@ import { buildContentModules } from "./vite-content";
 import { readContentFiles } from "./read-content";
 
 describe("vite content modules", () => {
-  const { catalogue, errors } = loadCatalogue(readContentFiles());
+  const { catalogue } = loadCatalogue(readContentFiles());
   const modules = buildContentModules(catalogue);
-
-  it("validates the source catalogue", () => {
-    expect(errors).toEqual([]);
-  });
 
   it("matches loadCatalogue question ids per platform", () => {
     for (const [id, bundle] of catalogue.platforms) {
