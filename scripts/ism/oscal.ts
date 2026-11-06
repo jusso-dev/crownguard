@@ -3,17 +3,10 @@
  *
  * The objects we read are strict: a shape change in ASD's `ISM_catalog.json` (a new key on a group, control, prop or
  * part) fails the parse, so `scripts/ism/build.ts` stops and a human reviews the release rather than silently
- * dropping or misreading something. Metadata siblings we only quote (parties, links) and `back-matter` stay loose.
+ * dropping or misreading something (`parseOscal`). Metadata siblings we only quote (parties, links) and `back-matter` stay loose.
  */
 import { z } from "zod";
-
-export interface OscalProp {
-  name: string;
-  /** Namespace URI, e.g. `https://cyber.gov.au/ns/ism/oscal/3.0` for the ISM's own props. */
-  ns?: string;
-  class?: string;
-  value: string;
-}
+import { oscalPropSchema, type OscalProp } from "../lib/oscal";
 
 export interface OscalPart {
   id?: string;
@@ -56,14 +49,7 @@ export interface OscalCatalogFile {
   };
 }
 
-export const oscalPropSchema: z.ZodType<OscalProp> = z.strictObject({
-  name: z.string().min(1),
-  ns: z.string().optional(),
-  class: z.string().optional(),
-  value: z.string().min(1),
-});
-
-export const oscalPartSchema: z.ZodType<OscalPart> = z.lazy(() =>
+const oscalPartSchema: z.ZodType<OscalPart> = z.lazy(() =>
   z.strictObject({
     id: z.string().optional(),
     name: z.string().min(1),
@@ -72,7 +58,7 @@ export const oscalPartSchema: z.ZodType<OscalPart> = z.lazy(() =>
   }),
 );
 
-export const oscalControlSchema: z.ZodType<OscalControl> = z.lazy(() =>
+const oscalControlSchema: z.ZodType<OscalControl> = z.lazy(() =>
   z.strictObject({
     id: z.string().min(1),
     class: z.string().optional(),
@@ -83,7 +69,7 @@ export const oscalControlSchema: z.ZodType<OscalControl> = z.lazy(() =>
   }),
 );
 
-export const oscalGroupSchema: z.ZodType<OscalGroup> = z.lazy(() =>
+const oscalGroupSchema: z.ZodType<OscalGroup> = z.lazy(() =>
   z.strictObject({
     title: z.string().min(1),
     props: z.array(oscalPropSchema).optional(),
@@ -112,13 +98,6 @@ export const oscalCatalogFileSchema: z.ZodType<OscalCatalogFile> = z.strictObjec
 export const ISM_APPLICABILITY = ["NC", "OS", "P", "S", "TS"] as const;
 /** Values of the ISM's own `essential-eight-applicability` prop. */
 export const ISM_E8_LEVELS = ["ML1", "ML2", "ML3"] as const;
-/** The ISM's namespace for its own props. */
-export const ISM_NS = "https://cyber.gov.au/ns/ism/oscal/3.0";
-
-/** All values of a named prop, in the order ASD lists them. */
-export const propValues = (control: OscalControl, name: string): string[] =>
-  (control.props ?? []).filter((p) => p.name === name).map((p) => p.value);
-
 /**
  * True when ASD has withdrawn the control. The current release marks these with a `status: withdrawn` prop (or its
  * own `withdrawn` prop); a control simply deleted from the catalog can only be spotted by diffing releases.

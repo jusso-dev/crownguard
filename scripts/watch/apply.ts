@@ -1,9 +1,21 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
+import { repoPath } from "../lib/repo";
+import { escapeRegExp } from "../lib/text";
 import type { WatchState } from "./types";
-import { escapeRegExp, isHttpUrl, stableStringify } from "./util";
+import { isHttpUrl, stableStringify } from "./util";
+
+/** Every content/sources file, keyed by absolute path: what `applyUrlUpdates` edits. */
+export function readSourceFiles(): Record<string, string> {
+  const dir = repoPath("content", "sources");
+  return Object.fromEntries(
+    readdirSync(dir)
+      .filter((f) => f.endsWith(".yaml"))
+      .map((f) => [join(dir, f), readFileSync(join(dir, f), "utf8")]),
+  );
+}
 
 export interface UrlUpdate {
   id: string;

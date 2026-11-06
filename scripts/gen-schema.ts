@@ -6,15 +6,14 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { assessmentSchema, SCHEMA_VERSION } from "../src/wizard/assessmentSchema";
 import { SCHEMA_URL } from "../src/wizard/saveFile";
+import { isMain } from "./lib/cli";
+import { repoPath } from "./lib/repo";
 
-export const SCHEMA_FILENAME = `crownguard-assessment.v${SCHEMA_VERSION}.json`;
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 /** Where the build copies it from, relative to the repo root. */
-export const SCHEMA_PATH = join("public", "schema", SCHEMA_FILENAME);
+export const SCHEMA_PATH = join("public", "schema", `crownguard-assessment.v${SCHEMA_VERSION}.json`);
 
 export function schemaDocument(): Record<string, unknown> {
   return {
@@ -31,14 +30,8 @@ export function schemaDocument(): Record<string, unknown> {
 /** Pretty-printed, with a trailing newline, so the committed copy diffs cleanly. */
 export const schemaText = () => `${JSON.stringify(schemaDocument(), null, 2)}\n`;
 
-export function writeSchema(): string {
-  const text = schemaText();
-  mkdirSync(join(root, "public", "schema"), { recursive: true });
-  writeFileSync(join(root, SCHEMA_PATH), text);
-  return text;
-}
-
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  writeSchema();
+if (isMain(import.meta.url)) {
+  mkdirSync(dirname(repoPath(SCHEMA_PATH)), { recursive: true });
+  writeFileSync(repoPath(SCHEMA_PATH), schemaText());
   console.log(`wrote ${SCHEMA_PATH}`);
 }

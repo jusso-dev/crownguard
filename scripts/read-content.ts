@@ -1,8 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { ContentFiles } from "../src/content/loader";
-
-const root = join(import.meta.dirname, "..");
+import { repoPath, ROOT } from "./lib/repo";
 
 function walk(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
@@ -11,5 +10,5 @@ function walk(dir: string): string[] {
 }
 
 export function readContentFiles(): ContentFiles {
-  return Object.fromEntries(walk(join(root, "content")).map((p) => [relative(root, p), readFileSync(p, "utf8")]));
+  return Object.fromEntries(walk(repoPath("content")).map((p) => [relative(ROOT, p), readFileSync(p, "utf8")]));
 }

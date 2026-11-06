@@ -1,5 +1,10 @@
-import { PLAIN_USER_AGENT } from "./fetch";
 import type { HostProfile } from "./types";
+
+/** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
+export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
+
+/** The same identity without the "Mozilla/5.0 (compatible; ...)" wrapper, for hosts that drop requests carrying it. */
+export const PLAIN_USER_AGENT = "crownguard-source-watch/1.0";
 
 /** Fallback for hosts without a profile: the usual main-content containers, no quoting. */
 export const DEFAULT_PROFILE: HostProfile = {
@@ -42,6 +47,8 @@ export const PROFILES: HostProfile[] = [
     // may be quoted (LEARN_MIRROR_LICENCES).
     excerpts: "none",
     concurrency: 4,
+    caseInsensitivePaths: true,
+    tocs: true,
   },
 ];
 
@@ -94,7 +101,8 @@ const devsite = (host: string, label: string): HostProfile => ({
 
 PROFILES.push(
   devsite("knowledge.workspace.google.com", "Google Workspace Help"),
-  devsite("docs.cloud.google.com", "Google Cloud documentation"),
+  // Cloud release notes still link to cloud.google.com.
+  { ...devsite("docs.cloud.google.com", "Google Cloud documentation"), formerHosts: ["cloud.google.com"] },
   {
     host: "support.google.com",
     label: "Google Help Center",
@@ -236,6 +244,7 @@ PROFILES.push(
     excerpts: "none",
     botProtected: true,
     concurrency: 1,
+    caseInsensitivePaths: true,
   },
   {
     host: "www.digital.gov.au",
@@ -273,3 +282,8 @@ export function hasProfile(host: string): boolean {
 export function profileFor(host: string): HostProfile {
   return byHost.get(host) ?? { ...DEFAULT_PROFILE, host };
 }
+
+const movedTo = new Map(PROFILES.flatMap((p) => (p.formerHosts ?? []).map((h) => [h, p.host] as const)));
+
+/** The host a site lives on now, for a host it has moved away from. */
+export const currentHost = (host: string): string => movedTo.get(host) ?? host;

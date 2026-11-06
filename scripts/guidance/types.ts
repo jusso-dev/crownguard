@@ -1,4 +1,4 @@
-import type { GuidanceGitHub, Release } from "./github";
+import type { Release, ReleaseGitHub } from "../lib/github";
 
 /** What an updater can see of the checkout. Paths are relative to the repo root. */
 export interface Workspace {
@@ -22,7 +22,7 @@ export interface ReviewItem {
 export interface UpdateResult {
   /** Full intended text of every file the updater touches; the run drops the ones that come out unchanged. */
   files: Record<string, string>;
-  /** False when the pins (`checkedAgainst`, the feed pin) stayed put because something needs review first. */
+  /** False when the pins (`checkedAgainst`) stayed put because something needs review first. */
   pinsMoved: boolean;
   review: ReviewItem[];
   /** Things worth reading in the pull request that don't block it. */
@@ -30,9 +30,9 @@ export interface UpdateResult {
 }
 
 /**
- * One upstream source of machine-readable guidance. To add one, write an entry in `registry.ts` (an OSCAL catalog
- * is one `oscalUpdater({...})` call), list its files in `paths` and in the `add-paths` of
- * .github/workflows/guidance-update.yml. `scripts/guidance/run.test.ts` checks the two lists agree.
+ * One upstream source of machine-readable guidance. To add one, describe the upstream in scripts/lib/upstreams.ts,
+ * write an entry in `registry.ts` and list its files in the `add-paths` of .github/workflows/guidance-update.yml.
+ * `scripts/guidance/run.test.ts` checks the two lists agree.
  */
 export interface GuidanceUpdater {
   /** Short id for `--only` (`ism`, `prowler`). */
@@ -43,14 +43,10 @@ export interface GuidanceUpdater {
   name: string;
   /** GitHub repo the releases come from. */
   repo: string;
-  /** Feed in scripts/watch/feeds.ts whose `reviewMapping.pinned` moves with this source. */
-  feed?: string;
   /** Every repo file this updater may write. The apply step and the workflow's `add-paths` allow nothing else. */
   paths: string[];
   /** The committed pins, keyed by where each lives. The oldest one is the current version. */
   pins(ws: Workspace): Record<string, string>;
   /** Regenerate everything for `release`. `from` is the current version. */
-  update(ws: Workspace, gh: GuidanceGitHub, release: Release, from: string): Promise<UpdateResult>;
+  update(ws: Workspace, gh: ReleaseGitHub, release: Release, from: string): Promise<UpdateResult>;
 }
-
-export const FEEDS_FILE = "scripts/watch/feeds.ts";

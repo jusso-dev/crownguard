@@ -11,11 +11,11 @@
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { desktopCspDirectives } from "../vite.config";
+import { isMain } from "./lib/cli";
+import { repoPath } from "./lib/repo";
 
-const root = join(import.meta.dirname, "..");
-const tauriDir = join(root, "src-tauri");
+const tauriDir = repoPath("src-tauri");
 
 type Permission = string | { identifier: string; allow?: Record<string, unknown>[]; deny?: Record<string, unknown>[] };
 interface Capability {
@@ -92,7 +92,7 @@ export function checkDesktopConfig(dir = tauriDir): string[] {
   return problems;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+if (isMain(import.meta.url)) {
   const problems = checkDesktopConfig();
   if (problems.length) {
     for (const p of problems) console.error(`✗ ${p}`);

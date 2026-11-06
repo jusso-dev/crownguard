@@ -1,11 +1,9 @@
+import { USER_AGENT } from "./hosts";
 import type { FetchOutcome, FetchResult, Fetcher, RedirectHop } from "./types";
 import { hostOf, isHttpUrl, limiter, readCapped, sleep as defaultSleep } from "./util";
 
-/** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
-export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
-
-/** The same identity without the "Mozilla/5.0 (compatible; ...)" wrapper, for hosts that drop requests carrying it. */
-export const PLAIN_USER_AGENT = "crownguard-source-watch/1.0";
+/** Redirect hops followed before a page counts as broken. */
+const MAX_REDIRECTS = 10;
 
 /** Hosts a redirect only reaches when a page wants a signed-in or consenting user: never a real page move. */
 const SIGN_IN_HOSTS = new Set([
@@ -43,7 +41,6 @@ export interface FetcherOptions {
   timeoutMs?: number;
   /** Extra attempts after a network error, 5xx or 429. */
   retries?: number;
-  maxRedirects?: number;
   maxBytes?: number;
   userAgent?: string;
   fetchImpl?: typeof fetch;
@@ -58,7 +55,6 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
     userAgentFor = () => undefined,
     timeoutMs = 30_000,
     retries = 2,
-    maxRedirects = 10,
     maxBytes = 20 * 1024 * 1024,
     userAgent = USER_AGENT,
     fetchImpl = fetch,
@@ -85,7 +81,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
       ...extra,
     });
 
-    for (let hop = 0; hop <= maxRedirects; hop++) {
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       if (!isHttpUrl(current)) return result("http-error", 0, { error: "redirected to a non-http URL" });
       if (SIGN_IN_HOSTS.has(hostOf(current))) return result("challenge", 0, { error: `redirected to sign-in (${hostOf(current)})` });
       let res: Response;
@@ -146,7 +142,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         ...(retryAfter !== undefined ? { retryAfterMs: retryAfter } : {}),
       };
     }
-    return result("http-error", 0, { error: `more than ${maxRedirects} redirects` });
+    return result("http-error", 0, { error: `more than ${MAX_REDIRECTS} redirects` });
   }
 
   return {

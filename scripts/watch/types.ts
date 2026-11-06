@@ -53,6 +53,12 @@ export interface HostProfile {
   blockedOnNetworkError?: boolean;
   /** Element holding the page's own "last reviewed/updated" date (its datetime attribute or text). */
   updatedSelector?: string;
+  /** URL paths on this host are case-insensitive, so they are compared lowercased. */
+  caseInsensitivePaths?: boolean;
+  /** Hosts this site's pages used to live on, which links in feeds still use. */
+  formerHosts?: string[];
+  /** Pages carry a table of contents the watch reads for new pages near cited ones. */
+  tocs?: boolean;
 }
 
 export interface RedirectHop {

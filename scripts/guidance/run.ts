@@ -1,5 +1,6 @@
-import type { GuidanceGitHub, Release } from "./github";
-import { compareTags, keepDates } from "./pins";
+import { keepDates } from "../lib/dates";
+import type { Release, ReleaseGitHub } from "../lib/github";
+import { compareTags } from "../lib/versions";
 import type { GuidanceUpdater, ReviewItem, Workspace } from "./types";
 
 export interface UpdateSummary {
@@ -33,7 +34,7 @@ export interface RunResult {
 export interface RunOptions {
   updaters: GuidanceUpdater[];
   ws: Workspace;
-  gh: GuidanceGitHub;
+  gh: ReleaseGitHub;
   only?: Set<string>;
   /** The same file on the open pull request's branch, so a rerun that only moves dates changes nothing. */
   previous?: (path: string) => string | undefined;
@@ -44,7 +45,7 @@ export interface RunOptions {
 export const currentVersion = (pins: Record<string, string>): string =>
   Object.values(pins).reduce((a, b) => (compareTags(a, b) <= 0 ? a : b));
 
-export function prTitle(updates: UpdateSummary[]): string {
+function prTitle(updates: UpdateSummary[]): string {
   const moved = updates.filter((u) => u.status === "updated" && u.files.length);
   if (!moved.length) return "Guidance update: nothing to change";
   const review = moved.some((u) => u.review.length);
@@ -55,7 +56,7 @@ export async function runUpdates(opts: RunOptions): Promise<RunResult> {
   const { gh, log = () => {} } = opts;
   const updates: UpdateSummary[] = [];
   const files: Record<string, string> = {};
-  // Several updaters can edit one file (feeds.ts), so each one reads the edits made before it.
+  // Each updater reads the edits made before it, so two can never undo each other in a shared file.
   const ws: Workspace = { ...opts.ws, read: (path) => files[path] ?? opts.ws.read(path) };
   for (const u of opts.updaters) {
     if (opts.only && !opts.only.has(u.id)) continue;
@@ -108,7 +109,7 @@ export function renderPrBody(result: RunResult, opts: { runUrl?: string; guideUr
     if (blocked.length)
       lines.push(
         "",
-        `The id lists moved, but ${blocked.map((u) => u.label).join(" and ")} pins (\`checkedAgainst\` and the source watch feed pin) did not, ` +
+        `The id lists moved, but ${blocked.map((u) => u.label).join(" and ")} pins (\`checkedAgainst\`) did not, ` +
           "so `pnpm test` fails on this PR until the mappings stop using the removed ids. Fix the mappings on a branch of your own and merge that; this PR then moves the pins on its next run.",
       );
     lines.push("");

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { contentDigest, loadCatalogue } from "../src/content/loader";
+import { readRepoFile } from "./lib/repo";
+import { parseIdList } from "./lib/text";
+import { ESSENTIALS_IT } from "./lib/upstreams";
 import { readContentFiles } from "./read-content";
 
 const { catalogue, errors } = loadCatalogue(readContentFiles());
@@ -115,8 +118,9 @@ describe("content", () => {
   });
 
   it("ships both Essentials chapters and leaves the Essential Eight and ISM files alone", () => {
-    expect(catalogue.frameworks.get("asd-essentials-enterprise-it")?.controls).toHaveLength(58);
-    expect(catalogue.frameworks.get("asd-essentials-cloud")?.controls).toHaveLength(78);
+    // The pinned action list is what the guidance update moves with each release, so the count comes from it.
+    expect(catalogue.frameworks.get("asd-essentials-enterprise-it")?.controls).toHaveLength(parseIdList(readRepoFile(ESSENTIALS_IT.idsFile)).length);
+    expect(catalogue.frameworks.get("asd-essentials-cloud")?.essentials?.provisional).toBe(true);
     expect(catalogue.frameworks.get("essential-eight")?.essentials).toBeUndefined();
     expect(catalogue.frameworks.get("ism")?.essentials).toBeUndefined();
   });
