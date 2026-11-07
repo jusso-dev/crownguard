@@ -1,17 +1,16 @@
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
-import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, type JewelRisk } from "../../engine/risk";
-import { essentialEight } from "../../engine/maturity";
+import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, isHighRisk, RISK_SCALE, riskScore, riskSteps, type JewelRisk } from "../../engine/risk";
+import { e8Title, essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
-import { answerLabels } from "../../engine/types";
-import { modeOf, stepsFor, useStore } from "../store";
-import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
-import { bandOf } from "../../engine/risk";
+import { answerText } from "../../format/vocab";
+import { useStore } from "../store";
+import { modeOf, stepIndex } from "../flow";
+import { BandBadge, bandClasses, Card, ExampleBadge, StepHeader, Tile } from "../ui";
 import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { EssentialsCard } from "../EssentialsOption";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
-import { ExampleBadge, Tile } from "./AiRegisterStep";
 
 
 export function ReviewStep() {
@@ -35,7 +34,7 @@ export function ReviewStep() {
   return (
     <>
       <StepHeader title="Review your risk">
-        Risk for each crown jewel is impact × likelihood on a 5×5 scale. Likelihood rises with unmet controls
+        Risk for each crown jewel is impact × likelihood on a {RISK_SCALE}×{RISK_SCALE} scale. Likelihood rises with unmet controls
         (weighted by severity), with each exposure you ticked, and is at least “possible” while any critical control is
         missing. Change answers in the previous step and this page updates.
       </StepHeader>
@@ -46,7 +45,7 @@ export function ReviewStep() {
             {unanswered} question{unanswered === 1 ? " is" : "s are"} unanswered and counted as gaps
             {naWithoutReason > 0 && ` (including ${naWithoutReason} N/A without a reason)`}.
           </span>
-          <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(3)}>Go back to answer them</button>
+          <button type="button" className="font-medium underline underline-offset-2" onClick={() => setStep(stepIndex("full", "controls"))}>Go back to answer them</button>
         </div>
       )}
 
@@ -54,7 +53,7 @@ export function ReviewStep() {
       <div className="grid overflow-hidden rounded-[var(--radius-card)] bg-graphite text-on-graphite sm:grid-cols-3">
         <Stat label="Control posture" value={pct(posture.score)} hint="Severity-weighted controls in place" />
         <Stat label="Answer confidence" value={pct(posture.confidence)} hint="Share of answers that aren't Unknown" />
-        <Stat label="High or extreme risks" value={String(risks.filter((r) => r.band === "High" || r.band === "Extreme").length)} hint={`of ${risks.length} crown jewels`} />
+        <Stat label="High or extreme risks" value={String(risks.filter((r) => isHighRisk(r.band)).length)} hint={`of ${risks.length} crown jewels`} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
@@ -74,7 +73,7 @@ export function ReviewStep() {
                   <td className="font-medium text-ink">{r.jewel.name}</td>
                   <td>{r.impact}</td>
                   <td>{r.likelihood}</td>
-                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="ml-1 font-mono text-xs text-muted">{r.score}/25</span></td>
+                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="ml-1 font-mono text-xs text-muted">{riskScore(r.score)}</span></td>
                   <td>{r.gaps.length}</td>
                 </tr>
               ))}
@@ -102,7 +101,7 @@ export function ReviewStep() {
             <tbody className="divide-y divide-rule">
               {e8.map((r) => (
                 <tr key={r.strategy}>
-                  <td className="py-2 pr-3 text-ink">{catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === r.strategy)?.title ?? r.strategy}</td>
+                  <td className="py-2 pr-3 text-ink">{e8Title(catalogue, r.strategy)}</td>
                   <td className="text-right font-mono text-sm font-medium text-ink">ML{r.level}</td>
                   <td className="w-28 pl-3 text-right font-mono text-[0.6875rem] text-muted">of ML{r.ceiling} asked</td>
                 </tr>
@@ -125,7 +124,7 @@ export function ReviewStep() {
               <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
                 <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                 <span className="text-ink">
-                  {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                  {g.question.question} <span className="text-muted">({answerText(g.answer)})</span>
                   {ism?.findings.some((f) => f.question.id === g.question.id) && (
                     <span className="mono-label ml-2 rounded-[4px] bg-sunken px-1.5 py-0.5 text-muted">ISM {ism.label}</span>
                   )}
@@ -151,7 +150,7 @@ function SocCard() {
     <Card className="mt-4" data-testid="soc-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold">SOC maturity (indicative)</h2>
-        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(4)}>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("full", "soc"))}>
           Edit SOC answers
         </button>
       </div>
@@ -194,7 +193,7 @@ function AiRegisterCard() {
     <Card className="mt-4" data-testid="ai-card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold">AI use-case register</h2>
-        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(5)}>
+        <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("full", "ai-register"))}>
           Edit AI register
         </button>
       </div>
@@ -233,7 +232,6 @@ function AiRegisterReview() {
   const setStep = useStore((s) => s.setStep);
   const module = catalogue.aiRegister;
   const summary = module ? aiRegisterSummary(catalogue, assessment) : undefined;
-  const registerStep = stepsFor("ai-register").indexOf("AI register");
   return (
     <>
       <StepHeader title="Review your register">
@@ -253,7 +251,7 @@ function AiRegisterReview() {
           <Card className="mt-4" data-testid="ai-review-gaps">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-base font-semibold">Open gaps</h2>
-              <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(registerStep)}>
+              <button type="button" className="text-sm font-medium text-accent underline underline-offset-2" onClick={() => setStep(stepIndex("ai-register", "ai-register"))}>
                 Edit the register
               </button>
             </div>
@@ -276,7 +274,7 @@ function AiRegisterReview() {
                           <li key={g.question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3">
                             <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{g.question.id}</span>
                             <span className="text-ink">
-                              {g.question.question} <span className="text-muted">({g.answer ? answerLabels[g.answer] : "Unanswered"})</span>
+                              {g.question.question} <span className="text-muted">({answerText(g.answer)})</span>
                             </span>
                           </li>
                         ))}
@@ -311,11 +309,11 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 
 function Heatmap({ risks }: { risks: JewelRisk[] }) {
   return (
-    <div className="inline-grid grid-cols-[auto_repeat(5,2.75rem)] gap-1 font-mono text-[0.6875rem]">
-      {[5, 4, 3, 2, 1].map((impact) => (
+    <div className="inline-grid gap-1 font-mono text-[0.6875rem]" style={{ gridTemplateColumns: `auto repeat(${RISK_SCALE}, 2.75rem)` }}>
+      {[...riskSteps].reverse().map((impact) => (
         <div key={impact} className="contents">
           <div className="pr-1.5 text-right leading-[2.75rem] text-muted">{impact}</div>
-          {[1, 2, 3, 4, 5].map((likelihood) => {
+          {riskSteps.map((likelihood) => {
             const here = risks.filter((r) => r.impact === impact && r.likelihood === likelihood);
             return (
               <div
@@ -330,9 +328,9 @@ function Heatmap({ risks }: { risks: JewelRisk[] }) {
         </div>
       ))}
       <div />
-      {[1, 2, 3, 4, 5].map((l) => <div key={l} className="pt-1 text-center text-muted">{l}</div>)}
+      {riskSteps.map((l) => <div key={l} className="pt-1 text-center text-muted">{l}</div>)}
       <div />
-      <div className="col-span-5 pt-1 text-center text-muted">Likelihood → · rows: impact</div>
+      <div className="pt-1 text-center text-muted" style={{ gridColumn: `span ${RISK_SCALE}` }}>Likelihood → · rows: impact</div>
     </div>
   );
 }

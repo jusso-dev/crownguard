@@ -1,7 +1,8 @@
 import { useRef, useState, type ReactNode } from "react";
 import { catalogue } from "../../content/catalogue";
 import { pct } from "../../engine/percent";
-import { exposures, type AiKind, type AiQuestion } from "../../content/schema";
+import { type AiKind, type AiQuestion } from "../../content/schema";
+import { exposures, andList, dayText, answerText } from "../../format/vocab";
 import {
   aiAccess,
   aiAutonomy,
@@ -16,13 +17,14 @@ import {
   aiUsagePatterns,
   type AiBasis,
   type AiCriterion,
-} from "../../engine/aiOptions";
+} from "../../format/aiOptions";
 import {
   aiFieldLabels,
   aiFieldSources,
-  aiNeedsReason,
   aiRegisterSummary,
   composeKillSwitchNote,
+  groupWarning,
+  KILL_SWITCH_QUESTION,
   highRiskNotification,
   parseKillSwitchNote,
   shareWithDta,
@@ -30,26 +32,21 @@ import {
   type KillSwitchNote,
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
-import { assessAll } from "../../engine/risk";
-import { answerLabels, type AiUseCase, type Answer } from "../../engine/types";
-import { NOTE_MAX } from "../assessmentSchema";
-import { download, slug } from "../download";
+import { assessAll, needsReason, riskScore } from "../../engine/risk";
+import type { AiUseCase } from "../../format/schema";
+import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
+import { platform } from "../../platform";
+import { fileNames } from "../files";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
-import { useStore, modeOf } from "../store";
-import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
-import { buildXlsx } from "../xlsx";
+import { useStore } from "../store";
+import { modeOf } from "../flow";
+import { BandBadge, Button, Card, CheckboxPill, ExampleBadge, Field, FieldGroup, Progress, SeverityBadge, StepHeader, Tile, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
+import { buildXlsx } from "../../lib/xlsx";
 
 const ADD = "add";
-const answerOrder: Answer[] = ["yes", "partial", "no", "unknown", "na"];
 /** The open-gaps filter: one basis of readiness question, or all of them. */
 type GapFilter = "all" | AiBasis;
-const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
-const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-
-export function ExampleBadge() {
-  return <span className="mono-label rounded-[4px] bg-warn-soft px-1.5 py-0.5 text-warn">Example</span>;
-}
 
 export function AiRegisterStep() {
   const assessment = useStore((s) => s.assessment);
@@ -95,7 +92,7 @@ export function AiRegisterStep() {
         <Card>
           <p className="max-w-[68ch] text-sm leading-relaxed text-ink-2">
             Add each use case from a preset, fill in the register fields, then answer up to {questions.length} readiness questions on{" "}
-            {model.themes.map((t) => t.name.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}. Only the questions that fit the use
+            {andList(model.themes.map((t) => t.name.toLowerCase()))}. Only the questions that fit the use
             case are asked: agent questions only for AI that can take actions, for example.
             {standalone ? "" : " The register doesn't change your crown-jewel risk ratings unless you tick the exposures it suggests."}
           </p>
@@ -124,6 +121,7 @@ export function AiRegisterStep() {
   const risks = assessAll(catalogue, assessment);
   const summary = aiRegisterSummary(catalogue, assessment, risks);
   const entries = summary.entries;
+  const grouping = groupWarning(entries.map((r) => r.entry));
   const current = active === ADD ? undefined : (entries.find((r) => r.entry.id === active) ?? entries[0]);
   const index = current ? entries.indexOf(current) : -1;
 
@@ -171,6 +169,11 @@ export function AiRegisterStep() {
           + Add a use case
         </button>
       </nav>
+      {grouping && (
+        <p role="status" className="mt-3 max-w-[72ch] rounded-[var(--radius-control)] border border-warn/20 bg-warn-soft px-3 py-2 text-sm text-warn">
+          {grouping}
+        </p>
+      )}
 
       {current ? (
         <Entry
@@ -208,16 +211,6 @@ export function AiRegisterStep() {
   );
 }
 
-export function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="border-rule p-4 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l">
-      <div className="mono-label text-muted">{label}</div>
-      <div className="mt-1.5 font-display text-[1.75rem] font-semibold leading-none tabular-nums text-ink">{value}</div>
-      <div className="mt-1.5 text-xs text-muted">{hint}</div>
-    </div>
-  );
-}
-
 function ExampleNotice({ count }: { count: number }) {
   const removeAiExamples = useStore((s) => s.removeAiExamples);
   return (
@@ -242,7 +235,7 @@ function Cite({ ids, label = "Source" }: { ids: readonly string[]; label?: strin
       {sources.map((s, i) => (
         <span key={s.id}>
           {i > 0 && " · "}
-          <a className={link} href={s.url} target="_blank" rel="noreferrer noopener">
+          <a className={linkClass} href={s.url} target="_blank" rel="noreferrer noopener">
             {s.title}
           </a>
         </span>
@@ -311,7 +304,7 @@ function KeyDates() {
                 <span className="text-ink-2">
                   {d.text}{" "}
                   {src && (
-                    <a className={`${link} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
+                    <a className={`${linkClass} text-xs`} href={src.url} target="_blank" rel="noreferrer noopener">
                       {src.title}
                     </a>
                   )}
@@ -493,7 +486,9 @@ function Entry({
           <Field label="Underpinning product" hint="Part of the description in the Standard, if it's built on a product">
             <input className={inputClass} value={e.product} maxLength={200} onChange={(x) => set({ product: x.target.value })} />
           </Field>
-          <div />
+          <Field label="Grouped under" hint="When this is one of several entries for a general-purpose AI, the AI it's part of">
+            <input className={inputClass} value={e.groupOf ?? ""} maxLength={200} placeholder="e.g. Microsoft 365 Copilot" onChange={(x) => set({ groupOf: x.target.value || undefined })} />
+          </Field>
           <div className="sm:col-span-2">
             <FieldGroup label={aiFieldLabels.technology} hint="Tick all that apply. There's no separate type for agents: record the technology they use.">
               <Pills options={aiTechnologies} value={e.technology} onChange={(technology) => set({ technology })} />
@@ -629,7 +624,7 @@ function Entry({
                       <li key={jewel.id} className="flex flex-wrap items-center gap-2">
                         <BandBadge band={risk.band} />
                         <span className="text-ink">{jewel.name}</span>
-                        <span className="font-mono text-xs text-muted">{risk.score}/25 · {risk.gaps.length} open control gaps</span>
+                        <span className="font-mono text-xs text-muted">{riskScore(risk.score)} · {risk.gaps.length} open control gaps</span>
                       </li>
                     ) : null,
                   )}
@@ -667,7 +662,7 @@ function Entry({
                       <li key={question.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] gap-3">
                         <span className="pt-0.5 font-mono text-[0.6875rem] text-muted">{question.id}</span>
                         <span className="text-ink-2">{question.question}</span>
-                        <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answer ? answerLabels[answer] : "Unanswered"}</span>
+                        <span className={`font-mono text-xs ${answer === "yes" ? "text-ok" : "text-muted"}`}>{answerText(answer)}</span>
                       </li>
                     ))}
                   </ul>
@@ -767,7 +762,7 @@ function NotificationDraft({ entry }: { entry: AiUseCase }) {
       <p className="mt-2 max-w-[68ch] text-xs text-muted">
         Send it to ai@dta.gov.au by typing that address into your own email.{" "}
         {src && (
-          <a className={link} href={src.url} target="_blank" rel="noreferrer noopener">
+          <a className={linkClass} href={src.url} target="_blank" rel="noreferrer noopener">
             {src.title}
           </a>
         )}
@@ -776,7 +771,6 @@ function NotificationDraft({ entry }: { entry: AiUseCase }) {
   );
 }
 
-/** Copy the draft to the clipboard, reporting success inline and any failure without losing the caught error. */
 async function copyText(text: string, setCopied: (v: boolean) => void, setCopyError: (v: string) => void) {
   try {
     await navigator.clipboard.writeText(text);
@@ -793,58 +787,28 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
   const setAiAnswer = useStore((s) => s.setAiAnswer);
   const setAiNote = useStore((s) => s.setAiNote);
   const answer = entry.answers[q.id];
-  const missingReason = aiNeedsReason(entry, q.id);
-  const reasonId = `${entry.id}-${q.id}-na-reason`;
+  const missingReason = needsReason(entry, q.id);
   // The switch-off question carries the kill-switch worksheet in its note, instead of the free-text note below.
-  const isKillSwitch = q.id === "AIR-OFF-001";
+  const isKillSwitch = q.id === KILL_SWITCH_QUESTION;
   return (
     <article className="rounded-[var(--radius-card)] border border-rule bg-surface p-5 sm:p-6" data-ai-question={q.id}>
       <div className="flex flex-wrap items-center gap-2.5">
         <SeverityBadge severity={q.severity} />
         <span className="font-mono text-[0.6875rem] text-muted">{q.id}</span>
         <span className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">{aiBases[q.basis]}</span>
-        {answer && !missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>✓ answered</span>}
-        {missingReason && <span className="ml-auto font-mono text-[0.6875rem] text-warn" aria-hidden>reason needed</span>}
+        <AnswerState answer={answer} missingReason={missingReason} />
       </div>
       <h5 className="mt-3 font-sans text-base font-medium leading-snug tracking-normal">{q.question}</h5>
-      <div className="mt-4 grid max-w-md grid-cols-5 gap-px overflow-hidden rounded-[var(--radius-control)] border border-field bg-field" role="radiogroup" aria-label={q.question} onKeyDown={radioKeys}>
-        {answerOrder.map((a, i) => (
-          <button
-            key={a}
-            type="button"
-            role="radio"
-            aria-checked={answer === a}
-            tabIndex={radioTab(answer === a, i, answer !== undefined)}
-            onClick={() => setAiAnswer(entry.id, q.id, a)}
-            className={`min-h-9 px-1 py-1.5 text-[0.8125rem] transition-colors duration-150 focus-visible:-outline-offset-2 sm:px-3 sm:text-sm ${
-              answer === a ? "bg-ink font-medium text-paper" : "bg-surface text-ink-2 [@media(hover:hover)]:hover:bg-sunken [@media(hover:hover)]:hover:text-ink"
-            }`}
-          >
-            {answerLabels[a]}
-          </button>
-        ))}
-      </div>
+      <AnswerButtons label={q.question} answer={answer} onAnswer={(a) => setAiAnswer(entry.id, q.id, a)} />
       {isKillSwitch && <KillSwitchWorksheet entry={entry} showReason={answer === "na"} missingReason={missingReason} />}
       {!isKillSwitch && answer === "na" && (
-        <div className="mt-4 max-w-[72ch]">
-          <label htmlFor={reasonId} className="text-sm font-medium text-ink">
-            Why doesn&apos;t this apply? <span className="font-normal text-muted">(required)</span>
-          </label>
-          <textarea
-            id={reasonId}
-            rows={2}
-            required
-            aria-required="true"
-            aria-invalid={missingReason}
-            className={`${inputClass} mt-1.5 ${missingReason ? "border-warn!" : ""}`}
-            value={entry.notes[q.id] ?? ""}
-            maxLength={NOTE_MAX}
-            onChange={(x) => setAiNote(entry.id, q.id, x.target.value)}
-          />
-          <p className={`mt-1 text-xs ${missingReason ? "text-warn" : "text-muted"}`}>
-            {missingReason ? "Until you give a reason this counts as unanswered and is scored as a gap." : "Shown in the report with this use case."}
-          </p>
-        </div>
+        <NaReason
+          id={`${entry.id}-${q.id}-na-reason`}
+          value={entry.notes[q.id] ?? ""}
+          onChange={(note) => setAiNote(entry.id, q.id, note)}
+          missing={missingReason}
+          shownIn="Shown in the report with this use case."
+        />
       )}
       <details className="group mt-4 border-t border-rule pt-3 text-sm">
         <summary className="text-muted transition-colors [@media(hover:hover)]:hover:text-ink">Why this matters and what good looks like</summary>
@@ -852,36 +816,8 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
           <p>{q.why}</p>
           <p><span className="font-medium text-ink">Yes looks like: </span>{q.yesLooksLike}</p>
           <p><span className="font-medium text-ink">How to fix: </span>{q.remediation}</p>
-          <div className="text-xs text-muted">
-            <div className="flex flex-wrap gap-1.5">
-              {q.refs.map((ref) => (
-                <span key={`${ref.framework}:${ref.ref}`} className="rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2">
-                  {catalogue.frameworks.get(ref.framework)?.shortName ?? ref.framework} {ref.ref}
-                </span>
-              ))}
-            </div>
-            <ul className="mt-2 space-y-0.5">
-              {q.sources.map((s) => {
-                const src = catalogue.sources.get(s);
-                return src ? (
-                  <li key={s}>
-                    <a className={link} href={src.url} target="_blank" rel="noreferrer noopener">{src.title}</a> · {src.publisher}
-                  </li>
-                ) : null;
-              })}
-            </ul>
-          </div>
-          {!isKillSwitch && answer !== "na" && (
-            <textarea
-              className={inputClass}
-              rows={2}
-              maxLength={NOTE_MAX}
-              aria-label={`Notes for the report on ${q.id}`}
-              placeholder="Notes for the report (optional)"
-              value={entry.notes[q.id] ?? ""}
-              onChange={(x) => setAiNote(entry.id, q.id, x.target.value)}
-            />
-          )}
+          <References refs={q.refs} sources={q.sources} />
+          {!isKillSwitch && answer !== "na" && <ReportNote questionId={q.id} value={entry.notes[q.id] ?? ""} onChange={(note) => setAiNote(entry.id, q.id, note)} />}
         </div>
       </details>
     </article>
@@ -894,9 +830,9 @@ function ReadinessCard({ q, entry }: { q: AiQuestion; entry: AiUseCase }) {
  */
 function KillSwitchWorksheet({ entry, showReason, missingReason }: { entry: AiUseCase; showReason: boolean; missingReason: boolean }) {
   const updateAiUseCase = useStore((s) => s.updateAiUseCase);
-  const n = parseKillSwitchNote(entry.notes?.["AIR-OFF-001"]);
+  const n = parseKillSwitchNote(entry.notes?.[KILL_SWITCH_QUESTION]);
   const set = (key: keyof KillSwitchNote, value: string) =>
-    updateAiUseCase(entry.id, { notes: { ...entry.notes, "AIR-OFF-001": composeKillSwitchNote({ ...n, [key]: value }) } });
+    updateAiUseCase(entry.id, { notes: { ...entry.notes, [KILL_SWITCH_QUESTION]: composeKillSwitchNote({ ...n, [key]: value }) } });
   const fields: [keyof KillSwitchNote, string][] = [
     ["stop", "How to stop it (identity, tokens, connectors)"],
     ["who", "Who may stop it"],
@@ -935,7 +871,6 @@ function KillSwitchWorksheet({ entry, showReason, missingReason }: { entry: AiUs
 }
 
 function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis: (b: GapFilter) => void }) {
-  // Only the bases that actually have an open gap are worth offering as a filter.
   const offered = [...new Set(r.gaps.map((g) => g.question.basis).filter((b): b is AiBasis => !!b))];
   const shown = basis === "all" ? r.gaps : r.gaps.filter((g) => g.question.basis === basis);
   return (
@@ -988,7 +923,7 @@ function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis
                 <span className="text-ink">
                   {g.question.question}{" "}
                   <span className="text-muted">
-                    ({g.answer ? answerLabels[g.answer] : "Unanswered"} · {g.question.severity}
+                    ({answerText(g.answer)} · {g.question.severity}
                     {basisLabel(g.question.basis) ? ` · ${basisLabel(g.question.basis)}` : ""})
                   </span>
                 </span>
@@ -1011,11 +946,7 @@ function Gaps({ r, basis, onBasis }: { r: AiReadiness; basis: GapFilter; onBasis
 function Exports() {
   const assessment = useStore((s) => s.assessment);
   const entries = assessment.aiRegister?.entries.length ?? 0;
-  const file = (ext: string) => {
-    const d = new Date();
-    const p2 = (n: number) => String(n).padStart(2, "0");
-    return `${slug(assessment.org.name)}-ai-use-case-register-${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}.${ext}`;
-  };
+  const file = (ext: "csv" | "xlsx") => fileNames.register(assessment.org.name, ext, new Date());
   return (
     <Card className="mt-10">
       <h2 className="text-base font-semibold">Download the register</h2>
@@ -1024,7 +955,7 @@ function Exports() {
         columns follow, so you can keep or drop them. The spreadsheet adds an About sheet with the dates, notes and sources. Files are made in your browser.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="secondary" disabled={!entries} onClick={() => download(file("csv"), toCsv(registerTable(catalogue, assessment)), "text/csv;charset=utf-8")}>
+        <Button variant="secondary" disabled={!entries} onClick={() => platform.saveAs(file("csv"), toCsv(registerTable(catalogue, assessment)), "text/csv;charset=utf-8")}>
           Download CSV
         </Button>
         <Button
@@ -1036,7 +967,7 @@ function Exports() {
               { name: "Register", rows: [t.headers, ...t.rows], header: true, widths: t.headers.map((h) => (/Description|gaps|missing/i.test(h) ? 48 : 22)) },
               { name: "About", rows: aboutRows(catalogue, assessment), widths: [18, 110] },
             ]);
-            download(file("xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            platform.saveAs(file("xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
           }}
         >
           Download XLSX

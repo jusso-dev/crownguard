@@ -1,6 +1,6 @@
 /**
  * In-memory only: the optional passphrase and a locked encrypted blob waiting to be unlocked.
- * Never written to localStorage. Lost on reload (user must enter the passphrase again).
+ * Never written to autosave storage. Lost on reload (user must enter the passphrase again).
  */
 
 let passphrase: string | null = null;
@@ -18,7 +18,7 @@ export function hasSessionPassphrase(): boolean {
   return passphrase !== null;
 }
 
-/** Raw localStorage value of an encrypted progress blob that could not be opened yet. */
+/** Raw autosaved value of an encrypted progress blob that could not be opened yet. */
 export function setLockedEnvelope(raw: string | null) {
   lockedRaw = raw;
 }

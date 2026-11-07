@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Assessment } from "../engine/types";
-import * as crypto from "./crypto";
+import type { Assessment } from "../format/schema";
+import * as crypto from "../format/crypto";
 import {
   checkedStorage,
   dropProgress,
@@ -15,7 +15,7 @@ import {
   writeProgress,
 } from "./persistence";
 import { setSessionPassphrase } from "./sessionSecrets";
-import { emptyAssessment } from "./store";
+import { emptyAssessment } from "../format/empty";
 
 const named = (name: string): Assessment => ({ ...emptyAssessment(), org: { ...emptyAssessment().org, name } });
 
@@ -163,5 +163,65 @@ describe("a browser that won't take the save", () => {
     await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: named("Room Co") }, version: 4 });
     expect(storageWriteFailed()).toBe(false);
     expect(disk.items.get(STORAGE_KEY)).toContain("Room Co");
+  });
+});
+
+describe("progress saved in this browser", () => {
+  it("validates it like an opened file, and keeps the answers it doesn't recognise", async () => {
+    const a: Assessment = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stored Co" }, answers: { "MS-ID-001": "no", GONE: "yes" } };
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: a }, version: 2 });
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
+    expect(stored?.state.assessment).toMatchObject({ org: { name: "Stored Co" } });
+    expect(stored?.state.assessment?.answers).toEqual({ "MS-ID-001": "no" });
+    expect(stored?.state.assessment?.orphans).toEqual({ GONE: { answer: "yes" } });
+  });
+
+  it("starts clean when the stored progress can't be read, and keeps it for download", async () => {
+    const unreadable = { org: "nonsense" } as unknown as Assessment;
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: unreadable }, version: 2 });
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(unreadableBackup()).toContain("nonsense");
+  });
+
+  it("does the same for progress that isn't even valid JSON", async () => {
+    writeProgress(STORAGE_KEY, "{not json");
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(unreadableBackup()).toBe("{not json");
+  });
+
+  it("does not let a slower passphrase save overwrite a newer one", async () => {
+    const actual = crypto.encrypt;
+    let calls = 0;
+    let releaseFirst: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const spy = vi.spyOn(crypto, "encrypt").mockImplementation(async (plaintext, pass) => {
+      calls += 1;
+      if (calls === 1) await gate;
+      return actual(plaintext, pass);
+    });
+    setSessionPassphrase("race-pass-1234");
+    const stale = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Stale Co" } };
+    const fresh = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Fresh Co" } };
+    const first = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: stale }, version: 3 });
+    const second = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: fresh }, version: 3 });
+    await second;
+    releaseFirst();
+    await first;
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
+    expect(stored?.state.assessment?.org.name).toBe("Fresh Co");
+    setSessionPassphrase(null);
+    dropProgress(STORAGE_KEY);
+    spy.mockRestore();
+  });
+
+  it("writes nothing while a newer file is open read-only", async () => {
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: emptyAssessment() }, version: 2 });
+    setStorageReadOnly(true);
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: { ...emptyAssessment(), updatedAt: "later" } }, version: 2 });
+    checkedStorage.removeItem(STORAGE_KEY);
+    setStorageReadOnly(false);
+    expect((await checkedStorage.getItem(STORAGE_KEY))?.state.assessment?.updatedAt).not.toBe("later");
   });
 });

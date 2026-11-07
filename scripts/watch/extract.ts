@@ -34,7 +34,7 @@ function meta(document: Doc, name: string): string | undefined {
 }
 
 /** Learn metadata from `<meta>` tags, when the page is a Learn article. */
-export function learnMeta(document: Doc): LearnMeta | undefined {
+function learnMeta(document: Doc): LearnMeta | undefined {
   const original = meta(document, "original_content_git_url");
   const m = original?.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/blob\/([^/]+)\/(.+)$/);
   if (!m) return undefined;

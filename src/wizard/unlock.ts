@@ -1,12 +1,13 @@
-import type { Assessment } from "../engine/types";
-import { questionIdSet } from "../content/questionIds";
-import { decrypt, isEncryptedEnvelope } from "./crypto";
-import { parseAssessment } from "./parseAssessment";
+import { allQuestionIds } from "../content/catalogue";
+import type { Assessment } from "../format/schema";
+import { decryptJson, isEncryptedEnvelope } from "../format/crypto";
+import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
-import { migrateProgress, modeOf, clampStep, useStore } from "./store";
+import { useStore } from "./store";
+import { HERE } from "./where";
 
-export type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
+type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
 
 /**
  * Decrypt locked (or on-disk encrypted) progress with the passphrase, load it into the store, and keep the
@@ -14,34 +15,27 @@ export type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; e
  */
 export async function unlockProgress(passphrase: string): Promise<UnlockResult> {
   const raw = getLockedEnvelope() ?? readProgress(STORAGE_KEY);
-  if (!raw) return { ok: false, error: "No encrypted progress found in this browser." };
+  if (!raw) return { ok: false, error: `No encrypted progress found ${HERE}.` };
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return { ok: false, error: "Encrypted progress in this browser is damaged." };
+    return { ok: false, error: `Encrypted progress ${HERE} is damaged.` };
   }
-  if (!isEncryptedEnvelope(parsed)) return { ok: false, error: "Progress in this browser is not encrypted." };
-
-  let plain: string;
-  try {
-    plain = await decrypt(parsed, passphrase);
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Wrong passphrase, or the encrypted data is damaged." };
-  }
+  if (!isEncryptedEnvelope(parsed)) return { ok: false, error: `Progress ${HERE} is not encrypted.` };
 
   let stored: { state?: { assessment?: Assessment }; version?: number };
   try {
-    stored = JSON.parse(plain) as { state?: { assessment?: Assessment }; version?: number };
-  } catch {
-    return { ok: false, error: "Encrypted progress could not be read after decrypting." };
+    stored = (await decryptJson(parsed, passphrase)) as typeof stored;
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
   }
 
   const assessment = stored.state?.assessment;
   if (!assessment) return { ok: false, error: "Encrypted progress had no assessment." };
 
-  const result = parseAssessment(assessment, { questionIds: questionIdSet() });
+  const result = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (result.kind === "error") {
     return { ok: false, error: `Encrypted progress couldn't be read (${result.issues[0] ?? result.message}).` };
   }
@@ -51,17 +45,15 @@ export async function unlockProgress(passphrase: string): Promise<UnlockResult> 
 
   setSessionPassphrase(passphrase);
   setLockedEnvelope(null);
-  const loaded = result.assessment;
-  const mode = modeOf(loaded);
-  const progress = migrateProgress(loaded.progress ?? { step: 0 }, mode)!;
-  useStore.getState().load({ ...loaded, progress: { ...progress, step: clampStep(progress.step, mode) } });
+  useStore.getState().load(result.assessment);
   return { ok: true, assessment: useStore.getState().assessment };
 }
 
-/** Drop encrypted progress from this browser without unlocking it. */
-export function forgetLockedProgress() {
-  dropProgress(STORAGE_KEY);
-  setLockedEnvelope(null);
+/** Drop the assessment kept here, encrypted or not, with its passphrase, and start blank. */
+export function forgetProgress() {
   setSessionPassphrase(null);
+  setLockedEnvelope(null);
+  // Reset first: resetting saves the blank assessment, and dropping afterwards leaves nothing behind.
   useStore.getState().reset();
+  dropProgress(STORAGE_KEY);
 }

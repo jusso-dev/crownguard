@@ -1,5 +1,6 @@
 import type { Catalogue, Question, Source } from "../../src/content/schema";
-import { citedByIndex, citedVersion, classifyChange, compareVersions, diffTexts, equivalentUrls, excerpt, redirectKind, versionsOnPage, type TextDiff } from "./compare";
+import { compareVersions } from "../lib/versions";
+import { citedByIndex, citedVersion, classifyChange, diffTexts, equivalentUrls, isNoiseParam, excerpt, redirectKind, versionsOnPage, type TextDiff } from "./compare";
 import { extractHtml, extractPdf, lifecycleLine } from "./extract";
 import { checkFeeds, type FeedDef } from "./feeds";
 import { compareUrl, markdownBody, type GitHub } from "./github";
@@ -27,29 +28,35 @@ export interface WatchDeps {
   simulate?: boolean;
   /** Check only these source ids; everything else keeps its baseline. */
   only?: Set<string>;
-  /** Consecutive failed runs before a source counts as broken. */
-  failureThreshold?: number;
   /** Consecutive runs a source can't be checked before it is reported as unmonitored. */
   unmonitoredAfter?: number;
-  /** New Learn pages listed per table-of-contents section per run. */
-  maxPerSection?: number;
   log?: (line: string) => void;
 }
 
+/** Consecutive failed runs before a source counts as broken. */
+const FAILURE_THRESHOLD = 2;
+/** New Learn pages listed per table-of-contents section per run. */
+const MAX_PER_SECTION = 5;
+/** Fewest sources checked before the network guard below can judge a run. */
+const SYSTEMIC_MIN_CHECKED = 20;
 /** Share of all sources that may fail before the run aborts: that looks like the runner's network, not the sources. */
 const SYSTEMIC_FAILURE_RATE = 0.25;
+/** The same, counting failures on hosts that are down as a whole. */
+const SYSTEMIC_FAILURE_RATE_ANY_HOST = 0.6;
+/** Fewest sources on one host before that host's failures can count as the host blocking the runner. */
+const HOST_MIN_SOURCES = 3;
 /** Share of one host's sources that may fail before the failures count as a host problem rather than broken pages. */
 const HOST_FAILURE_RATE = 0.8;
 /** Share of a host's pages that may change at once without a commit behind them before it looks like a site redesign. */
 const MASS_CHANGE_RATE = 0.3;
+/** Fewest pages loaded from one host before a mass change can be judged. */
+const MASS_CHANGE_MIN_PAGES = 10;
 
-/** Tracking and language parameters dropped from a moved page's new URL. */
-const TRACKING = /^(?:utm_[a-z]+|sjid|visit_id|rd|ref_topic|authuser|co|hl|cms_guid)$/;
-
+/** A moved page's new URL without its fragment and the tracking and language parameters sites add on redirect. */
 function cleanMovedUrl(url: string): string {
   const u = new URL(url);
   u.hash = "";
-  for (const k of [...u.searchParams.keys()]) if (TRACKING.test(k)) u.searchParams.delete(k);
+  for (const k of [...u.searchParams.keys()]) if (isNoiseParam(k)) u.searchParams.delete(k);
   return u.toString();
 }
 
@@ -98,7 +105,6 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
   const started = Date.now();
   const { catalogue, baseline, cache, fetcher, github, date } = deps;
   const log = deps.log ?? (() => {});
-  const threshold = deps.failureThreshold ?? 2;
   const unmonitoredAfter = deps.unmonitoredAfter ?? 7;
   const citedBy = citedByIndex(catalogue);
   const sources = [...catalogue.sources.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -221,12 +227,12 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
   const downHosts = new Set<string>();
   for (const [h, list] of perHost) {
     const down = list.filter(failing).length;
-    if (list.length >= 3 && down / list.length >= HOST_FAILURE_RATE) downHosts.add(h);
+    if (list.length >= HOST_MIN_SOURCES && down / list.length >= HOST_FAILURE_RATE) downHosts.add(h);
   }
   // Failures spread across many hosts point at the runner's network: abort rather than report them.
   const spread = raws.filter((r) => r.kind !== "skip" && failing(r) && !downHosts.has(hostOf(r.source.url))).length;
   const everywhere = raws.filter(failing).length;
-  if (stats.checked >= 20 && (spread / stats.checked > SYSTEMIC_FAILURE_RATE || everywhere / stats.checked > 0.6))
+  if (stats.checked >= SYSTEMIC_MIN_CHECKED && (spread / stats.checked > SYSTEMIC_FAILURE_RATE || everywhere / stats.checked > SYSTEMIC_FAILURE_RATE_ANY_HOST))
     throw new Error(`${everywhere} of ${stats.checked} sources failed to load; this looks like a network problem on the runner, not broken sources. Nothing was written.`);
   for (const h of downHosts) {
     const list = perHost.get(h)!;
@@ -246,7 +252,7 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
       const memo = cache.memos[r.source.id];
       return !!b?.contentHash && !r.sameText && !r.freshCommit && memo?.last !== undefined && memo.last !== r.ex.contentHash;
     });
-    const tonight = ok.length >= 10 && fresh.length / ok.length > MASS_CHANGE_RATE;
+    const tonight = ok.length >= MASS_CHANGE_MIN_PAGES && fresh.length / ok.length > MASS_CHANGE_RATE;
     // A page whose substantial change is already in the open pull request keeps being reported, not held.
     const pending = (r: Loaded) => {
       const memo = cache.memos[r.source.id];
@@ -287,7 +293,6 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
       continue;
     }
 
-    // The page loaded.
     delete cache.failures[s.id];
     delete cache.unverified[s.id];
     const { ex, current, redirect } = r;
@@ -377,11 +382,7 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
 
   // 6. Scanner mapping drift against injected upstream check lists (no network here).
   if (deps.upstreamChecks?.length && !deps.only) {
-    findings.push(
-      ...checkMappingDrift(catalogue, deps.upstreamChecks, {
-        baseId: (mappingId, id) => (mappingId === "scubagoggles" ? id.replace(/v\d+$/i, "") : id),
-      }),
-    );
+    findings.push(...checkMappingDrift(catalogue, deps.upstreamChecks));
   }
 
   // 7. Optional Claude triage of substantial changes.
@@ -441,13 +442,13 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
     }
   }
 
-  /** A 404/410 is broken at once; other failures only after `threshold` runs in a row. */
+  /** A 404/410 is broken at once; other failures only after `FAILURE_THRESHOLD` runs in a row. */
   function failed(s: Source, base: SourceState | undefined, res: FetchResult) {
     const gone = res.outcome === "not-found";
-    const count = gone ? threshold : cache.bump("failures", s.id, date);
+    const count = gone ? FAILURE_THRESHOLD : cache.bump("failures", s.id, date);
     if (gone) delete cache.failures[s.id];
     const reason = gone ? `HTTP ${res.status}: the page no longer exists` : `${res.error ?? `HTTP ${res.status}`}${count > 1 ? ` (${count} nights in a row)` : ""}`;
-    if (count < threshold) {
+    if (count < FAILURE_THRESHOLD) {
       const keepEntry = base ?? baseline.sources[s.id];
       if (keepEntry) proposed.sources[s.id] = keepEntry;
       findings.push(finding(s, { kind: "unverifiable", actionable: false, detail: `${reason}; reported as broken if it fails again` }));
@@ -609,10 +610,10 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
     let learnAllOk = true;
     for (const r of raws) {
       if (r.kind === "ok" && r.tocUrl) byToc.set(r.tocUrl, [...(byToc.get(r.tocUrl) ?? []), r.source]);
-      else if (r.kind !== "skip" && r.kind !== "ok" && hostOf(r.source.url) === "learn.microsoft.com") learnAllOk = false;
+      else if (r.kind !== "skip" && r.kind !== "ok" && profileFor(hostOf(r.source.url)).tocs) learnAllOk = false;
     }
     const limit = limiter(4);
-    const max = deps.maxPerSection ?? 5;
+    const max = MAX_PER_SECTION;
     const startedSections: string[] = [];
     const renamed = new Set<string>();
     const fetched = new Set<string>();
@@ -624,6 +625,7 @@ export async function runWatch(deps: WatchDeps): Promise<RunResult> {
           try {
             nodes = res.outcome === "ok" && res.body ? parseToc(JSON.parse(res.body), tocUrl) : undefined;
           } catch {
+            // Malformed JSON is handled like a failed fetch, just below.
             nodes = undefined;
           }
           if (!nodes) {

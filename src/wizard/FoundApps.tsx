@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { catalogue } from "../content/catalogue";
-import type { AiUseCase } from "../engine/types";
+import type { AiUseCase } from "../format/schema";
 import {
   categoryLabel,
   consentText,
@@ -12,26 +12,21 @@ import {
   type FoundInventory,
 } from "../imports/consent";
 import { useStore } from "./store";
+import { linkClass } from "./AnswerFields";
 import { Button } from "./ui";
 
-const link = "text-accent underline decoration-accent/30 underline-offset-2 [@media(hover:hover)]:hover:decoration-accent";
 const mono = "rounded-[4px] border border-rule bg-sunken px-1.5 py-0.5 font-mono text-[0.6875rem] text-ink-2";
 
 /** The Graph cmdlets the panel documents. Shown verbatim so the export can be made with the least privilege. */
 const GRANTS_CMD = "Get-MgOauth2PermissionGrant -All | ConvertTo-Json -Depth 5 | Set-Content grants.json";
 const SERVICE_PRINCIPALS_CMD = "Get-MgServicePrincipal -All | ConvertTo-Json -Depth 5 | Set-Content service-principals.json";
 
-/**
- * Scroll to the panel wherever it now is. Used by the Controls step's link, which changes steps first, so the panel
- * may still be a frame away from existing: try a few times before giving up.
- */
-export function scrollToFoundApps(attempts = 10) {
-  const el = document.getElementById("found-apps");
-  if (el) el.scrollIntoView({ block: "start" });
-  else if (attempts > 0) requestAnimationFrame(() => scrollToFoundApps(attempts - 1));
+/** Set by the Controls step's link before it changes step; the panel scrolls itself into view when it mounts. */
+let scrollOnMount = false;
+export function showFoundApps() {
+  scrollOnMount = true;
 }
 
-/** Open the export instructions and scroll to them. */
 function openHow() {
   const how = document.getElementById("found-apps-how") as HTMLDetailsElement | null;
   if (how) {
@@ -59,6 +54,12 @@ export interface FoundAppsState {
 const NO_ENTRIES: AiUseCase[] = [];
 
 export function FoundApps({ state, setState }: { state: FoundAppsState; setState: (fn: (s: FoundAppsState) => FoundAppsState) => void }) {
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!scrollOnMount) return;
+    scrollOnMount = false;
+    panel.current?.scrollIntoView({ block: "start" });
+  }, []);
   const input = useRef<HTMLInputElement>(null);
   const setAiIncluded = useStore((s) => s.setAiIncluded);
   const addImportedAiUseCase = useStore((s) => s.addImportedAiUseCase);
@@ -97,14 +98,14 @@ export function FoundApps({ state, setState }: { state: FoundAppsState; setState
   const groups = preview ? groupApps(preview.apps) : undefined;
 
   return (
-    <section className="mt-6 rounded-[var(--radius-card)] border border-rule bg-surface" aria-label="Found apps" data-testid="found-apps" id="found-apps">
+    <section ref={panel} className="mt-6 rounded-[var(--radius-card)] border border-rule bg-surface" aria-label="Found apps" data-testid="found-apps" id="found-apps">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4 sm:px-5">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">Found apps: find the AI people have already connected.</p>
           <p className="mt-0.5 text-xs text-muted">
             Optional. Export the list of apps people have granted access to — Microsoft Entra ID or Google Workspace — and crownguard sorts
             out the AI tools, note-takers and agents from it, entirely in your browser.{" "}
-            <button type="button" className={link} onClick={openHow}>
+            <button type="button" className={linkClass} onClick={openHow}>
               How to export the list
             </button>
           </p>
@@ -256,7 +257,7 @@ function ExportHow() {
             What the file holds: each grant&apos;s <span className={mono}>clientId</span>, <span className={mono}>consentType</span> (AllPrincipals or
             Principal), <span className={mono}>scope</span>, and each app&apos;s display name, publisher and{" "}
             <span className={mono}>appOwnerOrganizationId</span>.{" "}
-            <a className={link} href="https://learn.microsoft.com/en-us/graph/api/resources/oauth2permissiongrant" target="_blank" rel="noreferrer noopener">
+            <a className={linkClass} href="https://learn.microsoft.com/en-us/graph/api/resources/oauth2permissiongrant" target="_blank" rel="noreferrer noopener">
               Microsoft Graph consent grants
             </a>
           </p>
@@ -272,7 +273,7 @@ function ExportHow() {
             <li>Pick the CSV here.</li>
           </ol>
           <p className="mt-1.5 text-xs text-muted">
-            <a className={link} href="https://support.google.com/a/answer/6124308" target="_blank" rel="noreferrer noopener">
+            <a className={linkClass} href="https://support.google.com/a/answer/6124308" target="_blank" rel="noreferrer noopener">
               Google: OAuth log events
             </a>
           </p>

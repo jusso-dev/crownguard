@@ -1,10 +1,12 @@
 import type { Question } from "../content/schema";
-import { addsNothing, type E8Result } from "./maturity";
-import type { Answer, CrownJewel, Dsl } from "./types";
+import { addsNothing, e8Tagged, type E8Result } from "./maturity";
+import { isSatisfied, maxImpact } from "./risk";
+import { andList, type Answer, type Classification, type Dsl, type Regulation } from "../format/vocab";
+import type { CrownJewel } from "../format/schema";
 
 /** The IDCF levels a cloud configuration review can say something about. */
-export const IDCF_LEVELS = [2, 3, 4] as const;
-export type IdcfLevel = (typeof IDCF_LEVELS)[number];
+const IDCF_LEVELS = [2, 3, 4] as const;
+type IdcfLevel = (typeof IDCF_LEVELS)[number];
 
 export interface IdcfCell {
   /** "gaps": a mapped question isn't answered Yes or N/A; "clear": none found in what was asked; "not-verified": the
@@ -21,13 +23,11 @@ export interface IdcfRow {
   person: IdcfCell;
 }
 
-const satisfied = (a: Answer | undefined) => a === "yes" || a === "na";
-
 /** Questions mapped to any of these IDCF refs, and which of them aren't answered Yes or N/A. */
 function mappedCell(questions: Question[], answers: Record<string, Answer>, refs: string[]): IdcfCell {
   const mapped = questions.filter((q) => q.refs.some((r) => r.framework === "idcf" && refs.includes(r.ref)));
   if (!mapped.length) return { status: "not-assessed", gaps: [], notVerified: [] };
-  const gaps = mapped.filter((q) => !satisfied(answers[q.id]));
+  const gaps = mapped.filter((q) => !isSatisfied(answers[q.id]));
   return { status: gaps.length ? "gaps" : "clear", gaps, notVerified: [] };
 }
 
@@ -64,8 +64,8 @@ function cyberCell(questions: Question[], answers: Record<string, Answer>, e8: (
       continue;
     }
     if (r.level >= required) continue;
-    const tagged = (l: number) => questions.filter((q) => q.e8.some((t) => t.strategy === r.strategy && t.level === l));
-    for (let l = 1; l <= required; l++) for (const q of tagged(l)) if (!satisfied(answers[q.id])) gaps.set(q.id, q);
+    const tagged = (l: number) => e8Tagged(questions, r.strategy, l);
+    for (let l = 1; l <= required; l++) for (const q of tagged(l)) if (!isSatisfied(answers[q.id])) gaps.set(q.id, q);
     const missing = [1, 2, 3].find((l) => l <= required && tagged(l).length === 0 && !addsNothing(r.strategy, l));
     if (missing) notVerified.push(`${r.title} (Maturity Level ${missing} not asked)`);
   }
@@ -87,7 +87,6 @@ export function idcfRows(questions: Question[], answers: Record<string, Answer>,
   }));
 }
 
-const and = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
 
 /** "Not verified" items with their reasons grouped: "A, B and C (not covered by this assessment); D (...)". */
 export function notVerifiedText(items: string[]): string {
@@ -97,10 +96,10 @@ export function notVerifiedText(items: string[]): string {
     const [name, why] = m ? [m[1], m[2]] : [item, ""];
     groups.set(why, [...(groups.get(why) ?? []), name]);
   }
-  return [...groups].map(([why, names]) => (why ? `${and(names)} (${why})` : names.join("; "))).join("; ");
+  return [...groups].map(([why, names]) => (why ? `${andList(names)} (${why})` : names.join("; "))).join("; ");
 }
 
-export const dslLevel = (dsl: Dsl): number | "5+" => (dsl === "dsl-5-plus" ? "5+" : Number(dsl.slice(4)));
+const dslLevel = (dsl: Dsl): number | "5+" => (dsl === "dsl-5-plus" ? "5+" : Number(dsl.slice(4)));
 
 export interface JewelDsl {
   jewel: CrownJewel;
@@ -140,7 +139,7 @@ export function jewelDsl(jewel: CrownJewel, rows: IdcfRow[], system?: IdcfCell):
       ? `This assessment found ${g.length} gap${g.length === 1 ? "" : "s"} at or below ${label}: ${g.map((q) => q.id).join(", ")}.`
       : `The questions mapped to ${label} and below found no gaps.`,
     notVerified.size ? `Not verified: ${notVerifiedText([...notVerified])}.` : "",
-    notAssessed.length ? `Not assessed for this crown jewel: ${and(notAssessed)}.` : "",
+    notAssessed.length ? `Not assessed for this crown jewel: ${andList(notAssessed)}.` : "",
     jewel.exposures?.includes("unmanaged-devices")
       ? "It is recorded as reachable from unmanaged or personal devices; under the IDCF, devices that hold or sync the data are part of the system and need the same protection."
       : "",
@@ -149,13 +148,13 @@ export function jewelDsl(jewel: CrownJewel, rows: IdcfRow[], system?: IdcfCell):
   return { jewel, gaps: g, text: text.filter(Boolean).join(" ") };
 }
 
+/** The lowest DSL crownguard suggests for each classification and each obligation. A complete table, so a new value has to say. */
+const classificationFloor: Record<Classification, number> = { public: 0, internal: 2, confidential: 3, "highly-confidential": 4 };
+const regulationFloor: Record<Regulation, number> = { "privacy-act": 3, gdpr: 3, hipaa: 3, soci: 4, "cps-234": 0, pci: 0, other: 0 };
+
 /** crownguard's suggested DSL for a crown jewel (a heuristic, not an IDCF table: the IDCF has none). */
 export function suggestDsl(j: Pick<CrownJewel, "classification" | "confidentiality" | "integrity" | "availability" | "regulations">): Dsl {
-  const impact = Math.max(j.confidentiality, j.integrity, j.availability);
-  let level = impact >= 5 ? 4 : impact >= 3 ? 3 : 2;
-  const floor = { public: 0, internal: 2, confidential: 3, "highly-confidential": 4 }[j.classification];
-  level = Math.max(level, floor);
-  if (j.regulations.some((r) => r === "privacy-act" || r === "gdpr" || r === "hipaa")) level = Math.max(level, 3);
-  if (j.regulations.includes("soci")) level = Math.max(level, 4);
+  const impact = maxImpact(j);
+  const level = Math.max(impact >= 5 ? 4 : impact >= 3 ? 3 : 2, classificationFloor[j.classification], ...j.regulations.map((r) => regulationFloor[r]));
   return `dsl-${level}` as Dsl;
 }

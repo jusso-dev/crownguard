@@ -44,12 +44,12 @@ pnpm test:e2e                               # full journeys against the producti
 To look at the report without clicking through the app, render a sample PDF from fixture data:
 
 ```sh
-SAMPLE_OUT=/tmp/crownguard-sample.pdf pnpm vitest run src/report/sample.test.ts
+pnpm tsx src/report/sample.ts /tmp/crownguard-sample.pdf             # add microsoft,google,aws for more platforms
 ```
 
 The scoring rules live in `src/engine/` and are covered by `src/engine/engine.test.ts`. If you change
-them, update the method section in `src/report/Document.tsx` and the README so the published method
-always matches the code.
+them, update the README. The report's method section (`src/report/method.ts`) reads the weights and
+thresholds from the engine, but its wording still needs checking so the published method matches the code.
 
 ## Privacy is a feature
 

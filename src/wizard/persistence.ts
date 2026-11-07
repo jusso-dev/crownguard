@@ -1,17 +1,15 @@
+import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
-import type { Assessment } from "../engine/types";
-import { platform, type AutosaveStore } from "../platform";
-import { questionIdSet } from "../content/questionIds";
-import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
-import { SCHEMA_VERSION } from "./assessmentSchema";
-import { parseAssessment } from "./parseAssessment";
+import { SCHEMA_VERSION, type Assessment } from "../format/schema";
+import { autosaveKeys, EPHEMERAL_ON, platform, type AutosaveStore } from "../platform";
+import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
+import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
+import { HERE } from "./where";
 
-export const STORAGE_KEY = "crownguard:v1";
-/** Where a stored assessment is moved when it can't be read, so the user can still download it. */
-export const UNREADABLE_KEY = `${STORAGE_KEY}:unreadable`;
-/** Mode flag only: assessment itself stays out of localStorage when this is "1". */
-export const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
+export const STORAGE_KEY = autosaveKeys.progress;
+export const UNREADABLE_KEY = autosaveKeys.unreadable;
+const EPHEMERAL_FLAG_KEY = autosaveKeys.ephemeral;
 
 /**
  * Opened a file this build must not overwrite: every write to storage is dropped until the page is reloaded.
@@ -28,11 +26,11 @@ export const setStorageReadOnly = (value: boolean) => {
  */
 let encryptGeneration = 0;
 
-/** The last write of the assessment to localStorage failed (usually full); cleared by the next one that works. */
+/** The last write of the assessment to the autosave store failed (usually full); cleared by the next one that works. */
 let writeFailed = false;
 export const storageWriteFailed = () => writeFailed;
 
-export interface RehydrateNotice {
+interface RehydrateNotice {
   kind: "error" | "warn" | "info";
   text: string;
   /** The stored value, kept verbatim when it couldn't be read, so the user can still download it. */
@@ -59,7 +57,7 @@ let ephemeralFlag: boolean | undefined;
 const ephemeral = () =>
   (ephemeralFlag ??= (() => {
     try {
-      const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === "1";
+      const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === EPHEMERAL_ON;
       // A previous session may have left a stale assessment (or a copy kept aside) on disk; drop it when the mode is on.
       if (on) {
         disk()?.removeItem(STORAGE_KEY);
@@ -76,19 +74,19 @@ export const isEphemeralMode = () => ephemeral();
 export function setEphemeralMode(on: boolean) {
   ephemeralFlag = on;
   if (on) {
-    writeFlag(EPHEMERAL_FLAG_KEY, "1");
+    writeFlag(EPHEMERAL_FLAG_KEY, EPHEMERAL_ON);
     // Drop any autosaved assessment from disk; keep the in-memory Map copy for this session.
     try {
       disk()?.removeItem(STORAGE_KEY);
       disk()?.removeItem(UNREADABLE_KEY);
     } catch {
-      /* ignore */
+      // Locked storage: nothing was written there to remove, and the mode still holds for this session.
     }
   } else {
     try {
       disk()?.removeItem(EPHEMERAL_FLAG_KEY);
     } catch {
-      /* ignore */
+      // Locked storage never held the flag; the in-memory copy below is the one that counts.
     }
     memory.delete(EPHEMERAL_FLAG_KEY);
   }
@@ -103,11 +101,9 @@ const writeFlag = (name: string, value: string) => {
   }
 };
 
-/** Keys that hold assessment content. In ephemeral mode they live in memory only. */
 const memoryOnly = (name: string) => ephemeral() && (name === STORAGE_KEY || name === UNREADABLE_KEY);
 
 const read = (name: string): string | null => {
-  // Ephemeral: assessment never comes back from disk after a reload.
   if (memoryOnly(name)) {
     return memory.get(name) ?? null;
   }
@@ -150,34 +146,16 @@ export const dropProgress = (name: string) => {
   if (name === STORAGE_KEY) drop(UNREADABLE_KEY);
 };
 
-/** The stored value kept aside when progress couldn't be read, if there is one. */
 export const unreadableBackup = (): string | null => read(UNREADABLE_KEY);
 
-/** True when localStorage holds an encrypted envelope (locked or not). */
-export function peekEncryptedProgress(): boolean {
-  const raw = (() => {
-    try {
-      return disk()?.getItem(STORAGE_KEY) ?? memory.get(STORAGE_KEY) ?? null;
-    } catch {
-      return memory.get(STORAGE_KEY) ?? null;
-    }
-  })();
-  if (!raw) return false;
-  try {
-    return isEncryptedEnvelope(JSON.parse(raw));
-  } catch {
-    return false;
-  }
-}
-
-export interface Persisted {
+interface Persisted {
   assessment?: Assessment;
   /** Only ever set on the way in, for progress written by a newer crownguard; merged into the store's flag. */
   readOnly?: boolean;
 }
 
 /** The storage is async when a passphrase is set (WebCrypto); plain path stays a resolved promise. */
-export type CheckedStorage = PersistStorage<Persisted>;
+type CheckedStorage = PersistStorage<Persisted>;
 
 const decode = (value: string | null): StorageValue<Persisted> | null => {
   if (!value) return null;
@@ -196,14 +174,14 @@ async function validateStored(stored: StorageValue<Persisted>, raw: string, name
   const assessment = state.assessment;
   if (!assessment) return stored;
 
-  const parsed = parseAssessment(assessment, { questionIds: questionIdSet() });
+  const parsed = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (parsed.kind === "error") {
-    setAside(name, raw, `The progress saved in this browser couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
+    setAside(name, raw, `The progress saved ${HERE} couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
     return null;
   }
 
   if (parsed.kind === "newer") {
-    const ahead = `The progress saved in this browser was written by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}).`;
+    const ahead = `The progress saved ${HERE} was written by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}).`;
     if (!parsed.assessment) {
       setAside(name, raw, `${ahead} This version can't read it${parsed.issues[0] ? ` (${parsed.issues[0]})` : ""}.`);
       return null;
@@ -237,7 +215,7 @@ export const checkedStorage: CheckedStorage = {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
 
@@ -254,14 +232,14 @@ export const checkedStorage: CheckedStorage = {
         setLockedEnvelope(raw);
         rehydration.push({
           kind: "error",
-          text: "Wrong passphrase, or the encrypted progress in this browser is damaged. Nothing has been loaded.",
+          text: `Wrong passphrase, or the encrypted progress ${HERE} is damaged. Nothing has been loaded.`,
         });
         return null;
       }
       setLockedEnvelope(null);
       const stored = decode(plain);
       if (!stored) {
-        setAside(name, raw, "The encrypted progress in this browser couldn't be read after decrypting.");
+        setAside(name, raw, `The encrypted progress ${HERE} couldn't be read after decrypting.`);
         return null;
       }
       return validateStored(stored, raw, name);
@@ -269,7 +247,7 @@ export const checkedStorage: CheckedStorage = {
 
     const stored = parsed as StorageValue<Persisted>;
     if (!stored || typeof stored !== "object") {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
     return validateStored(stored, raw, name);

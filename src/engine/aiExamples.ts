@@ -1,4 +1,4 @@
-import type { AiUseCase, Assessment } from "./types";
+import type { AiUseCase, Assessment } from "../format/schema";
 
 /**
  * Example register entries, to show how the register works. Every one is flagged `example`, named "Example: …" and

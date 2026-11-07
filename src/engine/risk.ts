@@ -1,7 +1,29 @@
-import { severities, type Catalogue, type Question } from "../content/schema";
-import type { Answer, Assessment, CrownJewel } from "./types";
+import { severities, type Catalogue, type Question, type Severity } from "../content/schema";
+import { impactRatings, type Answer } from "../format/vocab";
+import type { Assessment, CrownJewel } from "../format/schema";
 
-export type Band = "Low" | "Medium" | "High" | "Extreme";
+export const bands = ["Low", "Medium", "High", "Extreme"] as const;
+export type Band = (typeof bands)[number];
+
+/** Impact and likelihood are each rated 1 to this; a risk score is their product. */
+export const RISK_SCALE = impactRatings.length;
+/** The scale's points, lowest first. */
+export const riskSteps = impactRatings;
+
+/** The lowest score in each band, lowest band first. */
+export const bandFloors: Record<Band, number> = { Low: 1, Medium: 5, High: 10, Extreme: 20 };
+
+/** Likelihood = 1 + `gapWeight` × weighted gap ratio + `perExposure` per exposure, at least `criticalFloor` while a critical control is open. */
+export const likelihoodRule = { gapWeight: 4, perExposure: 0.5, criticalFloor: 3 } as const;
+
+/** How each answer is credited, in words: "Yes 1, Partial 0.5, No and Unknown 0, N/A left out". */
+export const answerCredit = () =>
+  `Yes ${answerValue("yes")}, Partial ${answerValue("partial")}, No and Unknown ${answerValue("no")}, N/A left out`;
+
+/** "12/25": a risk score out of the highest possible. */
+export const riskScore = (score: number) => `${score}/${RISK_SCALE * RISK_SCALE}`;
+/** The bands the report and Review step count as needing attention first. */
+export const isHighRisk = (band: Band) => band === "High" || band === "Extreme";
 
 /** Score credited for an answer. Unknown and unanswered never count as compliant. N/A is excluded. */
 export function answerValue(a: Answer | undefined): number | null {
@@ -17,13 +39,27 @@ export function answerValue(a: Answer | undefined): number | null {
   }
 }
 
-export const isGap = (a: Answer | undefined) => a !== "yes" && a !== "na";
+/** Fully in place or justified as not applicable: the answers that leave nothing to fix. */
+export const isSatisfied = (a: Answer | undefined) => a === "yes" || a === "na";
+export const isGap = (a: Answer | undefined) => !isSatisfied(a);
+
+/** How far a group of questions is met, from their answers. N/A answers are left out. */
+export function metStatus(answers: (Answer | undefined)[]): "Met" | "Partly met" | "Not met" | "Not applicable" {
+  const v = answers.map(answerValue).filter((x): x is number => x !== null);
+  if (!v.length) return "Not applicable";
+  if (v.every((x) => x === 1)) return "Met";
+  if (v.some((x) => x > 0)) return "Partly met";
+  return "Not met";
+}
+
+/** Answers and the notes beside them: an assessment's Controls answers, or one AI register entry's. */
+type Answered = { answers: Record<string, Answer>; notes: Record<string, string> };
 
 /** N/A must be justified. Without a reason it doesn't count as an answer, so it is scored as a gap. */
-export const needsReason = (a: Assessment, questionId: string) => a.answers[questionId] === "na" && !a.notes[questionId]?.trim();
+export const needsReason = (a: Answered, questionId: string) => a.answers[questionId] === "na" && !a.notes[questionId]?.trim();
 
 /** The answers the scoring uses: unjustified N/A answers are dropped (treated as unanswered). */
-export function effectiveAnswers(a: Assessment): Record<string, Answer> {
+export function effectiveAnswers(a: Answered): Record<string, Answer> {
   const out: Record<string, Answer> = {};
   for (const [id, ans] of Object.entries(a.answers)) if (!needsReason(a, id)) out[id] = ans;
   return out;
@@ -56,16 +92,21 @@ export function questionsForJewel(jewel: CrownJewel, questions: Question[]): Que
   return questions.filter((q) => q.appliesTo.includes(jewel.assetType) || q.appliesTo.includes("*"));
 }
 
-export interface GapStats {
+/** Anything scored by severity: platform control questions and AI readiness questions. */
+type Weighted = { id: string; severity: Severity };
+
+interface GapStats {
   /** Total severity weight of non-N/A questions. */
   weight: number;
   /** Weighted shortfall: sum of weight × (1 − value). */
   gap: number;
   unknownWeight: number;
+  /** Weight of questions with any answer, including Unknown. */
+  answeredWeight: number;
 }
 
-export function gapStats(questions: Question[], answers: Record<string, Answer>): GapStats {
-  const s: GapStats = { weight: 0, gap: 0, unknownWeight: 0 };
+export function gapStats(questions: Weighted[], answers: Record<string, Answer>): GapStats {
+  const s: GapStats = { weight: 0, gap: 0, unknownWeight: 0, answeredWeight: 0 };
   for (const q of questions) {
     const a = answers[q.id];
     const v = answerValue(a);
@@ -74,32 +115,42 @@ export function gapStats(questions: Question[], answers: Record<string, Answer>)
     s.weight += w;
     s.gap += w * (1 - v);
     if (a === undefined || a === "unknown") s.unknownWeight += w;
+    if (a !== undefined) s.answeredWeight += w;
   }
   return s;
 }
 
-const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)));
+/** Weighted compliance 0–1, or null when every question is N/A. */
+export const scoreOf = (s: GapStats): number | null => (s.weight === 0 ? null : 1 - s.gap / s.weight);
+/** Share of question weight with a real answer (not unknown/unanswered), 0–1. */
+export const confidenceOf = (s: GapStats): number => (s.weight === 0 ? 0 : 1 - s.unknownWeight / s.weight);
+
+export const bySeverity = (a: Weighted, b: Weighted) => severities[b.severity] - severities[a.severity] || a.id.localeCompare(b.id);
+
+export const maxImpact = (j: Pick<CrownJewel, "confidentiality" | "integrity" | "availability">) => Math.max(j.confidentiality, j.integrity, j.availability);
+
+const clamp = (n: number) => Math.min(RISK_SCALE, Math.max(1, Math.round(n)));
 
 export function impactOf(j: CrownJewel): number {
-  const base = Math.max(j.confidentiality, j.integrity, j.availability);
+  const base = maxImpact(j);
   const uplift = j.regulations.length > 0 || j.classification === "highly-confidential" ? 1 : 0;
-  return Math.min(5, base + uplift);
+  return Math.min(RISK_SCALE, base + uplift);
 }
 
 /**
  * Likelihood 1–5: 1 + 4 × weighted gap ratio, +0.5 per exposure flag.
  * Any open critical-severity gap floors likelihood at 3 ("Possible").
  */
-export function likelihoodOf(stats: GapStats, exposureCount: number, openCritical: boolean): number {
+export function likelihoodOf(stats: Pick<GapStats, "weight" | "gap">, exposureCount: number, openCritical: boolean): number {
   const ratio = stats.weight === 0 ? 0 : stats.gap / stats.weight;
-  const raw = 1 + 4 * ratio + 0.5 * exposureCount;
-  return clamp(openCritical ? Math.max(raw, 3) : raw);
+  const raw = 1 + likelihoodRule.gapWeight * ratio + likelihoodRule.perExposure * exposureCount;
+  return clamp(openCritical ? Math.max(raw, likelihoodRule.criticalFloor) : raw);
 }
 
 export function bandOf(score: number): Band {
-  if (score >= 20) return "Extreme";
-  if (score >= 10) return "High";
-  if (score >= 5) return "Medium";
+  if (score >= bandFloors.Extreme) return "Extreme";
+  if (score >= bandFloors.High) return "High";
+  if (score >= bandFloors.Medium) return "Medium";
   return "Low";
 }
 
@@ -113,8 +164,6 @@ export interface JewelRisk {
   confidence: number;
   gaps: { question: Question; answer: Answer | undefined }[];
 }
-
-const bySeverity = (a: Question, b: Question) => severities[b.severity] - severities[a.severity] || a.id.localeCompare(b.id);
 
 export function assessJewel(jewel: CrownJewel, questions: Question[], answers: Record<string, Answer>): JewelRisk {
   const relevant = questionsForJewel(jewel, questions);
@@ -133,7 +182,7 @@ export function assessJewel(jewel: CrownJewel, questions: Question[], answers: R
     likelihood,
     score,
     band: bandOf(score),
-    confidence: stats.weight === 0 ? 0 : 1 - stats.unknownWeight / stats.weight,
+    confidence: confidenceOf(stats),
     gaps,
   };
 }
@@ -173,7 +222,7 @@ export function domainPosture(catalogue: Catalogue, assessment: Assessment): Dom
           platform: pid,
           domain: d.id,
           name: d.name,
-          score: s.weight === 0 ? null : 1 - s.gap / s.weight,
+          score: scoreOf(s),
           questions: qs.length,
           gaps: qs.filter((q) => isGap(answers[q.id])).length,
           unknown: qs.filter((q) => (answers[q.id] ?? "unknown") === "unknown").length,
@@ -185,6 +234,5 @@ export function domainPosture(catalogue: Catalogue, assessment: Assessment): Dom
 
 export function overallPosture(catalogue: Catalogue, assessment: Assessment): { score: number | null; confidence: number } {
   const s = gapStats(activeQuestions(catalogue, assessment), effectiveAnswers(assessment));
-  if (s.weight === 0) return { score: null, confidence: 0 };
-  return { score: 1 - s.gap / s.weight, confidence: 1 - s.unknownWeight / s.weight };
+  return { score: scoreOf(s), confidence: confidenceOf(s) };
 }

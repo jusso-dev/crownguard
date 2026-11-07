@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Framework, Question } from "../content/schema";
 import { actionRating, domainPercentage, essentials, principleRating, transitionGaps, type EssentialsEvidence, type EssentialsRating } from "./essentials";
-import type { Answer } from "./types";
+import type { Answer } from "../format/vocab";
 
 const q = (id: string, over: Partial<Question> = {}): Question => ({
   id,

@@ -146,3 +146,16 @@ test("the register's dates are recorded, the DTA share clock is worked out, and 
   await expect(reopened.getByLabel("Worked-out dates confirmed by")).toHaveValue("the accountable official");
   await expect(reopened.getByLabel("and confirmed on")).toHaveValue("2026-09-15");
 });
+
+test("warns when one product is registered both whole and in parts", async ({ page }) => {
+  await toAiStep(page);
+  await page.getByRole("button", { name: "Start an AI use-case register" }).click();
+  const entry = page.locator("[data-ai-entry]");
+  await page.getByRole("button", { name: "Add AI use case: Microsoft 365 Copilot" }).click();
+  await page.getByRole("button", { name: "+ Add a use case" }).click();
+  await page.getByRole("button", { name: "Add AI use case: Microsoft 365 Copilot" }).click();
+  await entry.getByLabel("Use case name").fill("Copilot in Word");
+  await expect(page.getByText(/registered both on its own/)).toHaveCount(0);
+  await entry.getByLabel("Grouped under").fill("Microsoft 365 Copilot");
+  await expect(page.getByRole("status").filter({ hasText: /registered both on its own .* and as parts of one/ })).toBeVisible();
+});

@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { Question } from "../content/schema";
 import { buildReport } from "../report/model";
-import { emptyAssessment } from "../wizard/empty";
+import { emptyAssessment } from "../format/empty";
 import { essentialEight } from "./maturity";
-import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf } from "./risk";
+import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf, questionPlatform, scoreOf } from "./risk";
 import { buildRoadmap } from "./roadmap";
-import type { Answer, Assessment, CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { Assessment, CrownJewel } from "../format/schema";
 
 const q = (id: string, over: Partial<Question> = {}): Question => ({
   id,
@@ -54,7 +55,8 @@ describe("scoring", () => {
 
   it("excludes N/A from the denominator", () => {
     const s = gapStats([q("MS-ID-001"), q("MS-ID-002")], { "MS-ID-001": "yes", "MS-ID-002": "na" });
-    expect(s).toEqual({ weight: 3, gap: 0, unknownWeight: 0 });
+    expect(scoreOf(s)).toBe(1);
+    expect(scoreOf(gapStats([q("MS-ID-002")], { "MS-ID-002": "na" }))).toBeNull();
   });
 
   it("uplifts impact for regulated or highly confidential data, capped at 5", () => {
@@ -64,10 +66,10 @@ describe("scoring", () => {
   });
 
   it("maps gap ratio and exposures onto likelihood", () => {
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, false)).toBe(1);
-    expect(likelihoodOf({ weight: 10, gap: 10, unknownWeight: 0 }, 0, false)).toBe(5);
-    expect(likelihoodOf({ weight: 10, gap: 5, unknownWeight: 0 }, 2, false)).toBe(4);
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, true)).toBe(3);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, false)).toBe(1);
+    expect(likelihoodOf({ weight: 10, gap: 10}, 0, false)).toBe(5);
+    expect(likelihoodOf({ weight: 10, gap: 5}, 2, false)).toBe(4);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, true)).toBe(3);
   });
 
   it("bands the 5x5 matrix", () => {
@@ -186,7 +188,7 @@ describe("crown jewels across platforms", () => {
     const report = buildReport(catalogue, withPlatforms(["microsoft", "aws"]));
     expect(report.roadmap.length).toBeGreaterThan(0);
     for (const item of report.roadmap) {
-      expect(report.platformOf(item.question)).toBe("aws");
+      expect(questionPlatform(catalogue, ["microsoft", "aws"])(item.question)).toBe("aws");
       expect(item.jewels).toEqual([]);
     }
   });

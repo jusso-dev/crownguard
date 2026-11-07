@@ -1,7 +1,8 @@
-import { severities, type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
-import { aiCriteria, aiRiskRatings, aiTechnologies } from "./aiOptions";
-import { activeQuestions, answerValue, effectiveAnswers, isGap, type JewelRisk } from "./risk";
-import type { AiUseCase, Answer, Assessment, CrownJewel } from "./types";
+import { type AiKind, type AiQuestion, type Catalogue, type Question } from "../content/schema";
+import { criterionShort, aiRiskRatings, aiTechnologies } from "../format/aiOptions";
+import { activeQuestions, bySeverity, confidenceOf, effectiveAnswers, gapStats, isGap, metStatus, scoreOf, type JewelRisk } from "./risk";
+import { ISO_DATE, type Answer, type ExposureId } from "../format/vocab";
+import type { AiUseCase, Assessment, CrownJewel } from "../format/schema";
 
 /**
  * Register field names, in the Standard for accountability's order and close to its wording. The owner's name and
@@ -38,9 +39,8 @@ export const aiFieldSources = {
 } as const;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-export const kindOf = (catalogue: Catalogue, e: Pick<AiUseCase, "kind">): AiKind | undefined => catalogue.aiRegister?.model.kinds.find((k) => k.id === e.kind);
+const kindOf = (catalogue: Catalogue, e: Pick<AiUseCase, "kind">): AiKind | undefined => catalogue.aiRegister?.model.kinds.find((k) => k.id === e.kind);
 
 /** Anything that can take actions, or might: unrecorded and "Not sure" count, so the agent questions aren't skipped by default. */
 export const isAgentic = (e: AiUseCase) => e.autonomy !== "assists";
@@ -73,15 +73,6 @@ export function applies(q: AiQuestion, e: AiUseCase, kind: AiKind | undefined): 
   }
 }
 
-/** As on the Controls step, N/A needs a reason; without one it counts as unanswered. */
-export const aiNeedsReason = (e: AiUseCase, questionId: string) => e.answers[questionId] === "na" && !e.notes[questionId]?.trim();
-
-export function aiEffectiveAnswers(e: AiUseCase): Record<string, Answer> {
-  const out: Record<string, Answer> = {};
-  for (const [id, a] of Object.entries(e.answers)) if (!aiNeedsReason(e, id)) out[id] = a;
-  return out;
-}
-
 /** Register fields still empty. Risk ratings and the assessment date count once it's in scope; review dates once it's high risk. */
 export function missingFields(e: AiUseCase): AiField[] {
   const scoped = inScope(e) === true;
@@ -99,9 +90,9 @@ export function missingFields(e: AiUseCase): AiField[] {
     criteria: e.criteria.length === 0,
     inherentRisk: scoped && !e.inherentRisk,
     residualRisk: scoped && !e.residualRisk,
-    impactAssessmentDate: scoped && !DATE.test(e.impactAssessmentDate ?? ""),
-    lastReview: e.inherentRisk === "high" && !DATE.test(e.lastReview ?? ""),
-    nextReview: e.inherentRisk === "high" && !DATE.test(e.nextReview ?? ""),
+    impactAssessmentDate: scoped && !ISO_DATE.test(e.impactAssessmentDate ?? ""),
+    lastReview: e.inherentRisk === "high" && !ISO_DATE.test(e.lastReview ?? ""),
+    nextReview: e.inherentRisk === "high" && !ISO_DATE.test(e.nextReview ?? ""),
   };
   return (Object.keys(aiFieldLabels) as AiField[]).filter((f) => empty[f]);
 }
@@ -114,12 +105,12 @@ export function aiFlags(e: AiUseCase, asAt = new Date()): string[] {
   if (isAgentic(e) && (e.access === "org-wide" || e.access === "privileged"))
     flags.push("An agent with organisation-wide or administrative access. The addendum and ASD both expect least privilege: access to only the resources and tools the task needs.");
   if (e.access === "unknown" || (isAgentic(e) && !e.access)) flags.push("Its access level isn't recorded yet. Check what it can reach in your admin centre.");
-  if (e.inherentRisk === "high" && DATE.test(e.lastReview ?? "") && DATE.test(e.nextReview ?? "")) {
+  if (e.inherentRisk === "high" && ISO_DATE.test(e.lastReview ?? "") && ISO_DATE.test(e.nextReview ?? "")) {
     const due = new Date(`${e.lastReview}T00:00:00Z`);
     due.setUTCFullYear(due.getUTCFullYear() + 1);
     if (new Date(`${e.nextReview}T00:00:00Z`) > due) flags.push("The next review is more than 12 months after the last one. The policy says high-risk use cases are reviewed at least every 12 months.");
   }
-  if (e.inherentRisk === "high" && DATE.test(e.nextReview ?? "") && new Date(`${e.nextReview}T23:59:59Z`) < asAt) flags.push(`The review due ${e.nextReview} is overdue.`);
+  if (e.inherentRisk === "high" && ISO_DATE.test(e.nextReview ?? "") && new Date(`${e.nextReview}T23:59:59Z`) < asAt) flags.push(`The review due ${e.nextReview} is overdue.`);
   return flags;
 }
 
@@ -127,13 +118,13 @@ export function aiFlags(e: AiUseCase, asAt = new Date()): string[] {
 export const suggestsCriterion4 = (e: AiUseCase) =>
   e.data.some((d) => d === "personal" || d === "sensitive" || d === "classified") && !e.criteria.includes("c4");
 
-export interface ExposureSuggestion {
+interface ExposureSuggestion {
   jewel: CrownJewel;
   exposure: ExposureId;
 }
 
 /** Exposures this kind of AI usually creates on the crown jewels it can reach, where the jewel's type has them and they aren't ticked. */
-export function exposureSuggestions(catalogue: Catalogue, assessment: Assessment, e: AiUseCase): ExposureSuggestion[] {
+function exposureSuggestions(catalogue: Catalogue, assessment: Assessment, e: AiUseCase): ExposureSuggestion[] {
   const kind = kindOf(catalogue, e);
   if (!kind) return [];
   const assetTypes = [...catalogue.platforms.values()].flatMap((b) => b.assetTypes);
@@ -145,7 +136,7 @@ export function exposureSuggestions(catalogue: Catalogue, assessment: Assessment
     });
 }
 
-export type ThemeStatus = "Met" | "Partly met" | "Not met" | "Not applicable" | "Not asked";
+export type ThemeStatus = ReturnType<typeof metStatus> | "Not asked";
 
 export interface AiReadiness {
   entry: AiUseCase;
@@ -171,36 +162,14 @@ export interface AiReadiness {
   related: { question: Question; answer: Answer | undefined }[];
 }
 
-const themeStatus = (values: (number | null)[]): ThemeStatus => {
-  if (values.length === 0) return "Not asked";
-  const v = values.filter((x): x is number => x !== null);
-  if (!v.length) return "Not applicable";
-  if (v.every((x) => x === 1)) return "Met";
-  if (v.some((x) => x > 0)) return "Partly met";
-  return "Not met";
-};
-
-const bySeverity = (a: AiQuestion, b: AiQuestion) => severities[b.severity] - severities[a.severity] || a.id.localeCompare(b.id);
+const themeStatus = (answers: (Answer | undefined)[]): ThemeStatus => (answers.length === 0 ? "Not asked" : metStatus(answers));
 
 export function aiReadiness(catalogue: Catalogue, assessment: Assessment, e: AiUseCase, risks: JewelRisk[] = [], asAt = new Date()): AiReadiness {
   const module = catalogue.aiRegister;
   const kind = kindOf(catalogue, e);
   const questions = (module?.questions ?? []).filter((q) => applies(q, e, kind));
-  const answers = aiEffectiveAnswers(e);
-  let weight = 0;
-  let gap = 0;
-  let unknown = 0;
-  let answeredWeight = 0;
-  for (const q of questions) {
-    const a = answers[q.id];
-    const v = answerValue(a);
-    if (v === null) continue;
-    const w = severities[q.severity];
-    weight += w;
-    gap += w * (1 - v);
-    if (a === undefined || a === "unknown") unknown += w;
-    if (a !== undefined) answeredWeight += w;
-  }
+  const answers = effectiveAnswers(e);
+  const stats = gapStats(questions, answers);
   const controls = new Map(activeQuestions(catalogue, assessment).map((q) => [q.id, q]));
   const controlAnswers = effectiveAnswers(assessment);
   return {
@@ -209,15 +178,15 @@ export function aiReadiness(catalogue: Catalogue, assessment: Assessment, e: AiU
     questions,
     answers,
     answered: questions.filter((q) => answers[q.id]).length,
-    score: weight === 0 || answeredWeight === 0 ? null : 1 - gap / weight,
-    confidence: weight === 0 ? 0 : 1 - unknown / weight,
+    score: stats.answeredWeight === 0 ? null : scoreOf(stats),
+    confidence: confidenceOf(stats),
     gaps: questions
       .filter((q) => isGap(answers[q.id]))
       .sort(bySeverity)
       .map((question) => ({ question, answer: answers[question.id] })),
     themes: (module?.model.themes ?? []).map((t) => {
       const qs = questions.filter((q) => q.theme === t.id);
-      return { id: t.id, name: t.name, status: themeStatus(qs.map((q) => answerValue(answers[q.id]))), questions: qs.length, gaps: qs.filter((q) => isGap(answers[q.id])).length };
+      return { id: t.id, name: t.name, status: themeStatus(qs.map((q) => answers[q.id])), questions: qs.length, gaps: qs.filter((q) => isGap(answers[q.id])).length };
     }),
     missing: missingFields(e),
     flags: aiFlags(e, asAt),
@@ -262,7 +231,7 @@ export function newUseCase(kind: AiKind, id: string): AiUseCase {
   return {
     id,
     kind: kind.id,
-    name: kind.id === "other" ? "" : kind.name,
+    name: kind.catchAll ? "" : kind.name,
     reference: "",
     description: "",
     product: kind.product,
@@ -334,14 +303,17 @@ export function highRiskNotification(e: AiUseCase): string {
     `Intended application: ${e.description || e.name || "not recorded"}.`,
     `How the risk rating was reached: inherent risk ${e.inherentRisk ? aiRiskRatings[e.inherentRisk] : "not recorded"}${
       e.impactAssessmentDate ? `, impact assessment dated ${e.impactAssessmentDate}` : ", no impact assessment date recorded"
-    }.${e.criteria.length ? ` Appendix C criteria: ${e.criteria.map((c) => (c === "none" ? "none" : aiCriteria[c].split(":")[0])).join(", ")}.` : ""}`,
+    }.${e.criteria.length ? ` Appendix C criteria: ${e.criteria.map((c) => (c === "none" ? "none" : criterionShort(c))).join(", ")}.` : ""}`,
     `Sensitivities: ${sensitivities.length ? sensitivities.join(", ") : "none recorded"}.`,
   ].join("\n\n");
 }
 
+/** The readiness question asking how a use case is switched off. Its note carries the kill-switch worksheet. */
+export const KILL_SWITCH_QUESTION = "AIR-OFF-001";
+
 /**
  * The kill-switch worksheet the switch-off question's note carries. It's stored as plain labelled lines in
- * `notes["AIR-OFF-001"]` so older files and any hand-edited note still read, and it needs no schema change.
+ * `notes[KILL_SWITCH_QUESTION]` so older files and any hand-edited note still read, and it needs no schema change.
  */
 export interface KillSwitchNote {
   stop: string;
@@ -365,7 +337,7 @@ const killSwitchLabels: [keyof KillSwitchNote, string][] = [
   ["reason", "Why it doesn't apply"],
 ];
 
-export const emptyKillSwitchNote = (): KillSwitchNote => ({ stop: "", who: "", targetTime: "", tested: "", rollback: "", reason: "", other: "" });
+const emptyKillSwitchNote = (): KillSwitchNote => ({ stop: "", who: "", targetTime: "", tested: "", rollback: "", reason: "", other: "" });
 
 /** Read a worksheet back out of the note's labelled lines. Unlabelled lines continue the field above them. */
 export function parseKillSwitchNote(text: string | undefined): KillSwitchNote {

@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { csp, securityHeaders } from "../vite.config";
+import { readRepoFile } from "./lib/repo";
 
 describe("docs/self-hosting.md matches securityHeaders", () => {
-  const doc = readFileSync(join("docs", "self-hosting.md"), "utf8");
+  const doc = readRepoFile("docs/self-hosting.md");
 
   it("documents every header name and the full CSP string", () => {
     for (const [name, value] of Object.entries(securityHeaders)) {

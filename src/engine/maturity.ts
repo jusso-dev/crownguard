@@ -1,5 +1,6 @@
-import { e8Strategies, type E8Strategy, type Question } from "../content/schema";
-import type { Answer } from "./types";
+import { E8_FRAMEWORK, e8Strategies, type Catalogue, type E8Strategy, type Question } from "../content/schema";
+import type { Answer } from "../format/vocab";
+import { isSatisfied } from "./risk";
 
 export interface E8Result {
   strategy: E8Strategy;
@@ -13,14 +14,19 @@ export interface E8Result {
   unasked: number | null;
 }
 
-const satisfied = (a: Answer | undefined) => a === "yes" || a === "na";
-
 /**
  * Levels at which ASD's Essential Eight Maturity Model (November 2023) adds no requirement over the level below, so
  * they are met whenever the level below is: patching operating systems has identical requirements at Maturity Levels
  * One and Two.
  */
-export const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-operating-systems": [2] };
+const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-operating-systems": [2] };
+
+/** A strategy's title from the Essential Eight framework file, or its id when the file isn't loaded. */
+export const e8Title = (catalogue: Pick<Catalogue, "frameworks">, strategy: string) =>
+  catalogue.frameworks.get(E8_FRAMEWORK)?.controls.find((c) => c.id === strategy)?.title ?? strategy;
+
+export const e8Tagged = (questions: Question[], strategy: E8Strategy, level: number) =>
+  questions.filter((q) => q.e8.some((t) => t.strategy === strategy && t.level === level));
 
 export const addsNothing = (strategy: E8Strategy, level: number) => NO_NEW_REQUIREMENTS[strategy]?.includes(level) ?? false;
 
@@ -30,7 +36,7 @@ export const addsNothing = (strategy: E8Strategy, level: number) => NO_NEW_REQUI
  */
 export function essentialEight(questions: Question[], answers: Record<string, Answer>): E8Result[] {
   return e8Strategies.map((strategy) => {
-    const tagged = (level: number) => questions.filter((q) => q.e8.some((t) => t.strategy === strategy && t.level === level));
+    const tagged = (level: number) => e8Tagged(questions, strategy, level);
     let ceiling = [3, 2, 1].find((l) => tagged(l).length > 0) ?? 0;
     if (ceiling === 0) return { strategy, level: null, ceiling, blockers: [], unasked: null };
     // Asking the level below also asks a level that adds nothing above it.
@@ -38,7 +44,7 @@ export function essentialEight(questions: Question[], answers: Record<string, An
     let level: 0 | 1 | 2 | 3 = 0;
     for (const l of [1, 2, 3] as const) {
       const qs = tagged(l);
-      const open = qs.filter((q) => !satisfied(answers[q.id]));
+      const open = qs.filter((q) => !isSatisfied(answers[q.id]));
       if (qs.length === 0 && addsNothing(strategy, l)) {
         level = l;
         if (l === ceiling) break;

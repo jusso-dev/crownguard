@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { chooseLogoBackdrop, extractPalette, readableOn } from "../theme/color";
-import { emptyAssessment, useStore } from "./store";
+import { useStore } from "./store";
+import { emptyAssessment } from "../format/empty";
 import { Button } from "./ui";
 
 const MAX_SIDE = 600;

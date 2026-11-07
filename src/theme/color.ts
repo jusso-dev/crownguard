@@ -1,8 +1,8 @@
-export type RGB = [number, number, number];
+type RGB = [number, number, number];
 
-export const toHex = ([r, g, b]: RGB) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+const toHex = ([r, g, b]: RGB) => `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 
-export function fromHex(hex: string): RGB {
+function fromHex(hex: string): RGB {
   const h = hex.replace("#", "");
   const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)) as RGB;
@@ -36,7 +36,6 @@ export function parseOklch(input: string): RGB {
   ];
 }
 
-/** An oklch() design token as hex, for `contrast` and friends. */
 export const oklchToHex = (input: string) => toHex(parseOklch(input));
 
 function luminance([r, g, b]: RGB): number {
@@ -53,12 +52,18 @@ export function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Darken a colour until it reaches the target contrast against `background`. */
-export function readableOn(color: string, background = "#ffffff", target = 4.5): string {
+/** WCAG AA contrast for normal text (SC 1.4.3). */
+const READABLE = 4.5;
+
+/** Darken a colour until it reaches readable contrast as text on white. */
+export function readableOn(color: string): string {
   let rgb = fromHex(color);
-  for (let i = 0; i < 40 && contrast(toHex(rgb), background) < target; i++) rgb = rgb.map((c) => Math.round(c * 0.92)) as RGB;
+  for (let i = 0; i < 40 && contrast(toHex(rgb), "#ffffff") < READABLE; i++) rgb = rgb.map((c) => Math.round(c * 0.92)) as RGB;
   return toHex(rgb);
 }
+
+/** True when a colour is too light to read as text on white, so headings use `readableOn` instead. */
+export const tooLightForText = (color: string) => readableOn(color) !== color;
 
 /**
  * Black or white, whichever reads better on `background`. Pure black, not a near-black: the better of black and

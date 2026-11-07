@@ -15,7 +15,7 @@ use tauri_plugin_updater::{Update, UpdaterExt};
 pub const MAX_VALUE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PATH_BYTES: usize = 4096;
 
-/// The only autosave keys the web build writes (`persistence.ts`, `store.ts`).
+/// The only autosave keys the app writes (`autosaveKeys` in src/platform/types.ts; a test checks they match).
 const AUTOSAVE_KEYS: &[&str] = &[
     "crownguard:v1",
     "crownguard:v1:unreadable",

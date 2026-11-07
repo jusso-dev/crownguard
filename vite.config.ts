@@ -14,7 +14,7 @@ import { crownguardContent } from "./scripts/vite-content";
  * `eval` in `src/`. React assigns some hoistable markup via `innerHTML`, so `main.tsx` installs a
  * `default` Trusted Types policy (pass-through). Allow it explicitly so createPolicy is not blocked.
  */
-export const cspDirectives = [
+const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self'",

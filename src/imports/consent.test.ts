@@ -1,18 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readContentFiles } from "../../scripts/read-content";
+import { readContentFiles } from "../content/disk";
 import { loadCatalogue } from "../content/loader";
-import {
-  classifyApp,
-  consentText,
-  groupApps,
-  importedUseCase,
-  readGoogleConsent,
-  readGraphConsent,
-  shortScope,
-  summariseScopes,
-  userCountText,
-  type FoundApp,
-} from "./consent";
+import { consentText, groupApps, importedUseCase, readGoogleConsent, readGraphConsent, type FoundApp } from "./consent";
 
 const { catalogue } = loadCatalogue(readContentFiles());
 const known = catalogue.aiRegister!.knownApps;
@@ -58,20 +47,11 @@ describe("Microsoft consent export", () => {
     const backup = byName(r, "Contoso Backup Tool");
     expect(backup.consent).toBe("admin");
     expect(backup.users).toBe(0);
-    expect(userCountText(backup)).toBe("everyone (admin consent)");
     expect(consentText(backup)).toBe("Admin consent for everyone in the tenant");
     expect(backup.category).toBeUndefined();
     expect(backup.highReach).toBe(true);
     // Microsoft's first-party owner org still names the publisher.
     expect(byName(r, "Weather Add-in").publisher).toBe("Microsoft");
-  });
-
-  it("keeps no user principal name or email address", () => {
-    const r = readGraphConsent([GRANTS, SERVICE_PRINCIPALS], known, scopes);
-    const saved = JSON.stringify(r);
-    expect(saved).not.toContain("@");
-    expect(saved).not.toContain("ana.ivanovic");
-    expect(saved).not.toContain("bo.chen");
   });
 
   it("accepts a bare array, a { value: [...] } wrapper, one file or two", () => {
@@ -139,14 +119,7 @@ describe("Google OAuth log export", () => {
     const weather = byName(r, "Weather Add-in");
     expect(weather.highReach).toBe(false);
     expect(weather.users).toBe(1);
-    expect(userCountText(weather)).toBe("1 user");
     expect(consentText(weather)).toBe("User consent from 1 user");
-  });
-
-  it("keeps no user name or email address", () => {
-    const saved = JSON.stringify(readGoogleConsent(GOOGLE_CSV, known, scopes));
-    expect(saved).not.toContain("@");
-    expect(saved).not.toContain("ana.ivanovic");
   });
 
   it("says when the 'By an agent' column is missing", () => {
@@ -169,20 +142,38 @@ describe("Google OAuth log export", () => {
   });
 });
 
+describe("keeping people out of what is read", () => {
+  it("keeps every user name and email out of both readers' results and the register entry", () => {
+    const ms = readGraphConsent([GRANTS, SERVICE_PRINCIPALS], known, scopes);
+    const gw = readGoogleConsent(GOOGLE_CSV, known, scopes);
+    for (const [label, out] of [["graph", ms], ["google", gw]] as const)
+      for (const leak of ["@", "ana.ivanovic", "bo.chen"]) expect(JSON.stringify(out), `${label} leaks ${leak}`).not.toContain(leak);
+    for (const app of [...ms.apps, ...gw.apps]) expect(JSON.stringify(importedUseCase(connector, "e1", app, "microsoft"))).not.toContain("@");
+  });
+});
+
+/** An app per name, each granted once, read from a Google export. */
+const appsNamed = (names: string[], known_ = known) =>
+  readGoogleConsent(["Application name,Application ID,Scope,Event", ...names.map((n, i) => `${n},id-${i},openid,Grant access`)].join("\n"), known_, scopes).apps;
+
 describe("AI classification from the curated list", () => {
   it("matches names most specific first and never claims a non-AI app", () => {
-    expect(classifyApp("Fathom Meeting Assistant", "", known)?.app.category).toBe("note-taker");
-    expect(classifyApp("Microsoft Copilot Studio", "", known)?.app.category).toBe("agent-platform");
-    expect(classifyApp("Microsoft 365 Copilot", "", known)?.app.category).toBe("assistant");
-    expect(classifyApp("Otter.ai Notetaker", "", known)?.app.category).toBe("note-taker");
-    expect(classifyApp("GitHub MCP Server", "", known)?.app.category).toBe("mcp-server");
-    expect(classifyApp("OpenAI", "", known)?.app.category).toBe("model-provider");
-    expect(classifyApp("Contoso Backup Tool", "", known)).toBeUndefined();
+    const names = ["Fathom Meeting Assistant", "Microsoft Copilot Studio", "Microsoft 365 Copilot", "Otter.ai Notetaker", "GitHub MCP Server", "OpenAI", "Contoso Backup Tool"];
+    expect(Object.fromEntries(appsNamed(names).map((a) => [a.name, a.category]))).toEqual({
+      "Fathom Meeting Assistant": "note-taker",
+      "Microsoft Copilot Studio": "agent-platform",
+      "Microsoft 365 Copilot": "assistant",
+      "Otter.ai Notetaker": "note-taker",
+      "GitHub MCP Server": "mcp-server",
+      OpenAI: "model-provider",
+      "Contoso Backup Tool": undefined,
+    });
   });
 
   it("matches a published OAuth client id wherever the name leads", () => {
     const list = [{ ...known[0], id: "test-app", name: "Test App", namePatterns: ["nope"], clientIds: ["abcdef12-3456"] }];
-    expect(classifyApp("Something Else", "ABCDEF12-3456", list)?.matchedBy).toBe("client id ABCDEF12-3456");
+    const grant = JSON.stringify([{ clientId: "ABCDEF12-3456", consentType: "AllPrincipals", scope: "openid" }]);
+    expect(readGraphConsent(grant, list, scopes).apps[0]).toMatchObject({ category: known[0].category, matchedBy: "client id ABCDEF12-3456" });
   });
 
   it("cites the vendor's own page for every entry", () => {
@@ -191,20 +182,27 @@ describe("AI classification from the curated list", () => {
 });
 
 describe("scope summaries", () => {
+  const appWith = (scope: string) => readGraphConsent(JSON.stringify([{ clientId: "c1", consentType: "AllPrincipals", scope }]), known, scopes).apps[0];
+
   it("says what the scopes mean in plain English and flags high reach", () => {
-    const s = summariseScopes(["Mail.Read", "https://www.googleapis.com/auth/gmail.readonly", "Weird.Scope"], scopes);
-    expect(s.lines).toContain("Read all email in every mailbox");
-    expect(s.lines).toContain("Read all email in Gmail");
-    expect(s.lines).toContain("Other permission: Weird.Scope");
-    expect(s.highReach).toBe(true);
-    expect(s.data).toEqual(["official", "personal"]);
+    const app = appWith("Mail.Read https://www.googleapis.com/auth/gmail.readonly Weird.Scope");
+    expect(app.scopeSummary).toEqual(expect.arrayContaining(["Read all email in every mailbox", "Read all email in Gmail", "Other permission: Weird.Scope"]));
+    expect(app.highReach).toBe(true);
+    expect(app.data).toEqual(["official", "personal"]);
   });
 
   it("leaves low-reach scopes unflagged and shortens scope URLs", () => {
-    expect(shortScope("https://www.googleapis.com/auth/drive.file")).toBe("drive.file");
-    const s = summariseScopes(["openid", "drive.file"], scopes);
-    expect(s.highReach).toBe(false);
-    expect(s.data).toEqual(["official", "personal"]);
+    const app = appWith("openid https://www.googleapis.com/auth/drive.file");
+    expect(app.scopes).toEqual(["drive.file", "openid"]);
+    expect(app.highReach).toBe(false);
+    expect(app.data).toEqual(["official", "personal"]);
+  });
+
+  it("names the first five scopes it doesn't know and counts the rest", () => {
+    const app = appWith(Array.from({ length: 7 }, (_, i) => `Weird.${i}`).join(" "));
+    expect(app.scopeSummary).toHaveLength(6);
+    expect(app.scopeSummary.at(-1)).toBe("2 more permissions crownguard has no plain-English name for");
+    expect(app.data).toEqual(["unknown"]);
   });
 });
 

@@ -215,6 +215,7 @@ domains:
   - id: apps-consent
     name: Apps & consent
     description: App registrations, service principals and the permissions users and admins grant to third-party apps.
+    appGrants: true
   - id: data-protection
     name: Data protection
     description: Knowing where sensitive information lives and protecting it with sensitivity labels and data loss prevention.

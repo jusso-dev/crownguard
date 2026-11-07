@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { assessmentSchema, SCHEMA_VERSION } from "./assessmentSchema";
-import type { CrownJewel } from "../engine/types";
-import { clampStep, currentStep, emptyAssessment, hasProgress, migrateProgress, reachableStep, stepsFor } from "./store";
+import { assessmentSchema, SCHEMA_VERSION, type CrownJewel } from "../format/schema";
+import { hasProgress } from "./store";
+import { clampStep, currentStep, migrateProgress, STEP_LAYOUT, stepIndex, stepsFor } from "./flow";
+import { emptyAssessment } from "../format/empty";
 import { relativeTime } from "./time";
 
 describe("save and resume", () => {
@@ -20,22 +21,20 @@ describe("save and resume", () => {
     expect(hasProgress({ ...a, answers: { "MS-ID-001": "yes" } })).toBe(true);
   });
 
-  it("keeps a resumed step inside the wizard", () => {
-    expect([undefined, -3, 2.7, 99].map((n) => clampStep(n))).toEqual([0, 0, 2, 8]);
-  });
-
-  it("keeps a resumed step inside the standalone AI register too", () => {
-    expect([undefined, -3, 2.7, 99].map((n) => clampStep(n, "ai-register"))).toEqual([0, 0, 2, 4]);
+  it("keeps a resumed step inside the step list", () => {
+    for (const mode of ["full", "ai-register"] as const) {
+      const last = stepsFor(mode).length - 1;
+      expect([undefined, -3, 2.7, 99].map((n) => clampStep(n, mode))).toEqual([0, 0, 2, last]);
+    }
   });
 
   it("opens a saved position no further than the assessment can reach", async () => {
-    const blank = { ...emptyAssessment(), progress: { step: 8, layout: 3 } };
-    expect(reachableStep(blank)).toBe(0);
+    const blank = { ...emptyAssessment(), progress: { step: 99, layout: STEP_LAYOUT } };
     expect(currentStep(blank)).toBe(0);
     const named = { ...blank, org: { ...blank.org, name: "Acme" }, platforms: ["microsoft"] };
-    expect(currentStep(named)).toBe(2);
-    expect(currentStep({ ...named, jewels: [{ id: "j1" } as CrownJewel] })).toBe(8);
-    expect(currentStep({ ...blank, mode: "ai-register" as const, org: named.org })).toBe(4);
+    expect(stepsFor()[currentStep(named)]).toBe("Crown jewels");
+    expect(stepsFor()[currentStep({ ...named, jewels: [{ id: "j1" } as CrownJewel] })]).toBe("Report");
+    expect(stepsFor("ai-register")[currentStep({ ...blank, mode: "ai-register" as const, org: named.org })]).toBe("Report");
     // load() stores the capped step, so Generate on Report can't be reached by editing the file.
     const { useStore } = await import("./store");
     useStore.getState().load(blank);
@@ -43,37 +42,17 @@ describe("save and resume", () => {
     useStore.getState().reset();
   });
 
-  it("has one step list per mode", () => {
-    expect(stepsFor("full")).toEqual(["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"]);
-    expect(stepsFor("ai-register")).toEqual(["Organisation", "AI register", "Review", "Branding", "Report"]);
-    expect(stepsFor()).toEqual(stepsFor("full"));
-  });
-
-  it("moves positions saved before the SOC maturity step onto the new step list", () => {
-    // First layout: Organisation, Environment, Crown jewels, Controls, Review (4), Branding (5), Report (6).
-    expect(migrateProgress({ step: 3, section: "microsoft:identity" })).toEqual({ step: 3, section: "microsoft:identity", layout: 3 });
-    expect(migrateProgress({ step: 4 })).toEqual({ step: 6, layout: 3 });
-    expect(migrateProgress({ step: 5 })).toEqual({ step: 7, layout: 3 });
-    expect(migrateProgress({ step: 6 })).toEqual({ step: 8, layout: 3 });
-    expect(stepsFor("full")[4]).toBe("SOC maturity");
-  });
-
-  it("moves positions saved before the AI register step onto the new step list", () => {
-    // Second layout: ..., SOC maturity (4), Review (5), Branding (6), Report (7).
-    expect(migrateProgress({ step: 4, layout: 2 })).toEqual({ step: 4, layout: 3 });
-    expect(migrateProgress({ step: 5, layout: 2 })).toEqual({ step: 6, layout: 3 });
-    expect(migrateProgress({ step: 7, layout: 2 })).toEqual({ step: 8, layout: 3 });
-    // Already on the current layout: unchanged.
-    expect(migrateProgress({ step: 5, layout: 3, aiSection: "x" })).toEqual({ step: 5, layout: 3, aiSection: "x" });
-    expect(stepsFor("full")[5]).toBe("AI register");
-  });
-
-  it("keeps standalone AI register positions on their own step list", () => {
-    // The standalone list was introduced with layout 3 and has never changed, so its positions move nowhere.
-    expect(migrateProgress({ step: 3, aiSection: "x" }, "ai-register")).toEqual({ step: 3, aiSection: "x", layout: 3 });
-    expect(migrateProgress({ step: 1, layout: 3 }, "ai-register")).toEqual({ step: 1, layout: 3 });
-    // A position saved as Report (8) on the full list means nothing here: it is clamped to the standalone list's end.
-    expect(clampStep(migrateProgress({ step: 8, layout: 3 }, "ai-register")!.step, "ai-register")).toBe(4);
+  it("resumes on the same step after steps were added to the list", () => {
+    // Layout 1 had no SOC maturity or AI register steps; layout 2 had no AI register step.
+    const stepAfter = (p: { step: number; layout?: number }) => stepsFor()[migrateProgress(p)!.step];
+    expect(stepAfter({ step: 3 })).toBe("Controls");
+    expect(stepAfter({ step: 4 })).toBe("Review");
+    expect(stepAfter({ step: 6 })).toBe("Report");
+    expect(stepAfter({ step: 4, layout: 2 })).toBe("SOC maturity");
+    expect(stepAfter({ step: 5, layout: 2 })).toBe("Review");
+    expect(stepAfter({ step: 5, layout: STEP_LAYOUT })).toBe("AI register");
+    expect(migrateProgress({ step: 3, section: "microsoft:identity" })).toMatchObject({ section: "microsoft:identity", layout: STEP_LAYOUT });
+    expect(stepsFor("ai-register")[migrateProgress({ step: 3, aiSection: "x" }, "ai-register")!.step]).toBe("Branding");
   });
 
   it("accepts files with an AI register, and rejects values off the DTA's lists", async () => {
@@ -147,7 +126,7 @@ describe("SOC maturity in the store", () => {
 
   it("caps notes at the length a saved file allows, and shortens longer notes in older files instead of refusing them", async () => {
     const { useStore } = await import("./store");
-    const { NOTE_MAX } = await import("./assessmentSchema");
+    const { NOTE_MAX } = await import("../format/schema");
     const s = useStore.getState();
     s.reset();
     s.setNote("MS-ID-001", "x".repeat(NOTE_MAX + 50));
@@ -183,7 +162,7 @@ describe("AI register in the store", () => {
     expect(entries.filter((e) => e.example)).toHaveLength(3);
     const mine = entries.find((e) => e.id === id)!;
     expect(mine).toMatchObject({ ownerName: "Jo", criteria: ["c4"], answers: { "AIR-ACC-001": "yes" } });
-    const { NOTE_MAX } = await import("./assessmentSchema");
+    const { NOTE_MAX } = await import("../format/schema");
     expect(mine.notes["AIR-ACC-001"]).toHaveLength(NOTE_MAX);
     s.removeAiExamples();
     entries = useStore.getState().assessment.aiRegister!.entries;
@@ -236,10 +215,10 @@ describe("the standalone AI register mode", () => {
     s.updateAiUseCase(id, { ownerName: "Priya Natarajan", notes: { "AIR-ACC-001": "Checked with the service owner." } });
     s.setAiAnswer(id, "AIR-ACC-001", "yes");
     // The Report step's "Turn this into a full crown-jewel assessment" button: full mode, at Environment.
-    s.setMode("full", stepsFor("full").indexOf("Environment"));
+    s.setMode("full", stepIndex("full", "environment"));
     const a = useStore.getState().assessment;
     expect(a.mode).toBeUndefined();
-    expect(a.progress?.step).toBe(1);
+    expect(stepsFor()[a.progress!.step]).toBe("Environment");
     expect(a.aiRegister?.entries.map((e) => e.id)).toEqual([id]);
     expect(a.aiRegister?.entries[0]).toMatchObject({
       ownerName: "Priya Natarajan",
@@ -250,8 +229,8 @@ describe("the standalone AI register mode", () => {
 
   it("carries the mode through a save and reopen, and opens older files in the full assessment", async () => {
     const { useStore } = await import("./store");
-    const { toSaveFile } = await import("./saveFile");
-    const { parseAssessment } = await import("./parseAssessment");
+    const { toSaveFile } = await import("../format/saveFile");
+    const { parseAssessment } = await import("../format/parse");
     const s = useStore.getState();
     s.reset();
     s.setMode("ai-register", 2);

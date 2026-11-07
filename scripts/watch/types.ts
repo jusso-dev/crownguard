@@ -8,7 +8,7 @@
  */
 
 /** How much of a page the report may quote. */
-export type ExcerptPolicy = "cc-by-4.0" | "public-domain" | "none";
+type ExcerptPolicy = "cc-by-4.0" | "public-domain" | "none";
 
 /** Per-host rules for fetching and extracting a page. */
 export interface HostProfile {
@@ -39,8 +39,6 @@ export interface HostProfile {
   licence?: string;
   /** Link to the licence text, required for attribution under Creative Commons licences. */
   licenceUrl?: string;
-  /** The host challenges automated clients from cloud IP ranges; a challenge is "unverifiable", never "broken". */
-  botProtected?: boolean;
   /** Maximum concurrent requests to this host. */
   concurrency: number;
   /** Pause after each request to this host (robots.txt crawl-delay). */
@@ -53,6 +51,12 @@ export interface HostProfile {
   blockedOnNetworkError?: boolean;
   /** Element holding the page's own "last reviewed/updated" date (its datetime attribute or text). */
   updatedSelector?: string;
+  /** URL paths on this host are case-insensitive, so they are compared lowercased. */
+  caseInsensitivePaths?: boolean;
+  /** Hosts this site's pages used to live on, which links in feeds still use. */
+  formerHosts?: string[];
+  /** Pages carry a table of contents the watch reads for new pages near cited ones. */
+  tocs?: boolean;
 }
 
 export interface RedirectHop {
@@ -162,7 +166,7 @@ export interface Extracted {
 }
 
 /** "unmonitored": the page couldn't be checked for a week of nights in a row (blocked or failing). */
-export type SourceStatus = "ok" | "broken" | "unmonitored";
+type SourceStatus = "ok" | "broken" | "unmonitored";
 
 /** Committed fingerprint of one source. Deterministic: no fields that change when the page doesn't. */
 export interface SourceState {
@@ -279,7 +283,7 @@ export interface ChangeDetail {
   triage?: Triage;
 }
 
-export interface CandidateDetail {
+interface CandidateDetail {
   origin: "learn-toc" | "feed";
   feedId?: string;
   feedName?: string;

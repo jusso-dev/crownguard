@@ -131,4 +131,5 @@ kinds:
     sources: [aws-amazon-quick, dta-ai-appendix-b]
   - id: other
     name: Other AI use case
+    catchAll: true
     description: Machine learning models, computer vision, analytics or any other AI not listed above.

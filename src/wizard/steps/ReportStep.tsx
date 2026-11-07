@@ -4,11 +4,14 @@ import { SOURCES_LAST_CHECKED } from "../../content/sourcesChecked";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
 import { buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
-import { download, requestOpenFile, slug } from "../download";
-import { modeOf, stepsFor, useStore } from "../store";
+import { platform } from "../../platform";
+import { fileNames, requestOpenFile } from "../files";
+import { useStore } from "../store";
+import { modeOf, stepIndex } from "../flow";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
 import { EssentialsPicker } from "../EssentialsOption";
 import { Button, Card, StepHeader } from "../ui";
+import { HERE } from "../where";
 
 export function ReportStep() {
   const assessment = useStore((s) => s.assessment);
@@ -27,17 +30,10 @@ export function ReportStep() {
     setError(undefined);
     try {
       await Promise.all([ensurePlatforms(assessment.platforms), ensureReportContent()]);
-      // PDF render runs in a worker when possible (see renderPdfInWorker).
-      const { renderPdfInWorker } = await import("../../report/pdfClient");
+      const { renderPdf } = await import("../../report/pdfClient");
       const now = new Date();
-      const p2 = (n: number) => String(n).padStart(2, "0");
-      const date = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
-      const blob = await renderPdfInWorker({
-        kind: standalone ? "ai-register" : "report",
-        assessment,
-        generatedAt: now,
-      });
-      const result = await download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
+      const blob = await renderPdf(standalone ? "ai-register" : "report", assessment, now);
+      const result = await platform.saveAs(fileNames.report(assessment.org.name, standalone, now), blob, "application/pdf");
       // On desktop the save dialog can be cancelled, or the write can fail (the user has already been told why).
       if (result === "cancelled" || result === "failed") {
         setStatus("idle");
@@ -168,14 +164,14 @@ export function ReportStep() {
             <Button
               variant="secondary"
               className="mt-3"
-              onClick={() => setMode("full", stepsFor("full").indexOf("Environment"))}
+              onClick={() => setMode("full", stepIndex("full", "environment"))}
             >
               Turn this into a full crown-jewel assessment
             </Button>
           </div>
         )}
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Your progress is saved in this browser. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
+          Your progress is saved {HERE}. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
           <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={() => requestOpenFile()}>
             Open its saved file
           </button>

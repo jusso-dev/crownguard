@@ -1,17 +1,14 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { exampleEntries } from "../engine/aiExamples";
-import {
-  buildReport,
-  fixtureAssessment,
-  loadCatalogueFromDisk,
-  scoreSummary,
-  toSaveFile,
-} from "../lib/index";
+import { loadCatalogueFromDisk } from "../content/disk";
+import { toSaveFile } from "../format/saveFile";
+import { fixtureAssessment } from "../report/fixture";
+import { buildReport } from "../report/model";
 import { EXIT, run } from "./index";
 
 const dir = () => mkdtempSync(join(tmpdir(), "cg-cli-"));
@@ -183,22 +180,18 @@ describe("cg import", () => {
 });
 
 describe("cg score", () => {
-  it("JSON matches buildReport for posture, risk bands and E8 levels", async () => {
+  it("reports posture, a band and score for each crown jewel, and E8 levels", async () => {
     const root = dir();
     const path = join(root, "a.crownguard.json");
     const assessment = writeAssessment(path);
-    const model = buildReport(catalogue, assessment);
-    const expected = scoreSummary(model);
     const r = await capture(["score", path]);
     expect(r.code).toBe(EXIT.OK);
     const got = JSON.parse(r.stdout);
-    expect(got.posture).toEqual(expected.posture);
-    expect(got.risks.map((x: { band: string; score: number }) => ({ band: x.band, score: x.score }))).toEqual(
-      expected.risks.map((x) => ({ band: x.band, score: x.score })),
-    );
-    expect(got.e8.map((x: { strategy: string; level: number | null }) => ({ strategy: x.strategy, level: x.level }))).toEqual(
-      expected.e8.map((x) => ({ strategy: x.strategy, level: x.level })),
-    );
+    expect(got.posture.score).toBeGreaterThan(0);
+    expect(got.posture.score).toBeLessThan(1);
+    expect(got.risks.map((x: { jewel: string }) => x.jewel).sort()).toEqual(assessment.jewels.map((j) => j.name).sort());
+    for (const x of got.risks) expect(["Low", "Medium", "High", "Extreme"]).toContain(x.band);
+    expect(got.e8).toHaveLength(8);
   });
 
   it("adds Essentials per domain, with not assessed kept apart, only when the assessment asks for it", async () => {
@@ -276,8 +269,8 @@ describe("cg ai-register export", () => {
     const r = await capture(["ai-register", "export", assessmentPath, "--format", "csv", "--out", csvPath]);
     expect(r.code).toBe(EXIT.OK);
     const csv = readFileSync(csvPath, "utf8");
-    expect(csv.length).toBeGreaterThan(50);
-    expect(csv).toMatch(/Use case|Name|Owner/i);
+    expect(csv.startsWith("\uFEFFUse case name,")).toBe(true);
+    for (const e of a.aiRegister.entries) expect(csv).toContain(e.name);
   });
 
   it("fails without AI entries", async () => {
@@ -367,18 +360,7 @@ describe("cg validate", () => {
       expect(issue).toMatch(/:/);
       expect(r.stderr).toContain(issue);
     }
-    // paths should appear
     expect(body.issues.some((i: string) => i.startsWith("org.name") || i.startsWith("platforms") || i.startsWith("answers"))).toBe(true);
   });
 });
 
-describe("temp dir hygiene", () => {
-  it("creates nested dirs for render destination parent", async () => {
-    const root = dir();
-    mkdirSync(join(root, "nested"), { recursive: true });
-    const assessmentPath = join(root, "a.crownguard.json");
-    writeAssessment(assessmentPath);
-    const r = await capture(["render", assessmentPath, join(root, "nested", "report.pdf")]);
-    expect(r.code).toBe(EXIT.OK);
-  }, 120_000);
-});

@@ -1,5 +1,6 @@
 import { parse } from "yaml";
 import { z } from "zod";
+import { essentialsActionPrefix } from "../format/vocab";
 import { aiRegisterSources } from "./aiRegisterSources";
 import {
   aiQuestionSchema,
@@ -24,14 +25,14 @@ import {
   type Question,
   type SocModel,
   type SocQuestion,
+  ISM_FRAMEWORK,
 } from "./schema";
 
-export { aiRegisterSources } from "./aiRegisterSources";
 
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
 export type ContentFiles = Record<string, string>;
 
-export interface LoadResult {
+interface LoadResult {
   catalogue: Catalogue;
   errors: string[];
   /** Things worth a maintainer's attention that don't make the content unusable: withdrawn refs, E8 mapping gaps. */
@@ -321,7 +322,7 @@ function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalog
         if (!mapped) warnings.push(`${q.id}: e8 ${tag.strategy} ${level} maps to no ISM control in the E8 ${level} profile`);
       }
   const essentials = [...frameworks.values()].filter((f) => f.essentials);
-  for (const f of essentials) errors.push(...checkEssentialsFramework(f, frameworks.get("ism")));
+  for (const f of essentials) errors.push(...checkEssentialsFramework(f, frameworks.get(ISM_FRAMEWORK)));
   for (const { questions } of platforms.values()) for (const q of questions) checkEssentialsTags(q, essentials, errors, warnings);
   return { errors, warnings };
 }
@@ -333,7 +334,7 @@ function checkEssentialsFramework(f: Framework, ism: Framework | undefined): str
   const at = `framework ${f.id}`;
   const domains = new Map(meta.domains.map((d) => [d.id, d]));
   const principles = new Set(meta.principles.map((p) => p.id));
-  const prefix = meta.chapter === "enterprise-it" ? "IT" : "CL";
+  const prefix = essentialsActionPrefix[meta.chapter];
   const pattern = meta.provisional ? new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.x\\d+$`) : new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.\\d+$`);
   const ismIds = new Set([...(ism?.controls.map((c) => c.id) ?? []), ...(ism?.withdrawn ?? [])]);
   for (const p of principles) if (!f.controls.some((c) => c.principle === p)) errors.push(`${at}: principle ${p} has no actions`);
@@ -375,7 +376,7 @@ function checkEssentialsTags(q: Question, chapters: Framework[], errors: string[
     for (const d of t.domains) if (!a.domains?.includes(d)) errors.push(`${where}: action doesn't apply to domain ${d}`);
   }
   if (q.essentialsReviewed) return;
-  const ismRefs = new Set(q.refs.filter((r) => r.framework === "ism").map((r) => r.ref));
+  const ismRefs = new Set(q.refs.filter((r) => r.framework === ISM_FRAMEWORK).map((r) => r.ref));
   const it = chapters.find((f) => f.essentials?.chapter === "enterprise-it");
   const suggested = (it?.controls ?? []).filter((c) => !seen.has(c.id) && [...(c.evidence?.ism ?? []), ...(c.evidence?.e8 ?? [])].some((id) => ismRefs.has(id)));
   if (suggested.length) warnings.push(`${q.id}: ISM refs suggest Essentials ${suggested.map((c) => c.id).join(", ")}; tag them or record essentialsReviewed`);

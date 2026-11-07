@@ -4,9 +4,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ask, message, open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import type { AutosaveStore, FileSaver, OpenedFile, Platform, RecentAssessment, SaveAsResult, SaveResult } from "./types";
+import { autosaveKeys, EPHEMERAL_ON, type AutosaveStore, type FileSaver, type OpenedFile, type Platform, type RecentAssessment, type SaveAsResult, type SaveResult } from "./types";
 
-/** The file filter for every `.crownguard.json` dialog. */
 const ASSESSMENT_FILTER = { name: "crownguard assessment", extensions: ["json"] };
 
 /** Sent by the Rust side when the operating system asks the running app to open a file (see src-tauri/src/lib.rs). */
@@ -57,7 +56,7 @@ export class SqliteAutosave implements AutosaveStore {
    * the assessment, not even a file's summary in the recent list, is kept then.
    */
   get ephemeral(): boolean {
-    return this.values.get("crownguard:v1:ephemeral") === "1";
+    return this.values.get(autosaveKeys.ephemeral) === EPHEMERAL_ON;
   }
 
   /** Resolves once every write so far has reached SQLite (or failed). */
@@ -86,6 +85,7 @@ let autosaveStore: SqliteAutosave | undefined;
  */
 async function recordRecent(path: string, contents: string) {
   if (autosaveStore?.ephemeral) return;
+  // The recent list is a convenience: failing to update it must never fail the save the user asked for.
   await invoke("recent_record", { path, contents }).catch(() => undefined);
 }
 
@@ -166,7 +166,7 @@ export async function confirmAndOpen(href: string): Promise<boolean> {
 }
 
 /** Catch clicks on links that leave the app, before the webview tries to follow them. */
-export function interceptExternalLinks(doc: Document) {
+function interceptExternalLinks(doc: Document) {
   const onClick = (e: MouseEvent) => {
     const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
     if (!a) return;
@@ -213,7 +213,6 @@ function onOpenRequest(handler: (file: OpenedFile) => void): () => void {
   };
 }
 
-/** Resolves once every autosave write so far has reached SQLite. */
 export const flushAutosave = () => autosaveStore?.flush() ?? Promise.resolve();
 
 export async function createTauriPlatform(): Promise<Platform> {

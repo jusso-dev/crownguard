@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Button, Field, inputClass } from "./ui";
 import { isEphemeralMode, setEphemeralMode } from "./persistence";
-import { getSessionPassphrase, hasSessionPassphrase, setSessionPassphrase } from "./sessionSecrets";
+import { hasSessionPassphrase, setSessionPassphrase } from "./sessionSecrets";
 import { useStore } from "./store";
 import { unlockProgress } from "./unlock";
+import { HERE, THIS } from "./where";
 
 /** Touch the assessment so zustand persist rewrites (plain or encrypted) under the current session settings. */
-export function repersist() {
+function repersist() {
   useStore.getState().update(() => ({}));
 }
 
@@ -45,7 +46,7 @@ export function PassphraseFields({
   }
 
   function clearProtection() {
-    if (!window.confirm("Remove passphrase protection? Progress in this browser will be stored as plain JSON again.")) return;
+    if (!window.confirm(`Remove passphrase protection? Progress ${HERE} will be stored as plain JSON again.`)) return;
     setSessionPassphrase(null);
     repersist();
     setOpen(false);
@@ -78,7 +79,7 @@ export function PassphraseFields({
           Protect with a passphrase
         </Button>
         <p className="mt-2 text-xs leading-relaxed text-muted">
-          Optional. Encrypts the copy kept in this browser and any file you save while the passphrase is set. There is no
+          Optional. Encrypts the copy kept {HERE} and any file you save while the passphrase is set. There is no
           recovery if you forget it.
         </p>
       </div>
@@ -153,7 +154,7 @@ export function EphemeralToggle({
     if (next) {
       if (
         !window.confirm(
-          "Don't keep this assessment in this browser? Use Save file first if you want a copy. Reloading will lose the assessment. The choice itself is remembered.",
+          `Don't keep this assessment ${HERE}? Use Save file first if you want a copy. Reloading will lose the assessment. The choice itself is remembered.`,
         )
       ) {
         return;
@@ -175,7 +176,7 @@ export function EphemeralToggle({
         onChange={(e) => toggle(e.target.checked)}
       />
       <span>
-        <span className="font-medium text-ink">Don&apos;t keep this assessment in this browser</span>
+        <span className="font-medium text-ink">Don&apos;t keep this assessment {HERE}</span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted">
           Progress stays in memory only. Reloading loses it. A small flag is kept so the choice survives a reload — the
           assessment is not. Save a file before you leave.
@@ -185,7 +186,7 @@ export function EphemeralToggle({
   );
 }
 
-/** Unlock card when localStorage holds an envelope and no session passphrase is set. */
+/** Unlock card when autosaved progress is an encryption envelope and no session passphrase is set. */
 export function UnlockCard({
   onUnlocked,
   onForget,
@@ -220,7 +221,7 @@ export function UnlockCard({
         <p className="mono-label text-accent">Protected</p>
         <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">Enter passphrase</h1>
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
-          Progress in this browser is encrypted. Enter the passphrase to unlock it. A wrong passphrase will not load
+          Progress {HERE} is encrypted. Enter the passphrase to unlock it. A wrong passphrase will not load
           anything. There is no recovery if you have forgotten it.
         </p>
         <div className="mt-5">
@@ -250,12 +251,12 @@ export function UnlockCard({
             variant="danger"
             type="button"
             onClick={() => {
-              if (window.confirm("Remove the encrypted progress from this browser? You will need a saved file to get it back.")) {
+              if (window.confirm(`Remove the encrypted progress from ${THIS}? You will need a saved file to get it back.`)) {
                 onForget();
               }
             }}
           >
-            Remove from this browser
+            Remove from {THIS}
           </Button>
         </div>
       </form>
@@ -281,6 +282,3 @@ export function LegacyOriginBanner() {
     </div>
   );
 }
-
-/** Current passphrase if set — for encrypting a save without re-prompting. */
-export { getSessionPassphrase, hasSessionPassphrase };

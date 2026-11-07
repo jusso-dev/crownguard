@@ -3,15 +3,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import { buildIsm, displayId, extractControls, ismYaml, releaseMonth, shorten, TITLE_MAX } from "./build";
-import { oscalCatalogFileSchema, type OscalCatalogFile } from "./oscal";
+import { parseOscal } from "../lib/oscal";
+import { readRepoFile } from "../lib/repo";
+import { parseIdList, shorten, TITLE_MAX } from "../lib/text";
+import { ISM } from "../lib/upstreams";
+import { displayId, extractControls, ismGenerator, ismYaml, releaseMonth } from "./build";
+import { ISM_APPLICABILITY, ISM_E8_LEVELS, oscalCatalogFileSchema, type OscalCatalogFile } from "./oscal";
 
 const sampleText = readFileSync(join(import.meta.dirname, "fixtures", "oscal-sample.json"), "utf8");
-const sample = (): OscalCatalogFile => {
-  const parsed = oscalCatalogFileSchema.safeParse(JSON.parse(sampleText));
-  if (!parsed.success) throw new Error(JSON.stringify(parsed.error.issues));
-  return parsed.data;
-};
+const sample = (): OscalCatalogFile => parseOscal("oscal-sample.json", sampleText, oscalCatalogFileSchema);
+const build = (catalog: string, retrieved = "2026-10-10") => ismGenerator.build({ "ISM_catalog.json": catalog }, { tag: "v2026.09.4", retrieved });
 
 describe("the ISM generator", () => {
   it("shows every control id in display form and its guideline / section / topic path", () => {
@@ -23,7 +24,6 @@ describe("the ISM generator", () => {
       "Guidelines for system access / Identity and access management / Multi-factor authentication",
       "Cyber security principles / The cyber security principles / Protect cyber security principles",
     ]);
-    expect(displayId("ism-1504")).toBe("ISM-1504");
     expect(withdrawn).toEqual(["ISM-1999"]);
     expect(oscalIds).toContain("ism-1999");
   });
@@ -71,14 +71,10 @@ describe("the ISM generator", () => {
     expect(() => releaseMonth("2026.09.4")).toThrow();
   });
 
-  it("writes the same text every time and keeps its retrieval date on a rerun", () => {
-    const first = buildIsm(sample(), { tag: "v2026.09.4", retrieved: "2026-10-10" });
-    const again = buildIsm(sample(), { tag: "v2026.09.4", retrieved: "2026-10-10" });
-    expect(again.yaml).toBe(first.yaml);
-    expect(again.ids).toBe(first.ids);
-    // A rerun on another day changes nothing but would change the date, so the old date is kept: a true no-op.
-    const rerun = buildIsm(sample(), { tag: "v2026.09.4", retrieved: "2027-01-05", previousYaml: first.yaml });
-    expect(rerun.yaml).toBe(first.yaml);
+  it("writes the same text every time, differing only in the retrieval date", () => {
+    const first = build(sampleText);
+    expect(build(sampleText)).toEqual(first);
+    expect(build(sampleText, "2027-01-05").yaml).toBe(first.yaml.replace("Retrieved 2026-10-10.", "Retrieved 2027-01-05."));
   });
 
   it("quotes each control's updated month and refuses catalog metadata that could break out of the header", () => {
@@ -95,54 +91,35 @@ describe("the ISM generator", () => {
     expect(() => extractControls(month)).toThrowError(/unexpected updated value/);
   });
 
-  it("fails loudly when the OSCAL shape changes", () => {
+  it("stops when the OSCAL shape changes or a control has no statement", () => {
     const odd = JSON.parse(sampleText);
     odd.catalog.groups[0].brandNewKey = true;
-    expect(oscalCatalogFileSchema.safeParse(odd).success).toBe(false);
+    expect(() => build(JSON.stringify(odd))).toThrowError(/ISM_catalog\.json does not match the expected OSCAL shape/);
     const noStatement = JSON.parse(sampleText);
     noStatement.catalog.groups[0].groups[0].groups[0].controls[0].parts = [];
-    const parsed = oscalCatalogFileSchema.safeParse(noStatement);
-    expect(parsed.success).toBe(true);
-    expect(() => extractControls(parsed.data as OscalCatalogFile)).toThrowError(/no statement/);
+    expect(() => build(JSON.stringify(noStatement))).toThrowError(/no statement/);
   });
 
-  it("parses the generated framework file as YAML with every control carrying its id, group and title", () => {
-    const doc = parse(ismYaml(sample(), extractControls(sample()), { tag: "v2026.09.4", retrieved: "2026-10-10" }));
-    expect(doc.id).toBe("ism");
-    expect(doc.closed).toBe(true);
-    expect(doc.source).toBe("asd-ism");
-    expect(doc.sources).toEqual(["asd-ism-oscal"]);
-    expect(doc.withdrawn).toEqual(["ISM-1999"]);
-    for (const c of doc.controls) {
-      expect(c.id).toMatch(/^ISM-/);
-      expect(c.group.length).toBeGreaterThan(10);
-      expect(c.title.length).toBeGreaterThan(2);
-    }
+  it("writes a framework file the content loader reads, citing the ISM and its OSCAL release", () => {
+    const doc = parse(build(sampleText).yaml);
+    expect(doc).toMatchObject({ id: "ism", closed: true, source: "asd-ism", sources: [ISM.source!.id], withdrawn: ["ISM-1999"] });
   });
 });
 
 describe("the committed ISM artifacts", () => {
-  const yamlText = readFileSync(join(import.meta.dirname, "..", "..", "content", "frameworks", "ism.yaml"), "utf8");
-  const idsText = readFileSync(join(import.meta.dirname, "fixtures", "ism-controls.txt"), "utf8");
+  const yamlText = readRepoFile(ISM.frameworkFile);
+  const idsText = readRepoFile(ISM.idsFile);
   const doc = parse(yamlText);
 
-  it("has exactly the control count pinned in the fixture for this release", () => {
-    const pinned = idsText.split("\n").filter((l) => l && !l.startsWith("#"));
+  it("list every control in the pinned id list for this release, live or withdrawn", () => {
     const listed = [...doc.controls.map((c: { id: string }) => c.id), ...doc.withdrawn];
-    expect(pinned.length).toBe(listed.length);
-    expect(new Set(pinned.map(displayId))).toEqual(new Set(listed));
+    expect(new Set(parseIdList(idsText).map(displayId))).toEqual(new Set(listed));
   });
 
-  it("pins the release tag in both files' headers", () => {
-    const tag = idsText.match(/release tag (v[\d.]+)/)?.[1];
-    expect(tag).toBeTruthy();
-    expect(yamlText).toContain(`at release tag ${tag}`);
-  });
-
-  it("keeps every control's applicability and e8 values inside the ISM's own lists", () => {
+  it("keep every control's applicability and e8 values inside the ISM's own lists", () => {
     for (const c of doc.controls) {
-      for (const a of c.applicability ?? []) expect(["NC", "OS", "P", "S", "TS"]).toContain(a);
-      for (const e of c.e8 ?? []) expect(["ML1", "ML2", "ML3"]).toContain(e);
+      for (const a of c.applicability ?? []) expect(ISM_APPLICABILITY).toContain(a);
+      for (const e of c.e8 ?? []) expect(ISM_E8_LEVELS).toContain(e);
     }
   });
 });

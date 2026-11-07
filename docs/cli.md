@@ -89,9 +89,9 @@ Lists every Zod issue and path; exits 1 on failure.
 pnpm cg validate riverbend.crownguard.json
 ```
 
-## Library surface
+## Using it from other tools
 
-Stable Node imports live in `src/lib/index.ts` (`loadCatalogueFromDisk`, `parseAssessment`, `applyScan`, `buildReport`, `renderReportToFile`, `registerTable`, …). Prefer that entry over reaching into other `src/` modules.
+The CLI is the stable interface: its commands, JSON output and exit codes are what other tools should depend on. The modules behind it are internal. The file format lives in `src/format/`, scan import in `src/imports/`, scoring in `src/engine/` and PDF rendering in `src/report/`.
 
 ## Replacing the Hermes helper
 

@@ -1,69 +1,43 @@
-import type { ImportMapping } from "../content/schema";
-import type { ScanStatus } from "../engine/types";
-import { collapse, countText, suggestAll, type CheckRow } from "./aggregate";
-import { type Finding, type ScanImporter, type ScanResult } from "./types";
+import type { ScanStatus } from "../format/vocab";
+import { buildScanResult, type CheckRow } from "./aggregate";
+import { parseCsv, readTable, yesNo } from "./csv";
+import type { ScanImporter } from "./types";
 
 /** CSV column names Prowler has used, newest first, mapped to what crownguard calls them. */
-const columns: Record<string, string[]> = {
+const columns = {
   check: ["CHECK_ID", "CHECKID"],
   title: ["CHECK_TITLE", "FINDING_TITLE", "TITLE"],
   status: ["STATUS", "FINDING_STATUS"],
   muted: ["MUTED", "IS_MUTED"],
   account: ["ACCOUNT_UID", "ACCOUNT_ID", "SUBSCRIPTION", "PROJECT_ID"],
   accountName: ["ACCOUNT_NAME", "SUBSCRIPTION_NAME", "PROJECT_NAME"],
-  region: ["REGION", "LOCATION"],
   resource: ["RESOURCE_UID", "RESOURCE_ARN", "RESOURCE_NAME", "RESOURCE_ID"],
-  detail: ["STATUS_EXTENDED", "STATUS_DETAIL", "DETAIL"],
   at: ["TIMESTAMP", "ASSESSMENT_START_TIME", "FINDING_TIMESTAMP"],
   version: ["PROWLER_VERSION", "VERSION"],
 };
+type Column = keyof typeof columns;
 
-/** Which delimiter a CSV uses: count candidates in the header row and take the one it uses most. */
-export function detectDelimiter(headerLine: string): string {
-  const counts = [",", ";", "\t", "|"].map((d) => [d, headerLine.split(d).length - 1] as const);
-  const best = counts.sort((a, b) => b[1] - a[1])[0];
-  return best[1] > 0 ? best[0] : ",";
+/** One Prowler finding: one check against one resource in one region. */
+interface Finding {
+  check: string;
+  title?: string;
+  status: ScanStatus;
+  /** Suppressed in Prowler. A muted finding never becomes Yes. */
+  muted: boolean;
+  account: string;
+  accountName?: string;
+  resource?: string;
+  at: string;
+  toolVersion?: string;
 }
 
-/** RFC 4180 fields and rows: quoted fields, doubled quotes, either line ending. */
-export function parseCsv(text: string): string[][] {
-  const delim = detectDelimiter(text.slice(0, text.indexOf("\n") < 0 ? undefined : text.indexOf("\n")));
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c !== '"') field += c;
-      else if (text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else quoted = false;
-    } else if (c === '"' && field === "") quoted = true;
-    else if (c === delim) {
-      row.push(field);
-      field = "";
-    } else if (c === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else if (c !== "\r") field += c;
-  }
-  if (field !== "" || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim() !== ""));
-}
-
-const truthy = (v: string | undefined) => /^(true|yes|1|y|toggled)$/i.test((v ?? "").trim());
-
-/** Prowler reports PASS, FAIL and MANUAL. Anything else, including a suppressed finding, is review. */
+/**
+ * Prowler's statuses are PASS, FAIL and MANUAL (and MUTED in Prowler App). MANUAL needs a person to check, and a
+ * muted finding is review, so anything but PASS and FAIL is review.
+ */
 function toStatus(raw: string): ScanStatus {
   const s = raw.trim().toUpperCase();
-  if (s === "PASS" || s === "PASSIVE") return "pass";
+  if (s === "PASS") return "pass";
   if (s === "FAIL") return "fail";
   return "review";
 }
@@ -80,53 +54,24 @@ const iso = (v: string) => {
   return isNaN(d.getTime()) ? t : d.toISOString();
 };
 
-function toFinding(row: Record<string, string>): Finding {
+function toFinding(row: Record<Exclude<Column, "muted">, string>, muted: boolean): Finding {
   return {
     check: row.check.trim(),
-    title: row.title?.trim() || undefined,
+    title: row.title.trim() || undefined,
     status: toStatus(row.status),
-    muted: truthy(row.muted),
+    muted,
     account: row.account.trim(),
-    accountName: row.accountName?.trim() || undefined,
-    region: row.region?.trim() || undefined,
-    resource: row.resource?.trim() || undefined,
-    detail: row.detail?.trim() || undefined,
+    accountName: row.accountName.trim() || undefined,
+    resource: row.resource.trim() || undefined,
     at: iso(row.at),
-    toolVersion: row.version?.trim() || undefined,
+    toolVersion: row.version.trim() || undefined,
   };
 }
 
-export function readProwlerCsv(text: string): Finding[] {
-  const rows = parseCsv(text);
-  const header = rows[0] ?? [];
-  const index = new Map(header.map((h, i) => [h.trim().toUpperCase(), i]));
-  const pick = (names: string[]) => {
-    for (const n of names) {
-      const i = index.get(n);
-      if (i !== undefined) return i;
-    }
-    return -1;
-  };
-  const wanted = Object.fromEntries(Object.entries(columns).map(([k, names]) => [k, pick(names)])) as Record<string, number>;
-  if (wanted.check < 0 || wanted.status < 0)
-    throw new Error("this isn't a Prowler CSV: it needs at least the CHECK_ID and STATUS columns");
-
-  return rows.slice(1).map((cells) => {
-    const value = (i: number) => (i >= 0 ? (cells[i] ?? "") : "");
-    return toFinding({
-      check: value(wanted.check),
-      title: value(wanted.title),
-      status: value(wanted.status),
-      muted: value(wanted.muted),
-      account: value(wanted.account),
-      accountName: value(wanted.accountName),
-      region: value(wanted.region),
-      resource: value(wanted.resource),
-      detail: value(wanted.detail),
-      at: value(wanted.at),
-      version: value(wanted.version),
-    });
-  });
+function readCsv(text: string): Finding[] {
+  const { found, records } = readTable(parseCsv(text), columns);
+  if (!found.has("check") || !found.has("status")) throw new Error("this isn't a Prowler CSV: it needs at least the CHECK_ID and STATUS columns");
+  return records.map((r) => toFinding(r, yesNo(r.muted) === true));
 }
 
 type OcsfFinding = {
@@ -136,104 +81,68 @@ type OcsfFinding = {
   muted?: unknown;
   time_dt?: string;
   finding_info?: { title?: string; created_time_dt?: string; muted?: unknown };
-  cloud?: { account?: { uid?: string; name?: string }; region?: string };
-  resources?: { uid?: string; name?: string; region?: string }[];
+  cloud?: { account?: { uid?: string; name?: string } };
+  resources?: { uid?: string; name?: string }[];
   unmapped?: { muted?: unknown };
 };
 
-export function readProwlerOcsf(text: string): Finding[] {
+function readOcsf(text: string): Finding[] {
   const parsed = JSON.parse(text) as OcsfFinding | OcsfFinding[];
   const rows = Array.isArray(parsed) ? parsed : [parsed];
   if (!rows.length || rows.some((r) => !r?.metadata?.event_code))
     throw new Error("this isn't Prowler JSON-OCSF output: findings need metadata.event_code");
 
-  return rows.map((r) => {
-    const detail = r.status_detail ?? "";
-    return toFinding({
-      check: r.metadata?.event_code ?? "",
-      title: r.finding_info?.title ?? "",
-      status: r.status_code ?? "",
-      muted: String(truthy(String(r.muted)) || truthy(String(r.finding_info?.muted)) || truthy(String(r.unmapped?.muted)) || /^muted\b/i.test(detail)),
-      account: r.cloud?.account?.uid ?? "",
-      accountName: r.cloud?.account?.name ?? "",
-      region: r.cloud?.region ?? r.resources?.[0]?.region ?? "",
-      resource: r.resources?.[0]?.uid ?? r.resources?.[0]?.name ?? "",
-      detail,
-      at: r.time_dt ?? r.finding_info?.created_time_dt ?? "",
-      version: r.metadata?.product?.version ?? "",
-    });
-  });
-}
-
-/** Prowler writes one finding per resource per region, so a check can produce hundreds of rows. */
-function byCheck(findings: Finding[]): Map<string, Finding[]> {
-  const groups = new Map<string, Finding[]>();
-  for (const f of findings) {
-    const group = groups.get(f.check);
-    if (group) group.push(f);
-    else groups.set(f.check, [f]);
-  }
-  return groups;
-}
-
-const major = (v: string | undefined) => v?.trim().split(".")[0];
-
-export function readProwler(findings: Finding[], mapping: ImportMapping): ScanResult {
-  const groups = byCheck(findings);
-  const seen = new Map<string, { id: string; name: string; findings: number }>();
-  for (const f of findings) {
-    const id = f.account || "unknown";
-    const row = seen.get(id) ?? { id, name: f.accountName ?? "", findings: 0 };
-    row.findings++;
-    seen.set(id, row);
-  }
-  const accounts = [...seen.values()].sort((a, b) => a.id.localeCompare(b.id));
-  const mapped = new Set(mapping.mappings.flatMap((m) => m.checks));
-  const unmappedIds = [...groups.keys()].filter((id) => !mapped.has(id));
-  const toolVersion = findings.find((f) => f.toolVersion)?.toolVersion;
-  const at = findings.map((f) => f.at).filter(Boolean).sort()[0] ?? new Date(0).toISOString();
-
-  const rows = new Map<string, CheckRow[]>();
-  for (const [id, found] of groups) {
-    const c = collapse(found);
-    const examples = found.filter((f) => c.status === "fail" ? f.status === "fail" && !f.muted : !f.muted).map((f) => f.resource).filter(Boolean) as string[];
-    rows.set(id, [
+  // Prowler versions have put the muted flag in each of these places, and older ones only said so in the detail text.
+  const muted = (r: OcsfFinding) =>
+    [r.muted, r.finding_info?.muted, r.unmapped?.muted].some((v) => yesNo(String(v)) === true) || /^muted\b/i.test(r.status_detail ?? "");
+  return rows.map((r) =>
+    toFinding(
       {
-        id,
-        status: c.status,
-        setting: found[0].title ?? "",
-        current: countText(c),
-        expected: c.status === "review" ? "reviewed by the assessor" : "every resource passes this check",
-        count: countText(c),
-        examples,
+        check: r.metadata?.event_code ?? "",
+        title: r.finding_info?.title ?? "",
+        status: r.status_code ?? "",
+        account: r.cloud?.account?.uid ?? "",
+        accountName: r.cloud?.account?.name ?? "",
+        resource: r.resources?.[0]?.uid ?? r.resources?.[0]?.name ?? "",
+        at: r.time_dt ?? r.finding_info?.created_time_dt ?? "",
+        version: r.metadata?.product?.version ?? "",
       },
-    ]);
-  }
-
-  const account = accounts?.length === 1 ? accounts[0].id : undefined;
-  const warnings: string[] = [];
-  if (toolVersion && mapping.checkedAgainst && major(toolVersion) !== major(mapping.checkedAgainst))
-    warnings.push(
-      `This scan came from Prowler ${toolVersion}. The check ids in crownguard's mappings were checked against ${mapping.checkedAgainst}, so a renamed or new check may not line up.`,
-    );
-  if ((accounts?.length ?? 0) > 1)
-    warnings.push(`Findings from ${accounts!.length} accounts were combined: ${accounts!.map((a) => a.name || a.id).join(", ")}.`);
-
-  return {
-    tool: mapping.name,
-    toolVersion,
-    tenant: accounts?.length ? accounts.map((a) => a.name || a.id).join(", ") : "Prowler scan",
-    domain: accounts?.length === 1 ? accounts[0].id : `${accounts?.length ?? 0} accounts`,
-    accounts,
-    scannedAt: at,
-    suggestions: suggestAll(
-      mapping,
-      rows,
-      { tool: mapping.name, toolVersion, account, tenant: accounts?.map((a) => a.name || a.id).join(", ") ?? "Prowler scan", scannedAt: at },
+      muted(r),
     ),
-    unmapped: unmappedIds.length,
-    unmappedFailing: unmappedIds.filter((id) => collapse(groups.get(id)!).status === "fail").sort(),
-    warnings: warnings.length ? warnings : undefined,
+  );
+}
+
+/**
+ * Prowler reports a check once per resource per region, so a check can have hundreds of findings. They become one row:
+ * any failure fails the check, since the control is not in place everywhere, and it passes only when every resource
+ * passes. A muted finding counts as review, never as a pass, so suppressing a failure can't turn it into a Yes.
+ */
+function checkRow(id: string, findings: Finding[]): CheckRow {
+  let pass = 0;
+  let fail = 0;
+  let review = 0;
+  for (const f of findings) {
+    if (f.muted || f.status === "review") review++;
+    else if (f.status === "pass") pass++;
+    else fail++;
+  }
+  const status: ScanStatus = fail > 0 ? "fail" : pass > 0 && review === 0 ? "pass" : "review";
+  const of = `${findings.length} resource${findings.length === 1 ? "" : "s"}`;
+  const count =
+    fail > 0 ? `${fail} of ${of} failing`
+    : review > 0 && pass > 0 ? `${pass} of ${of} passing, ${review} needing review`
+    : review > 0 ? `${review} of ${of} needing review`
+    : `${pass} of ${of} passing`;
+  const examples = findings.filter((f) => !f.muted && (status !== "fail" || f.status === "fail")).flatMap((f) => (f.resource ? [f.resource] : []));
+  return {
+    id,
+    status,
+    setting: findings[0].title ?? "",
+    // The count is what the scan found. The wizard shows `current` and the report shows `count`, so it goes in both.
+    current: count,
+    expected: status === "review" ? "reviewed by the assessor" : "every resource passes this check",
+    count,
+    examples,
   };
 }
 
@@ -249,13 +158,11 @@ const looksLikeOcsf = (text: string) => text.includes('"event_code"') && text.in
  * Which cloud a Prowler report covers, from the fields Prowler fills in. Empty when the file doesn't say; the
  * importer then takes the file at face value rather than guessing.
  */
-export function prowlerProvider(text: string): string {
+function providerOf(text: string): string {
   const ocsf = text.match(/"provider"\s*:\s*"(aws|azure|gcp|kubernetes)"/i);
   if (ocsf) return ocsf[1].toLowerCase();
-  const rows = parseCsv(text.split(/\r?\n/).slice(0, 2).join("\n"));
-  const header = rows[0] ?? [];
-  const i = header.findIndex((h) => h.trim().toUpperCase() === "PROVIDER");
-  return i >= 0 ? (rows[1]?.[i] ?? "").trim().toLowerCase() : "";
+  const { records } = readTable(parseCsv(text.split(/\r?\n/).slice(0, 2).join("\n")), { provider: ["PROVIDER"] });
+  return (records[0]?.provider ?? "").trim().toLowerCase();
 }
 
 /** One importer per platform: same file formats, different mapping and questions. Azure questions live on `microsoft`. */
@@ -265,17 +172,45 @@ export function prowlerImporter(platform: "aws" | "microsoft"): ScanImporter {
   const name = azure ? "Prowler (Azure)" : "Prowler (AWS)";
   return {
     id: azure ? "prowler-azure" : "prowler-aws",
+    tool: "prowler",
     platform,
     requiresModule: azure ? "azure" : undefined,
     label: name,
     hint: azure ? "prowler-output-<subscription>-<date>.csv or .json" : "prowler-output-<account>-<date>.csv or .json",
     url: "https://github.com/prowler-cloud/prowler",
     accept: ".csv,.json,text/csv,application/json",
-    detect: (text) => (looksLikeCsv(text) || looksLikeOcsf(text)) && [provider, ""].includes(prowlerProvider(text)),
+    detect: (text) => (looksLikeCsv(text) || looksLikeOcsf(text)) && [provider, ""].includes(providerOf(text)),
     read: (text, mapping) => {
-      const findings = looksLikeCsv(text) ? readProwlerCsv(text) : readProwlerOcsf(text);
+      const findings = looksLikeCsv(text) ? readCsv(text) : readOcsf(text);
       if (!findings.length) throw new Error(`this ${name} file has no findings in it`);
-      return readProwler(findings, mapping);
+
+      const byCheck = new Map<string, Finding[]>();
+      const byAccount = new Map<string, { id: string; name: string; findings: number }>();
+      for (const f of findings) {
+        const group = byCheck.get(f.check);
+        if (group) group.push(f);
+        else byCheck.set(f.check, [f]);
+        const id = f.account || "unknown";
+        const account = byAccount.get(id) ?? { id, name: f.accountName ?? "", findings: 0 };
+        account.findings++;
+        byAccount.set(id, account);
+      }
+      const accounts = [...byAccount.values()].sort((a, b) => a.id.localeCompare(b.id));
+      const names = accounts.map((a) => a.name || a.id);
+
+      return buildScanResult(
+        mapping,
+        [...byCheck].map(([id, found]) => checkRow(id, found)),
+        {
+          toolVersion: findings.find((f) => f.toolVersion)?.toolVersion,
+          tenant: names.join(", "),
+          domain: accounts.length === 1 ? accounts[0].id : `${accounts.length} accounts`,
+          account: accounts.length === 1 ? accounts[0].id : undefined,
+          accounts,
+          scannedAt: findings.map((f) => f.at).filter(Boolean).sort()[0] ?? new Date(0).toISOString(),
+          warnings: accounts.length > 1 ? [`Findings from ${accounts.length} accounts were combined: ${names.join(", ")}.`] : [],
+        },
+      );
     },
   };
 }

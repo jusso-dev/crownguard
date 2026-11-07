@@ -7,16 +7,8 @@
  * misreading it. Metadata siblings we only quote and `back-matter` stay loose.
  */
 import { z } from "zod";
+import { oscalPropSchema as prop, type OscalProp as Prop } from "../lib/oscal";
 
-/** ASD's namespace for its Essentials props (`domain`, `domain-priority-phase`). */
-export const ESSENTIALS_NS = "https://www.cyber.gov.au/ns/essentials/oscal/1.0";
-
-export interface Prop {
-  name: string;
-  ns?: string;
-  class?: string;
-  value: string;
-}
 export interface Part {
   id?: string;
   name: string;
@@ -26,14 +18,14 @@ export interface Part {
   prose?: string;
   parts?: Part[];
 }
-export interface Control {
+interface Control {
   id: string;
   title?: string;
   props?: Prop[];
   links?: { href: string; rel?: string; text?: string }[];
   parts?: Part[];
 }
-export interface Group {
+interface Group {
   id?: string;
   class?: string;
   title: string;
@@ -43,7 +35,6 @@ export interface Group {
   groups?: Group[];
 }
 
-const prop: z.ZodType<Prop> = z.strictObject({ name: z.string().min(1), ns: z.string().optional(), class: z.string().optional(), value: z.string().min(1) });
 const part: z.ZodType<Part> = z.lazy(() =>
   z.strictObject({
     id: z.string().optional(),
@@ -132,5 +123,3 @@ export const DOMAIN_SLUGS = {
   "user-devices": "UD",
 } as const;
 export type DomainSlug = keyof typeof DOMAIN_SLUGS;
-
-export const propValues = (props: Prop[] | undefined, name: string): string[] => (props ?? []).filter((p) => p.name === name).map((p) => p.value);

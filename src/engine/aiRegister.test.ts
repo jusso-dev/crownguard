@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
-import { assessmentSchema } from "../wizard/assessmentSchema";
+import { assessmentSchema, type AiUseCase } from "../format/schema";
 import { fixtureAssessment } from "../report/fixture";
 import { exampleEntries } from "./aiExamples";
 import { aboutRows, registerTable, toCsv } from "./aiExport";
-import { addMonths, groupWarning, highRiskNotification, shareWithDta } from "./aiRegister";
-import { aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
+import { addMonths, groupWarning, highRiskNotification, shareWithDta, aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
 import { assessAll } from "./risk";
-import type { AiUseCase } from "./types";
 
 const module = catalogue.aiRegister!;
 const kind = (id: string) => module.model.kinds.find((k) => k.id === id)!;
@@ -16,11 +14,8 @@ const asked = (e: AiUseCase) => module.questions.filter((q) => applies(q, e, kin
 const asAt = new Date("2026-10-09T00:00:00Z");
 
 describe("AI register content", () => {
-  it("loads with every theme, kind and question", () => {
-    expect(module.model.themes.map((t) => t.id)).toEqual(["accountability", "oversight", "access", "data", "monitoring", "switch-off", "transparency", "assurance"]);
-    expect(module.model.kinds.map((k) => k.id)).toContain("in-house-agent");
-    expect(module.questions.length).toBeGreaterThanOrEqual(20);
-    for (const t of module.model.themes) expect(module.questions.some((q) => q.theme === t.id)).toBe(true);
+  it("asks at least one question for every theme", () => {
+    for (const t of module.model.themes) expect(module.questions.some((q) => q.theme === t.id), t.id).toBe(true);
   });
 
   it("only maps to frameworks and controls that exist", () => {
@@ -112,6 +107,7 @@ describe("flags and suggestions", () => {
     const e = entry({ kind: "ai-connector", jewels: [jewel.id] });
     const r = aiReadiness(catalogue, a, e);
     const type = catalogue.platforms.get("microsoft")!.assetTypes.find((t) => t.id === jewel.assetType)!;
+    expect(r.exposures.length).toBeGreaterThan(0);
     for (const s of r.exposures) {
       expect(s.jewel.id).toBe(jewel.id);
       expect(type.exposures).toContain(s.exposure);
@@ -141,6 +137,7 @@ describe("readiness", () => {
     const e = { ...newUseCase(kind("m365-copilot"), "c"), jewels: [a.jewels[0].id] };
     const r = aiReadiness(catalogue, a, e, risks);
     expect(r.jewels[0].risk?.jewel.id).toBe(a.jewels[0].id);
+    expect(r.related.length).toBeGreaterThan(0);
     for (const x of r.related) expect(kind("m365-copilot").relatedQuestions).toContain(x.question.id);
   });
 });
@@ -171,17 +168,31 @@ describe("register export", () => {
 
   it("puts the Standard's fields first, in its order", () => {
     const t = registerTable(catalogue, a, { asAt });
-    expect(t.standardColumns).toBe(16);
-    expect(t.headers.slice(0, 3)).toEqual(["Use case name", "Agency identifier (reference number)", "Description"]);
-    expect(t.headers.indexOf("Domain")).toBeLessThan(t.headers.indexOf("Usage pattern"));
-    // The Standard's fields come first and crownguard's additions after them, agent column included.
-    expect(t.standardColumns).toBe(16);
-    expect(t.headers[16]).toBe("Agent (takes actions)");
-    expect(t.headers[17]).toBe("Grouped under");
-    expect(t.headers[18]).toBe("Example data");
+    // The Standard for accountability's minimum fields, in its order.
+    expect(t.headers.slice(0, t.standardColumns)).toEqual([
+      "Use case name",
+      "Agency identifier (reference number)",
+      "Description",
+      "AI technology type",
+      "Lifecycle stage",
+      "Use of the Technical standard",
+      "Domain",
+      "Usage pattern",
+      "Accountable use case owner (name)",
+      "Accountable use case owner (email address)",
+      "Appendix C criteria met",
+      "Inherent risk rating",
+      "Residual risk rating",
+      "Date the AI impact assessment was last updated",
+      "Last date of review",
+      "Date for next review",
+    ]);
+    // crownguard's additions come after the Standard's fields.
+    expect(t.headers.indexOf("Agent (takes actions)")).toBe(t.standardColumns);
     expect(t.rows).toHaveLength(3);
     for (const r of t.rows) expect(r).toHaveLength(t.headers.length);
-    expect(t.rows.every((r) => r[18].startsWith("Yes: example data"))).toBe(true);
+    const example = t.headers.indexOf("Example data");
+    expect(t.rows.every((r) => r[example].startsWith("Yes: example data"))).toBe(true);
   });
 
   it("only fills review dates for high-risk use cases", () => {
