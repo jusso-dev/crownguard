@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms } from "../../content/useCatalogue";
-import { exposures, tiers, type AssetType, type Tier } from "../../content/schema";
+import { tiers, type AssetType, type Tier } from "../../content/schema";
+import { exposures } from "../../format/vocab";
 import { suggestDsl } from "../../engine/idcf";
 import { impactOf } from "../../engine/risk";
 import { classifications, dsls, regulations, type Classification, type Dsl, type ImpactRating, type Regulation } from "../../format/vocab";

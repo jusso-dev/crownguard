@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "./aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../format/aiOptions";
+import { essentialsChapters, exposures, isoDate, type ExposureId } from "../format/vocab";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
-export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const date = isoDate;
 
 const sourceSchema = z.strictObject({
@@ -25,8 +25,6 @@ const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
  */
 const essentialsDomains = ["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"] as const;
 export type EssentialsDomain = (typeof essentialsDomains)[number];
-export const essentialsChapters = ["enterprise-it", "cloud"] as const;
-export type EssentialsChapter = (typeof essentialsChapters)[number];
 /** Cloud shared responsibility: (C) Customer, (S) Supplied, (P) Provider-inherited. */
 const responsibility = z.enum(["C", "S", "P"]);
 
@@ -92,16 +90,6 @@ export const frameworkSchema = z.strictObject({
 
 export const tiers = ["identity", "privileged", "data", "collaboration", "endpoint", "cloud", "ai"] as const;
 
-export const exposures = {
-  "external-sharing": "Content can be shared with people outside the organisation",
-  "guest-access": "Guest or external accounts have access",
-  "internet-facing": "Reachable from the internet without a trusted network or device",
-  "standing-admin": "Administrators hold permanent (not just-in-time) privileges",
-  "third-party-apps": "Third-party apps or integrations hold delegated or application access",
-  "unmanaged-devices": "Accessible from unmanaged or personal devices",
-  "ai-grounding": "Indexed by an AI assistant (Copilot / Gemini) that answers users' questions",
-} as const;
-export type ExposureId = keyof typeof exposures;
 const exposureId = z.enum(Object.keys(exposures) as [ExposureId, ...ExposureId[]]);
 
 export const platformSchema = z.strictObject({
@@ -429,3 +417,4 @@ export const answerableQuestionIds = (catalogue: Pick<Catalogue, "platforms" | "
   ...[...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)),
   ...(catalogue.soc?.questions.map((q) => q.id) ?? []),
 ];
+

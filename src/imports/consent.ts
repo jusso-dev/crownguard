@@ -1,6 +1,6 @@
 import { aiAppCategories, type AiAppCategory, type AiKind, type KnownAiApp, type OAuthScope } from "../content/schema";
 import { newUseCase } from "../engine/aiRegister";
-import type { AiDataKind } from "../content/aiOptions";
+import type { AiDataKind } from "../format/aiOptions";
 import type { AiUseCase } from "../format/schema";
 import { parseCsv, readTable, yesNo } from "./csv";
 

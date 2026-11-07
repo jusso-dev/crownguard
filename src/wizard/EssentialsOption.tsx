@@ -1,6 +1,6 @@
 import { catalogue, ensureReportContent } from "../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../content/useCatalogue";
-import type { EssentialsChapter } from "../content/schema";
+import type { EssentialsChapter } from "../format/vocab";
 import { essentials, type EssentialsResult } from "../engine/essentials";
 import { activeQuestions, effectiveAnswers } from "../engine/risk";
 import { useStore } from "./store";

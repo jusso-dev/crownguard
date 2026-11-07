@@ -1,7 +1,7 @@
-import { type AiKind, type AiQuestion, type Catalogue, type ExposureId, type Question } from "../content/schema";
-import { aiCriteria, aiRiskRatings, aiTechnologies } from "../content/aiOptions";
+import { type AiKind, type AiQuestion, type Catalogue, type Question } from "../content/schema";
+import { aiCriteria, aiRiskRatings, aiTechnologies } from "../format/aiOptions";
 import { activeQuestions, bySeverity, confidenceOf, effectiveAnswers, gapStats, isGap, metStatus, scoreOf, type JewelRisk } from "./risk";
-import type { Answer } from "../format/vocab";
+import { ISO_DATE, type Answer, type ExposureId } from "../format/vocab";
 import type { AiUseCase, Assessment, CrownJewel } from "../format/schema";
 
 /**
@@ -39,7 +39,6 @@ export const aiFieldSources = {
 } as const;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const kindOf = (catalogue: Catalogue, e: Pick<AiUseCase, "kind">): AiKind | undefined => catalogue.aiRegister?.model.kinds.find((k) => k.id === e.kind);
 
@@ -91,9 +90,9 @@ export function missingFields(e: AiUseCase): AiField[] {
     criteria: e.criteria.length === 0,
     inherentRisk: scoped && !e.inherentRisk,
     residualRisk: scoped && !e.residualRisk,
-    impactAssessmentDate: scoped && !DATE.test(e.impactAssessmentDate ?? ""),
-    lastReview: e.inherentRisk === "high" && !DATE.test(e.lastReview ?? ""),
-    nextReview: e.inherentRisk === "high" && !DATE.test(e.nextReview ?? ""),
+    impactAssessmentDate: scoped && !ISO_DATE.test(e.impactAssessmentDate ?? ""),
+    lastReview: e.inherentRisk === "high" && !ISO_DATE.test(e.lastReview ?? ""),
+    nextReview: e.inherentRisk === "high" && !ISO_DATE.test(e.nextReview ?? ""),
   };
   return (Object.keys(aiFieldLabels) as AiField[]).filter((f) => empty[f]);
 }
@@ -106,12 +105,12 @@ export function aiFlags(e: AiUseCase, asAt = new Date()): string[] {
   if (isAgentic(e) && (e.access === "org-wide" || e.access === "privileged"))
     flags.push("An agent with organisation-wide or administrative access. The addendum and ASD both expect least privilege: access to only the resources and tools the task needs.");
   if (e.access === "unknown" || (isAgentic(e) && !e.access)) flags.push("Its access level isn't recorded yet. Check what it can reach in your admin centre.");
-  if (e.inherentRisk === "high" && DATE.test(e.lastReview ?? "") && DATE.test(e.nextReview ?? "")) {
+  if (e.inherentRisk === "high" && ISO_DATE.test(e.lastReview ?? "") && ISO_DATE.test(e.nextReview ?? "")) {
     const due = new Date(`${e.lastReview}T00:00:00Z`);
     due.setUTCFullYear(due.getUTCFullYear() + 1);
     if (new Date(`${e.nextReview}T00:00:00Z`) > due) flags.push("The next review is more than 12 months after the last one. The policy says high-risk use cases are reviewed at least every 12 months.");
   }
-  if (e.inherentRisk === "high" && DATE.test(e.nextReview ?? "") && new Date(`${e.nextReview}T23:59:59Z`) < asAt) flags.push(`The review due ${e.nextReview} is overdue.`);
+  if (e.inherentRisk === "high" && ISO_DATE.test(e.nextReview ?? "") && new Date(`${e.nextReview}T23:59:59Z`) < asAt) flags.push(`The review due ${e.nextReview} is overdue.`);
   return flags;
 }
 

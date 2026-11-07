@@ -1,4 +1,5 @@
-import type { E8Strategy, EssentialsChapter, EssentialsDomain, Framework, Question } from "../content/schema";
+import type { E8Strategy, EssentialsDomain, Framework, Question } from "../content/schema";
+import type { EssentialsChapter } from "../format/vocab";
 import type { Answer } from "../format/vocab";
 
 /**

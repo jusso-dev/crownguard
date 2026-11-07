@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /**
  * The closed value lists a saved assessment uses, each with its display label. The file schema, the engine and the
  * UI all derive their enums and types from these, so adding a value is one edit here (plus a schema version bump
@@ -88,3 +90,22 @@ export const socProviders = {
   none: "We don't have a SOC",
 } as const;
 export type SocProvider = keyof typeof socProviders;
+
+export const exposures = {
+  "external-sharing": "Content can be shared with people outside the organisation",
+  "guest-access": "Guest or external accounts have access",
+  "internet-facing": "Reachable from the internet without a trusted network or device",
+  "standing-admin": "Administrators hold permanent (not just-in-time) privileges",
+  "third-party-apps": "Third-party apps or integrations hold delegated or application access",
+  "unmanaged-devices": "Accessible from unmanaged or personal devices",
+  "ai-grounding": "Indexed by an AI assistant (Copilot / Gemini) that answers users' questions",
+} as const;
+export type ExposureId = keyof typeof exposures;
+
+/** The two chapters of ASD's Essentials an assessment can be reported against. */
+export const essentialsChapters = ["enterprise-it", "cloud"] as const;
+export type EssentialsChapter = (typeof essentialsChapters)[number];
+
+/** A `YYYY-MM-DD` calendar date. */
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+export const isoDate = z.string().regex(ISO_DATE, "YYYY-MM-DD");

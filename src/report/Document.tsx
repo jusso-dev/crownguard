@@ -1,5 +1,5 @@
 import { Link, Text, View } from "@react-pdf/renderer";
-import { exposures } from "../content/schema";
+import { exposures } from "../format/vocab";
 import { bandOf, bands, RISK_SCALE } from "../engine/risk";
 import { phases, type RoadmapItem } from "../engine/roadmap";
 import { classifications, dsls, regulations } from "../format/vocab";

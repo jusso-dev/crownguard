@@ -1,7 +1,8 @@
 import { useRef, useState, type ReactNode } from "react";
 import { catalogue } from "../../content/catalogue";
 import { pct } from "../../engine/percent";
-import { exposures, type AiKind, type AiQuestion } from "../../content/schema";
+import { type AiKind, type AiQuestion } from "../../content/schema";
+import { exposures } from "../../format/vocab";
 import {
   aiAccess,
   aiAutonomy,
@@ -16,7 +17,7 @@ import {
   aiUsagePatterns,
   type AiBasis,
   type AiCriterion,
-} from "../../content/aiOptions";
+} from "../../format/aiOptions";
 import {
   aiFieldLabels,
   aiFieldSources,

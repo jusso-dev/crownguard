@@ -1,6 +1,6 @@
 import { aiRegisterSources } from "../content/aiRegisterSources";
 import type { Catalogue } from "../content/schema";
-import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "../content/aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "../format/aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, isAgentic, type AiField } from "./aiRegister";
 import { pct } from "./percent";
 import { assessAll } from "./risk";

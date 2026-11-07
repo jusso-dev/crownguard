@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { version } from "../../package.json";
-import { essentialsChapters, exposures, isoDate } from "../content/schema";
 import {
   aiAccess,
   aiAutonomy,
@@ -12,7 +11,7 @@ import {
   aiStandardUse,
   aiTechnologies,
   aiUsagePatterns,
-} from "../content/aiOptions";
+} from "./aiOptions";
 import {
   answers,
   classifications,
@@ -25,6 +24,9 @@ import {
   scanStatuses,
   socProviders,
   socRatings,
+  essentialsChapters,
+  exposures,
+  isoDate,
 } from "./vocab";
 
 const keys = <K extends string>(o: Record<K, unknown>) => Object.keys(o) as [K, ...K[]];

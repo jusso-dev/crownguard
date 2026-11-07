@@ -1,5 +1,5 @@
 import { Text, View } from "@react-pdf/renderer";
-import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../../content/aiOptions";
+import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../../format/aiOptions";
 import { basisLabel, dayText } from "../../engine/aiExport";
 import { aiFieldLabels, KILL_SWITCH_QUESTION } from "../../engine/aiRegister";
 import { pct } from "../../engine/percent";
