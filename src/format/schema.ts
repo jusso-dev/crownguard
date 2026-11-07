@@ -50,6 +50,21 @@ export const SCHEMA_VERSION = 5;
 /** Version of the app that wrote the file. */
 export const APP_VERSION = version;
 
+/** Size limits on scan evidence. Importers trim to these so what they save always validates. */
+export const evidenceLimits = {
+  tenant: 300,
+  toolVersion: 40,
+  scannedAt: 60,
+  checks: 50,
+  setting: 500,
+  value: 2000,
+  examples: 10,
+  example: 300,
+  /** Import records kept: the most recent ones. */
+  imports: 50,
+} as const;
+const L = evidenceLimits;
+
 /** Answers and notes kept for questions this build no longer asks. */
 const orphans = z.record(z.string().max(80), z.looseObject({ answer: answer.optional(), note: note.optional() }));
 
@@ -131,30 +146,39 @@ export const assessmentSchema = z.looseObject({
       z.object({
         source: z.string().max(80),
         tool: z.string().max(80).optional(),
-        toolVersion: z.string().max(40).optional(),
-        account: z.string().max(300).optional(),
-        tenant: z.string().max(300),
-        scannedAt: z.string().max(60),
+        toolVersion: z.string().max(L.toolVersion).optional(),
+        account: z.string().max(L.tenant).optional(),
+        tenant: z.string().max(L.tenant),
+        scannedAt: z.string().max(L.scannedAt),
         suggested: answer.optional(),
         checks: z
           .array(
             z.object({
               id: z.string().max(80),
               status: z.enum(scanStatuses),
-              setting: z.string().max(500),
-              current: z.string().max(2000),
-              expected: z.string().max(2000),
+              setting: z.string().max(L.setting),
+              current: z.string().max(L.value),
+              expected: z.string().max(L.value),
               count: z.string().max(200).optional(),
-              examples: z.array(z.string().max(300)).max(10).optional(),
+              examples: z.array(z.string().max(L.example)).max(L.examples).optional(),
             }),
           )
-          .max(50),
+          .max(L.checks),
       }),
     )
     .optional(),
   imports: z
-    .array(z.object({ source: z.string().max(80), toolVersion: z.string().max(40).optional(), tenant: z.string().max(300), scannedAt: z.string().max(60), importedAt: z.string().max(60), applied: z.number().int().min(0) }))
-    .max(50)
+    .array(
+      z.object({
+        source: z.string().max(80),
+        toolVersion: z.string().max(L.toolVersion).optional(),
+        tenant: z.string().max(L.tenant),
+        scannedAt: z.string().max(L.scannedAt),
+        importedAt: z.string().max(60),
+        applied: z.number().int().min(0),
+      }),
+    )
+    .max(L.imports)
     .optional(),
   soc: z
     .looseObject({

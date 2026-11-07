@@ -1,5 +1,6 @@
 import type { ImportMapping } from "../content/schema";
 import type { Answer, ScanStatus } from "../format/vocab";
+import { evidenceLimits as L } from "../format/schema";
 import type { ScanResult, Suggestion } from "./types";
 
 /** Statuses that actually say whether the control is in place. Review, info, unknown and not-licensed don't. */
@@ -115,10 +116,10 @@ export function buildScanResult(mapping: ImportMapping, rows: CheckRow[], facts:
   }
   const mapped = new Set(mapping.mappings.flatMap((m) => m.checks.map(key)));
   const unmapped = [...groups.keys()].filter((k) => !mapped.has(k));
-  const tenant = scrub(facts.tenant, 300);
-  const account = facts.account && scrub(facts.account, 300);
-  const toolVersion = facts.toolVersion && clip(facts.toolVersion, 40);
-  const scannedAt = clip(facts.scannedAt, 60);
+  const tenant = scrub(facts.tenant, L.tenant);
+  const account = facts.account && scrub(facts.account, L.tenant);
+  const toolVersion = facts.toolVersion && clip(facts.toolVersion, L.toolVersion);
+  const scannedAt = clip(facts.scannedAt, L.scannedAt);
 
   const suggestions = mapping.mappings
     .map((m): Suggestion | null => {
@@ -134,15 +135,15 @@ export function buildScanResult(mapping: ImportMapping, rows: CheckRow[], facts:
           tenant,
           scannedAt,
           suggested: suggestFor(m, found.map((f) => f.status)),
-          checks: found.slice(0, 50).map((f) => ({
+          checks: found.slice(0, L.checks).map((f) => ({
             id: f.id,
             status: f.status,
-            setting: scrub(f.setting, 500),
-            current: scrub(f.current, 2000),
-            expected: scrub(f.expected, 2000),
+            setting: scrub(f.setting, L.setting),
+            current: scrub(f.current, L.value),
+            expected: scrub(f.expected, L.value),
             count: f.count,
             // Resource ids are kept as examples; one that is a user's UPN is an account, and goes.
-            examples: f.examples?.slice(0, 10).map((e) => scrub(e, 300)),
+            examples: f.examples?.slice(0, L.examples).map((e) => scrub(e, L.example)),
           })),
         },
       };

@@ -1,4 +1,4 @@
-import type { Assessment } from "../format/schema";
+import { evidenceLimits, type Assessment } from "../format/schema";
 import type { ScanResult } from "./types";
 
 /**
@@ -34,7 +34,7 @@ export function applyScan(
       imports: [
         ...(assessment.imports ?? []),
         { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied },
-      ],
+      ].slice(-evidenceLimits.imports),
       updatedAt: now,
     },
   };

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Answer } from "../format/vocab";
 import { emptyAssessment } from "../format/empty";
+import { parseAssessment } from "../format/parse";
+import { toSaveFile } from "../format/saveFile";
+import { evidenceLimits } from "../format/schema";
 import { applyScan } from "./apply";
 import type { ScanResult } from "./types";
 
@@ -37,5 +40,15 @@ describe("applying a scan to an assessment", () => {
     const a = applyScan(emptyAssessment(), scan("first", [["MS-ID-001", "yes"]]), { ...opts(false), now }).assessment;
     expect(a.imports).toEqual([{ source: "first", tenant: "Contoso", scannedAt: "2026-10-01T03:00:00Z", importedAt: now.toISOString(), applied: 1 }]);
     expect(a.updatedAt).toBe(now.toISOString());
+  });
+});
+
+describe("the import history", () => {
+  it("keeps the most recent imports the file format allows, so the file still opens", () => {
+    let a = emptyAssessment();
+    for (let i = 0; i < evidenceLimits.imports + 3; i++) a = applyScan(a, scan(`scan ${i}`, []), opts(false)).assessment;
+    expect(a.imports).toHaveLength(evidenceLimits.imports);
+    expect(a.imports?.at(-1)?.source).toBe(`scan ${evidenceLimits.imports + 2}`);
+    expect(parseAssessment(JSON.parse(toSaveFile(a))).kind).toBe("ok");
   });
 });
