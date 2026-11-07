@@ -231,7 +231,7 @@ export function newUseCase(kind: AiKind, id: string): AiUseCase {
   return {
     id,
     kind: kind.id,
-    name: kind.id === "other" ? "" : kind.name,
+    name: kind.catchAll ? "" : kind.name,
     reference: "",
     description: "",
     product: kind.product,

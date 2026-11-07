@@ -288,6 +288,8 @@ export const aiRegisterModelSchema = z.strictObject({
         product: z.string().default(""),
         /** A public generative AI service used outside the organisation's tenant. */
         publicTool: z.boolean().default(false),
+        /** A catch-all preset: its name describes the preset, not the use case, so a new entry starts unnamed. */
+        catchAll: z.boolean().default(false),
         defaults: z
           .strictObject({
             technology: z.array(enumOf(aiTechnologies)).default([]),

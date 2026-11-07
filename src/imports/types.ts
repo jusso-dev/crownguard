@@ -36,6 +36,8 @@ export interface ScanResult {
 export interface ScanImporter {
   /** Matches the `content/imports/<id>.yaml` mapping that goes with it. */
   id: string;
+  /** The scanner, as `cg import --tool` names it. One scanner can have an importer per platform it scans. */
+  tool: string;
   /** Platform whose questions it pre-fills. */
   platform: string;
   /** Also needs this optional module to be in scope, e.g. Prowler (Azure) needs the Azure module. */

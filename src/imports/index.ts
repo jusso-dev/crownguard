@@ -11,19 +11,17 @@ import type { ScanImporter, ScanResult } from "./types";
  */
 export const importers: ScanImporter[] = [m365SecureImporter, prowlerImporter("aws"), prowlerImporter("microsoft"), scubagogglesImporter];
 
-const importerFor = (id: string): ScanImporter | undefined => importers.find((i) => i.id === id);
-
 /** The importer that recognises this file, whichever platform it belongs to. */
 export function detectImporter(text: string): ScanImporter | undefined {
   return importers.find((i) => i.detect(text));
 }
 
-/** The `--tool` names: every importer id, with one `prowler` standing for both Prowler importers. */
-export const toolChoices: readonly string[] = ["auto", ...new Set(importers.map((i) => i.id.replace(/^prowler-.*/, "prowler")))];
+/** The `--tool` names. */
+export const toolChoices: readonly string[] = ["auto", ...new Set(importers.map((i) => i.tool))];
 
 /**
- * The importer for a scan file. `auto` detects it; `prowler` detects which cloud, falling back to the assessment's
- * platforms because a Prowler file with no findings doesn't say.
+ * The importer for a scan file. `auto` detects it. A scanner with an importer per platform detects which one, falling
+ * back to the platform the assessment covers, because a file with no findings doesn't say which it scanned.
  */
 export function resolveImporter(tool: string, text: string, assessment?: Assessment): ScanImporter {
   const found = detectImporter(text);
@@ -31,14 +29,10 @@ export function resolveImporter(tool: string, text: string, assessment?: Assessm
     if (!found) throw new Error(`could not detect the scan tool; pass --tool ${toolChoices.slice(1).join("|")}`);
     return found;
   }
-  if (tool === "prowler") {
-    if (found?.id.startsWith("prowler-")) return found;
-    const preferAzure = assessment?.platforms.includes("microsoft") && !assessment.platforms.includes("aws");
-    return importerFor(preferAzure ? "prowler-azure" : "prowler-aws")!;
-  }
-  const chosen = importerFor(tool);
-  if (!chosen) throw new Error(`unknown tool '${tool}'`);
-  return chosen;
+  const candidates = importers.filter((i) => i.tool === tool);
+  if (!candidates.length) throw new Error(`unknown tool '${tool}'`);
+  if (found && candidates.includes(found)) return found;
+  return candidates.find((i) => assessment?.platforms.includes(i.platform) && !i.requiresModule) ?? candidates.find((i) => assessment?.platforms.includes(i.platform)) ?? candidates[0];
 }
 
 /** Why an importer can't be used with this assessment, in the assessor's words. Undefined when it can be. */

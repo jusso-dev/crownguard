@@ -172,6 +172,7 @@ export function prowlerImporter(platform: "aws" | "microsoft"): ScanImporter {
   const name = azure ? "Prowler (Azure)" : "Prowler (AWS)";
   return {
     id: azure ? "prowler-azure" : "prowler-aws",
+    tool: "prowler",
     platform,
     requiresModule: azure ? "azure" : undefined,
     label: name,

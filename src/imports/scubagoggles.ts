@@ -162,6 +162,7 @@ const looksLike = (text: string) => text.includes('"Results"') && /"Tool"\s*:\s*
 /** CISA's ScubaGoggles: `ScubaResults*.json` from a Google Workspace assessment. */
 export const scubagogglesImporter: ScanImporter = {
   id: "scubagoggles",
+  tool: "scubagoggles",
   platform: "google",
   label: "ScubaGoggles",
   hint: "ScubaResults*.json",

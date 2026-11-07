@@ -46,6 +46,7 @@ const looksLike = (text: string) => ['"summary"', '"findings"', '"primary_domain
 
 export const m365SecureImporter: ScanImporter = {
   id: "m365-secure",
+  tool: "m365-secure",
   platform: "microsoft",
   label: "M365-Secure",
   hint: "_Assessment-Results_<domain>.json",
