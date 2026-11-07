@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button } from "../wizard/ui";
-import { relativeTime } from "../wizard/time";
-import { desktopSettings, flushAutosave, type DesktopSettings } from "./tauri";
-import type { RecentAssessment } from "./types";
+import { Button } from "./ui";
+import { relativeTime } from "./time";
+import { desktopSettings, flushAutosave, type DesktopSettings } from "../platform/tauri";
+import type { RecentAssessment } from "../platform/types";
 
 /**
  * Desktop only: files recently opened or saved on this device, and the optional update check. Loaded lazily from the

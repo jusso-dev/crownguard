@@ -41,17 +41,13 @@ import { fileNames } from "../files";
 import { FoundApps, type FoundAppsState } from "../FoundApps";
 import { useStore } from "../store";
 import { modeOf } from "../flow";
-import { BandBadge, Button, Card, CheckboxPill, Field, FieldGroup, Progress, SeverityBadge, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
+import { BandBadge, Button, Card, CheckboxPill, ExampleBadge, Field, FieldGroup, Progress, SeverityBadge, StepHeader, Tile, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
 import { buildXlsx } from "../../lib/xlsx";
 
 const ADD = "add";
 /** The open-gaps filter: one basis of readiness question, or all of them. */
 type GapFilter = "all" | AiBasis;
 const toggle = <T,>(list: T[], v: T, on: boolean) => (on ? [...list, v] : list.filter((x) => x !== v));
-
-export function ExampleBadge() {
-  return <span className="mono-label rounded-[4px] bg-warn-soft px-1.5 py-0.5 text-warn">Example</span>;
-}
 
 export function AiRegisterStep() {
   const assessment = useStore((s) => s.assessment);
@@ -213,16 +209,6 @@ export function AiRegisterStep() {
       )}
       <Footer />
     </>
-  );
-}
-
-export function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="border-rule p-4 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l">
-      <div className="mono-label text-muted">{label}</div>
-      <div className="mt-1.5 font-display text-[1.75rem] font-semibold leading-none tabular-nums text-ink">{value}</div>
-      <div className="mt-1.5 text-xs text-muted">{hint}</div>
-    </div>
   );
 }
 

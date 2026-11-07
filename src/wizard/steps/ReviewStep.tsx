@@ -7,11 +7,10 @@ import { levelFor, socMaturity } from "../../engine/soc";
 import { answerText } from "../../format/vocab";
 import { useStore } from "../store";
 import { modeOf, stepIndex } from "../flow";
-import { BandBadge, bandClasses, Card, StepHeader } from "../ui";
+import { BandBadge, bandClasses, Card, ExampleBadge, StepHeader, Tile } from "../ui";
 import { IsmBaselineCard, useIsmSummary } from "../IsmBaseline";
 import { EssentialsCard } from "../EssentialsOption";
 import { aiFieldLabels, aiRegisterSummary } from "../../engine/aiRegister";
-import { ExampleBadge, Tile } from "./AiRegisterStep";
 
 
 export function ReviewStep() {

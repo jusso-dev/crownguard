@@ -34,7 +34,7 @@ import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
 
 /** Desktop-only settings and recent files. Folded away at build time on the web, so the web bundle doesn't carry it. */
-const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./platform/DesktopPanel")) : null;
+const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./wizard/DesktopPanel")) : null;
 
 /** Where autosaved progress lives, for the words on screen. */
 const THIS = isDesktop ? "this device" : "this browser";
