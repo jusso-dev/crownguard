@@ -15,6 +15,7 @@
  * The output is © Commonwealth of Australia 2026, licensed CC BY 4.0 (Coat of Arms and ASD logo excepted).
  */
 import { join } from "node:path";
+import { essentialsActionPrefix } from "../../src/format/vocab";
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { cliArgs, isMain } from "../lib/cli";
@@ -146,7 +147,7 @@ export function extractEssentials(inputs: EssentialsInputs): EssentialsExtract {
       const [, id, name] = m;
       principles.push({ id, name });
       for (const c of g.controls ?? []) {
-        if (!new RegExp(`^IT\\.${id}\\.\\d+$`).test(c.id)) throw new Error(`action ${c.id} doesn't belong to ${id}`);
+        if (!new RegExp(`^${essentialsActionPrefix["enterprise-it"]}\\.${id}\\.\\d+$`).test(c.id)) throw new Error(`action ${c.id} doesn't belong to ${id}`);
         const statement = c.parts?.find((p) => p.class === "essentials-action")?.prose;
         if (!statement) throw new Error(`${c.id} has no action statement`);
         const domains = propValues(c.props, "domain").map((d) => {

@@ -1,5 +1,6 @@
 import { parse } from "yaml";
 import { z } from "zod";
+import { essentialsActionPrefix } from "../format/vocab";
 import { aiRegisterSources } from "./aiRegisterSources";
 import {
   aiQuestionSchema,
@@ -333,7 +334,7 @@ function checkEssentialsFramework(f: Framework, ism: Framework | undefined): str
   const at = `framework ${f.id}`;
   const domains = new Map(meta.domains.map((d) => [d.id, d]));
   const principles = new Set(meta.principles.map((p) => p.id));
-  const prefix = meta.chapter === "enterprise-it" ? "IT" : "CL";
+  const prefix = essentialsActionPrefix[meta.chapter];
   const pattern = meta.provisional ? new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.x\\d+$`) : new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.\\d+$`);
   const ismIds = new Set([...(ism?.controls.map((c) => c.id) ?? []), ...(ism?.withdrawn ?? [])]);
   for (const p of principles) if (!f.controls.some((c) => c.principle === p)) errors.push(`${at}: principle ${p} has no actions`);

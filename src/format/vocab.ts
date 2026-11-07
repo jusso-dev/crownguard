@@ -115,6 +115,8 @@ export type ExposureId = keyof typeof exposures;
 /** The two chapters of ASD's Essentials an assessment can be reported against. */
 export const essentialsChapters = ["enterprise-it", "cloud"] as const;
 export type EssentialsChapter = (typeof essentialsChapters)[number];
+/** The prefix ASD puts on each chapter's action ids, e.g. IT.PRO-13.4 and CL.GOV-01.x1. */
+export const essentialsActionPrefix = { "enterprise-it": "IT", cloud: "CL" } as const satisfies Record<EssentialsChapter, string>;
 
 /** A `YYYY-MM-DD` calendar date. */
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;

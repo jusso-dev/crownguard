@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../format/aiOptions";
-import { essentialsChapters, exposures, isoDate, socScaleTop, type EssentialsChapter, type ExposureId } from "../format/vocab";
+import { essentialsActionPrefix, essentialsChapters, exposures, isoDate, socScaleTop, type EssentialsChapter, type ExposureId } from "../format/vocab";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 const date = isoDate;
@@ -167,7 +167,7 @@ const questionSchema = z.strictObject({
     .array(
       z
         .strictObject({
-          action: z.string().regex(/^(IT|CL)\.[A-Z]{3}-\d{2}\.x?\d+$/, "e.g. IT.PRO-13.4"),
+          action: z.string().regex(new RegExp(`^(${Object.values(essentialsActionPrefix).join("|")})\\.[A-Z]{3}-\\d{2}\\.x?\\d+$`), "e.g. IT.PRO-13.4"),
           domains: z.array(z.enum(essentialsDomains)).min(1),
           coverage: z.enum(["full", "partial"]),
           note: z.string().min(10).optional(),

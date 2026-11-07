@@ -12,6 +12,7 @@
  * The chapter is © Commonwealth of Australia 2026, licensed CC BY 4.0 (Coat of Arms and ASD logo excepted).
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { essentialsActionPrefix } from "../../src/format/vocab";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import { cliArgs, isMain } from "../lib/cli";
@@ -34,7 +35,7 @@ export const cloudCatalogueSchema = z.looseObject({
   principles: z.array(z.looseObject({ key: z.string().regex(/^[A-Z]{3}-\d{2}$/), name: z.string() })),
   actions: z.array(
     z.looseObject({
-      id: z.string().regex(/^CL\.[A-Z]{3}-\d{2}\.x\d+$/),
+      id: z.string().regex(new RegExp(`^${essentialsActionPrefix.cloud}\\.[A-Z]{3}-\\d{2}\\.x\\d+$`)),
       principle: z.string(),
       statement: z.string(),
       domains: z.array(domainKey).min(1),
