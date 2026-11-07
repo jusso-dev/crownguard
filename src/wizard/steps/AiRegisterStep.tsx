@@ -32,7 +32,7 @@ import {
   type KillSwitchNote,
 } from "../../engine/aiRegister";
 import { aboutRows, basisLabel, dayText, registerTable, toCsv } from "../../engine/aiExport";
-import { assessAll, needsReason } from "../../engine/risk";
+import { assessAll, needsReason, riskScore } from "../../engine/risk";
 import { answerText } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
 import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
@@ -639,7 +639,7 @@ function Entry({
                       <li key={jewel.id} className="flex flex-wrap items-center gap-2">
                         <BandBadge band={risk.band} />
                         <span className="text-ink">{jewel.name}</span>
-                        <span className="font-mono text-xs text-muted">{risk.score}/25 · {risk.gaps.length} open control gaps</span>
+                        <span className="font-mono text-xs text-muted">{riskScore(risk.score)} · {risk.gaps.length} open control gaps</span>
                       </li>
                     ) : null,
                   )}

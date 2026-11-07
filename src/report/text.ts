@@ -1,11 +1,8 @@
-import { RISK_SCALE } from "../engine/risk";
 
 export const firstSentence = (t: string) => t.split(/(?<=\.)\s/)[0];
 
 export const sentence = (t: string) => (/[.?!]$/.test(t) ? t : `${t}.`);
 
-/** "12/25": a risk score out of the highest possible. */
-export const riskScore = (score: number) => `${score}/${RISK_SCALE * RISK_SCALE}`;
 
 /** Full timestamp with time zone, e.g. "8 October 2026 at 5:42 pm AEDT". */
 export const stampText = (d: Date) =>

@@ -3,7 +3,7 @@ import type { Catalogue } from "../content/schema";
 import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "../format/aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, isAgentic, type AiField } from "./aiRegister";
 import { pct } from "./percent";
-import { assessAll } from "./risk";
+import { answerCredit, assessAll } from "./risk";
 import type { Assessment } from "../format/schema";
 
 interface RegisterTable {
@@ -123,7 +123,7 @@ export function aboutRows(catalogue: Catalogue, assessment: Assessment, opts: Re
     ["Applies to", model.appliesTo],
     ...model.dates.map((d) => ["Key date", `${d.date ? `${dayText(d.date)}: ` : ""}${d.text}`]),
     ...model.caveats.map((c) => ["Note", c.text]),
-    ["Readiness", "Readiness is crownguard's severity-weighted score of the readiness questions asked for each use case (Yes 1, Partial 0.5, No and Unknown 0, N/A left out). It isn't a DTA rating."],
+    ["Readiness", `Readiness is crownguard's severity-weighted score of the readiness questions asked for each use case (${answerCredit()}). It isn't a DTA rating.`],
     ...sources.map((s) => ["Source", `${s.publisher}. ${s.title}. ${s.url} (retrieved ${s.retrieved})`]),
   ];
 }

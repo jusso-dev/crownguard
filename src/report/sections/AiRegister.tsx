@@ -7,7 +7,8 @@ import { Section } from "../layout";
 import type { AiRegisterSlice } from "../model";
 import { Badge, exampleColors, line, muted, severityColors, StatTiles, Table, themeStatusColors, useTheme, warning, caution } from "../primitives";
 import { answerText } from "../../format/vocab";
-import { firstSentence, riskScore } from "../text";
+import { firstSentence } from "../text";
+import { riskScore } from "../../engine/risk";
 
 const GAPS_SHOWN = 8;
 

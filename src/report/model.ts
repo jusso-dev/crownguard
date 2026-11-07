@@ -19,6 +19,7 @@ import {
   questionsForJewel,
   type DomainPosture,
   type JewelRisk,
+  isHighRisk,
 } from "../engine/risk";
 import { buildRoadmap, phases, type RoadmapItem } from "../engine/roadmap";
 import { socMaturity, type SocResult } from "../engine/soc";
@@ -432,7 +433,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
       e8Reached: e8.filter((r) => (r.level ?? 0) >= 1),
     },
     focus: {
-      highOrExtreme: risks.filter((r) => r.band === "High" || r.band === "Extreme").length,
+      highOrExtreme: risks.filter((r) => isHighRisk(r.band)).length,
       unknown: questions.filter((q) => (answers[q.id] ?? "unknown") === "unknown").length,
       quickWins: roadmap.filter((r) => r.phase === phases[0]).slice(0, 5),
     },

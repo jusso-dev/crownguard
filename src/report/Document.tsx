@@ -1,6 +1,6 @@
 import { Link, Text, View } from "@react-pdf/renderer";
 import { exposures } from "../format/vocab";
-import { bandOf, bands, RISK_SCALE } from "../engine/risk";
+import { answerValue, bandOf, bands, RISK_SCALE, riskScore } from "../engine/risk";
 import { phases, type RoadmapItem } from "../engine/roadmap";
 import { classifications, dsls, regulations } from "../format/vocab";
 import type { Evidence } from "../format/schema";
@@ -13,7 +13,7 @@ import { AiRegisterSection } from "./sections/AiRegister";
 import { EssentialsSection } from "./sections/Essentials";
 import { IdcfSection } from "./sections/Idcf";
 import { SocSection } from "./sections/Soc";
-import { firstSentence, riskScore, stampText } from "./text";
+import { firstSentence, stampText } from "./text";
 import { andList, answerText } from "../format/vocab";
 
 const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
@@ -231,7 +231,7 @@ function ExecutiveSummary({ model }: { model: ReportModel }) {
         large
         tiles={[
           ["Controls in place", `${st.inPlace}/${st.assessed}`, st.partial ? `plus ${st.partial} partly in place` : "fully implemented"],
-          ["Control posture", pct(model.posture.score), "Severity-weighted, partial counts half"],
+          ["Control posture", pct(model.posture.score), `Severity-weighted, partial counts ${answerValue("partial") === 0.5 ? "half" : answerValue("partial")}`],
           ["High / extreme risks", String(focus.highOrExtreme), `of ${model.risks.length} crown jewels`],
         ]}
       />

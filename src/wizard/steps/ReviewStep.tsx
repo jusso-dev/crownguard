@@ -1,6 +1,6 @@
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
-import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, type JewelRisk } from "../../engine/risk";
+import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, isHighRisk, RISK_SCALE, riskScore, type JewelRisk } from "../../engine/risk";
 import { e8Title, essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
@@ -35,7 +35,7 @@ export function ReviewStep() {
   return (
     <>
       <StepHeader title="Review your risk">
-        Risk for each crown jewel is impact × likelihood on a 5×5 scale. Likelihood rises with unmet controls
+        Risk for each crown jewel is impact × likelihood on a {RISK_SCALE}×{RISK_SCALE} scale. Likelihood rises with unmet controls
         (weighted by severity), with each exposure you ticked, and is at least “possible” while any critical control is
         missing. Change answers in the previous step and this page updates.
       </StepHeader>
@@ -54,7 +54,7 @@ export function ReviewStep() {
       <div className="grid overflow-hidden rounded-[var(--radius-card)] bg-graphite text-on-graphite sm:grid-cols-3">
         <Stat label="Control posture" value={pct(posture.score)} hint="Severity-weighted controls in place" />
         <Stat label="Answer confidence" value={pct(posture.confidence)} hint="Share of answers that aren't Unknown" />
-        <Stat label="High or extreme risks" value={String(risks.filter((r) => r.band === "High" || r.band === "Extreme").length)} hint={`of ${risks.length} crown jewels`} />
+        <Stat label="High or extreme risks" value={String(risks.filter((r) => isHighRisk(r.band)).length)} hint={`of ${risks.length} crown jewels`} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)]">
@@ -74,7 +74,7 @@ export function ReviewStep() {
                   <td className="font-medium text-ink">{r.jewel.name}</td>
                   <td>{r.impact}</td>
                   <td>{r.likelihood}</td>
-                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="ml-1 font-mono text-xs text-muted">{r.score}/25</span></td>
+                  <td className="whitespace-nowrap"><BandBadge band={r.band} /> <span className="ml-1 font-mono text-xs text-muted">{riskScore(r.score)}</span></td>
                   <td>{r.gaps.length}</td>
                 </tr>
               ))}

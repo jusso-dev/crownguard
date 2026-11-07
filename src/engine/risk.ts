@@ -14,6 +14,15 @@ export const bandFloors: Record<Band, number> = { Low: 1, Medium: 5, High: 10, E
 /** Likelihood = 1 + `gapWeight` × weighted gap ratio + `perExposure` per exposure, at least `criticalFloor` while a critical control is open. */
 export const likelihoodRule = { gapWeight: 4, perExposure: 0.5, criticalFloor: 3 } as const;
 
+/** How each answer is credited, in words: "Yes 1, Partial 0.5, No and Unknown 0, N/A left out". */
+export const answerCredit = () =>
+  `Yes ${answerValue("yes")}, Partial ${answerValue("partial")}, No and Unknown ${answerValue("no")}, N/A left out`;
+
+/** "12/25": a risk score out of the highest possible. */
+export const riskScore = (score: number) => `${score}/${RISK_SCALE * RISK_SCALE}`;
+/** The bands the report and Review step count as needing attention first. */
+export const isHighRisk = (band: Band) => band === "High" || band === "Extreme";
+
 /** Score credited for an answer. Unknown and unanswered never count as compliant. N/A is excluded. */
 export function answerValue(a: Answer | undefined): number | null {
   switch (a) {
