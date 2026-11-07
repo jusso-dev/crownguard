@@ -1,7 +1,7 @@
 import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
 import { SCHEMA_VERSION, type Assessment } from "../format/schema";
-import { autosaveKeys, platform, type AutosaveStore } from "../platform";
+import { autosaveKeys, EPHEMERAL_ON, platform, type AutosaveStore } from "../platform";
 import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
@@ -57,7 +57,7 @@ let ephemeralFlag: boolean | undefined;
 const ephemeral = () =>
   (ephemeralFlag ??= (() => {
     try {
-      const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === "1";
+      const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === EPHEMERAL_ON;
       // A previous session may have left a stale assessment (or a copy kept aside) on disk; drop it when the mode is on.
       if (on) {
         disk()?.removeItem(STORAGE_KEY);
@@ -74,19 +74,19 @@ export const isEphemeralMode = () => ephemeral();
 export function setEphemeralMode(on: boolean) {
   ephemeralFlag = on;
   if (on) {
-    writeFlag(EPHEMERAL_FLAG_KEY, "1");
+    writeFlag(EPHEMERAL_FLAG_KEY, EPHEMERAL_ON);
     // Drop any autosaved assessment from disk; keep the in-memory Map copy for this session.
     try {
       disk()?.removeItem(STORAGE_KEY);
       disk()?.removeItem(UNREADABLE_KEY);
     } catch {
-      /* ignore */
+      // Locked storage: nothing was written there to remove, and the mode still holds for this session.
     }
   } else {
     try {
       disk()?.removeItem(EPHEMERAL_FLAG_KEY);
     } catch {
-      /* ignore */
+      // Locked storage never held the flag; the in-memory copy below is the one that counts.
     }
     memory.delete(EPHEMERAL_FLAG_KEY);
   }

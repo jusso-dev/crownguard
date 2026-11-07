@@ -1,7 +1,7 @@
 import type { Question } from "../content/schema";
 import { addsNothing, e8Tagged, type E8Result } from "./maturity";
 import { isSatisfied, maxImpact } from "./risk";
-import { andList, type Answer, type Dsl } from "../format/vocab";
+import { andList, type Answer, type Classification, type Dsl, type Regulation } from "../format/vocab";
 import type { CrownJewel } from "../format/schema";
 
 /** The IDCF levels a cloud configuration review can say something about. */
@@ -148,13 +148,13 @@ export function jewelDsl(jewel: CrownJewel, rows: IdcfRow[], system?: IdcfCell):
   return { jewel, gaps: g, text: text.filter(Boolean).join(" ") };
 }
 
+/** The lowest DSL crownguard suggests for each classification and each obligation. A complete table, so a new value has to say. */
+const classificationFloor: Record<Classification, number> = { public: 0, internal: 2, confidential: 3, "highly-confidential": 4 };
+const regulationFloor: Record<Regulation, number> = { "privacy-act": 3, gdpr: 3, hipaa: 3, soci: 4, "cps-234": 0, pci: 0, other: 0 };
+
 /** crownguard's suggested DSL for a crown jewel (a heuristic, not an IDCF table: the IDCF has none). */
 export function suggestDsl(j: Pick<CrownJewel, "classification" | "confidentiality" | "integrity" | "availability" | "regulations">): Dsl {
   const impact = maxImpact(j);
-  let level = impact >= 5 ? 4 : impact >= 3 ? 3 : 2;
-  const floor = { public: 0, internal: 2, confidential: 3, "highly-confidential": 4 }[j.classification];
-  level = Math.max(level, floor);
-  if (j.regulations.some((r) => r === "privacy-act" || r === "gdpr" || r === "hipaa")) level = Math.max(level, 3);
-  if (j.regulations.includes("soci")) level = Math.max(level, 4);
+  const level = Math.max(impact >= 5 ? 4 : impact >= 3 ? 3 : 2, classificationFloor[j.classification], ...j.regulations.map((r) => regulationFloor[r]));
   return `dsl-${level}` as Dsl;
 }

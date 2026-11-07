@@ -1,6 +1,6 @@
 import { allQuestionIds } from "../content/catalogue";
 import type { Assessment } from "../format/schema";
-import { decrypt, isEncryptedEnvelope } from "../format/crypto";
+import { decryptJson, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
@@ -25,18 +25,11 @@ export async function unlockProgress(passphrase: string): Promise<UnlockResult> 
   }
   if (!isEncryptedEnvelope(parsed)) return { ok: false, error: `Progress ${HERE} is not encrypted.` };
 
-  let plain: string;
-  try {
-    plain = await decrypt(parsed, passphrase);
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Wrong passphrase, or the encrypted data is damaged." };
-  }
-
   let stored: { state?: { assessment?: Assessment }; version?: number };
   try {
-    stored = JSON.parse(plain) as { state?: { assessment?: Assessment }; version?: number };
-  } catch {
-    return { ok: false, error: "Encrypted progress could not be read after decrypting." };
+    stored = (await decryptJson(parsed, passphrase)) as typeof stored;
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
   }
 
   const assessment = stored.state?.assessment;

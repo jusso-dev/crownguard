@@ -1,7 +1,7 @@
 import type { Platform } from "./types";
 import { webPlatform } from "./web";
 
-export { autosaveKeys } from "./types";
+export { autosaveKeys, EPHEMERAL_ON } from "./types";
 export type { AutosaveStore, FileSaver, OpenedFile, Platform, RecentAssessment, SaveAsResult, SaveResult } from "./types";
 
 /** True in the Tauri build (`vite build --mode desktop`). A compile-time constant, so the web build drops desktop code. */

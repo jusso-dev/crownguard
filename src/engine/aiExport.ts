@@ -1,7 +1,7 @@
 import { aiRegisterSources } from "../content/aiRegisterSources";
 import { dayText, stampText } from "../format/vocab";
 import type { Catalogue } from "../content/schema";
-import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "../format/aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiData, criterionShort, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis, type AiCriterion } from "../format/aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, isAgentic, type AiField } from "./aiRegister";
 import { pct } from "./percent";
 import { answerCredit, assessAll } from "./risk";
@@ -15,7 +15,7 @@ interface RegisterTable {
 }
 
 const list = (values: string[]) => values.join("; ");
-const criterionLabel = (c: keyof typeof aiCriteria) => (c === "none" ? "None (not in scope)" : aiCriteria[c].split(":")[0]);
+const criterionLabel = (c: AiCriterion) => (c === "none" ? "None (not in scope)" : criterionShort(c));
 
 /** The Standard for accountability's minimum fields, in its order. */
 const standardFields = Object.keys(aiFieldLabels) as AiField[];

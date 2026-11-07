@@ -53,6 +53,8 @@ export const aiCriteria = {
   none: "None of these: not in scope of the policy",
 } as const;
 export type AiCriterion = keyof typeof aiCriteria;
+/** "Criterion 1", or "None" for the entry that records none apply. */
+export const criterionShort = (c: AiCriterion) => (c === "none" ? "None" : aiCriteria[c].split(":")[0]);
 
 /** Inherent and residual risk ratings, from the AI impact assessment tool. */
 export const aiRiskRatings = { low: "Low", medium: "Medium", high: "High" } as const;

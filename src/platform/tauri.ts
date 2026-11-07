@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ask, message, open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { autosaveKeys, type AutosaveStore, type FileSaver, type OpenedFile, type Platform, type RecentAssessment, type SaveAsResult, type SaveResult } from "./types";
+import { autosaveKeys, EPHEMERAL_ON, type AutosaveStore, type FileSaver, type OpenedFile, type Platform, type RecentAssessment, type SaveAsResult, type SaveResult } from "./types";
 
 const ASSESSMENT_FILTER = { name: "crownguard assessment", extensions: ["json"] };
 
@@ -56,7 +56,7 @@ export class SqliteAutosave implements AutosaveStore {
    * the assessment, not even a file's summary in the recent list, is kept then.
    */
   get ephemeral(): boolean {
-    return this.values.get(autosaveKeys.ephemeral) === "1";
+    return this.values.get(autosaveKeys.ephemeral) === EPHEMERAL_ON;
   }
 
   /** Resolves once every write so far has reached SQLite (or failed). */
@@ -85,6 +85,7 @@ let autosaveStore: SqliteAutosave | undefined;
  */
 async function recordRecent(path: string, contents: string) {
   if (autosaveStore?.ephemeral) return;
+  // The recent list is a convenience: failing to update it must never fail the save the user asked for.
   await invoke("recent_record", { path, contents }).catch(() => undefined);
 }
 

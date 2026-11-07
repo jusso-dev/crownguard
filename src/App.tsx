@@ -5,7 +5,7 @@ import { activeQuestions, effectiveAnswers } from "./engine/risk";
 import type { Mode } from "./format/vocab";
 import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
-import { decrypt, isEncryptedEnvelope } from "./format/crypto";
+import { decryptJson, isEncryptedEnvelope } from "./format/crypto";
 import { parseAssessment } from "./format/parse";
 import { isEphemeralMode, rehydrateNotices, storageWriteFailed } from "./wizard/persistence";
 import {
@@ -553,13 +553,7 @@ export function App() {
   async function unlockPendingFile(passphrase: string): Promise<string | null> {
     if (!pendingEncrypted) return "No encrypted file waiting.";
     try {
-      const plain = await decrypt(pendingEncrypted, passphrase);
-      let raw: unknown;
-      try {
-        raw = JSON.parse(plain);
-      } catch {
-        return "Encrypted file could not be read after decrypting.";
-      }
+      const raw = await decryptJson(pendingEncrypted, passphrase);
       // Keep the passphrase for this visit so a re-save stays protected if the user wants.
       setSessionPassphrase(passphrase);
       setPendingEncrypted(null);
@@ -567,7 +561,7 @@ export function App() {
       pendingFile.current = undefined;
       return null;
     } catch (e) {
-      return e instanceof Error ? e.message : "Wrong passphrase, or the encrypted data is damaged.";
+      return (e as Error).message;
     }
   }
 

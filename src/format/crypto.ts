@@ -109,3 +109,13 @@ export async function decrypt(envelope: unknown, passphrase: string): Promise<st
     throw new CryptoError("Wrong passphrase, or the encrypted data is damaged.");
   }
 }
+
+/** Decrypt an envelope holding JSON and parse it. Throws CryptoError, with a message for the user, either way it fails. */
+export async function decryptJson(envelope: unknown, passphrase: string): Promise<unknown> {
+  const plain = await decrypt(envelope, passphrase);
+  try {
+    return JSON.parse(plain);
+  } catch {
+    throw new CryptoError("The encrypted data could not be read after decrypting.");
+  }
+}

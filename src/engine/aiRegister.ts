@@ -1,5 +1,5 @@
 import { type AiKind, type AiQuestion, type Catalogue, type Question } from "../content/schema";
-import { aiCriteria, aiRiskRatings, aiTechnologies } from "../format/aiOptions";
+import { criterionShort, aiRiskRatings, aiTechnologies } from "../format/aiOptions";
 import { activeQuestions, bySeverity, confidenceOf, effectiveAnswers, gapStats, isGap, metStatus, scoreOf, type JewelRisk } from "./risk";
 import { ISO_DATE, type Answer, type ExposureId } from "../format/vocab";
 import type { AiUseCase, Assessment, CrownJewel } from "../format/schema";
@@ -303,7 +303,7 @@ export function highRiskNotification(e: AiUseCase): string {
     `Intended application: ${e.description || e.name || "not recorded"}.`,
     `How the risk rating was reached: inherent risk ${e.inherentRisk ? aiRiskRatings[e.inherentRisk] : "not recorded"}${
       e.impactAssessmentDate ? `, impact assessment dated ${e.impactAssessmentDate}` : ", no impact assessment date recorded"
-    }.${e.criteria.length ? ` Appendix C criteria: ${e.criteria.map((c) => (c === "none" ? "none" : aiCriteria[c].split(":")[0])).join(", ")}.` : ""}`,
+    }.${e.criteria.length ? ` Appendix C criteria: ${e.criteria.map((c) => (c === "none" ? "none" : criterionShort(c))).join(", ")}.` : ""}`,
     `Sensitivities: ${sensitivities.length ? sensitivities.join(", ") : "none recorded"}.`,
   ].join("\n\n");
 }
