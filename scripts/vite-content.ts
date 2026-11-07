@@ -18,6 +18,8 @@ import { repoPath } from "./lib/repo";
 import { readContentFiles } from "../src/content/disk";
 
 const RESOLVED = "\0";
+/** The content id format (see `id` in src/content/schema.ts): safe to write into generated code as is. */
+const SAFE_ID = /^[a-z0-9][a-z0-9-]*$/;
 
 /** Frameworks the wizard needs fully before the report (E8 titles on Controls/Review). */
 const WIZARD_FULL_FRAMEWORKS = new Set(["essential-eight"]);
@@ -110,7 +112,11 @@ export function crownguardContent(): Plugin {
       if (id === RESOLVED + SHARED_ID) return asModule(get().shared);
       if (id === RESOLVED + REPORT_ID) return asModule(get().report);
       if (id === RESOLVED + PLATFORM_LOADERS_ID) {
-        const entries = get().shared.platformIds.map((pid) => `${JSON.stringify(pid)}: () => import(${JSON.stringify(platformVirtualId(pid))})`);
+        // This module is generated code, so every id written into it must be a plain content id, never arbitrary text.
+        const entries = get().shared.platformIds.map((pid) => {
+          if (!SAFE_ID.test(pid)) throw new Error(`Platform id ${JSON.stringify(pid)} is not a lowercase kebab-case id`);
+          return `"${pid}": () => import("${platformVirtualId(pid)}")`;
+        });
         return `export default {${entries.join(", ")}};`;
       }
       if (id.startsWith(RESOLVED + platformVirtualId(""))) {
