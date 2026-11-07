@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../format/aiOptions";
-import { essentialsChapters, exposures, isoDate, type ExposureId } from "../format/vocab";
+import { essentialsChapters, exposures, isoDate, type EssentialsChapter, type ExposureId } from "../format/vocab";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 const date = isoDate;
@@ -418,3 +418,10 @@ export const answerableQuestionIds = (catalogue: Pick<Catalogue, "platforms" | "
   ...(catalogue.soc?.questions.map((q) => q.id) ?? []),
 ];
 
+/** Framework ids the engine reads by name: the Essential Eight (strategy titles) and the ISM (baselines). */
+export const E8_FRAMEWORK = "essential-eight";
+export const ISM_FRAMEWORK = "ism";
+
+/** The Essentials chapter file for a chapter: the framework whose `essentials` block names it. */
+export const essentialsFramework = (catalogue: Pick<Catalogue, "frameworks">, chapter: EssentialsChapter) =>
+  [...catalogue.frameworks.values()].find((f) => f.essentials?.chapter === chapter);

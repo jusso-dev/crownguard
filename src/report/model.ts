@@ -1,4 +1,4 @@
-import type { AiRegisterModel, Catalogue, Framework, Question, SocModel, SocQuestion, Source } from "../content/schema";
+import { E8_FRAMEWORK, essentialsFramework as chapterFile, type AiRegisterModel, type Catalogue, type Framework, type Question, type SocModel, type SocQuestion, type Source } from "../content/schema";
 import { SOURCES_LAST_CHECKED } from "../content/sourcesChecked";
 import { aiRegisterSummary, shareWithDta, type AiRegisterSummary, type ShareStatus } from "../engine/aiRegister";
 import { aiRegisterSources } from "../content/aiRegisterSources";
@@ -225,7 +225,7 @@ function aiRegisterOf(catalogue: Catalogue, assessment: Assessment, model: AiReg
 }
 
 const CSF = "nist-csf-2";
-const E8 = "essential-eight";
+const E8 = E8_FRAMEWORK;
 const ISM = "ism";
 const VENDOR_ROLE = "Vendor guidance the questions are drawn from";
 const frameworkRoles: Record<string, string> = {
@@ -325,7 +325,7 @@ export function buildReport(catalogue: Catalogue, assessment: Assessment, genera
   const aiRegister = aiModule ? aiRegisterOf(catalogue, assessment, aiModule.model, risks, generatedAt) : undefined;
   if (aiModule) for (const id of aiRegisterSources(aiModule)) sourceIds.add(id);
 
-  const chapterFramework = assessment.essentials ? catalogue.frameworks.get(`asd-essentials-${assessment.essentials.chapter}`) : undefined;
+  const chapterFramework = assessment.essentials ? chapterFile(catalogue, assessment.essentials.chapter) : undefined;
   // Only a framework file that carries the chapter structure gives the section anything to show.
   const essentialsFramework = chapterFramework?.essentials ? chapterFramework : undefined;
   const essentials = essentialsFramework

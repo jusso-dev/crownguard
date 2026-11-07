@@ -1,4 +1,4 @@
-import { e8Strategies, type Catalogue, type E8Strategy, type Question } from "../content/schema";
+import { E8_FRAMEWORK, e8Strategies, type Catalogue, type E8Strategy, type Question } from "../content/schema";
 import type { Answer } from "../format/vocab";
 import { isSatisfied } from "./risk";
 
@@ -23,7 +23,7 @@ const NO_NEW_REQUIREMENTS: Partial<Record<E8Strategy, number[]>> = { "patch-oper
 
 /** A strategy's title from the Essential Eight framework file, or its id when the file isn't loaded. */
 export const e8Title = (catalogue: Pick<Catalogue, "frameworks">, strategy: string) =>
-  catalogue.frameworks.get("essential-eight")?.controls.find((c) => c.id === strategy)?.title ?? strategy;
+  catalogue.frameworks.get(E8_FRAMEWORK)?.controls.find((c) => c.id === strategy)?.title ?? strategy;
 
 export const e8Tagged = (questions: Question[], strategy: E8Strategy, level: number) =>
   questions.filter((q) => q.e8.some((t) => t.strategy === strategy && t.level === level));

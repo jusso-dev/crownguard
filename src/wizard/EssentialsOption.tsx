@@ -1,5 +1,6 @@
 import { catalogue, ensureReportContent } from "../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../content/useCatalogue";
+import { essentialsFramework } from "../content/schema";
 import type { EssentialsChapter } from "../format/vocab";
 import { essentials, type EssentialsResult } from "../engine/essentials";
 import { activeQuestions, effectiveAnswers } from "../engine/risk";
@@ -11,7 +12,7 @@ const chapters: Record<EssentialsChapter, { label: string; hint: string }> = {
   cloud: { label: "Cloud (SaaS and PaaS only)", hint: "For organisations running entirely on SaaS and PaaS. ASD hasn't published IDs for this chapter, so its IDs are provisional." },
 };
 
-const frameworkFor = (chapter: EssentialsChapter) => catalogue.frameworks.get(`asd-essentials-${chapter}`);
+const frameworkFor = (chapter: EssentialsChapter) => essentialsFramework(catalogue, chapter);
 const available = () => (Object.keys(chapters) as EssentialsChapter[]).filter((c) => frameworkFor(c)?.essentials);
 
 /** The indicative result behind the review card, when a chapter is chosen and the full content has loaded. */

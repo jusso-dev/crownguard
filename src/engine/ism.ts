@@ -1,4 +1,4 @@
-import type { Catalogue, Question } from "../content/schema";
+import { ISM_FRAMEWORK, type Catalogue, type Question } from "../content/schema";
 import { isGap } from "./risk";
 import { ismBaselines, type Answer, type IsmBaseline } from "../format/vocab";
 
@@ -34,7 +34,7 @@ export function ismBaselineReport(
   baseline: IsmBaseline,
 ): IsmBaselineSummary {
   const { label, applicability } = ismBaselines[baseline];
-  const ism = catalogue.frameworks.get("ism");
+  const ism = catalogue.frameworks.get(ISM_FRAMEWORK);
   const inBaseline = new Map(
     (ism?.controls ?? [])
       .filter((c) => c.applicability?.includes(applicability))
@@ -43,11 +43,11 @@ export function ismBaselineReport(
   const findings: IsmFinding[] = [];
   for (const q of questions) {
     if (!isFinding(q, answers)) continue;
-    const controls = q.refs.filter((r) => r.framework === "ism" && inBaseline.has(r.ref)).map((r) => r.ref);
+    const controls = q.refs.filter((r) => r.framework === ISM_FRAMEWORK && inBaseline.has(r.ref)).map((r) => r.ref);
     if (controls.length) findings.push({ question: q, controls });
   }
   const mapped = new Set(
-    questions.flatMap((q) => q.refs.filter((r) => r.framework === "ism" && inBaseline.has(r.ref)).map((r) => r.ref)),
+    questions.flatMap((q) => q.refs.filter((r) => r.framework === ISM_FRAMEWORK && inBaseline.has(r.ref)).map((r) => r.ref)),
   );
   return {
     baseline,

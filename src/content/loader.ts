@@ -24,6 +24,7 @@ import {
   type Question,
   type SocModel,
   type SocQuestion,
+  ISM_FRAMEWORK,
 } from "./schema";
 
 
@@ -320,7 +321,7 @@ function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalog
         if (!mapped) warnings.push(`${q.id}: e8 ${tag.strategy} ${level} maps to no ISM control in the E8 ${level} profile`);
       }
   const essentials = [...frameworks.values()].filter((f) => f.essentials);
-  for (const f of essentials) errors.push(...checkEssentialsFramework(f, frameworks.get("ism")));
+  for (const f of essentials) errors.push(...checkEssentialsFramework(f, frameworks.get(ISM_FRAMEWORK)));
   for (const { questions } of platforms.values()) for (const q of questions) checkEssentialsTags(q, essentials, errors, warnings);
   return { errors, warnings };
 }
@@ -374,7 +375,7 @@ function checkEssentialsTags(q: Question, chapters: Framework[], errors: string[
     for (const d of t.domains) if (!a.domains?.includes(d)) errors.push(`${where}: action doesn't apply to domain ${d}`);
   }
   if (q.essentialsReviewed) return;
-  const ismRefs = new Set(q.refs.filter((r) => r.framework === "ism").map((r) => r.ref));
+  const ismRefs = new Set(q.refs.filter((r) => r.framework === ISM_FRAMEWORK).map((r) => r.ref));
   const it = chapters.find((f) => f.essentials?.chapter === "enterprise-it");
   const suggested = (it?.controls ?? []).filter((c) => !seen.has(c.id) && [...(c.evidence?.ism ?? []), ...(c.evidence?.e8 ?? [])].some((id) => ismRefs.has(id)));
   if (suggested.length) warnings.push(`${q.id}: ISM refs suggest Essentials ${suggested.map((c) => c.id).join(", ")}; tag them or record essentialsReviewed`);
