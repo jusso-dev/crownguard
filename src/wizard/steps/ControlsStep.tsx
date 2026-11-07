@@ -5,7 +5,7 @@ import { e8Title } from "../../engine/maturity";
 import { activeQuestions, effectiveAnswers, needsReason } from "../../engine/risk";
 import { answerLabels, type Answer } from "../../format/vocab";
 import type { Evidence } from "../../format/schema";
-import { scrollToFoundApps } from "../FoundApps";
+import { showFoundApps } from "../FoundApps";
 import { useStore } from "../store";
 import { stepIndex } from "../flow";
 import { Button, Progress, SeverityBadge, StepHeader } from "../ui";
@@ -80,8 +80,8 @@ export function ControlsStep() {
               type="button"
               className="font-medium text-accent underline decoration-accent/30 underline-offset-2"
               onClick={() => {
+                showFoundApps();
                 useStore.getState().setStep(stepIndex("full", "ai-register"));
-                scrollToFoundApps();
               }}
             >
               Find the apps people have connected →
