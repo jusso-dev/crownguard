@@ -2,7 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { catalogue } from "../../content/catalogue";
 import { pct } from "../../engine/percent";
 import { type AiKind, type AiQuestion } from "../../content/schema";
-import { exposures } from "../../format/vocab";
+import { exposures, andList, dayText, answerText } from "../../format/vocab";
 import {
   aiAccess,
   aiAutonomy,
@@ -31,9 +31,8 @@ import {
   type AiReadiness,
   type KillSwitchNote,
 } from "../../engine/aiRegister";
-import { aboutRows, basisLabel, dayText, registerTable, toCsv } from "../../engine/aiExport";
+import { aboutRows, basisLabel, registerTable, toCsv } from "../../engine/aiExport";
 import { assessAll, needsReason, riskScore } from "../../engine/risk";
-import { answerText } from "../../format/vocab";
 import type { AiUseCase } from "../../format/schema";
 import { AnswerButtons, AnswerState, linkClass, NaReason, References, ReportNote } from "../AnswerFields";
 import { platform } from "../../platform";
@@ -93,7 +92,7 @@ export function AiRegisterStep() {
         <Card>
           <p className="max-w-[68ch] text-sm leading-relaxed text-ink-2">
             Add each use case from a preset, fill in the register fields, then answer up to {questions.length} readiness questions on{" "}
-            {model.themes.map((t) => t.name.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}. Only the questions that fit the use
+            {andList(model.themes.map((t) => t.name.toLowerCase()))}. Only the questions that fit the use
             case are asked: agent questions only for AI that can take actions, for example.
             {standalone ? "" : " The register doesn't change your crown-jewel risk ratings unless you tick the exposures it suggests."}
           </p>

@@ -17,6 +17,12 @@ export type Answer = keyof typeof answerLabels;
 /** An answer's label, or "Unanswered". */
 export const answerText = (a: Answer | undefined) => (a ? answerLabels[a] : "Unanswered");
 
+/** A YYYY-MM-DD date as "15 September 2026", read as a calendar day so the time zone never shifts it. */
+export const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+/** Full timestamp with time zone, e.g. "8 October 2026 at 5:42 pm AEDT". */
+export const stampText = (d: Date) =>
+  d.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+
 /** "a, b and c", the en-AU way (no serial comma). */
 export const andList = (items: string[]) => new Intl.ListFormat("en-AU", { type: "conjunction" }).format(items);
 /** In the order the answer buttons show them. */

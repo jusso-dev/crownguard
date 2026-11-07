@@ -1,12 +1,12 @@
 import { Text, View } from "@react-pdf/renderer";
 import { aiAccess, aiAutonomy, aiCriteria, aiData, aiLifecycles, aiRiskRatings } from "../../format/aiOptions";
-import { basisLabel, dayText } from "../../engine/aiExport";
+import { basisLabel } from "../../engine/aiExport";
 import { aiFieldLabels, KILL_SWITCH_QUESTION } from "../../engine/aiRegister";
 import { pct } from "../../engine/percent";
 import { Section } from "../layout";
 import type { AiRegisterSlice } from "../model";
 import { Badge, exampleColors, line, muted, severityColors, StatTiles, Table, themeStatusColors, useTheme, warning, caution } from "../primitives";
-import { answerText } from "../../format/vocab";
+import { answerText, dayText } from "../../format/vocab";
 import { firstSentence } from "../text";
 import { riskScore } from "../../engine/risk";
 

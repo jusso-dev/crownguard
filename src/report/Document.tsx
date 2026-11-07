@@ -1,8 +1,7 @@
 import { Link, Text, View } from "@react-pdf/renderer";
-import { exposures } from "../format/vocab";
+import { exposures, stampText, classifications, dsls, regulations, andList, answerText } from "../format/vocab";
 import { answerValue, bandOf, bands, RISK_SCALE, riskScore } from "../engine/risk";
 import { phases, type RoadmapItem } from "../engine/roadmap";
-import { classifications, dsls, regulations } from "../format/vocab";
 import type { Evidence } from "../format/schema";
 import { Bullets, ReportShell, Section } from "./layout";
 import { methodParagraphs } from "./method";
@@ -13,8 +12,7 @@ import { AiRegisterSection } from "./sections/AiRegister";
 import { EssentialsSection } from "./sections/Essentials";
 import { IdcfSection } from "./sections/Idcf";
 import { SocSection } from "./sections/Soc";
-import { firstSentence, stampText } from "./text";
-import { andList, answerText } from "../format/vocab";
+import { firstSentence } from "./text";
 
 const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
 

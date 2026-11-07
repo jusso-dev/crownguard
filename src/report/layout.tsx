@@ -1,8 +1,8 @@
 import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
+import { stampText } from "../format/vocab";
 import { createContext, useContext, type ReactNode } from "react";
 import type { DocumentHeader } from "./model";
 import { ink, line, muted, ThemeProvider, useTheme } from "./primitives";
-import { stampText } from "./text";
 
 const Header = createContext<{ header: DocumentHeader; title: string } | null>(null);
 

@@ -1,4 +1,5 @@
 import { aiRegisterSources } from "../content/aiRegisterSources";
+import { dayText, stampText } from "../format/vocab";
 import type { Catalogue } from "../content/schema";
 import { aiAccess, aiAutonomy, aiBases, aiCriteria, aiData, aiDomains, aiLifecycles, aiRiskRatings, aiStandardUse, aiTechnologies, aiUsagePatterns, type AiBasis } from "../format/aiOptions";
 import { aiFieldLabels, aiRegisterSummary, shareWithDta, isAgentic, type AiField } from "./aiRegister";
@@ -88,8 +89,6 @@ export function registerTable(catalogue: Catalogue, assessment: Assessment, opts
   return { headers: [...headers, ...extraHeaders], rows, standardColumns: headers.length };
 }
 
-/** A YYYY-MM-DD date as "15 September 2026", read as a calendar day so the time zone never shifts it. */
-export const dayText = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 /** The "About" sheet: what the columns are, any example data, the dates and caveats, and the sources. */
 export function aboutRows(catalogue: Catalogue, assessment: Assessment, opts: RegisterOptions = {}): string[][] {
@@ -103,7 +102,7 @@ export function aboutRows(catalogue: Catalogue, assessment: Assessment, opts: Re
   const share = shareWithDta(assessment, asAt);
   return [
     ["AI use-case register", assessment.org.name],
-    ["Exported", `${asAt.toLocaleString("en-AU", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" })} from crownguard`],
+    ["Exported", `${stampText(asAt)} from crownguard`],
     [
       "Columns",
       `The first ${standardFields.length} columns of the Register sheet are the minimum fields in the DTA's Standard for accountability, in its order and close to its wording. The owner's name and email address are one field in the Standard and two columns here. The remaining columns are crownguard's additions: keep, rename or drop them to suit your own register.`,
