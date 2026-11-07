@@ -2,10 +2,9 @@ import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms } from "../../content/useCatalogue";
 import { tiers, type AssetType, type Tier } from "../../content/schema";
-import { exposures } from "../../format/vocab";
 import { suggestDsl } from "../../engine/idcf";
 import { impactOf } from "../../engine/risk";
-import { classifications, dsls, regulations, type Classification, type Dsl, type ImpactRating, type Regulation } from "../../format/vocab";
+import { classifications, dsls, exposures, impactRatings, regulations, type Classification, type Dsl, type ImpactRating, type Regulation } from "../../format/vocab";
 import { type CrownJewel } from "../../format/schema";
 import { useStore } from "../store";
 import { Button, Card, CheckboxPill, Field, FieldGroup, inputClass, radioKeys, radioTab, StepHeader } from "../ui";
@@ -20,7 +19,7 @@ const tierLabels: Record<Tier, string> = {
   ai: "AI assistants",
 };
 
-const impactLabels = ["Minimal", "Minor", "Moderate", "Major", "Severe"];
+const impactLabels: Record<ImpactRating, string> = { 1: "Minimal", 2: "Minor", 3: "Moderate", 4: "Major", 5: "Severe" };
 
 /** IDCF guidance per level, paraphrased from the framework's examples at a moderate risk appetite. */
 const dslHelp: Record<Dsl | "none", string> = {
@@ -184,23 +183,23 @@ function JewelForm({ asset, initial, onDone }: { asset: AssetType; initial: Crow
               aria-label={`${k} impact`}
               onKeyDown={radioKeys}
             >
-              {[1, 2, 3, 4, 5].map((n) => (
+              {impactRatings.map((n) => (
                 <button
                   key={n}
                   type="button"
                   role="radio"
                   aria-checked={j[k] === n}
                   tabIndex={radioTab(j[k] === n, n - 1, true)}
-                  aria-label={`${k} ${n} ${impactLabels[n - 1]}`}
-                  title={impactLabels[n - 1]}
-                  onClick={() => set({ [k]: n as ImpactRating })}
+                  aria-label={`${k} ${n} ${impactLabels[n]}`}
+                  title={impactLabels[n]}
+                  onClick={() => set({ [k]: n })}
                   className={`h-9 flex-1 font-mono text-sm tabular-nums transition-colors duration-150 focus-visible:-outline-offset-2 ${n > 1 ? "border-l border-rule-2" : ""} ${j[k] === n ? "bg-ink font-medium text-paper" : "text-ink-2 [@media(hover:hover)]:hover:bg-sunken"}`}
                 >
                   {n}
                 </button>
               ))}
             </div>
-            <div className="mt-1.5 text-xs text-muted">{impactLabels[j[k] - 1]}</div>
+            <div className="mt-1.5 text-xs text-muted">{impactLabels[j[k]]}</div>
           </fieldset>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import type { SocModel, SocQuestion } from "../content/schema";
-import type { SocAnswer, SocRating } from "../format/vocab";
+import { socScaleTop, type SocAnswer, type SocRating } from "../format/vocab";
 import type { SocTargets } from "../format/schema";
 
 interface SocInput {
@@ -71,8 +71,7 @@ const mean = (xs: (number | null)[]) => {
   return ns.length ? two(ns.reduce((n, x) => n + x, 0) / ns.length) : null;
 };
 
-/** The highest rating a question takes: 5 for maturity, 3 for capability. */
-const maxRating = (q: SocQuestion) => q.levels.length - 1;
+const maxRating = (q: SocQuestion) => socScaleTop[q.kind];
 
 /** True for a rating the question takes; Unknown and out-of-range answers (say 5 on a 0-3 question) are not. */
 export const isRating = (q: SocQuestion, answer: SocAnswer | undefined): answer is SocRating => typeof answer === "number" && answer <= maxRating(q);

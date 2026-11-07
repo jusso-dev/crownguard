@@ -1,12 +1,14 @@
 import { severities, type Catalogue, type Question, type Severity } from "../content/schema";
-import type { Answer } from "../format/vocab";
+import { impactRatings, type Answer } from "../format/vocab";
 import type { Assessment, CrownJewel } from "../format/schema";
 
 export const bands = ["Low", "Medium", "High", "Extreme"] as const;
 export type Band = (typeof bands)[number];
 
 /** Impact and likelihood are each rated 1 to this; a risk score is their product. */
-export const RISK_SCALE = 5;
+export const RISK_SCALE = impactRatings.length;
+/** The scale's points, lowest first. */
+export const riskSteps = impactRatings;
 
 /** The lowest score in each band, lowest band first. */
 export const bandFloors: Record<Band, number> = { Low: 1, Medium: 5, High: 10, Extreme: 20 };

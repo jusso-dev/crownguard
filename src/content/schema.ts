@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../format/aiOptions";
-import { essentialsChapters, exposures, isoDate, type EssentialsChapter, type ExposureId } from "../format/vocab";
+import { essentialsChapters, exposures, isoDate, socScaleTop, type EssentialsChapter, type ExposureId } from "../format/vocab";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
 const date = isoDate;
@@ -224,9 +224,9 @@ export const socModelSchema = z
     /** Version of the SOC-CMM tool the structure was taken from. */
     basisVersion: z.string().regex(/^\d+\.\d+(\.\d+)?$/),
     attribution: z.string().min(40),
-    scales: z.strictObject({ maturity: z.array(socLevel).length(6), capability: z.array(socLevel).length(4) }),
+    scales: z.strictObject({ maturity: z.array(socLevel).length(socScaleTop.maturity + 1), capability: z.array(socLevel).length(socScaleTop.capability + 1) }),
     /** Default targets: maturity for every domain, capability for the capability domains. */
-    targets: z.strictObject({ maturity: z.number().min(1).max(5), capability: z.number().min(1).max(3) }),
+    targets: z.strictObject({ maturity: z.number().min(1).max(socScaleTop.maturity), capability: z.number().min(1).max(socScaleTop.capability) }),
     domains: z
       .array(
         z.strictObject({
@@ -256,9 +256,9 @@ export const socQuestionSchema = z
     levels: z.array(z.string().min(8).max(260)),
     refs: z.array(z.strictObject({ framework: id, ref: z.string().min(1) })).default([]),
   })
-  .refine((q) => q.levels.length === (q.kind === "maturity" ? 6 : 4), {
+  .refine((q) => q.levels.length === socScaleTop[q.kind] + 1, {
     path: ["levels"],
-    message: "maturity questions need 6 levels (0-5), capability questions 4 (0-3)",
+    message: `maturity questions need ${socScaleTop.maturity + 1} levels (0-${socScaleTop.maturity}), capability questions ${socScaleTop.capability + 1} (0-${socScaleTop.capability})`,
   });
 
 export type SocModel = z.infer<typeof socModelSchema>;

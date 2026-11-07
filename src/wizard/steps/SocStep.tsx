@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { catalogue } from "../../content/catalogue";
 import type { SocQuestion } from "../../content/schema";
 import { isRating, levelFor, socMaturity } from "../../engine/soc";
-import { socProviders, type SocAnswer, type SocProvider } from "../../format/vocab";
+import { socProviders, socScaleTop, type SocAnswer, type SocProvider } from "../../format/vocab";
 import { NOTE_MAX } from "../../format/schema";
 import { useStore } from "../store";
 import { Button, Card, FieldGroup, Progress, StepHeader, focusHeading, inputClass, radioKeys, radioTab } from "../ui";
@@ -244,16 +244,16 @@ function Targets() {
         <thead className="mono-label text-left text-muted [&_th]:pb-2 [&_th]:pr-4 [&_th]:font-medium">
           <tr>
             <th>Domain</th>
-            <th>Maturity (1–5)</th>
-            <th>Capability (1–3)</th>
+            <th>Maturity (1–{socScaleTop.maturity})</th>
+            <th>Capability (1–{socScaleTop.capability})</th>
           </tr>
         </thead>
         <tbody className="[&_td]:py-1 [&_td]:pr-4">
           {model.domains.map((d) => (
             <tr key={d.id}>
               <td className="text-ink">{d.name}</td>
-              <td>{select(d.id, "maturity", 5, `${d.name} maturity target`)}</td>
-              <td>{d.capability ? select(d.id, "capability", 3, `${d.name} capability target`) : <span className="text-muted">–</span>}</td>
+              <td>{select(d.id, "maturity", socScaleTop.maturity, `${d.name} maturity target`)}</td>
+              <td>{d.capability ? select(d.id, "capability", socScaleTop.capability, `${d.name} capability target`) : <span className="text-muted">–</span>}</td>
             </tr>
           ))}
         </tbody>
@@ -291,7 +291,7 @@ function SocQuestionCard({ q }: { q: SocQuestion }) {
   return (
     <article className="rounded-[var(--radius-card)] border border-rule bg-surface p-5 sm:p-6" data-soc-question={q.id}>
       <div className="flex items-center gap-2.5">
-        <span className="mono-label rounded-[4px] bg-sunken px-1.5 py-0.5 text-muted">{q.kind === "maturity" ? "Maturity 0–5" : "Capability 0–3"}</span>
+        <span className="mono-label rounded-[4px] bg-sunken px-1.5 py-0.5 text-muted">{q.kind === "maturity" ? "Maturity" : "Capability"} 0–{socScaleTop[q.kind]}</span>
         <span className="font-mono text-[0.6875rem] text-muted">{q.id}</span>
         {valid && (
           <span className="ml-auto font-mono text-[0.6875rem] text-ok" aria-hidden>

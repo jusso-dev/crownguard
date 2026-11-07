@@ -83,9 +83,13 @@ export const ismBaselines = {
 } as const;
 export type IsmBaseline = keyof typeof ismBaselines;
 
-/** A rating against a SOC question's level descriptions: 0-5 for maturity, 0-3 for capability. */
-export const socRatings = [0, 1, 2, 3, 4, 5] as const;
-export type SocRating = (typeof socRatings)[number];
+/** The top of each SOC-CMM scale. Ratings run from 0; targets from 1. */
+export const socScaleTop = { maturity: 5, capability: 3 } as const;
+export type SocScale = keyof typeof socScaleTop;
+
+/** A rating against a SOC question's level descriptions: 0 to the top of its scale. */
+export type SocRating = 0 | 1 | 2 | 3 | 4 | 5;
+export const socRatings = Array.from({ length: socScaleTop.maturity + 1 }, (_, i) => i as SocRating);
 export type SocAnswer = SocRating | "unknown";
 
 /** Who runs the organisation's security operations. */

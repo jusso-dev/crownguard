@@ -24,6 +24,7 @@ import {
   scanStatuses,
   socProviders,
   socRatings,
+  socScaleTop,
   essentialsChapters,
   exposures,
   isoDate,
@@ -190,7 +191,7 @@ export const assessmentSchema = z.looseObject({
       targets: z
         .record(
           z.string().max(40),
-          z.object({ maturity: z.number().min(1).max(5).multipleOf(0.5).optional(), capability: z.number().min(1).max(3).multipleOf(0.5).optional() }),
+          z.object({ maturity: z.number().min(1).max(socScaleTop.maturity).multipleOf(0.5).optional(), capability: z.number().min(1).max(socScaleTop.capability).multipleOf(0.5).optional() }),
         )
         .optional(),
       provider: z.enum(keys(socProviders)).optional(),

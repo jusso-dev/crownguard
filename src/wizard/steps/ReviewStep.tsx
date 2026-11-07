@@ -1,6 +1,6 @@
 import { catalogue } from "../../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
-import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, isHighRisk, RISK_SCALE, riskScore, type JewelRisk } from "../../engine/risk";
+import { activeQuestions, assessAll, domainPosture, effectiveAnswers, needsReason, overallPosture, bandOf, isHighRisk, RISK_SCALE, riskScore, riskSteps, type JewelRisk } from "../../engine/risk";
 import { e8Title, essentialEight } from "../../engine/maturity";
 import { pct } from "../../engine/percent";
 import { levelFor, socMaturity } from "../../engine/soc";
@@ -309,11 +309,11 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 
 function Heatmap({ risks }: { risks: JewelRisk[] }) {
   return (
-    <div className="inline-grid grid-cols-[auto_repeat(5,2.75rem)] gap-1 font-mono text-[0.6875rem]">
-      {[5, 4, 3, 2, 1].map((impact) => (
+    <div className="inline-grid gap-1 font-mono text-[0.6875rem]" style={{ gridTemplateColumns: `auto repeat(${RISK_SCALE}, 2.75rem)` }}>
+      {[...riskSteps].reverse().map((impact) => (
         <div key={impact} className="contents">
           <div className="pr-1.5 text-right leading-[2.75rem] text-muted">{impact}</div>
-          {[1, 2, 3, 4, 5].map((likelihood) => {
+          {riskSteps.map((likelihood) => {
             const here = risks.filter((r) => r.impact === impact && r.likelihood === likelihood);
             return (
               <div
@@ -328,9 +328,9 @@ function Heatmap({ risks }: { risks: JewelRisk[] }) {
         </div>
       ))}
       <div />
-      {[1, 2, 3, 4, 5].map((l) => <div key={l} className="pt-1 text-center text-muted">{l}</div>)}
+      {riskSteps.map((l) => <div key={l} className="pt-1 text-center text-muted">{l}</div>)}
       <div />
-      <div className="col-span-5 pt-1 text-center text-muted">Likelihood → · rows: impact</div>
+      <div className="pt-1 text-center text-muted" style={{ gridColumn: `span ${RISK_SCALE}` }}>Likelihood → · rows: impact</div>
     </div>
   );
 }
