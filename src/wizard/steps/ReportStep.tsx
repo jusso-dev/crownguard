@@ -11,6 +11,7 @@ import { modeOf, stepIndex } from "../flow";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
 import { EssentialsPicker } from "../EssentialsOption";
 import { Button, Card, StepHeader } from "../ui";
+import { HERE } from "../where";
 
 export function ReportStep() {
   const assessment = useStore((s) => s.assessment);
@@ -170,7 +171,7 @@ export function ReportStep() {
           </div>
         )}
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Your progress is saved in this browser. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
+          Your progress is saved {HERE}. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
           <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={() => requestOpenFile()}>
             Open its saved file
           </button>

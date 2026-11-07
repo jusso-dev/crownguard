@@ -5,6 +5,7 @@ import { autosaveKeys, platform, type AutosaveStore } from "../platform";
 import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
 import { parseAssessment } from "../format/parse";
 import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
+import { HERE } from "./where";
 
 export const STORAGE_KEY = autosaveKeys.progress;
 export const UNREADABLE_KEY = autosaveKeys.unreadable;
@@ -175,12 +176,12 @@ async function validateStored(stored: StorageValue<Persisted>, raw: string, name
 
   const parsed = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (parsed.kind === "error") {
-    setAside(name, raw, `The progress saved in this browser couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
+    setAside(name, raw, `The progress saved ${HERE} couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
     return null;
   }
 
   if (parsed.kind === "newer") {
-    const ahead = `The progress saved in this browser was written by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}).`;
+    const ahead = `The progress saved ${HERE} was written by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}).`;
     if (!parsed.assessment) {
       setAside(name, raw, `${ahead} This version can't read it${parsed.issues[0] ? ` (${parsed.issues[0]})` : ""}.`);
       return null;
@@ -214,7 +215,7 @@ export const checkedStorage: CheckedStorage = {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
 
@@ -231,14 +232,14 @@ export const checkedStorage: CheckedStorage = {
         setLockedEnvelope(raw);
         rehydration.push({
           kind: "error",
-          text: "Wrong passphrase, or the encrypted progress in this browser is damaged. Nothing has been loaded.",
+          text: `Wrong passphrase, or the encrypted progress ${HERE} is damaged. Nothing has been loaded.`,
         });
         return null;
       }
       setLockedEnvelope(null);
       const stored = decode(plain);
       if (!stored) {
-        setAside(name, raw, "The encrypted progress in this browser couldn't be read after decrypting.");
+        setAside(name, raw, `The encrypted progress ${HERE} couldn't be read after decrypting.`);
         return null;
       }
       return validateStored(stored, raw, name);
@@ -246,7 +247,7 @@ export const checkedStorage: CheckedStorage = {
 
     const stored = parsed as StorageValue<Persisted>;
     if (!stored || typeof stored !== "object") {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
     return validateStored(stored, raw, name);

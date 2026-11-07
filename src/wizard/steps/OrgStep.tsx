@@ -5,6 +5,7 @@ import { LogoField } from "../LogoField";
 import { requestOpenFile } from "../files";
 import { useStore } from "../store";
 import { Button, CheckboxPill, Field, FieldGroup, inputClass, StepHeader } from "../ui";
+import { THIS } from "../where";
 
 const sectors = [
   "Government", "Health", "Education", "Financial services", "Critical infrastructure", "Legal & professional services",
@@ -36,7 +37,7 @@ export function OrgStep() {
       <StepHeader title="Your organisation">
         Crown jewels are the systems and information whose loss, exposure or corruption would seriously hurt your
         organisation. This assessment helps you name them, check how well your Microsoft, Google or AWS environment protects
-        them, and produce a report you can take to leadership. Nothing you enter leaves this browser.
+        them, and produce a report you can take to leadership. Nothing you enter leaves {THIS}.
       </StepHeader>
       <div className="mb-8 flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--radius-control)] border border-rule bg-surface px-4 py-3 text-sm">
         <span className="text-ink-2">

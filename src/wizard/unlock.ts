@@ -5,6 +5,7 @@ import { parseAssessment } from "../format/parse";
 import { dropProgress, readProgress, STORAGE_KEY } from "./persistence";
 import { getLockedEnvelope, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
 import { useStore } from "./store";
+import { HERE } from "./where";
 
 type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: string };
 
@@ -14,15 +15,15 @@ type UnlockResult = { ok: true; assessment: Assessment } | { ok: false; error: s
  */
 export async function unlockProgress(passphrase: string): Promise<UnlockResult> {
   const raw = getLockedEnvelope() ?? readProgress(STORAGE_KEY);
-  if (!raw) return { ok: false, error: "No encrypted progress found in this browser." };
+  if (!raw) return { ok: false, error: `No encrypted progress found ${HERE}.` };
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return { ok: false, error: "Encrypted progress in this browser is damaged." };
+    return { ok: false, error: `Encrypted progress ${HERE} is damaged.` };
   }
-  if (!isEncryptedEnvelope(parsed)) return { ok: false, error: "Progress in this browser is not encrypted." };
+  if (!isEncryptedEnvelope(parsed)) return { ok: false, error: `Progress ${HERE} is not encrypted.` };
 
   let plain: string;
   try {

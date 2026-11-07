@@ -21,7 +21,7 @@ import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/fl
 import { Button, Card, Field, inputClass } from "./wizard/ui";
 import { forgetProgress } from "./wizard/unlock";
 import { fileNames, OPEN_FILE_EVENT } from "./wizard/files";
-import { isDesktop, platform, type OpenedFile } from "./platform";
+import { platform, type OpenedFile } from "./platform";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
 import { JewelsStep } from "./wizard/steps/JewelsStep";
@@ -32,13 +32,11 @@ import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
+import { HERE, THIS } from "./wizard/where";
 
 /** Desktop-only settings and recent files. Folded away at build time on the web, so the web bundle doesn't carry it. */
 const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./wizard/DesktopPanel")) : null;
 
-/** Where autosaved progress lives, for the words on screen. */
-const THIS = isDesktop ? "this device" : "this browser";
-const HERE = isDesktop ? `on ${THIS}` : `in ${THIS}`;
 
 const views: Record<StepId, () => React.JSX.Element | null> = {
   org: OrgStep,
