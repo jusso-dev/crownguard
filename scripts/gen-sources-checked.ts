@@ -6,7 +6,7 @@ import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { isMain } from "./lib/cli";
-import { ISO_DATE } from "./lib/dates";
+import { ISO_DATE } from "../src/format/vocab";
 import { repoPath, ROOT } from "./lib/repo";
 import { readState } from "./watch/apply";
 import type { WatchState } from "./watch/types";

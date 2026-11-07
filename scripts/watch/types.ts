@@ -39,8 +39,6 @@ export interface HostProfile {
   licence?: string;
   /** Link to the licence text, required for attribution under Creative Commons licences. */
   licenceUrl?: string;
-  /** The host challenges automated clients from cloud IP ranges; a challenge is "unverifiable", never "broken". */
-  botProtected?: boolean;
   /** Maximum concurrent requests to this host. */
   concurrency: number;
   /** Pause after each request to this host (robots.txt crawl-delay). */

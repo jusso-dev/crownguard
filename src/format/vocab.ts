@@ -85,7 +85,6 @@ export type IsmBaseline = keyof typeof ismBaselines;
 
 /** The top of each SOC-CMM scale. Ratings run from 0; targets from 1. */
 export const socScaleTop = { maturity: 5, capability: 3 } as const;
-export type SocScale = keyof typeof socScaleTop;
 
 /** A rating against a SOC question's level descriptions: 0 to the top of its scale. */
 export type SocRating = 0 | 1 | 2 | 3 | 4 | 5;

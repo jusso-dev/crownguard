@@ -1,4 +1,4 @@
-import { ISO_DATE } from "./dates";
+import { ISO_DATE } from "../../src/format/vocab";
 import { isTag } from "./versions";
 
 export const API_BASE = "https://api.github.com";

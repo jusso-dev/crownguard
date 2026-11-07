@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ISO_DATE } from "../lib/dates";
+import { ISO_DATE } from "../../src/format/vocab";
 import type { FeedMemo, SourceMemo, WatchCache } from "./types";
 import { stableStringify } from "./util";
 

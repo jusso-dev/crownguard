@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
-import { ISO_DATE } from "../lib/dates";
+import { ISO_DATE } from "../../src/format/vocab";
 import { repoPath } from "../lib/repo";
 import { escapeRegExp } from "../lib/text";
 import type { WatchState } from "./types";

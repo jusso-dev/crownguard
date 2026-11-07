@@ -1,5 +1,8 @@
 import type { HostProfile } from "./types";
 
+/** English pages, including US English: the language every crownguard source is cited in. */
+const ENGLISH = /^en(?:-US)?$/i;
+
 /** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
 export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
 
@@ -90,7 +93,7 @@ const devsite = (host: string, label: string): HostProfile => ({
   title: "og",
   // Without hl=en, some requests land on a random machine translation.
   fetchParams: { hl: "en" },
-  lang: /^en(?:-US)?$/i,
+  lang: ENGLISH,
   // "Last updated" is stamped on every page at each site rebuild.
   ignoreUpdated: true,
   excerpts: "cc-by-4.0",
@@ -112,7 +115,7 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3",
     fetchParams: { hl: "en" },
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     // Help Center text has no open licence: hashes and section names only.
     excerpts: "none",
     concurrency: 2,
@@ -127,7 +130,7 @@ PROFILES.push(
     sectionHeadings: "h2, h3",
     title: "og",
     fetchParams: { hl: "en" },
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     excerpts: "none",
     concurrency: 1,
   },
@@ -141,7 +144,6 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3, h5",
     excerpts: "none",
-    botProtected: true,
     concurrency: 1,
     // robots.txt asks for 10 seconds between requests.
     delayMs: 10_000,
@@ -160,7 +162,6 @@ PROFILES.push(
     excerpts: "cc-by-4.0",
     licence: "CC BY 4.0, © Commonwealth of Australia (ASD)",
     licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
-    botProtected: true,
     // Its firewall resets or hangs connections it doesn't like instead of answering, so retrying only wastes time.
     blockedOnNetworkError: true,
     retries: 0,
@@ -176,7 +177,6 @@ PROFILES.push(
     sectionHeadings: "h2, h3",
     excerpts: "public-domain",
     licence: "public domain, US Government work (NIST)",
-    botProtected: true,
     concurrency: 1,
   },
   {
@@ -215,7 +215,7 @@ PROFILES.push(
     strip: ["awsdocs-language-banner", "awsdocs-page-header", "awsdocs-filter-selector", "awsdocs-copyright", "awsdocs-thumb-feedback"],
     volatile: [],
     sectionHeadings: "h2, h3",
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     // AWS's site terms don't allow republishing documentation text: hashes and section names only.
     excerpts: "none",
     concurrency: 2,
@@ -229,7 +229,7 @@ PROFILES.push(
     strip: ["nav", "[role=navigation]", "[hidden]", "[aria-hidden=true]"],
     volatile: [],
     sectionHeadings: "h2, h3",
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     excerpts: "none",
     concurrency: 1,
   },
@@ -242,7 +242,6 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3",
     excerpts: "none",
-    botProtected: true,
     concurrency: 1,
     caseInsensitivePaths: true,
   },

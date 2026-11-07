@@ -1,7 +1,6 @@
 /** Today's date in UTC, YYYY-MM-DD. */
 export const today = (): string => new Date().toISOString().slice(0, 10);
 
-export { ISO_DATE } from "../../src/format/vocab";
 
 /** The retrieval dates generated files carry: `Retrieved 2026-10-10.` in headers, `retrieved: 2026-10-10` in sources. */
 const RETRIEVED = /\b(Retrieved |retrieved: )\d{4}-\d{2}-\d{2}\b/g;

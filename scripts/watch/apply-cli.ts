@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { loadCatalogue } from "../../src/content/loader";
 import { cliArgs } from "../lib/cli";
-import { ISO_DATE } from "../lib/dates";
+import { ISO_DATE } from "../../src/format/vocab";
 import { repoPath } from "../lib/repo";
 import { readContentFiles } from "../../src/content/disk";
 import { applyUrlUpdates, readSourceFiles, stateSchema, writeState } from "./apply";
