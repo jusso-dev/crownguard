@@ -5,7 +5,7 @@
 
 /**
  * Every key the app writes to the autosave store. The desktop backend accepts only these (AUTOSAVE_KEYS in
- * src-tauri/src/commands.rs; scripts/desktop-config.test.ts checks the two lists match).
+ * src-tauri/src/commands.rs; autosaveKeys.test.ts checks the two lists match).
  */
 export const autosaveKeys = {
   /** The assessment in progress. */

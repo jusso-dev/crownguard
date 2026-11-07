@@ -4,7 +4,7 @@ import { assessmentSchema, type AiUseCase } from "../format/schema";
 import { fixtureAssessment } from "../report/fixture";
 import { exampleEntries } from "./aiExamples";
 import { aboutRows, registerTable, toCsv } from "./aiExport";
-import { addMonths, aiFieldLabels, groupWarning, highRiskNotification, shareWithDta, aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
+import { addMonths, groupWarning, highRiskNotification, shareWithDta, aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
 import { assessAll } from "./risk";
 
 const module = catalogue.aiRegister!;
@@ -168,7 +168,25 @@ describe("register export", () => {
 
   it("puts the Standard's fields first, in its order", () => {
     const t = registerTable(catalogue, a, { asAt });
-    expect(t.headers.slice(0, t.standardColumns)).toEqual(Object.values(aiFieldLabels));
+    // The Standard for accountability's minimum fields, in its order.
+    expect(t.headers.slice(0, t.standardColumns)).toEqual([
+      "Use case name",
+      "Agency identifier (reference number)",
+      "Description",
+      "AI technology type",
+      "Lifecycle stage",
+      "Use of the Technical standard",
+      "Domain",
+      "Usage pattern",
+      "Accountable use case owner (name)",
+      "Accountable use case owner (email address)",
+      "Appendix C criteria met",
+      "Inherent risk rating",
+      "Residual risk rating",
+      "Date the AI impact assessment was last updated",
+      "Last date of review",
+      "Date for next review",
+    ]);
     // crownguard's additions come after the Standard's fields.
     expect(t.headers.indexOf("Agent (takes actions)")).toBe(t.standardColumns);
     expect(t.rows).toHaveLength(3);
