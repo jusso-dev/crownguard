@@ -41,10 +41,10 @@
     "@tauri-apps/plugin-dialog": "2.8.4",
     "@tauri-apps/plugin-fs": "2.7.1",
     "@tauri-apps/plugin-opener": "2.7.2",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "zod": "^4.6.6",
-    "zustand": "^5.0.15"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.132.1",
