@@ -1,5 +1,5 @@
-# Check ids in Prowler azure at tag 5.47.0 (2026-10-29), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.47.0/prowler/providers/azure/services.
+# Check ids in Prowler azure at tag 5.49.0 (2026-11-12), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.49.0/prowler/providers/azure/services.
 # One id per line. Regenerate when content/imports/prowler-azure.yaml moves to a newer Prowler.
 aisearch_service_not_publicly_accessible
 aiservices_account_diagnostic_logging_enabled
@@ -194,6 +194,7 @@ storage_smb_channel_encryption_with_secure_algorithm
 storage_smb_protocol_version_is_latest
 vm_backup_enabled
 vm_desired_sku_size
+vm_emerging_threat_image
 vm_ensure_attached_disks_encrypted_with_cmk
 vm_ensure_unattached_disks_encrypted_with_cmk
 vm_ensure_using_approved_images

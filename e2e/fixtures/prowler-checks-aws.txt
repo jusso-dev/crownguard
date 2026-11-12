@@ -1,5 +1,5 @@
-# Check ids in Prowler aws at tag 5.47.0 (2026-10-29), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.47.0/prowler/providers/aws/services.
+# Check ids in Prowler aws at tag 5.49.0 (2026-11-12), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.49.0/prowler/providers/aws/services.
 # One id per line. Regenerate when content/imports/prowler-aws.yaml moves to a newer Prowler.
 accessanalyzer_enabled
 accessanalyzer_enabled_without_findings
@@ -79,6 +79,9 @@ bedrock_model_invocation_logs_encryption_enabled
 bedrock_prompt_encrypted_with_cmk
 bedrock_prompt_management_exists
 bedrock_vpc_endpoints_configured
+bedrockagentcore_full_access_policy_attached
+bedrockagentcore_payments_process_payment_role_separation
+bedrockagentcore_runtime_vpc_configured
 cloudformation_stack_cdktoolkit_bootstrap_version
 cloudformation_stack_outputs_find_secrets
 cloudformation_stacks_termination_protection_enabled
@@ -96,6 +99,7 @@ cloudfront_distributions_s3_origin_access_control
 cloudfront_distributions_s3_origin_non_existent_bucket
 cloudfront_distributions_using_deprecated_ssl_protocols
 cloudfront_distributions_using_waf
+cloudtrail_agentcore_data_events_enabled
 cloudtrail_bedrock_logging_enabled
 cloudtrail_bucket_requires_mfa_delete
 cloudtrail_cloudwatch_logging_enabled
@@ -222,6 +226,7 @@ ec2_elastic_ip_shodan
 ec2_elastic_ip_unassigned
 ec2_instance_account_imdsv2_enabled
 ec2_instance_detailed_monitoring_enabled
+ec2_instance_emerging_threat_image
 ec2_instance_imdsv2_enabled
 ec2_instance_internet_facing_with_instance_profile
 ec2_instance_managed_by_ssm
@@ -500,6 +505,7 @@ networkfirewall_multi_az
 networkfirewall_policy_default_action_fragmented_packets
 networkfirewall_policy_default_action_full_packets
 networkfirewall_policy_rule_group_associated
+oam_sink_not_publicly_accessible
 opensearch_service_domains_access_control_enabled
 opensearch_service_domains_audit_logging_enabled
 opensearch_service_domains_cloudwatch_logging_enabled
@@ -516,6 +522,7 @@ organizations_account_part_of_organizations
 organizations_delegated_administrators
 organizations_opt_out_ai_services_policy
 organizations_scp_check_deny_regions
+organizations_security_services_delegated_admin_not_management_account
 organizations_tags_policies_enabled_and_attached
 rds_cluster_backtrack_enabled
 rds_cluster_copy_tags_to_snapshots
