@@ -35,7 +35,7 @@ let recoveryBlocked = false;
 let recovering = false;
 let restoreSessionBackup = false;
 let explicitRevision: number | undefined;
-const removals = new Set<Promise<void>>();
+const removals = new Map<Promise<void>, string>();
 const listeners = new Set<() => void>();
 export const protectionSnapshot = () => protectionStatus;
 export const protectionOperation = () => protectionRevision;
@@ -127,9 +127,10 @@ export function setEphemeralMode(on: boolean) {
     }
   } else {
     try {
-      disk()?.removeItem(EPHEMERAL_FLAG_KEY);
+      observeRemoval(EPHEMERAL_FLAG_KEY);
     } catch {
-      // Locked storage never held the flag; the in-memory copy below is the one that counts.
+      writeFailed = true;
+      status("error");
     }
     memory.delete(EPHEMERAL_FLAG_KEY);
   }
@@ -195,7 +196,7 @@ export const dropProgress = (name: string) => {
   if (name === STORAGE_KEY) drop(UNREADABLE_KEY);
   const revision = protectionRevision;
   const generation = encryptGeneration;
-  void Promise.all(removals).then(() => {
+  void Promise.all(removals.keys()).then(() => {
     if (revision !== protectionRevision || generation !== encryptGeneration) return;
     try {
       const store = disk();
@@ -227,13 +228,13 @@ function observeRemoval(name: string) {
   const result = store.removeItem(name);
   if (result) {
     const handled = result.catch(() => { writeFailed = true; status("error"); });
-    removals.add(handled);
+    removals.set(handled, name);
     void handled.then(() => removals.delete(handled));
   }
 }
 
 async function confirmEphemeralRemoval() {
-  await Promise.all(removals);
+  await Promise.all(removals.keys());
   const store = disk();
   if (!store) throw new Error("Local storage absence cannot be confirmed.");
   for (const key of [STORAGE_KEY, UNREADABLE_KEY]) {
@@ -253,6 +254,10 @@ async function strictWrite(name: string, value: string) {
     memory.set(name, value);
     if (name === UNREADABLE_KEY && !memoryOnly(name)) restoreSessionBackup = false;
   }
+}
+
+function confirmPersistentMode() {
+  if (committed(EPHEMERAL_FLAG_KEY) !== null) throw new Error("Local persistence could not be enabled.");
 }
 
 export function backupIsEncrypted(raw: string): boolean {
@@ -431,8 +436,9 @@ export const checkedStorage: CheckedStorage = {
 /** Prepare both ciphertexts before replacing either key; acknowledge backup before active progress. */
 async function saveProtected(name: string, value: StorageValue<Persisted>, pass: string | null, revision: number): Promise<boolean> {
   guard(revision);
-  if (removals.size) await Promise.all(removals);
+  if (removals.size) await Promise.all(removals.keys());
   guard(revision);
+  if (!ephemeral()) confirmPersistentMode();
   const generation = ++encryptGeneration;
   // Leaving ephemeral mode must restore recovery even when active progress has no passphrase.
   const work = pass || restoreSessionBackup ? prepareBackup(pass, revision) : undefined;
@@ -451,6 +457,7 @@ async function saveProtected(name: string, value: StorageValue<Persisted>, pass:
   guard(revision);
   if (generation !== encryptGeneration) return false;
   if (ephemeral()) await confirmEphemeralRemoval();
+  else confirmPersistentMode();
   guard(revision);
   writeFailed = false;
   return true;
@@ -469,6 +476,10 @@ export async function rewriteProtection(pass: string | null, value: () => Storag
   explicitRevision = revision;
   status("pending");
   try {
+    // An explicit retry may need to remove a flag whose earlier removal failed.
+    if (!ephemeral() && committed(EPHEMERAL_FLAG_KEY) !== null && ![...removals.values()].includes(EPHEMERAL_FLAG_KEY)) {
+      observeRemoval(EPHEMERAL_FLAG_KEY);
+    }
     if (ephemeral()) await confirmEphemeralRemoval();
     // Edits may supersede active encryption, but do not restart the shared backup conversion.
     while (!await saveProtected(STORAGE_KEY, value(), pass, revision)) guard(revision);
@@ -515,7 +526,7 @@ async function setAside(name: string, raw: string, text: string) {
   } catch {
     if (revision !== protectionRevision) {
       // An explicit removal already owns the source. Its own acknowledgement reports failure.
-      if (removals.size) return;
+      if ([...removals.values()].includes(name)) return;
       try { if (committed(name) !== raw) return; } catch { /* Keep writes blocked when source cannot be checked. */ }
     }
     recoveryBlocked = true;

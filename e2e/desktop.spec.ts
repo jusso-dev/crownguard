@@ -367,6 +367,41 @@ for (const fails of [false, true]) {
 }
 
 
+test("failed ephemeral-flag removal blocks completion and retry survives reload", async ({ page, baseURL }) => {
+  const d = await desktop(page, baseURL!);
+  const raw = "{original recovery";
+  d.db.set("crownguard:v1:unreadable", raw);
+  await page.goto("./");
+  const ephemeral = page.getByLabel(/Don't keep this assessment on this device/);
+  page.once("dialog", (dialog) => dialog.accept());
+  await ephemeral.check();
+  await expect.poll(() => d.db.get("crownguard:v1:ephemeral")).toBe("1");
+  await expect.poll(() => d.db.has("crownguard:v1:unreadable")).toBe(false);
+  await expect(page.getByText("Updating protection…", { exact: true })).toHaveCount(0);
+  d.beforeAutosave = async (cmd, key) => {
+    if (cmd === "autosave_remove" && key === "crownguard:v1:ephemeral") throw new Error("locked");
+  };
+  await ephemeral.uncheck();
+  await expect(page.getByRole("alert").filter({ hasText: "Protection is incomplete" })).toBeVisible();
+  expect(d.db.get("crownguard:v1:ephemeral")).toBe("1");
+  expect(d.db.has("crownguard:v1")).toBe(false);
+
+  d.beforeAutosave = undefined;
+  await page.getByRole("button", { name: "Protect with a passphrase" }).click();
+  await page.locator("#start-pass").fill("retry-passphrase");
+  await page.locator("#start-confirm").fill("retry-passphrase");
+  await page.getByRole("button", { name: "Apply passphrase" }).click();
+  await expect(page.getByText(/^Protected with a passphrase/)).toBeVisible();
+  expect(d.db.has("crownguard:v1:ephemeral")).toBe(false);
+  const backup = d.db.get("crownguard:v1:unreadable")!;
+  expect(await decrypt(JSON.parse(backup), "retry-passphrase")).toBe(raw);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Enter passphrase" })).toBeVisible();
+  expect(d.db.get("crownguard:v1:unreadable")).toBe(backup);
+  expect(d.db.has("crownguard:v1")).toBe(true);
+  expect(d.unknown).toEqual([]);
+});
+
 test("a later successful active save cannot hide failed backup protection", async ({ page, baseURL }) => {
   const d = await desktop(page, baseURL!);
   d.db.set("crownguard:v1", "{original");

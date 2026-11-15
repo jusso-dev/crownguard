@@ -329,6 +329,39 @@ describe("privacy operations with queued desktop writes", () => {
     vi.restoreAllMocks();
   });
 
+  it.each([null, "new-passphrase"])("rejects failed ephemeral-flag removal before saving with passphrase %s, then retries", async (pass) => {
+    const flag = "crownguard:v1:ephemeral";
+    setEphemeralMode(true);
+    await store.flush();
+    expect(tauri.db.get(flag)).toBe("1");
+    const normalInvoke = vi.mocked(invoke).getMockImplementation()!;
+    let rejectRemoval!: (reason: Error) => void;
+    vi.mocked(invoke).mockImplementation((command, args) => {
+      if (command === "autosave_remove" && (args as { key: string }).key === flag) {
+        return new Promise((_, reject) => { rejectRemoval = reject; });
+      }
+      return normalInvoke(command, args);
+    });
+    setEphemeralMode(false);
+    const value = () => ({ state: { assessment: emptyAssessment() }, version: 4 });
+    const saving = rewriteProtection(pass, value);
+    await vi.waitFor(() => expect(rejectRemoval).toBeTypeOf("function"));
+    rejectRemoval(new Error("locked"));
+    const saved = await saving;
+    vi.mocked(invoke).mockImplementation(normalInvoke);
+    expect(saved).toBe(false);
+    expect(protectionSnapshot()).toBe("error");
+    expect(tauri.db.get(flag)).toBe("1");
+    expect(tauri.db.has(STORAGE_KEY)).toBe(false);
+    expect(tauri.db.has(UNREADABLE_KEY)).toBe(false);
+
+    expect(await rewriteProtection(pass, value)).toBe(true);
+    expect(tauri.db.has(flag)).toBe(false);
+    expect(tauri.db.has(STORAGE_KEY)).toBe(true);
+    const backup = tauri.db.get(UNREADABLE_KEY)!;
+    expect(pass ? await decrypt(JSON.parse(backup), pass) : backup).toBe("{original");
+  });
+
   it.each(["forget", "ephemeral round trip"])("orders %s after already queued backup ciphertext", async (change) => {
     let release!: () => void;
     vi.mocked(invoke).mockImplementationOnce((_command, args) => new Promise((resolve) => {

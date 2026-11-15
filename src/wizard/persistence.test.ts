@@ -565,6 +565,28 @@ it("cancelled recovery cannot re-block writes after queued forget succeeds", asy
   vi.restoreAllMocks();
 });
 
+it("an unrelated flag removal cannot unblock cancelled recovery over its retained source", async () => {
+  const disk = fakeDisk();
+  disk.items.set(STORAGE_KEY, "{source");
+  setSessionPassphrase("original-passphrase");
+  const gate = gateFirstEncrypt();
+  const hydration = checkedStorage.getItem(STORAGE_KEY);
+  let release!: () => void;
+  const remove = disk.removeItem;
+  vi.spyOn(disk, "removeItem").mockImplementation((key) => {
+    if (key !== "crownguard:v1:ephemeral") return remove(key);
+    return new Promise<void>((resolve) => { release = () => { remove(key); resolve(); }; });
+  });
+  setEphemeralMode(false);
+  gate.release();
+  await hydration;
+  release();
+  await checkedStorage.setItem(STORAGE_KEY, currentValue());
+  expect(disk.items.get(STORAGE_KEY)).toBe("{source");
+  expect(rehydrateNotices().at(-1)?.text).toContain("Local writes are blocked");
+  vi.restoreAllMocks();
+});
+
 
 it("retains ephemeral mode on reload when deleting stale disk data throws", async () => {
   const disk = fakeDisk();
