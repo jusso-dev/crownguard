@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { assessmentSchema, formatIssues, SCHEMA_VERSION, type Assessment } from "./schema";
 import { detectSchemaVersion, migrate, migrations } from "./migrations";
 import { parseAssessment } from "./parse";
-import { toSaveFile } from "./saveFile";
+import { SCHEMA_URL, toSaveFile } from "./saveFile";
 import { emptyAssessment } from "./empty";
 
 const fixtureText = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
@@ -362,6 +362,20 @@ describe("frozen files from schema 3, 4 and 5", () => {
     expect(reopened.kind).toBe("ok");
     if (reopened.kind !== "ok") return;
     expect(plain(reopened.assessment)).toEqual(saved);
+  });
+
+  it.each(["schema3.crownguard.json", "schema4.crownguard.json"])("links the current JSON Schema when %s is saved again", (name) => {
+    const raw = fixture(name);
+    const opened = parseAssessment(raw, { questionIds });
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+
+    const saved = JSON.parse(toSaveFile(opened.assessment)) as Record<string, unknown>;
+    expect(saved.$schema).toBe(SCHEMA_URL);
+    expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
+    // The writer leaves the opened assessment alone.
+    expect(plain(opened.assessment).$schema).toBe(raw.$schema);
+    expect(parseAssessment(saved, { questionIds }).kind).toBe("ok");
   });
 
   it("moves an answer this build no longer asks beside the orphan the schema 5 file already carried", () => {

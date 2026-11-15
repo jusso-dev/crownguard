@@ -13,8 +13,8 @@ export function toSaveFile(a: Assessment, opts: { contentHash?: string; now?: Da
   delete content.version; // superseded by schemaVersion
   return JSON.stringify(
     {
-      $schema: SCHEMA_URL,
       ...content,
+      $schema: SCHEMA_URL,
       schemaVersion: SCHEMA_VERSION,
       savedBy: {
         app: "crownguard",
