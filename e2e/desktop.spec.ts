@@ -7,9 +7,13 @@
  */
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { decrypt } from "../src/format/crypto";
 import { expectReport, pdfText, runJourney } from "./journey";
 
 interface Desktop {
+  beforeAutosave?: (cmd: string, key: string, value?: string) => Promise<void>;
+  cancelSave?: boolean;
+  failSave?: boolean;
   /** The autosave table, key → value, as the Rust side would hold it. */
   db: Map<string, string>;
   /** Files written through the fs plugin, by path. */
@@ -36,16 +40,18 @@ async function desktop(page: Page, baseURL: string, state?: Desktop): Promise<De
     if (!url.startsWith("data:") && !url.startsWith("blob:") && new URL(url).origin !== origin) d.external.push(url);
   });
   page.on("pageerror", (e) => d.unknown.push(`pageerror: ${e.message}`));
-  await page.exposeFunction("__cgIpc", (cmd: string, args: Record<string, unknown> | number[] | null, headers: Record<string, string> | null) => {
+  await page.exposeFunction("__cgIpc", async (cmd: string, args: Record<string, unknown> | number[] | null, headers: Record<string, string> | null) => {
     d.calls.push({ cmd, args });
     const a = (args ?? {}) as Record<string, unknown>;
     switch (cmd) {
       case "autosave_load":
         return Object.fromEntries(d.db);
       case "autosave_set":
+        await d.beforeAutosave?.(cmd, a.key as string, a.value as string);
         d.db.set(a.key as string, a.value as string);
         return null;
       case "autosave_remove":
+        await d.beforeAutosave?.(cmd, a.key as string);
         d.db.delete(a.key as string);
         return null;
       case "recent_record":
@@ -63,6 +69,7 @@ async function desktop(page: Page, baseURL: string, state?: Desktop): Promise<De
       case "plugin:event|unlisten":
         return null;
       case "plugin:dialog|save":
+        if (d.cancelSave) return null;
         return `/home/tester/Documents/${(a.options as { defaultPath: string }).defaultPath}`;
       case "plugin:dialog|open":
         return d.openPaths.shift() ?? null;
@@ -75,6 +82,7 @@ async function desktop(page: Page, baseURL: string, state?: Desktop): Promise<De
       }
       case "plugin:fs|write_text_file":
       case "plugin:fs|write_file":
+        if (d.failSave) throw new Error("read-only file system");
         d.files.set(decodeURIComponent(headers!.path), Uint8Array.from(args as number[]));
         return null;
       case "plugin:fs|read_text_file": {
@@ -301,4 +309,120 @@ test("the PDF is generated from bundled fonts only", async ({ page, baseURL }) =
   expect((await pdfText(pdf))[0]).toContain("Riverbend Health");
   expect(new Set(fonts)).toEqual(new Set([new URL(baseURL!).origin]));
   expect(d.external).toEqual([]);
+});
+
+
+for (const fails of [false, true]) {
+  test(`recovery protection waits for backup IPC acknowledgement (failure=${fails})`, async ({ page, baseURL }) => {
+    const d = await desktop(page, baseURL!);
+    const raw = " {private desktop raw\r\n秘密";
+    d.db.set("crownguard:v1", raw);
+    await page.goto("./");
+    await expect(page.getByRole("button", { name: "Download the unreadable data" })).toBeVisible();
+    let release!: () => void;
+    let entered = false;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    d.beforeAutosave = async (cmd, key) => {
+      if (cmd === "autosave_set" && key === "crownguard:v1:unreadable") {
+        entered = true;
+        await gate;
+        if (fails) throw new Error("value too large");
+      }
+    };
+    const before = d.calls.length;
+    await page.getByRole("button", { name: "Protect with a passphrase" }).click();
+    await page.locator("#start-pass").fill("desktop-passphrase");
+    await page.locator("#start-confirm").fill("desktop-passphrase");
+    await page.getByRole("button", { name: "Apply passphrase" }).click();
+    await expect.poll(() => entered).toBe(true);
+    await expect(page.getByText("Updating protection…", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Download the unreadable data" })).toBeDisabled();
+    await expect(page.getByText(/^Protected with a passphrase/)).toHaveCount(0);
+    expect(d.db.get("crownguard:v1:unreadable")).toBe(raw);
+    expect(JSON.stringify(d.calls.slice(before))).not.toContain("private desktop raw");
+    release();
+    if (fails) {
+      await expect(page.getByRole("alert").filter({ hasText: "Protection is incomplete" })).toBeVisible();
+      expect(d.db.get("crownguard:v1:unreadable")).toBe(raw);
+      await expect(page.getByText(/^Protected with a passphrase/)).toHaveCount(0);
+      d.beforeAutosave = undefined;
+      await page.getByRole("button", { name: "Apply passphrase" }).click();
+    }
+    await expect(page.getByText(/^Protected with a passphrase/)).toBeVisible();
+    const protectedBackup = d.db.get("crownguard:v1:unreadable")!;
+    expect(await decrypt(JSON.parse(protectedBackup), "desktop-passphrase")).toBe(raw);
+    expect(JSON.parse(d.db.get("crownguard:v1")!).crownguardEncrypted).toBe(1);
+    for (const outcome of ["cancelled", "failed", "saved"]) {
+      d.cancelSave = outcome === "cancelled";
+      d.failSave = outcome === "failed";
+      await page.getByRole("button", { name: "Download the unreadable data" }).click();
+      if (outcome === "failed") await expect.poll(() => d.asked.some((message) => message.includes("Couldn't save"))).toBe(true);
+      if (outcome === "saved") await expect.poll(() => text(d.files.get("/home/tester/Documents/crownguard-unreadable.json"))).toBe(protectedBackup);
+      expect(d.db.get("crownguard:v1:unreadable")).toBe(protectedBackup);
+    }
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Download the unreadable data" })).toBeVisible();
+    expect(d.unknown).toEqual([]);
+  });
+}
+
+
+test("failed ephemeral-flag removal blocks completion and retry survives reload", async ({ page, baseURL }) => {
+  const d = await desktop(page, baseURL!);
+  const raw = "{original recovery";
+  d.db.set("crownguard:v1:unreadable", raw);
+  await page.goto("./");
+  const ephemeral = page.getByLabel(/Don't keep this assessment on this device/);
+  page.once("dialog", (dialog) => dialog.accept());
+  await ephemeral.check();
+  await expect.poll(() => d.db.get("crownguard:v1:ephemeral")).toBe("1");
+  await expect.poll(() => d.db.has("crownguard:v1:unreadable")).toBe(false);
+  await expect(page.getByText("Updating protection…", { exact: true })).toHaveCount(0);
+  d.beforeAutosave = async (cmd, key) => {
+    if (cmd === "autosave_remove" && key === "crownguard:v1:ephemeral") throw new Error("locked");
+  };
+  await ephemeral.uncheck();
+  await expect(page.getByRole("alert").filter({ hasText: "Protection is incomplete" })).toBeVisible();
+  expect(d.db.get("crownguard:v1:ephemeral")).toBe("1");
+  expect(d.db.has("crownguard:v1")).toBe(false);
+
+  d.beforeAutosave = undefined;
+  await page.getByRole("button", { name: "Protect with a passphrase" }).click();
+  await page.locator("#start-pass").fill("retry-passphrase");
+  await page.locator("#start-confirm").fill("retry-passphrase");
+  await page.getByRole("button", { name: "Apply passphrase" }).click();
+  await expect(page.getByText(/^Protected with a passphrase/)).toBeVisible();
+  expect(d.db.has("crownguard:v1:ephemeral")).toBe(false);
+  const backup = d.db.get("crownguard:v1:unreadable")!;
+  expect(await decrypt(JSON.parse(backup), "retry-passphrase")).toBe(raw);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Enter passphrase" })).toBeVisible();
+  expect(d.db.get("crownguard:v1:unreadable")).toBe(backup);
+  expect(d.db.has("crownguard:v1")).toBe(true);
+  expect(d.unknown).toEqual([]);
+});
+
+test("a later successful active save cannot hide failed backup protection", async ({ page, baseURL }) => {
+  const d = await desktop(page, baseURL!);
+  d.db.set("crownguard:v1", "{original");
+  await page.goto("./");
+  await expect(page.getByRole("button", { name: "Download the unreadable data" })).toBeVisible();
+  d.beforeAutosave = async (cmd, key) => {
+    if (cmd === "autosave_set" && key === "crownguard:v1:unreadable") throw new Error("disk full");
+  };
+  await page.getByRole("button", { name: "Protect with a passphrase" }).click();
+  await page.locator("#start-pass").fill("desktop-passphrase");
+  await page.locator("#start-confirm").fill("desktop-passphrase");
+  await page.getByRole("button", { name: "Apply passphrase" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Protection is incomplete" })).toBeVisible();
+  d.beforeAutosave = undefined;
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+  await page.getByLabel("Organisation name").fill("Later Co");
+  await expect.poll(async () => {
+    const raw = d.db.get("crownguard:v1");
+    if (!raw) return "pending";
+    return JSON.parse(await decrypt(JSON.parse(raw), "desktop-passphrase")).state.assessment.org.name;
+  }).toBe("Later Co");
+  await expect(page.getByRole("status").filter({ hasText: "Local protection incomplete" })).toBeVisible();
+  expect(d.unknown).toEqual([]);
 });

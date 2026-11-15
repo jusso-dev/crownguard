@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /** In-memory stand-ins for the Tauri bridge and plugins. Every call is recorded so tests can see what crossed IPC. */
 const tauri = vi.hoisted(() => {
@@ -72,7 +72,11 @@ vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn(async () => undefin
 import { invoke } from "@tauri-apps/api/core";
 import { ask, save } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { encrypt } from "../format/crypto";
+import { decrypt, encrypt } from "../format/crypto";
+import { platform } from "./index";
+import { dropProgress, protectionSnapshot, recoveryDownload, rewriteProtection, setEphemeralMode, STORAGE_KEY, UNREADABLE_KEY } from "../wizard/persistence";
+import { setSessionPassphrase } from "../wizard/sessionSecrets";
+import { emptyAssessment } from "../format/empty";
 import { basename, confirmAndOpen, createNativeFileSaver, createTauriPlatform, saveAs, SqliteAutosave } from "./tauri";
 
 beforeEach(() => {
@@ -264,5 +268,132 @@ describe("createTauriPlatform", () => {
   it("basename handles both separators", () => {
     expect(basename("C:\\Users\\me\\a.crownguard.json")).toBe("a.crownguard.json");
     expect(basename("/home/me/a.crownguard.json")).toBe("a.crownguard.json");
+  });
+});
+
+
+describe("durable autosave acknowledgement", () => {
+  it("rejects the failed operation despite a subsequent successful write", async () => {
+    tauri.db.set("backup", "plain");
+    const store = new SqliteAutosave({ backup: "plain" });
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("value too large"));
+    const failed = store.setItem("backup", "ciphertext");
+    const later = store.setItem("active", "ok");
+    await expect(failed).rejects.toThrow("Local storage write failed");
+    await later;
+    expect(store.lastError).toBeUndefined();
+    expect(tauri.db.get("backup")).toBe("plain");
+    expect(store.getItem("backup")).toBe("plain");
+    expect(store.getCommittedItem("backup")).toBe("plain");
+    expect(tauri.db.get("active")).toBe("ok");
+  });
+
+  it("restores the last committed value after consecutive failures, without clobbering a newer optimistic write", async () => {
+    tauri.db.set("backup", "original");
+    const store = new SqliteAutosave({ backup: "original" });
+    let reject!: (error: Error) => void;
+    vi.mocked(invoke).mockImplementationOnce(() => new Promise((_, r) => { reject = r; }));
+    let rejectSecond!: (error: Error) => void;
+    vi.mocked(invoke).mockImplementationOnce(() => new Promise((_, r) => { rejectSecond = r; }));
+    const first = store.setItem("backup", "first");
+    await Promise.resolve();
+    const second = store.setItem("backup", "second");
+    reject(new Error("quota"));
+    await expect(first).rejects.toThrow();
+    expect(store.getItem("backup")).toBe("second");
+    rejectSecond(new Error("quota"));
+    await expect(second).rejects.toThrow();
+    expect(store.getItem("backup")).toBe("original");
+    expect(tauri.db.get("backup")).toBe("original");
+    // Ignored ordinary writes are handled and do not break the queue.
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("locked"));
+    store.setItem("backup", "ignored failure");
+    await store.setItem("backup", "recovered");
+    expect(tauri.db.get("backup")).toBe("recovered");
+  });
+});
+
+
+describe("privacy operations with queued desktop writes", () => {
+  let store: SqliteAutosave;
+  beforeEach(() => {
+    tauri.db.set(UNREADABLE_KEY, "{original");
+    store = new SqliteAutosave(Object.fromEntries(tauri.db));
+    vi.spyOn(platform, "autosave").mockReturnValue(store);
+  });
+  afterEach(async () => {
+    setSessionPassphrase(null);
+    setEphemeralMode(false);
+    dropProgress(STORAGE_KEY);
+    await store.flush();
+    vi.restoreAllMocks();
+  });
+
+  it.each([null, "new-passphrase"])("rejects failed ephemeral-flag removal before saving with passphrase %s, then retries", async (pass) => {
+    const flag = "crownguard:v1:ephemeral";
+    setEphemeralMode(true);
+    await store.flush();
+    expect(tauri.db.get(flag)).toBe("1");
+    const normalInvoke = vi.mocked(invoke).getMockImplementation()!;
+    let rejectRemoval!: (reason: Error) => void;
+    vi.mocked(invoke).mockImplementation((command, args) => {
+      if (command === "autosave_remove" && (args as { key: string }).key === flag) {
+        return new Promise((_, reject) => { rejectRemoval = reject; });
+      }
+      return normalInvoke(command, args);
+    });
+    setEphemeralMode(false);
+    const value = () => ({ state: { assessment: emptyAssessment() }, version: 4 });
+    const saving = rewriteProtection(pass, value);
+    await vi.waitFor(() => expect(rejectRemoval).toBeTypeOf("function"));
+    rejectRemoval(new Error("locked"));
+    const saved = await saving;
+    vi.mocked(invoke).mockImplementation(normalInvoke);
+    expect(saved).toBe(false);
+    expect(protectionSnapshot()).toBe("error");
+    expect(tauri.db.get(flag)).toBe("1");
+    expect(tauri.db.has(STORAGE_KEY)).toBe(false);
+    expect(tauri.db.has(UNREADABLE_KEY)).toBe(false);
+
+    expect(await rewriteProtection(pass, value)).toBe(true);
+    expect(tauri.db.has(flag)).toBe(false);
+    expect(tauri.db.has(STORAGE_KEY)).toBe(true);
+    const backup = tauri.db.get(UNREADABLE_KEY)!;
+    expect(pass ? await decrypt(JSON.parse(backup), pass) : backup).toBe("{original");
+  });
+
+  it.each(["forget", "ephemeral round trip"])("orders %s after already queued backup ciphertext", async (change) => {
+    let release!: () => void;
+    vi.mocked(invoke).mockImplementationOnce((_command, args) => new Promise((resolve) => {
+      release = () => {
+        const values = args as { key: string; value: string };
+        tauri.db.set(values.key, values.value);
+        resolve(null);
+      };
+    }));
+    const value = () => ({ state: { assessment: emptyAssessment() }, version: 4 });
+    const old = rewriteProtection("old-passphrase", value);
+    await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+    let newer: Promise<boolean> | undefined;
+    if (change === "forget") {
+      setSessionPassphrase(null);
+      dropProgress(STORAGE_KEY);
+    } else {
+      setEphemeralMode(true);
+      setEphemeralMode(false);
+      newer = rewriteProtection("new-passphrase", value);
+    }
+    release();
+    expect(await old).toBe(false);
+    if (newer) {
+      expect(await newer).toBe(true);
+      expect(await decrypt(JSON.parse(tauri.db.get(UNREADABLE_KEY)!), "new-passphrase")).toBe("{original");
+      expect(protectionSnapshot()).toBe("protected");
+    } else {
+      await store.flush();
+      expect(tauri.db.has(UNREADABLE_KEY)).toBe(false);
+      expect(tauri.db.has(STORAGE_KEY)).toBe(false);
+      expect(recoveryDownload()).toBeNull();
+    }
   });
 });

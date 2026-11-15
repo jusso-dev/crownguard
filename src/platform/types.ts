@@ -20,11 +20,12 @@ export const autosaveKeys = {
 /** The value of `autosaveKeys.ephemeral` while that mode is on. */
 export const EPHEMERAL_ON = "1";
 
-/** Synchronous key/value storage for autosave. The shape of `localStorage`, so the web build can pass it straight in. */
+/** Browser writes are synchronous; desktop writes acknowledge their particular SQLite operation. */
 export interface AutosaveStore {
   getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-  removeItem(key: string): void;
+  getCommittedItem?(key: string): string | null;
+  setItem(key: string, value: string): void | Promise<void>;
+  removeItem(key: string): void | Promise<void>;
 }
 
 /** A file the user opened. `path` is set on desktop, where the app can save back to the same file. */

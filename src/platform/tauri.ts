@@ -25,12 +25,15 @@ const describe = (e: unknown) => (e instanceof Error ? e.message : String(e));
  */
 export class SqliteAutosave implements AutosaveStore {
   private readonly values: Map<string, string>;
+  private readonly committed: Map<string, string>;
+  private readonly revisions = new Map<string, number>();
   private queue: Promise<void> = Promise.resolve();
   /** The last write that failed, if any, for the settings panel to report. */
   lastError: string | undefined;
 
   constructor(initial: Record<string, string>) {
     this.values = new Map(Object.entries(initial));
+    this.committed = new Map(this.values);
   }
 
   static async load(): Promise<SqliteAutosave> {
@@ -41,14 +44,18 @@ export class SqliteAutosave implements AutosaveStore {
     return this.values.get(key) ?? null;
   }
 
-  setItem(key: string, value: string): void {
-    this.values.set(key, value);
-    this.enqueue(() => invoke("autosave_set", { key, value }));
+  getCommittedItem(key: string): string | null {
+    return this.committed.get(key) ?? null;
   }
 
-  removeItem(key: string): void {
+  setItem(key: string, value: string): Promise<void> {
+    this.values.set(key, value);
+    return this.enqueue(key, value, () => invoke("autosave_set", { key, value }));
+  }
+
+  removeItem(key: string): Promise<void> {
     this.values.delete(key);
-    this.enqueue(() => invoke("autosave_remove", { key }));
+    return this.enqueue(key, null, () => invoke("autosave_remove", { key }));
   }
 
   /**
@@ -64,16 +71,28 @@ export class SqliteAutosave implements AutosaveStore {
     return this.queue;
   }
 
-  private enqueue(write: () => Promise<unknown>) {
-    this.queue = this.queue.then(write).then(
+  private enqueue(key: string, value: string | null, write: () => Promise<unknown>): Promise<void> {
+    const revision = (this.revisions.get(key) ?? 0) + 1;
+    this.revisions.set(key, revision);
+    const operation = this.queue.then(write).then(
       () => {
+        if (value === null) this.committed.delete(key);
+        else this.committed.set(key, value);
         this.lastError = undefined;
       },
       (e) => {
+        if (this.revisions.get(key) === revision) {
+          const previous = this.committed.get(key);
+          if (previous === undefined) this.values.delete(key);
+          else this.values.set(key, previous);
+        }
         this.lastError = describe(e);
-        console.error("crownguard: autosave write failed", this.lastError);
+        throw new Error("Local storage write failed.");
       },
     );
+    // Ordinary callers may ignore completion. Strict callers still receive the rejecting operation.
+    this.queue = operation.catch(() => undefined);
+    return operation;
   }
 }
 

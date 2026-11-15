@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 import { catalogue, contentHash, ensurePlatforms, allQuestionIds } from "./content/catalogue";
 import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
@@ -7,7 +7,7 @@ import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
 import { decryptJson, isEncryptedEnvelope } from "./format/crypto";
 import { parseAssessment } from "./format/parse";
-import { isEphemeralMode, rehydrateNotices, storageWriteFailed } from "./wizard/persistence";
+import { backupIsEncrypted, isEphemeralMode, protectionSnapshot, recoveryDownload, rehydrateNotices, storageWriteFailed, subscribeProtection, unreadableBackup } from "./wizard/persistence";
 import {
   EphemeralToggle,
   LegacyOriginBanner,
@@ -15,7 +15,7 @@ import {
   UnlockCard,
 } from "./wizard/PrivacyControls";
 import { toEncryptedSaveFile, toSaveFile } from "./format/saveFile";
-import { getSessionPassphrase, hasLockedEnvelope, hasSessionPassphrase, setSessionPassphrase } from "./wizard/sessionSecrets";
+import { getSessionPassphrase, hasLockedEnvelope, setSessionPassphrase } from "./wizard/sessionSecrets";
 import { hasProgress, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
 import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/flow";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
@@ -102,11 +102,14 @@ function SaveStatus({
   ephemeral: boolean;
   fileSave?: { file: string; at: string; downloaded: boolean };
 }) {
+  const protection = useSyncExternalStore(subscribeProtection, protectionSnapshot);
   const updatedAt = useStore((s) => s.assessment.updatedAt);
   const now = useNow(fileSave ? 5_000 : 30_000);
   // A failed autosave comes first: a file saved a minute ago doesn't hold the edits made since. The desktop store reports
   // its own error; the browser's quota failure is only known to persistence.
   const autosaveError = platform.autosaveError() ?? (storageWriteFailed() ? "Browser storage is full or unavailable." : undefined);
+  if (protection === "pending") return <span role="status">Updating protection…</span>;
+  if (protection === "error") return <span role="status">Local protection incomplete. Check passphrase settings; keep your passphrases.</span>;
   if (autosaveError)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn" title={autosaveError}>
@@ -131,7 +134,7 @@ function SaveStatus({
     <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted" title={`Progress saves automatically ${HERE} as you go`}>
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ok" />
       Saved {HERE} · {relativeTime(updatedAt, now)}
-      {hasSessionPassphrase() ? " · encrypted" : ""}
+      {protection === "protected" ? " · encrypted" : ""}
     </span>
   );
 }
@@ -325,17 +328,29 @@ function FileUnlockForm({
 /** Anything the last rehydrate couldn't use: stale, hand-edited, or written by something else on this origin. */
 function noticeFromRehydrate(): Notice | undefined {
   const notices = rehydrateNotices();
-  if (!notices.length) return undefined;
+  const backup = unreadableBackup();
+  if (!notices.length && backup === null) return undefined;
   const first = notices.find((n) => n.kind === "error") ?? notices[0];
-  const backup = notices.find((n) => n.backup)?.backup;
   return {
-    kind: first.kind === "error" ? "error" : "warn",
-    text: first.text,
+    kind: first?.kind === "error" ? "error" : "warn",
+    text: first?.text ?? "Raw recovery data is available. It may need manual repair. Encrypted recovery data still requires its original passphrase.",
     details: notices.filter((n) => n !== first).map((n) => n.text),
-    actions: backup
-      ? [{ label: "Download the unreadable data", onClick: () => platform.saveAs("crownguard-unreadable.json", backup, "application/json") }]
-      : undefined,
   };
+}
+
+function RecoveryDownload() {
+  const protection = useSyncExternalStore(subscribeProtection, protectionSnapshot);
+  const backup = unreadableBackup();
+  if (backup === null) return null;
+  return <div className="mx-auto max-w-6xl px-6 py-2 text-sm">
+    <Button variant="secondary" disabled={protection === "pending"} onClick={() => {
+      const current = recoveryDownload();
+      if (current !== null) void platform.saveAs("crownguard-unreadable.json", current, "application/json");
+    }}>Download the unreadable data</Button>
+    <p className="mt-1 text-xs text-muted">{backupIsEncrypted(backup)
+      ? "Encrypted raw recovery data. Keep its original passphrase, even after changing or removing active protection. Manual repair may still be needed."
+      : "Unprotected raw recovery data. The download contains the original unprotected data and may need manual repair."}</p>
+  </div>;
 }
 
 export function App() {
@@ -623,6 +638,7 @@ export function App() {
     return (
       <div className="min-h-screen">
         <LegacyOriginBanner />
+        <RecoveryDownload />
         <div className="px-4 py-10 sm:px-6">
           <UnlockCard
             onUnlocked={() => {
@@ -645,6 +661,7 @@ export function App() {
       </a>
       <div id="step-announce" className="sr-only" aria-live="polite" aria-atomic="true" />
       <LegacyOriginBanner />
+      <RecoveryDownload />
       <header ref={header} className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm [overflow-anchor:none]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
