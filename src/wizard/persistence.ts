@@ -34,7 +34,16 @@ let protectionRevision = 0;
 let recoveryBlocked = false;
 let recovering = false;
 let restoreSessionBackup = false;
-let explicitRevision: number | undefined;
+function completion<T>() {
+  let finish!: (value: T) => void;
+  const done = new Promise<T>((resolve) => { finish = resolve; });
+  return { done, finish };
+}
+let explicit: (ReturnType<typeof completion<boolean>> & { revision: number }) | undefined;
+type SaveJob = { name: string; json: string; pass: string; revision: number; generation: number };
+type Drain = ReturnType<typeof completion<void>> & { pending?: SaveJob };
+// Keyed so a caller using another storage key cannot replace the active assessment's pending snapshot.
+const ordinary = new Map<string, Drain>();
 const removals = new Map<Promise<void>, string>();
 const listeners = new Set<() => void>();
 export const protectionSnapshot = () => protectionStatus;
@@ -52,6 +61,13 @@ export function invalidateProtection() {
   protectionRevision++;
   encryptGeneration++;
   backupWork = undefined;
+  for (const drain of ordinary.values()) {
+    drain.pending = undefined;
+    drain.finish();
+  }
+  ordinary.clear();
+  explicit?.finish(false);
+  explicit = undefined;
   // Invalidation cancels earlier completion; only an actual failure stays sticky until explicit retry.
   status(protectionStatus === "error" ? "error" : "idle");
 }
@@ -412,20 +428,24 @@ export const checkedStorage: CheckedStorage = {
   },
   setItem: (name, value) => {
     if (readOnly || recoveryBlocked || recovering) return;
+    const generation = ++encryptGeneration;
+    if (explicit?.revision === protectionRevision && name === STORAGE_KEY) return explicit.done.then(() => {});
     const pass = getSessionPassphrase();
+    const json = JSON.stringify(value);
     if (!pass) {
-      encryptGeneration++;
-      write(name, JSON.stringify(value));
+      write(name, json);
       return;
     }
-    const revision = protectionRevision;
-    const mayConfirm = protectionStatus !== "error" && explicitRevision !== revision;
-    if (mayConfirm) status("pending");
-    return saveProtected(name, value, pass, revision).then((saved) => {
-      if (saved && mayConfirm && revision === protectionRevision && protectionStatus !== "error") status(ephemeral() ? "session" : "protected");
-    }).catch(() => {
-      if (revision === protectionRevision) { writeFailed = true; status("error"); }
-    });
+    const job = { name, json, pass, revision: protectionRevision, generation };
+    const existing = ordinary.get(name);
+    if (existing) {
+      existing.pending = job;
+      return existing.done;
+    }
+    const drain: Drain = completion<void>();
+    ordinary.set(name, drain);
+    void drainOrdinary(drain, job);
+    return drain.done;
   },
   removeItem: (name) => {
     if (readOnly) return;
@@ -433,16 +453,40 @@ export const checkedStorage: CheckedStorage = {
   },
 };
 
+/** Leading save starts immediately; overlapping callers share one drain and one latest snapshot. */
+async function drainOrdinary(drain: Drain, first: SaveJob) {
+  let job: SaveJob | undefined = first;
+  try {
+    while (job && ordinary.get(first.name) === drain) {
+      if (readOnly || recoveryBlocked || recovering) break;
+      if (protectionStatus !== "error") status("pending");
+      const saved = await saveProtected(job.name, job.json, job.pass, job.revision, job.generation);
+      if (ordinary.get(first.name) !== drain) break;
+      if (saved && !drain.pending && job.generation === encryptGeneration && protectionStatus !== "error") {
+        status(ephemeral() ? "session" : "protected");
+      }
+      job = drain.pending;
+      drain.pending = undefined;
+    }
+  } catch {
+    // A genuine failure ends this drain, including its pending work. Only explicit retry clears the error.
+    if (first.revision === protectionRevision) { writeFailed = true; status("error"); }
+  } finally {
+    drain.pending = undefined;
+    if (ordinary.get(first.name) === drain) ordinary.delete(first.name);
+    drain.finish();
+  }
+}
+
 /** Prepare both ciphertexts before replacing either key; acknowledge backup before active progress. */
-async function saveProtected(name: string, value: StorageValue<Persisted>, pass: string | null, revision: number): Promise<boolean> {
+async function saveProtected(name: string, json: string, pass: string | null, revision: number, generation: number): Promise<boolean> {
   guard(revision);
   if (removals.size) await Promise.all(removals.keys());
   guard(revision);
   if (!ephemeral()) confirmPersistentMode();
-  const generation = ++encryptGeneration;
+  if (generation !== encryptGeneration) return false;
   // Leaving ephemeral mode must restore recovery even when active progress has no passphrase.
   const work = pass || restoreSessionBackup ? prepareBackup(pass, revision) : undefined;
-  const json = JSON.stringify(value);
   const active = pass ? JSON.stringify(await encrypt(json, pass)) : json;
   guard(revision);
   if (pass && !work && committed(UNREADABLE_KEY) !== null) throw cancelled();
@@ -459,44 +503,54 @@ async function saveProtected(name: string, value: StorageValue<Persisted>, pass:
   if (ephemeral()) await confirmEphemeralRemoval();
   else confirmPersistentMode();
   guard(revision);
+  if (generation !== encryptGeneration) return false;
   writeFailed = false;
   return true;
 }
 
 /** Explicit Apply/clear, using the store's current partialisation and version on every retry. */
-export async function rewriteProtection(pass: string | null, value: () => StorageValue<Persisted>): Promise<boolean> {
+export function rewriteProtection(pass: string | null, value: () => StorageValue<Persisted>): Promise<boolean> {
   if (readOnly || recoveryBlocked || recovering) {
     status("error");
-    return false;
+    return Promise.resolve(false);
   }
   const previousPass = getSessionPassphrase();
   invalidateProtection();
   setSessionPassphrase(pass);
   const revision = protectionRevision;
-  explicitRevision = revision;
+  const owner = { ...completion<boolean>(), revision };
+  explicit = owner;
   status("pending");
-  try {
-    // An explicit retry may need to remove a flag whose earlier removal failed.
-    if (!ephemeral() && committed(EPHEMERAL_FLAG_KEY) !== null && ![...removals.values()].includes(EPHEMERAL_FLAG_KEY)) {
-      observeRemoval(EPHEMERAL_FLAG_KEY);
+  void (async () => {
+    try {
+      // An explicit retry may need to remove a flag whose earlier removal failed.
+      if (!ephemeral() && committed(EPHEMERAL_FLAG_KEY) !== null && ![...removals.values()].includes(EPHEMERAL_FLAG_KEY)) {
+        observeRemoval(EPHEMERAL_FLAG_KEY);
+      }
+      if (ephemeral()) await confirmEphemeralRemoval();
+      // Edits may supersede active encryption, but do not restart the shared backup conversion.
+      for (;;) {
+        const generation = ++encryptGeneration;
+        const saved = await saveProtected(STORAGE_KEY, JSON.stringify(value()), pass, revision, generation);
+        guard(revision);
+        if (saved && generation === encryptGeneration) break;
+      }
+      guard(revision);
+      status(ephemeral() ? "session" : pass ? "protected" : "plain");
+      return true;
+    } catch {
+      if (revision === protectionRevision) {
+        // A failed clear may have left active ciphertext on disk. Keep its key for retry and file saving.
+        if (pass === null) setSessionPassphrase(previousPass);
+        writeFailed = true;
+        status("error");
+      }
+      return false;
+    } finally {
+      if (explicit === owner) explicit = undefined;
     }
-    if (ephemeral()) await confirmEphemeralRemoval();
-    // Edits may supersede active encryption, but do not restart the shared backup conversion.
-    while (!await saveProtected(STORAGE_KEY, value(), pass, revision)) guard(revision);
-    guard(revision);
-    status(ephemeral() ? "session" : pass ? "protected" : "plain");
-    return true;
-  } catch {
-    if (revision === protectionRevision) {
-      // A failed clear may have left active ciphertext on disk. Keep its key for retry and file saving.
-      if (pass === null) setSessionPassphrase(previousPass);
-      writeFailed = true;
-      status("error");
-    }
-    return false;
-  } finally {
-    if (explicitRevision === revision) explicitRevision = undefined;
-  }
+  })().then(owner.finish);
+  return owner.done;
 }
 
 /** Acknowledge recovery before removing its source. A different existing backup is never disposable. */

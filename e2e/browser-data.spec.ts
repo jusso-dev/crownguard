@@ -85,6 +85,12 @@ test("encrypted save and open round trip", async ({ page }) => {
   const text = await readFile(path!, "utf8");
   expect(text).not.toContain("Secret Crown Co");
   expect(JSON.parse(text).crownguardEncrypted).toBe(1);
+  const secondDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save file" }).click();
+  const secondText = await readFile(await (await secondDownload).path(), "utf8");
+  expect(JSON.parse(secondText).salt).not.toBe(JSON.parse(text).salt);
+  expect(JSON.parse(secondText).iv).not.toBe(JSON.parse(text).iv);
+  expect(JSON.parse(await decrypt(JSON.parse(secondText), "file-pass-5678")).org.name).toBe("Secret Crown Co");
 
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Remove from this browser" }).click();
@@ -295,4 +301,95 @@ test("forget during pending protection cannot restore a key or recovery copy", a
   await expect(page.getByRole("button", { name: "Protect with a passphrase" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download the unreadable data" })).toHaveCount(0);
   expect(await page.evaluate(() => [localStorage.getItem("crownguard:v1"), localStorage.getItem("crownguard:v1:unreadable")])).toEqual([null, null]);
+});
+
+
+interface BurstProbe {
+  releases: (() => void)[];
+  restore: () => void;
+  derived: number;
+  encrypted: number;
+  writes: number;
+  gate: boolean;
+  started: number;
+  samples: number[];
+}
+
+test("protected typing coalesces gated organisation and note edits, then reloads the latest state", async ({ page, browser }) => {
+  page.setDefaultTimeout(10_000);
+  await page.goto("./");
+  await setPassphrase(page, "typing-passphrase");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+  await page.getByLabel("Organisation name").fill("Before burst");
+  await next(page);
+  await page.getByRole("checkbox", { name: /Microsoft 365/ }).check();
+  await next(page);
+  await page.getByRole("button", { name: /^Add crown jewel:/ }).first().click();
+  await page.getByRole("button", { name: "Save crown jewel" }).click();
+  await next(page);
+  await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /Organisation/ }).click();
+  const saved = page.getByRole("status").filter({ hasText: /Saved in this browser.*encrypted/ });
+  await expect(saved).toBeVisible();
+  const before = await page.evaluate(() => localStorage.getItem("crownguard:v1"));
+  await page.evaluate(() => {
+    const derive = crypto.subtle.deriveKey.bind(crypto.subtle);
+    const encrypt = crypto.subtle.encrypt.bind(crypto.subtle);
+    const set = Storage.prototype.setItem;
+    const probe: BurstProbe = { releases: [], restore: () => {}, derived: 0, encrypted: 0, writes: 0, gate: true, started: 0, samples: [] };
+    (window as unknown as { burst: BurstProbe }).burst = probe;
+    const gates = Array.from({ length: 2 }, () => new Promise<void>((resolve) => probe.releases.push(resolve)));
+    crypto.subtle.deriveKey = async (...args: Parameters<SubtleCrypto["deriveKey"]>) => {
+      const index = probe.derived++;
+      probe.started = performance.now();
+      if (probe.gate) await gates[index];
+      return derive(...args);
+    };
+    crypto.subtle.encrypt = async (...args: Parameters<SubtleCrypto["encrypt"]>) => { probe.encrypted++; return encrypt(...args); };
+    Storage.prototype.setItem = function (key, value) {
+      set.call(this, key, value);
+      if (key === "crownguard:v1") { probe.writes++; if (!probe.gate) probe.samples.push(performance.now() - probe.started); }
+    };
+    probe.restore = () => { crypto.subtle.deriveKey = derive; crypto.subtle.encrypt = encrypt; Storage.prototype.setItem = set; };
+  });
+  let noteLabel: string;
+  try {
+    await page.getByLabel("Organisation name").fill("Leading");
+    await expect.poll(() => page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.derived)).toBe(1);
+    await page.getByLabel("Organisation name").fill("");
+    await page.getByLabel("Organisation name").pressSequentially("Latest typing Co");
+    await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /Controls/ }).click();
+    await page.getByText("Why this matters and what good looks like", { exact: true }).first().click();
+    const note = page.getByRole("textbox", { name: /^Notes for the report on/ }).first();
+    noteLabel = (await note.getAttribute("aria-label"))!;
+    await note.pressSequentially("Latest note");
+    expect(await page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.derived)).toBe(1);
+    await page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.releases[0]());
+    await expect.poll(() => page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.derived)).toBe(2);
+    expect(await page.evaluate(() => localStorage.getItem("crownguard:v1"))).toBe(before);
+    await expect(page.getByRole("status").filter({ hasText: "Updating protection" })).toBeVisible();
+    await page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.releases[1]());
+    await expect(saved).toBeVisible();
+    const counts = await page.evaluate(() => { const p = (window as unknown as { burst: BurstProbe }).burst; return [p.derived, p.encrypted, p.writes]; });
+    expect(counts).toEqual([2, 2, 1]);
+    const raw = await page.evaluate(() => localStorage.getItem("crownguard:v1"));
+    const value = JSON.parse(await decrypt(JSON.parse(raw!), "typing-passphrase"));
+    expect(value.version).toBe(4);
+    expect(value.state.assessment.org.name).toBe("Latest typing Co");
+    expect(value.state.assessment.notes[noteLabel.replace("Notes for the report on ", "")]).toBe("Latest note");
+    // Descriptive real-browser sequential timings, excluding the deliberately gated burst.
+    await page.evaluate(() => { (window as unknown as { burst: BurstProbe }).burst.gate = false; });
+    for (let i = 0; i < 5; i++) { await note.fill(`Spaced note ${i}`); await expect(saved).toBeVisible(); }
+    const samples = await page.evaluate(() => (window as unknown as { burst: BurstProbe }).burst.samples);
+    expect(samples).toHaveLength(5);
+    console.info(JSON.stringify({ browser: browser.version(), environment: "local production web build, sequential note edits, derive entry to localStorage commit", milliseconds: samples }));
+  } finally {
+    await page.evaluate(() => { const p = (window as unknown as { burst: BurstProbe }).burst; p.releases.forEach((release) => release()); p.restore(); });
+  }
+  await page.reload();
+  await page.getByLabel("Passphrase").fill("typing-passphrase");
+  await page.getByRole("button", { name: "Unlock", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Latest typing Co" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue where you left off" }).click();
+  await page.getByText("Why this matters and what good looks like", { exact: true }).first().click();
+  await expect(page.getByRole("textbox", { name: noteLabel, exact: true })).toHaveValue("Spaced note 4");
 });

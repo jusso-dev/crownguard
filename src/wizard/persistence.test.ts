@@ -5,6 +5,7 @@ import { SCHEMA_VERSION, type Assessment } from "../format/schema";
 import * as crypto from "../format/crypto";
 import {
   checkedStorage,
+  invalidateProtection,
   dropProgress,
   readProgress,
   rehydrateNotices,
@@ -213,9 +214,8 @@ describe("progress saved in this browser", () => {
     const fresh = { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Fresh Co" } };
     const first = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: stale }, version: 3 });
     const second = checkedStorage.setItem(STORAGE_KEY, { state: { assessment: fresh }, version: 3 });
-    await second;
     releaseFirst();
-    await first;
+    await Promise.all([first, second]);
     const stored = await checkedStorage.getItem(STORAGE_KEY);
     expect(stored?.state.assessment?.org.name).toBe("Fresh Co");
     setSessionPassphrase(null);
@@ -599,4 +599,212 @@ it("retains ephemeral mode on reload when deleting stale disk data throws", asyn
   expect(fresh.protectionSnapshot()).toBe("error");
   await fresh.checkedStorage.setItem(STORAGE_KEY, currentValue());
   expect(disk.items.get(STORAGE_KEY)).toBe("{stale");
+});
+
+
+/** Fixed gates, released even when an assertion fails. No timing-based ordering. */
+function deferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => { resolve = done; });
+  return { promise, resolve };
+}
+const microtasks = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };
+function gatedEncryptions(count = 3) {
+  const actual = crypto.encrypt;
+  const gates = Array.from({ length: count }, deferred);
+  const completed: Promise<unknown>[] = [];
+  const spy = vi.spyOn(crypto, "encrypt").mockImplementation((plain, pass) => {
+    const index = completed.length;
+    const result = (async () => {
+      await gates[index]?.promise;
+      return actual(plain, pass);
+    })();
+    completed.push(result);
+    return result;
+  });
+  return {
+    spy,
+    async release(index: number) { gates[index].resolve(); await completed[index]; await microtasks(); },
+    async cleanup() { gates.forEach((g) => g.resolve()); await Promise.allSettled(completed); await microtasks(); },
+  };
+}
+const snapshot = (name: string) => ({ state: { assessment: { ...named(name), createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z", notes: { "MS-ID-001": `Note ${name}` } } }, version: 4 });
+
+it("coalesces eight overlapping snapshots into two encryptions and one latest commit", async () => {
+  const disk = fakeDisk();
+  dropProgress(STORAGE_KEY);
+  await microtasks();
+  setSessionPassphrase("burst-passphrase");
+  const gate = gatedEncryptions(8);
+  const writes = vi.spyOn(disk, "setItem");
+  const pending: unknown[] = [];
+  try {
+    for (let i = 0; i < 8; i++) pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot(`Revision ${i}`)));
+    expect(gate.spy).toHaveBeenCalledTimes(1);
+    expect(protectionSnapshot()).toBe("pending");
+    await gate.release(0);
+    expect(gate.spy).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(gate.spy.mock.calls[1][0])).toEqual(snapshot("Revision 7"));
+    expect(writes).not.toHaveBeenCalled();
+    expect(protectionSnapshot()).toBe("pending");
+    await gate.release(1);
+    await Promise.all(pending);
+    expect(writes).toHaveBeenCalledTimes(1);
+    expect(protectionSnapshot()).toBe("protected");
+    expect(JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "burst-passphrase"))).toEqual(snapshot("Revision 7"));
+  } finally { await gate.cleanup(); await Promise.allSettled(pending); }
+});
+
+
+it("captures pending snapshots at ingress and invalidates the latest encryption on a further edit", async () => {
+  const disk = fakeDisk();
+  dropProgress(STORAGE_KEY);
+  await microtasks();
+  setSessionPassphrase("burst-passphrase");
+  const gate = gatedEncryptions();
+  const writes = vi.spyOn(disk, "setItem");
+  const pending: unknown[] = [];
+  try {
+    pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot("First")));
+    const value = snapshot("Second");
+    pending.push(checkedStorage.setItem(STORAGE_KEY, value));
+    value.state.assessment.org.name = "Mutated after enqueue";
+    await gate.release(0);
+    expect(JSON.parse(gate.spy.mock.calls[1][0])).toEqual(snapshot("Second"));
+    pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot("Third")));
+    await gate.release(1);
+    expect(writes).not.toHaveBeenCalled();
+    expect(protectionSnapshot()).toBe("pending");
+    expect(gate.spy).toHaveBeenCalledTimes(3);
+    await gate.release(2);
+    await Promise.all(pending);
+    expect(JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "burst-passphrase"))).toEqual(snapshot("Third"));
+  } finally { await gate.cleanup(); await Promise.allSettled(pending); }
+});
+
+it.each(["reset", "new key", "forget", "read-only", "backup replacement", "ephemeral"])("retires ordinary waiters and pending work on %s", async (change) => {
+  const disk = fakeDisk();
+  dropProgress(STORAGE_KEY);
+  await microtasks();
+  setSessionPassphrase("old-passphrase");
+  const gate = gatedEncryptions();
+  const pending: unknown[] = [];
+  try {
+    let settled = 0;
+    pending.push(Promise.resolve(checkedStorage.setItem(STORAGE_KEY, snapshot("Old"))).then(() => settled++));
+    pending.push(Promise.resolve(checkedStorage.setItem(STORAGE_KEY, snapshot("Discarded"))).then(() => settled++));
+    if (change === "reset") invalidateProtection();
+    if (change === "new key") setSessionPassphrase("new-passphrase");
+    if (change === "forget") dropProgress(STORAGE_KEY);
+    if (change === "read-only") setStorageReadOnly(true);
+    if (change === "backup replacement") writeProgress(UNREADABLE_KEY, "{replacement");
+    if (change === "ephemeral") setEphemeralMode(true);
+    await microtasks();
+    expect(settled, "retired callers settle without old crypto release").toBe(2);
+    if (change === "reset" || change === "new key") {
+      let freshSettled = false;
+      const fresh = Promise.resolve(checkedStorage.setItem(STORAGE_KEY, snapshot("Fresh"))).then(() => { freshSettled = true; });
+      pending.push(fresh);
+      expect(gate.spy).toHaveBeenCalledTimes(2);
+      await gate.release(0);
+      expect(freshSettled, "old cleanup cannot resolve the new drain").toBe(false);
+      pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot("Freshest")));
+      expect(gate.spy).toHaveBeenCalledTimes(2);
+      await gate.release(1);
+      expect(gate.spy).toHaveBeenCalledTimes(3);
+      await gate.release(2);
+      await fresh;
+      expect(JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), getSessionPassphrase()!))).toEqual(snapshot("Freshest"));
+    } else {
+      await gate.release(0);
+      expect(gate.spy).toHaveBeenCalledTimes(1);
+      expect(disk.items.has(STORAGE_KEY)).toBe(false);
+      if (change === "backup replacement") expect(disk.items.get(UNREADABLE_KEY)).toBe("{replacement");
+    }
+  } finally { await gate.cleanup(); await Promise.allSettled(pending); }
+});
+
+it("ends a failed ordinary drain without retrying its pending snapshot; explicit same-key retry restores status", async () => {
+  const disk = fakeDisk();
+  dropProgress(STORAGE_KEY);
+  await microtasks();
+  setSessionPassphrase("retry-passphrase");
+  const hold = deferred();
+  const actual = crypto.encrypt;
+  const spy = vi.spyOn(crypto, "encrypt").mockImplementationOnce(async () => { await hold.promise; throw new Error("unavailable"); });
+  const pending = [checkedStorage.setItem(STORAGE_KEY, snapshot("First")), checkedStorage.setItem(STORAGE_KEY, snapshot("Pending"))];
+  try {
+    hold.resolve();
+    await Promise.all(pending);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(disk.items.has(STORAGE_KEY)).toBe(false);
+    expect(protectionSnapshot()).toBe("error");
+    spy.mockImplementation(actual);
+    await checkedStorage.setItem(STORAGE_KEY, snapshot("Ordinary success"));
+    expect(protectionSnapshot()).toBe("error");
+    expect(await rewriteProtection("retry-passphrase", () => snapshot("Retried"))).toBe(true);
+    expect(protectionSnapshot()).toBe("protected");
+    expect(JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "retry-passphrase"))).toEqual(snapshot("Retried"));
+  } finally { hold.resolve(); await Promise.allSettled(pending); }
+});
+
+it("explicit Apply owns edits and encrypts recovery once", async () => {
+  const disk = fakeDisk();
+  disk.items.set(UNREADABLE_KEY, "{opaque recovery");
+  const actual = crypto.encrypt;
+  const hold = deferred();
+  const activeCalls: string[] = [];
+  const all: Promise<unknown>[] = [];
+  const spy = vi.spyOn(crypto, "encrypt").mockImplementation((raw, pass) => {
+    const result = (async () => {
+      if (raw !== "{opaque recovery") {
+        activeCalls.push(raw);
+        if (activeCalls.length === 1) await hold.promise;
+      }
+      return actual(raw, pass);
+    })();
+    all.push(result);
+    return result;
+  });
+  let value = snapshot("Initial");
+  const applied = rewriteProtection("apply-passphrase", () => value);
+  const edits: unknown[] = [];
+  try {
+    for (let i = 0; i < 8; i++) {
+      value = snapshot(`Edit ${i}`);
+      edits.push(checkedStorage.setItem(STORAGE_KEY, value));
+    }
+    expect(activeCalls).toHaveLength(1);
+    expect(protectionSnapshot()).toBe("pending");
+    hold.resolve();
+    expect(await applied).toBe(true);
+    await Promise.all(edits);
+    expect(activeCalls).toHaveLength(2);
+    expect(spy.mock.calls.filter(([raw]) => raw === "{opaque recovery")).toHaveLength(1);
+    expect(JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "apply-passphrase"))).toEqual(value);
+    expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "apply-passphrase")).toBe("{opaque recovery");
+  } finally { hold.resolve(); await Promise.allSettled([applied, ...edits, ...all]); }
+});
+
+it("rechecks recovery at dispatch and retains its source", async () => {
+  const disk = fakeDisk();
+  dropProgress(STORAGE_KEY);
+  await microtasks();
+  setSessionPassphrase("recovery-passphrase");
+  const gate = gatedEncryptions();
+  const pending: unknown[] = [];
+  try {
+    pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot("First")));
+    pending.push(checkedStorage.setItem(STORAGE_KEY, snapshot("Pending")));
+    disk.items.set(STORAGE_KEY, "{source");
+    pending.push(checkedStorage.getItem(STORAGE_KEY));
+    expect(gate.spy).toHaveBeenCalledTimes(2);
+    await gate.release(0);
+    expect(gate.spy).toHaveBeenCalledTimes(2);
+    expect(disk.items.get(STORAGE_KEY)).toBe("{source");
+    await gate.release(1);
+    await Promise.all(pending);
+    expect(disk.items.has(STORAGE_KEY)).toBe(false);
+    expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "recovery-passphrase")).toBe("{source");
+  } finally { await gate.cleanup(); await Promise.allSettled(pending); }
 });

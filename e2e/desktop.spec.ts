@@ -457,3 +457,56 @@ test("a later successful active save cannot hide failed backup protection", asyn
   await expect(page.getByRole("status").filter({ hasText: "Local protection incomplete" })).toBeVisible();
   expect(d.unknown).toEqual([]);
 });
+
+for (const fails of [false, true]) {
+  test(`active IPC acknowledgement owns protection and newest edits (failure=${fails})`, async ({ page, baseURL }) => {
+    page.setDefaultTimeout(10_000);
+    const d = await desktop(page, baseURL!);
+    await page.goto("./");
+    let release!: () => void;
+    const hold = new Promise<void>((resolve) => { release = resolve; });
+    let entered = false;
+    d.beforeAutosave = async (command, key) => {
+      if (command === "autosave_set" && key === "crownguard:v1") { entered = true; await hold; if (fails) throw new Error("disk full"); }
+    };
+    try {
+      await page.getByRole("button", { name: "Protect with a passphrase" }).click();
+      await page.locator("#start-pass").fill("active-passphrase");
+      await page.locator("#start-confirm").fill("active-passphrase");
+      await page.getByRole("button", { name: "Apply passphrase" }).click();
+      await expect.poll(() => entered).toBe(true);
+      await expect(page.getByText(/^Protected with a passphrase/)).toHaveCount(0);
+      expect(d.db.has("crownguard:v1")).toBe(false);
+      release();
+      if (fails) {
+        await expect(page.getByRole("alert").filter({ hasText: "Protection is incomplete" })).toBeVisible();
+        d.beforeAutosave = undefined;
+        await page.getByRole("button", { name: "Apply passphrase" }).click();
+      }
+      await expect(page.getByText(/^Protected with a passphrase/)).toBeVisible();
+    } finally { release(); d.beforeAutosave = undefined; }
+    await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+    const saved = page.getByRole("status").filter({ hasText: /Saved on this device.*encrypted/ });
+    await expect(saved).toBeVisible();
+    let releaseEdit!: () => void;
+    const editGate = new Promise<void>((resolve) => { releaseEdit = resolve; });
+    let edits = 0;
+    d.beforeAutosave = async (command, key) => {
+      if (command === "autosave_set" && key === "crownguard:v1" && ++edits === 1) await editGate;
+    };
+    try {
+      await page.getByLabel("Organisation name").fill("First desktop edit");
+      await expect.poll(() => edits).toBe(1);
+      await page.getByLabel("Organisation name").fill("Latest desktop edit");
+      await expect(page.getByRole("status").filter({ hasText: "Updating protection" })).toBeVisible();
+      releaseEdit();
+      await expect(saved).toBeVisible();
+      expect(JSON.parse(await decrypt(JSON.parse(d.db.get("crownguard:v1")!), "active-passphrase")).state.assessment.org.name).toBe("Latest desktop edit");
+    } finally { releaseEdit(); d.beforeAutosave = undefined; }
+    await page.reload();
+    await page.getByLabel("Passphrase").fill("active-passphrase");
+    await page.getByRole("button", { name: "Unlock", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Latest desktop edit" })).toBeVisible();
+    expect(d.unknown).toEqual([]);
+  });
+}
