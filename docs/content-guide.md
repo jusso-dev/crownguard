@@ -260,7 +260,7 @@ Writing rules:
 `content/ai-register/` holds the optional AI use-case register. Its wording comes from the Digital Transformation
 Agency's AI policy and standards (CC BY 4.0) and ASD guidance; the register fields themselves (technology types,
 lifecycle stages, domains, usage patterns, Appendix C criteria, risk ratings) are fixed lists in
-`src/engine/aiOptions.ts`, in the DTA's wording, because saved files store their keys.
+`src/format/aiOptions.ts`, in the DTA's wording, because saved files store their keys.
 
 `model.yaml` sets:
 
