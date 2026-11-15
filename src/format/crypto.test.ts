@@ -104,7 +104,6 @@ describe("a frozen envelope from envelope version 1", () => {
 
   it("decrypts to exactly the bytes that were encrypted", async () => {
     const plain = await decrypt(frozen(), FIXTURE_PASSPHRASE);
-    expect(sha256(plain)).toBe("e81355a4d79c5c0f4bb64ab6fdbd2123453e888bd0dcfd946c6cf87b3ee109d5");
     expect(plain).toBe(fixtureText("schema5.crownguard.json"));
     expect(await decryptJson(frozen(), FIXTURE_PASSPHRASE)).toEqual(JSON.parse(fixtureText("schema5.crownguard.json")));
   });

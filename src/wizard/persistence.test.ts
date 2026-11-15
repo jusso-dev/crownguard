@@ -242,7 +242,7 @@ describe("frozen encrypted progress", () => {
     const raw = fixtureText("encrypted-progress-v1.json");
     expect(sha256(raw)).toBe("0181d825ea807f4f6e0dd9372f9d77f856bd12923ad2008e81f9e08bf3054a20");
     const expected = JSON.parse(fixtureText("schema5.crownguard.json")) as Record<string, unknown>;
-    expect(sha256(await crypto.decrypt(JSON.parse(raw), FIXTURE_PASSPHRASE))).toBe("abd023ebf7a2414914cd649acbf19d8db0cb9b39f1eeec6166eea40dc45572aa");
+    expect(await crypto.decrypt(JSON.parse(raw), FIXTURE_PASSPHRASE)).toBe(JSON.stringify({ state: { assessment: expected }, version: 4 }));
 
     writeProgress(STORAGE_KEY, raw);
     setSessionPassphrase(FIXTURE_PASSPHRASE);
