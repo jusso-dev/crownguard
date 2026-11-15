@@ -536,6 +536,8 @@ export function rewriteProtection(pass: string | null, value: () => StorageValue
         if (saved && generation === encryptGeneration) break;
       }
       guard(revision);
+      // Success listeners may enqueue edits; those must start a new save, not join this finished owner.
+      if (explicit === owner) explicit = undefined;
       status(ephemeral() ? "session" : pass ? "protected" : "plain");
       return true;
     } catch {

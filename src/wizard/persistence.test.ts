@@ -16,6 +16,7 @@ import {
   setStorageReadOnly,
   STORAGE_KEY,
   storageWriteFailed,
+  subscribeProtection,
   UNREADABLE_KEY,
   unreadableBackup,
   writeProgress,
@@ -629,6 +630,32 @@ function gatedEncryptions(count = 3) {
   };
 }
 const snapshot = (name: string) => ({ state: { assessment: { ...named(name), createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z", notes: { "MS-ID-001": `Note ${name}` } } }, version: 4 });
+
+it.each(["notification-passphrase", null])("saves edits made by an explicit success subscriber (pass=%s)", async (pass) => {
+  const disk = fakeDisk();
+  setSessionPassphrase("previous-passphrase");
+  let value = snapshot("Before notification");
+  await checkedStorage.setItem(STORAGE_KEY, value);
+  let notified = false;
+  let edit: unknown;
+  const unsubscribe = subscribeProtection(() => {
+    if (notified || protectionSnapshot() !== (pass ? "protected" : "plain")) return;
+    notified = true;
+    value = snapshot("Notification edit");
+    edit = checkedStorage.setItem(STORAGE_KEY, value);
+  });
+  try {
+    expect(await rewriteProtection(pass, () => value)).toBe(true);
+    expect(notified).toBe(true);
+    await edit;
+    const raw = disk.items.get(STORAGE_KEY)!;
+    expect(JSON.parse(pass ? await crypto.decrypt(JSON.parse(raw), pass) : raw)).toEqual(snapshot("Notification edit"));
+    expect(protectionSnapshot()).toBe(pass ? "protected" : "plain");
+  } finally {
+    unsubscribe();
+    await edit;
+  }
+});
 
 it("coalesces eight overlapping snapshots into two encryptions and one latest commit", async () => {
   const disk = fakeDisk();
