@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Assessment } from "../format/schema";
+import { SCHEMA_VERSION, type Assessment } from "../format/schema";
 import * as crypto from "../format/crypto";
 import {
   checkedStorage,
@@ -248,7 +248,7 @@ describe("frozen encrypted progress", () => {
     setSessionPassphrase(FIXTURE_PASSPHRASE);
     const stored = await checkedStorage.getItem(STORAGE_KEY);
     expect(stored?.version).toBe(4);
-    expect(JSON.parse(JSON.stringify(stored?.state.assessment))).toEqual(expected);
+    expect(JSON.parse(JSON.stringify(stored?.state.assessment))).toEqual({ ...expected, schemaVersion: SCHEMA_VERSION });
     expect(stored?.state.assessment?.progress).toEqual({ step: 3, section: "microsoft:identity", socSection: "people", aiSection: "register", layout: 2 });
     // Reading it changes nothing on disk.
     expect(readProgress(STORAGE_KEY)).toBe(raw);

@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
+import { emptyAssessment } from "../format/empty";
+import { parseAssessment } from "../format/parse";
+import { toSaveFile } from "../format/saveFile";
+import { applyScan } from "./apply";
 import { prowlerImporter } from "./prowler";
 
 const fixture = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
@@ -178,5 +182,30 @@ describe("the pinned Prowler check list", () => {
       // The list and checkedAgainst move together (pnpm guidance:update), so the list is the release checked against.
       expect(fixture(`prowler-checks-${prov}.txt`)).toMatch(new RegExp(`^# .* at tag ${mapping.checkedAgainst!.replaceAll(".", "\\.")} \\(`));
     }
+  });
+});
+
+describe("Prowler's longest mapped check ids", () => {
+  const ids = [
+    "cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled",
+    "cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled",
+  ];
+
+  it("keeps both 83 character ids whole through an import, a save and a reopen", () => {
+    const [header, first] = rows(ids[0], [["arn:aws:cloudtrail:ap-southeast-2:123456789012:trail/main", "FAIL"]]).split("\n");
+    const second = rows(ids[1], [["arn:aws:config:ap-southeast-2:123456789012:recorder/default", "PASS"]]).split("\n")[1];
+    const r = read([header, first, second].join("\n"));
+    expect(r.warnings?.some((w) => w.includes("shortened")) ?? false).toBe(false);
+
+    const a = applyScan(emptyAssessment(), r, { platform: "aws", overwrite: false, licence: false }).assessment;
+    const opened = parseAssessment(JSON.parse(toSaveFile(a)));
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+    expect(opened.assessment.evidence?.["AWS-LOG-006"]?.checks.map((c) => c.id)).toEqual(ids);
+
+    const reopened = parseAssessment(JSON.parse(toSaveFile(opened.assessment)));
+    expect(reopened.kind).toBe("ok");
+    if (reopened.kind !== "ok") return;
+    expect(reopened.assessment.evidence).toEqual(opened.assessment.evidence);
   });
 });
