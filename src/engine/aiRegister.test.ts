@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import { assessmentSchema, type AiUseCase } from "../format/schema";
-import { fixtureAssessment } from "../report/fixture";
+import { fixtureAssessment } from "./fixture";
 import { exampleEntries } from "./aiExamples";
 import { aboutRows, registerTable, toCsv } from "./aiExport";
 import { addMonths, groupWarning, highRiskNotification, shareWithDta, aiFlags, aiReadiness, aiRegisterSummary, applies, inScope, isAgentic, missingFields, newUseCase, suggestsCriterion4 } from "./aiRegister";
