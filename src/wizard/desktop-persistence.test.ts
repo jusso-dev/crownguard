@@ -115,3 +115,93 @@ describe("privacy operations with queued desktop writes", () => {
     }
   });
 });
+
+function gate() {
+  let release!: () => void;
+  const promise = new Promise<void>((resolve) => { release = resolve; });
+  return { promise, release };
+}
+const checkpoint = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };
+
+// Use signals for actual IPC entry; always release all gates before draining the real queue.
+describe("latest protected desktop state", () => {
+  it.each(["ordinary", "explicit", "clear"])("keeps %s edits pending through backup and active acknowledgements", async (kind) => {
+    const { checkedStorage } = await import("./persistence");
+    const store = new SqliteAutosave({});
+    vi.spyOn(platform, "autosave").mockReturnValue(store);
+    const normal = vi.mocked(invoke).getMockImplementation()!;
+    const backup = gate();
+    const active = gate();
+    const final = gate();
+    const backupEntered = gate();
+    const activeEntered = gate();
+    const finalEntered = gate();
+    let activeCalls = 0;
+    let value = { state: { assessment: { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "First" } } }, version: 4 };
+    const pending: unknown[] = [];
+    try {
+      if (kind === "clear") {
+        await store.setItem(UNREADABLE_KEY, "{session recovery");
+        setEphemeralMode(true);
+        await store.flush();
+        setEphemeralMode(false);
+      } else await store.setItem(UNREADABLE_KEY, "{recovery");
+      await store.flush();
+      vi.mocked(invoke).mockImplementation(async (command, args) => {
+        const key = (args as { key?: string })?.key;
+        if (command === "autosave_set" && key === UNREADABLE_KEY) {
+          backupEntered.release();
+          await backup.promise;
+        }
+        if (command === "autosave_set" && key === STORAGE_KEY) {
+          activeCalls++;
+          if (activeCalls === 1) { activeEntered.release(); await active.promise; }
+          if (activeCalls === 2) { finalEntered.release(); await final.promise; }
+        }
+        return normal(command, args);
+      });
+      let settled = false;
+      const saving = kind === "ordinary"
+        ? (setSessionPassphrase("desktop-passphrase"), Promise.resolve(checkedStorage.setItem(STORAGE_KEY, value)))
+        : rewriteProtection(kind === "clear" ? null : "desktop-passphrase", () => value);
+      pending.push(Promise.resolve(saving).then(() => { settled = true; }));
+      await Promise.race([backupEntered.promise, Promise.resolve(saving).then(() => { throw new Error("save completed before backup IPC"); })]);
+      await checkpoint();
+      expect(settled, "no completion before backup acknowledgement").toBe(false);
+      expect(activeCalls, "backup must acknowledge before active IPC").toBe(0);
+      expect(tauri.db.has(STORAGE_KEY)).toBe(false);
+      expect(protectionSnapshot()).toBe("pending");
+      backup.release();
+      await Promise.race([activeEntered.promise, Promise.resolve(saving).then(() => { throw new Error("save completed before active IPC"); })]);
+      await checkpoint();
+      expect(settled).toBe(false);
+      expect(tauri.db.has(STORAGE_KEY)).toBe(false);
+      expect(protectionSnapshot(), "no success before active acknowledgement").toBe("pending");
+      value = { state: { assessment: { ...emptyAssessment(), org: { ...emptyAssessment().org, name: "Latest" } } }, version: 4 };
+      pending.push(checkedStorage.setItem(STORAGE_KEY, value));
+      await checkpoint();
+      expect(activeCalls).toBe(1);
+      active.release();
+      await Promise.race([finalEntered.promise, Promise.resolve(saving).then(() => { throw new Error("save completed before latest IPC"); })]);
+      await checkpoint();
+      expect(settled).toBe(false);
+      expect(protectionSnapshot()).toBe("pending");
+      final.release();
+      await Promise.all(pending);
+      await store.flush();
+      const raw = tauri.db.get(STORAGE_KEY)!;
+      expect(JSON.parse(kind === "clear" ? raw : await decrypt(JSON.parse(raw), "desktop-passphrase"))).toEqual(value);
+      expect(protectionSnapshot()).toBe(kind === "clear" ? "plain" : "protected");
+    } finally {
+      backup.release(); active.release(); final.release();
+      await Promise.allSettled(pending);
+      await store.flush();
+      vi.mocked(invoke).mockImplementation(normal);
+      setSessionPassphrase(null);
+      setEphemeralMode(false);
+      dropProgress(STORAGE_KEY);
+      await store.flush();
+      vi.restoreAllMocks();
+    }
+  });
+});

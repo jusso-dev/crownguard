@@ -1,6 +1,6 @@
 import { createDecipheriv, createHash, pbkdf2Sync } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CryptoError, decrypt, decryptJson, encrypt, isEncryptedEnvelope, ITERATIONS, KDF } from "./crypto";
 
 describe("encrypt / decrypt", () => {
@@ -9,7 +9,7 @@ describe("encrypt / decrypt", () => {
     const env = await encrypt(plain, "correct horse battery staple");
     expect(env.crownguardEncrypted).toBe(1);
     expect(env.kdf).toBe(KDF);
-    expect(env.iterations).toBe(ITERATIONS);
+    expect(env.iterations).toBe(600_000);
     expect(isEncryptedEnvelope(env)).toBe(true);
     expect(await decrypt(env, "correct horse battery staple")).toBe(plain);
   });
@@ -124,4 +124,21 @@ describe("a frozen envelope from envelope version 1", () => {
     expect(Object.keys(fresh)).toEqual(["crownguardEncrypted", "kdf", "iterations", "salt", "iv", "ciphertext"]);
     expect(independentDecrypt(fresh, FIXTURE_PASSPHRASE)).toBe("written now: “quotes”, 200–999 staff");
   });
+});
+
+
+it("forwards the inclusive historical KDF boundary and rejects invalid counts before derivation", async () => {
+  const env = JSON.parse(readFileSync(new URL("../../e2e/fixtures/encrypted-file-v1.json", import.meta.url), "utf8"));
+  // Intercept WebCrypto: never perform a six-million-iteration workload.
+  const derive = vi.spyOn(crypto.subtle, "deriveKey").mockResolvedValue({} as CryptoKey);
+  const decode = vi.spyOn(crypto.subtle, "decrypt").mockResolvedValue(new TextEncoder().encode("historical").buffer);
+  try {
+    expect(await decrypt({ ...env, iterations: 6_000_000 }, "public-test-pass")).toBe("historical");
+    expect(derive.mock.calls[0][0]).toMatchObject({ iterations: 6_000_000 });
+    derive.mockClear();
+    for (const iterations of [6_000_001, 0, 1.5]) {
+      await expect(decrypt({ ...env, iterations }, "public-test-pass")).rejects.toThrow("Invalid encryption parameters.");
+    }
+    expect(derive).not.toHaveBeenCalled();
+  } finally { derive.mockRestore(); decode.mockRestore(); }
 });
