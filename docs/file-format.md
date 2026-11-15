@@ -4,15 +4,15 @@ A saved assessment is one JSON object. It is written by **Save file** (or Ctrl/â
 is sent anywhere: the file is the whole of your data, and you choose where it lives.
 
 - Published JSON Schema: [`public/schema/crownguard-assessment.v6.json`](../public/schema/crownguard-assessment.v6.json),
-  generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
+  generated from the same [Zod schema](../src/format/schema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
 - The [schema 5 document](../public/schema/crownguard-assessment.v5.json) remains published unchanged so existing
   files' schema links keep working. Future format bumps retain previously published schemas.
-- Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
+- Migrations live in [`src/format/migrations.ts`](../src/format/migrations.ts); one step per version, in order.
 
 ## Reading a file safely
 
-`parseAssessment` (`src/wizard/parseAssessment.ts`) is the only place that turns untrusted JSON into an assessment. The
+`parseAssessment` (`src/format/parse.ts`) is the only place that turns untrusted JSON into an assessment. The
 **Open file** flow, the progress saved in the browser and the headless CLI all go through it, so a file behaves the same
 however it arrives.
 
