@@ -1,3 +1,5 @@
+import { assertImportRows, assertImportText, importLimits } from "./limits";
+
 /** CSV reading shared by the importers that take a spreadsheet export: Prowler and the Google OAuth log. */
 
 /** Which delimiter a CSV uses: count candidates in the header row and take the one it uses most. */
@@ -8,12 +10,23 @@ function detectDelimiter(headerLine: string): string {
 }
 
 /** RFC 4180 fields and rows: quoted fields, doubled quotes, either line ending. Blank rows are dropped. */
-export function parseCsv(text: string): string[][] {
+export function parseCsv(text: string, { maxRows = importLimits.maxRows, label = "CSV export" }: { maxRows?: number; label?: string } = {}): string[][] {
+  assertImportText(text, label);
   const delim = detectDelimiter(text.slice(0, text.indexOf("\n") < 0 ? undefined : text.indexOf("\n")));
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
   let quoted = false;
+  const finishRow = () => {
+    row.push(field);
+    if (row.some((c) => c.trim() !== "")) {
+      // The first nonblank record is the header. Reject excess before retaining it.
+      assertImportRows(rows.length, maxRows, label);
+      rows.push(row);
+    }
+    row = [];
+    field = "";
+  };
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (quoted) {
@@ -27,17 +40,11 @@ export function parseCsv(text: string): string[][] {
       row.push(field);
       field = "";
     } else if (c === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
+      finishRow();
     } else if (c !== "\r") field += c;
   }
-  if (field !== "" || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+  if (field !== "" || row.length) finishRow();
+  return rows;
 }
 
 /**

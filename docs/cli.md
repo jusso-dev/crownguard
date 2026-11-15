@@ -39,6 +39,10 @@ Refuses to replace an existing file (the default `--out` is `assessment.crowngua
 
 Uses the importer registry (M365-Secure, Prowler AWS/Azure, ScubaGoggles). Writes the assessment back in place. A file saved by a newer crownguard (a higher `schemaVersion`) is refused with exit 1 rather than rewritten as this build's schema, which would drop what the newer build added.
 
+Scan input must be a regular file (a symlink to one is allowed). Limits are inclusive: **8 MB (8,000,000 source bytes and UTF-8 bytes of decoded text)** and **50,000 raw input records**, with **5,000 findings for M365-Secure**. CSV counts nonblank logical data rows, excluding the header; quoted newlines stay in one row. JSON counts Prowler findings or ScubaGoggles controls, including duplicate, unmapped and blank-ID records. Either excess rejects the whole import with exit 1 and no success JSON; the assessment stays unchanged, including with `--overwrite --licence`. BOM bytes count towards the source limit before removal.
+
+Use a smaller scoped scanner export or a compact equivalent export if refused. The byte cap can be reached well before the record cap, especially with OCSF or Scuba `Raw` data. Importing manually split files does not recombine checks across those files and can change assessment meaning. These bounds do not guarantee a particular processing time. The browser applies the same scan limits before reading files. Consent imports use 8 MB across the entire selected set of Graph files, with 50,000 combined grants/service principals, or 50,000 raw Google CSV rows.
+
 ```sh
 pnpm cg import riverbend.crownguard.json ./scan.json --tool auto --licence
 pnpm cg import riverbend.crownguard.json ./prowler.csv --tool prowler --overwrite

@@ -1,3 +1,4 @@
+import { ImportLimitError } from "./limits";
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { ImportMapping } from "../content/schema";
@@ -126,4 +127,10 @@ describe("M365-Secure import", () => {
     expect(suggested["MS-APP-005"]).toBeUndefined();
     expect(r.suggestions.find((s) => s.question === "MS-APP-005")!.evidence.checks.map((c) => c.id)).toEqual(["ENTRA-ENTAPP-020"]);
   });
+});
+
+it("keeps the production 5,000-finding boundary inclusive and the last failure decisive", () => {
+  const rows = Array.from({ length: 5000 }, (_, i) => ({ check_id: "CA-1", status: i === 4999 ? "fail" : "pass" }));
+  expect(read(file(rows)).suggestions[0].evidence.suggested).toBe("partial");
+  expect(() => read(file([...rows, { check_id: "unknown", status: "pass" }]))).toThrow(ImportLimitError);
 });

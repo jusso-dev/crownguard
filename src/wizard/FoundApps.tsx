@@ -1,3 +1,4 @@
+import { assertImportBytes } from "../imports/limits";
 import { useEffect, useRef } from "react";
 import { catalogue } from "../content/catalogue";
 import type { AiUseCase } from "../format/schema";
@@ -55,6 +56,8 @@ const NO_ENTRIES: AiUseCase[] = [];
 
 export function FoundApps({ state, setState }: { state: FoundAppsState; setState: (fn: (s: FoundAppsState) => FoundAppsState) => void }) {
   const panel = useRef<HTMLElement>(null);
+  const generation = useRef(0);
+  useEffect(() => () => { generation.current++; }, []);
   useEffect(() => {
     if (!scrollOnMount) return;
     scrollOnMount = false;
@@ -69,11 +72,21 @@ export function FoundApps({ state, setState }: { state: FoundAppsState; setState
   const added = new Set(entries.filter((e) => e.foundBy).map((e) => e.name));
 
   async function onFiles(files: FileList) {
+    const picked = [...files];
+    if (!picked.length) return;
+    const request = ++generation.current;
+    const started = useStore.getState().assessment;
     setState((s) => ({ ...s, error: undefined, done: undefined, preview: undefined }));
     try {
-      const picked = [...files];
-      if (!picked.length) return;
+      let bytes = 0;
+      for (const file of picked) {
+        assertImportBytes(file.size, "consent export");
+        bytes += file.size;
+        assertImportBytes(bytes, "consent export selection");
+      }
       const texts = await Promise.all(picked.map((f) => f.text()));
+      if (request !== generation.current) return;
+      if (started !== useStore.getState().assessment) throw new Error("the assessment changed while reading. Choose the export again");
       const known = catalogue.aiRegister?.knownApps ?? [];
       const scopes = catalogue.aiRegister?.scopes ?? [];
       const json = texts.every((t) => /^\s*[[{]/.test(t));
@@ -83,6 +96,7 @@ export function FoundApps({ state, setState }: { state: FoundAppsState; setState
       if (!result.apps.length) throw new Error("no apps with consent grants were found in that file");
       setState((s) => ({ ...s, preview: result }));
     } catch (e) {
+      if (request !== generation.current) return;
       setState((s) => ({ ...s, error: `Couldn't read that export: ${(e as Error).message}.` }));
     }
   }
@@ -104,7 +118,8 @@ export function FoundApps({ state, setState }: { state: FoundAppsState; setState
           <p className="text-sm font-medium text-ink">Found apps: find the AI people have already connected.</p>
           <p className="mt-0.5 text-xs text-muted">
             Optional. Export the list of apps people have granted access to — Microsoft Entra ID or Google Workspace — and crownguard sorts
-            out the AI tools, note-takers and agents from it, entirely in your browser.{" "}
+            out the AI tools, note-takers and agents from it, entirely in your browser.
+            Up to 8 MB (8,000,000 bytes) across all selected files and 50,000 input records. Larger exports are refused in full.{" "}
             <button type="button" className={linkClass} onClick={openHow}>
               How to export the list
             </button>

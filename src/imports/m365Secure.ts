@@ -1,3 +1,4 @@
+import { assertImportRows, assertImportText, importLimits } from "./limits";
 import { z } from "zod";
 import { scanStatuses } from "../format/vocab";
 import { buildScanResult } from "./aggregate";
@@ -23,7 +24,7 @@ const scanSchema = z.object({
         expected_value: z.string().default(""),
       }),
     )
-    .max(5000),
+    .max(importLimits.m365MaxRows),
 });
 
 /** Licence SKU part numbers, highest tier first. */
@@ -52,9 +53,15 @@ export const m365SecureImporter: ScanImporter = {
   hint: "_Assessment-Results_<domain>.json",
   url: "https://github.com/jusso-dev/M365-Secure",
   accept: ".json,application/json",
-  detect: looksLike,
+  detect: (text) => {
+    assertImportText(text);
+    return looksLike(text);
+  },
   read: (text, mapping) => {
-    const parsed = scanSchema.safeParse(JSON.parse(text));
+    assertImportText(text);
+    const raw = JSON.parse(text);
+    if (Array.isArray(raw?.findings)) assertImportRows(raw.findings.length, importLimits.m365MaxRows, "M365-Secure scan", "findings");
+    const parsed = scanSchema.safeParse(raw);
     if (!parsed.success) throw new Error("this doesn't look like an M365-Secure results file (_Assessment-Results_<domain>.json)");
     const { summary, findings } = parsed.data;
     return buildScanResult(
