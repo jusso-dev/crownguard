@@ -170,6 +170,26 @@ describe("cg import", () => {
     expect(readFileSync(assessmentPath, "utf8")).toBe(text);
   });
 
+  it("imports a Prowler scan with an 83 character check id into a file that still validates", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "a.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["aws"]);
+    a.answers = {};
+    a.notes = {};
+    writeFileSync(assessmentPath, toSaveFile(a, { contentHash }));
+    const id = "cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled";
+    const scan = join(root, "prowler.csv");
+    writeFileSync(
+      scan,
+      ["CHECK_ID;CHECK_TITLE;STATUS;MUTED;ACCOUNT_UID;RESOURCE_UID;TIMESTAMP", `${id};A check;PASS;False;123456789012;arn:aws:cloudtrail:ap-southeast-2:123456789012:trail/main;2026-10-08T22:00:00Z`].join("\n"),
+    );
+    const r = await capture(["import", assessmentPath, scan, "--tool", "prowler"]);
+    expect(r.code).toBe(EXIT.OK);
+    expect(JSON.parse(readFileSync(assessmentPath, "utf8")).evidence["AWS-LOG-006"].checks[0].id).toBe(id);
+    const v = await capture(["validate", assessmentPath]);
+    expect(v.code).toBe(EXIT.OK);
+  });
+
   it("fails when the scan file is missing", async () => {
     const root = dir();
     const assessmentPath = join(root, "a.crownguard.json");

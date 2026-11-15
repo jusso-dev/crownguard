@@ -49,6 +49,13 @@ export const migrations: Migration[] = [
     // has to see the file as newer and open it read-only instead.
     up: (raw) => ({ ...raw, schemaVersion: 5 }),
   },
+  {
+    from: 5,
+    to: 6,
+    // Schema 6 lets an evidence check id be up to 200 characters, where it was 80. Nothing to transform. The version
+    // moves so a schema 5 build recognises the file as newer instead of treating it as damaged.
+    up: (raw) => ({ ...raw, schemaVersion: 6 }),
+  },
 ];
 
 /**

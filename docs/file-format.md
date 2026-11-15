@@ -3,7 +3,7 @@
 A saved assessment is one JSON object. It is written by **Save file** (or Ctrl/⌘ S) and read by **Open file**. Nothing
 is sent anywhere: the file is the whole of your data, and you choose where it lives.
 
-- Published JSON Schema: [`public/schema/crownguard-assessment.v5.json`](../public/schema/crownguard-assessment.v5.json),
+- Published JSON Schema: [`public/schema/crownguard-assessment.v6.json`](../public/schema/crownguard-assessment.v6.json),
   generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
 - Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
@@ -36,7 +36,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | Field | Type | Notes |
 | --- | --- | --- |
 | `$schema` | string | Written on save. Points at the published JSON Schema for this format. |
-| `schemaVersion` | integer | File format version. **5** is current. |
+| `schemaVersion` | integer | File format version. **6** is current. |
 | `mode` | string | `"ai-register"` for the standalone AI use-case register flow. Omitted, and meaning the full crown-jewel assessment, otherwise. |
 | `savedBy` | object | `{ app, appVersion, contentHash?, savedAt }`. Who wrote the file, and the digest of the questions they saved against. For support and debugging. |
 | `org` | object | Organisation profile: `name`, `abn?`, `sector`, `size`, `jurisdiction`, `regulations`. |
@@ -61,7 +61,15 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ## Changelog
 
-### 5 — current
+### 6 (current)
+
+- An evidence check id may now be up to 200 characters, where it was 80. Two check ids Prowler (AWS) reports are 83
+  characters: an earlier build wrote them into the file but then refused to reopen it. A schema 5 file holding a longer
+  id like that now opens. An importer shortens anything over 200 characters (ending it in `…`) and says so. Nothing to
+  migrate. The version moved because a schema 5 build refuses an id over 80. Older builds recognise schema 6 files
+  as newer and offer read-only access only when their contents still fit the older schema.
+
+### 5
 
 - AI register usage patterns: `strategic-support`, `workflow-automation` and `coding`, the three that version 2.1 of
   the DTA's Policy for the responsible use of AI in government added to its classification system (Appendix D).
@@ -116,6 +124,6 @@ tell a file saved yesterday from one saved a year earlier.
 
 If you write `.crownguard.json` files yourself (the Hermes `crown-jewel-risk-assessor` profile does):
 
-1. Set `schemaVersion: 5` and fill in `savedBy`.
+1. Set `schemaVersion: 6` and fill in `savedBy`.
 2. Validate against the published JSON Schema before writing.
 3. Don't drop fields you don't recognise. crownguard keeps them, so keep them too.

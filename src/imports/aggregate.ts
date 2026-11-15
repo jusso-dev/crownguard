@@ -121,6 +121,13 @@ export function buildScanResult(mapping: ImportMapping, rows: CheckRow[], facts:
   const toolVersion = facts.toolVersion && clip(facts.toolVersion, L.toolVersion);
   const scannedAt = clip(facts.scannedAt, L.scannedAt);
 
+  // Ids longer than the saved file allows are shortened, never dropped or merged: the answer still comes from every row.
+  const shortened = new Set<string>();
+  const checkId = (id: string) => {
+    if (id.length > L.checkId) shortened.add(id);
+    return clip(id, L.checkId);
+  };
+
   const suggestions = mapping.mappings
     .map((m): Suggestion | null => {
       const found = m.checks.flatMap((c) => groups.get(key(c)) ?? []);
@@ -136,12 +143,12 @@ export function buildScanResult(mapping: ImportMapping, rows: CheckRow[], facts:
           scannedAt,
           suggested: suggestFor(m, found.map((f) => f.status)),
           checks: found.slice(0, L.checks).map((f) => ({
-            id: f.id,
+            id: checkId(f.id),
             status: f.status,
             setting: scrub(f.setting, L.setting),
             current: scrub(f.current, L.value),
             expected: scrub(f.expected, L.value),
-            count: f.count,
+            count: f.count === undefined ? undefined : clip(f.count, L.count),
             // Resource ids are kept as examples; one that is a user's UPN is an account, and goes.
             examples: f.examples?.slice(0, L.examples).map((e) => scrub(e, L.example)),
           })),
@@ -151,6 +158,14 @@ export function buildScanResult(mapping: ImportMapping, rows: CheckRow[], facts:
     .filter((s): s is Suggestion => s !== null);
 
   const warnings = [...versionWarnings(mapping, groups, facts.toolVersion, key), ...(facts.warnings ?? [])];
+  if (shortened.size) {
+    const n = shortened.size;
+    const named = [...shortened].slice(0, 3).map((id) => clip(id, 60));
+    warnings.push(
+      `${n} check ${n === 1 ? "id was" : "ids were"} longer than ${L.checkId} characters and ${n === 1 ? "is" : "are"} shortened in the saved evidence: ` +
+        `${named.join("; ")}${n > named.length ? `, and ${n - named.length} more` : ""}.`,
+    );
+  }
   return {
     tool: mapping.name,
     toolVersion,

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ImportMapping } from "../content/schema";
 import type { ScanStatus } from "../format/vocab";
+import { emptyAssessment } from "../format/empty";
+import { parseAssessment } from "../format/parse";
+import { toSaveFile } from "../format/saveFile";
+import { evidenceLimits } from "../format/schema";
 import { buildScanResult, type CheckRow } from "./aggregate";
+import { applyScan } from "./apply";
 
 const mapping = (over: Partial<ImportMapping["mappings"][number]> = {}, checks = ["A", "B", "C"]): ImportMapping => ({
   id: "test",
@@ -95,5 +100,79 @@ describe("version mismatches against the mapping", () => {
     const r = buildScanResult({ ...mapping({}, ["A.1v1"]), checkedAgainst: "v1" }, [row("A.1v2", "pass")], facts, base);
     expect(r.suggestions[0].evidence.checks[0].id).toBe("A.1v2");
     expect(r.warnings?.join(" ")).toContain("A.1v2 here against A.1v1 in crownguard");
+  });
+});
+
+describe("check ids and counts longer than the saved file allows", () => {
+  const L = evidenceLimits;
+  const long = (n: number, prefix = "") => `${prefix}${"x".repeat(n - prefix.length)}`;
+  const opens = (r: ReturnType<typeof buildScanResult>) => {
+    const a = applyScan(emptyAssessment(), r, { platform: "microsoft", overwrite: false, licence: false }).assessment;
+    const opened = parseAssessment(JSON.parse(toSaveFile(a)));
+    expect(opened.kind).toBe("ok");
+    return opened.kind === "ok" ? opened.assessment.evidence?.["Q-1"] : undefined;
+  };
+  const shortening = (r: ReturnType<typeof buildScanResult>) => r.warnings?.filter((w) => w.includes("shortened")) ?? [];
+
+  it("keeps an id at the limit exactly as it is, with no warning", () => {
+    const id = long(L.checkId);
+    const r = buildScanResult(mapping({}, [id]), [row(id, "pass")], facts);
+    expect(r.suggestions[0].evidence.checks[0].id).toBe(id);
+    expect(shortening(r)).toEqual([]);
+    expect(opens(r)?.checks[0].id).toBe(id);
+  });
+
+  it("shortens an id one over the limit and says so", () => {
+    const id = long(L.checkId + 1);
+    const r = buildScanResult(mapping({}, [id]), [row(id, "fail")], facts);
+    const saved = r.suggestions[0].evidence.checks[0].id;
+    expect(saved).toHaveLength(L.checkId);
+    expect(saved.endsWith("…")).toBe(true);
+    expect(id.startsWith(saved.slice(0, -1))).toBe(true);
+    expect(shortening(r)).toHaveLength(1);
+    expect(shortening(r)[0]).toContain(`1 check id was longer than ${L.checkId} characters`);
+    expect(opens(r)?.checks[0].id).toBe(saved);
+  });
+
+  it("keeps two long ids that share their start as two rows, and answers from both", () => {
+    const shared = long(220, "shared_");
+    const a = `${shared}${"a".repeat(30)}`;
+    const b = `${shared}${"b".repeat(30)}`;
+    const r = buildScanResult(mapping({}, [a, b]), [row(a, "pass"), row(b, "fail")], facts);
+    const ev = r.suggestions[0].evidence;
+    expect(ev.checks.map((c) => c.status)).toEqual(["pass", "fail"]);
+    expect(ev.checks[0].id).toBe(ev.checks[1].id);
+    expect(ev.suggested).toBe("partial");
+    expect(shortening(r)).toHaveLength(1);
+    expect(shortening(r)[0]).toContain("2 check ids were longer");
+    expect(opens(r)?.checks).toHaveLength(2);
+  });
+
+  it("names at most three shortened ids in the warning, each kept short", () => {
+    const ids = [1, 2, 3, 4, 5].map((i) => long(300, `id${i}_`));
+    const r = buildScanResult(mapping({}, ids), ids.map((id) => row(id, "pass")), facts);
+    const [w] = shortening(r);
+    expect(w).toContain("5 check ids were longer");
+    expect(w).toContain("id3_");
+    expect(w).not.toContain("id4_");
+    expect(w.length).toBeLessThan(400);
+  });
+
+  it("keeps a count at the limit and shortens a longer one", () => {
+    const at = buildScanResult(mapping(), [row("A", "fail", { count: long(L.count) })], facts);
+    expect(at.suggestions[0].evidence.checks[0].count).toBe(long(L.count));
+    opens(at);
+    const over = buildScanResult(mapping(), [row("A", "fail", { count: long(L.count + 1) })], facts);
+    expect(over.suggestions[0].evidence.checks[0].count).toHaveLength(L.count);
+    expect(opens(over)?.checks[0].count).toHaveLength(L.count);
+  });
+
+  it("lands a versioned id with an over-long version suffix, shortened", () => {
+    const base = (id: string) => id.replace(/v[\d.]+$/, "");
+    const id = `A.1v${"1.".repeat(150)}1`;
+    const r = buildScanResult({ ...mapping({}, ["A.1v1"]), checkedAgainst: "v1" }, [row(id, "pass")], facts, base);
+    expect(r.suggestions[0].evidence.checks[0].id).toHaveLength(L.checkId);
+    expect(shortening(r)).toHaveLength(1);
+    expect(opens(r)?.checks[0].id).toHaveLength(L.checkId);
   });
 });

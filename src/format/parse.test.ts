@@ -72,11 +72,11 @@ describe("schema 5: the usage patterns DTA's AI policy v2.1 added", () => {
     aiRegister: { entries: [registerEntry(usagePatterns)] },
   });
 
-  it("opens a schema 4 file, brings it up to 5 and keeps its patterns", () => {
+  it("opens a schema 4 file, brings it up to the current version and keeps its patterns", () => {
     const result = parseAssessment(withRegister(4, ["workplace-productivity", "analytics"]));
     expect(result.kind).toBe("ok");
     if (result.kind !== "ok") return;
-    expect(result.assessment.schemaVersion).toBe(5);
+    expect(result.assessment.schemaVersion).toBe(SCHEMA_VERSION);
     expect(result.assessment.aiRegister?.entries[0].usagePatterns).toEqual(["workplace-productivity", "analytics"]);
     expect(result.notices.some((n) => n.text.includes("older 4 format"))).toBe(true);
   });
@@ -86,20 +86,42 @@ describe("schema 5: the usage patterns DTA's AI policy v2.1 added", () => {
     const opened = parseAssessment(withRegister(5, patterns));
     expect(opened.kind).toBe("ok");
     if (opened.kind !== "ok") return;
-    expect(opened.notices).toEqual([]);
+    expect(opened.notices).toEqual([
+      { kind: "info", text: `Opened a file saved in the older 5 format and brought it up to schema ${SCHEMA_VERSION}.` },
+    ]);
 
     const saved = JSON.parse(toSaveFile(opened.assessment)) as Assessment;
-    expect(saved.schemaVersion).toBe(5);
-    expect(saved.$schema).toMatch(/crownguard-assessment\.v5\.json$/);
+    expect(saved.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(saved.$schema).toBe(SCHEMA_URL);
     const reopened = parseAssessment(saved);
     expect(reopened.kind).toBe("ok");
     if (reopened.kind !== "ok") return;
     expect(reopened.assessment.aiRegister?.entries[0].usagePatterns).toEqual(patterns);
   });
 
+  it("opens a schema 5 file holding an 83 character check id, which an earlier build wrote but could not reopen", () => {
+    const id = "cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled";
+    const check = (checkId: string) => ({ id: checkId, status: "pass", setting: "s", current: "", expected: "" });
+    const withCheck = (checkId: string) => ({
+      ...emptyAssessment(),
+      schemaVersion: 5,
+      evidence: { "AWS-LOG-006": { source: "Prowler (AWS)", tenant: "Example", scannedAt: "2026-10-08T22:00:00Z", checks: [check(checkId)] } },
+    });
+    const opened = parseAssessment(withCheck(id));
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+    expect(opened.assessment.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(opened.assessment.evidence?.["AWS-LOG-006"]?.checks[0].id).toBe(id);
+
+    const refused = parseAssessment(withCheck("x".repeat(201)));
+    expect(refused.kind).toBe("error");
+    if (refused.kind !== "error") return;
+    expect(refused.issues.some((i) => /checks\.0\.id\b/.test(i.split(":")[0]))).toBe(true);
+  });
+
   it("opens a file with a pattern this build doesn't know read-only, the way a schema 4 build sees `coding`", () => {
     // A schema 4 build reading a schema 5 file takes the newer-file path: never migrated, never offered for editing.
-    // Here the build is 5 and the file one ahead, with a pattern this build has never heard of.
+    // Here the file is one version ahead of this build, with a pattern this build has never heard of.
     const result = parseAssessment(withRegister(SCHEMA_VERSION + 1, ["coding", "some-later-pattern"]));
     expect(result.kind).toBe("newer");
     if (result.kind !== "newer") return;
@@ -301,9 +323,9 @@ describe("frozen files from schema 3, 4 and 5", () => {
     if (result.kind !== "ok") return;
 
     // Nothing is added, dropped or reshaped on the way in: only the version moves.
-    expect(plain(result.assessment)).toEqual({ ...raw, schemaVersion: 5 });
+    expect(plain(result.assessment)).toEqual({ ...raw, schemaVersion: SCHEMA_VERSION });
     expect(result.notices).toEqual([
-      { kind: "info", text: "Opened a file saved in the older 4 format and brought it up to schema 5." },
+      { kind: "info", text: `Opened a file saved in the older 4 format and brought it up to schema ${SCHEMA_VERSION}.` },
       { kind: "warn", text: "Kept 1 field this version doesn't understand: fixtureTopLevelExtra. Save the file only if you mean to keep them." },
     ]);
 
@@ -322,7 +344,7 @@ describe("frozen files from schema 3, 4 and 5", () => {
     });
     expect(plain(result.assessment.soc).fixtureSocExtra).toEqual({ kept: true });
     expect(plain(result.assessment).fixtureTopLevelExtra).toEqual({ kept: true, list: [1, 2, 3] });
-    // An evidence check id at the 80 character limit, and the schema 3 provenance fields, survive.
+    // An evidence check id at schema 4's 80 character limit, and the schema 3 provenance fields, survive.
     const evidence = result.assessment.evidence!["MS-ID-001"];
     expect(evidence.checks[1].id).toBe("fixture_check_id_exactly_eighty_characters_long_0123456789_0123456789_0123456789");
     expect(evidence.checks[1].id).toHaveLength(80);
@@ -330,15 +352,16 @@ describe("frozen files from schema 3, 4 and 5", () => {
     expect(result.assessment.progress).toEqual({ step: 3, section: "microsoft:identity", socSection: "people", aiSection: "register", layout: 2 });
   });
 
-  it("opens the schema 5 file with the v2.1 usage patterns and nothing to report but the unknown field", () => {
+  it("opens the schema 5 file with the v2.1 usage patterns and reports migration and the unknown field", () => {
     const raw = fixture("schema5.crownguard.json");
     expect(raw.schemaVersion).toBe(5);
     const result = parseAssessment(raw, { questionIds });
     expect(result.kind).toBe("ok");
     if (result.kind !== "ok") return;
 
-    expect(plain(result.assessment)).toEqual(raw);
+    expect(plain(result.assessment)).toEqual({ ...raw, schemaVersion: SCHEMA_VERSION });
     expect(result.notices).toEqual([
+      { kind: "info", text: `Opened a file saved in the older 5 format and brought it up to schema ${SCHEMA_VERSION}.` },
       { kind: "warn", text: "Kept 1 field this version doesn't understand: fixtureTopLevelExtra. Save the file only if you mean to keep them." },
     ]);
     const entries = result.assessment.aiRegister!.entries;
@@ -355,7 +378,7 @@ describe("frozen files from schema 3, 4 and 5", () => {
 
     const saved = JSON.parse(toSaveFile(opened.assessment, { now: new Date("2026-11-15T00:00:00.000Z") })) as Record<string, unknown>;
     // `$schema` and `savedBy` are the writer's to set; everything else is the user's and must come back untouched.
-    expect(userData(saved)).toEqual({ ...userData(raw), schemaVersion: 5 });
+    expect(userData(saved)).toEqual({ ...userData(raw), schemaVersion: SCHEMA_VERSION });
     expect(saved.savedBy).toMatchObject({ app: "crownguard", contentHash: (raw.savedBy as { contentHash: string }).contentHash, savedAt: "2026-11-15T00:00:00.000Z" });
 
     const reopened = parseAssessment(saved, { questionIds });

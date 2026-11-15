@@ -48,7 +48,7 @@ const answer = z.enum(answers);
  * File format version written into every saved assessment. Files that predate this carry `version: 1` instead and
  * are migrated up on open (see `migrations.ts`). A file with a higher number than this build knows is opened read-only.
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /** Version of the app that wrote the file. */
 export const APP_VERSION = version;
@@ -59,6 +59,9 @@ export const evidenceLimits = {
   toolVersion: 40,
   scannedAt: 60,
   checks: 50,
+  /** Preserves Prowler's pinned check ids, currently up to 93 characters, with room for longer future ids. */
+  checkId: 200,
+  count: 200,
   setting: 500,
   value: 2000,
   examples: 10,
@@ -157,12 +160,12 @@ export const assessmentSchema = z.looseObject({
         checks: z
           .array(
             z.object({
-              id: z.string().max(80),
+              id: z.string().max(L.checkId),
               status: z.enum(scanStatuses),
               setting: z.string().max(L.setting),
               current: z.string().max(L.value),
               expected: z.string().max(L.value),
-              count: z.string().max(200).optional(),
+              count: z.string().max(L.count).optional(),
               examples: z.array(z.string().max(L.example)).max(L.examples).optional(),
             }),
           )
