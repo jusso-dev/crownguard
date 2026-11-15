@@ -51,6 +51,44 @@ The scoring rules live in `src/engine/` and are covered by `src/engine/engine.te
 them, update the README. The report's method section (`src/report/method.ts`) reads the weights and
 thresholds from the engine, but its wording still needs checking so the published method matches the code.
 
+### Source boundaries
+
+`pnpm lint` enforces this explicit partial dependency policy, based on current responsibilities.
+It is not a previously documented total layer order. Same-directory dependencies are allowed;
+other internal source dependencies must follow this table:
+
+| Source directory | Allowed other source directories |
+| --- | --- |
+| `format`, `lib`, `theme` | none |
+| `content` | `format` |
+| `engine` | `content`, `format` |
+| `imports` | `content`, `engine`, `format` |
+| `platform` | `format` |
+| `report` | `content`, `engine`, `format`, `theme` |
+| `wizard` | `content`, `engine`, `format`, `imports`, `lib`, `platform`, `report`, `theme` |
+| `cli` | `content`, `engine`, `format`, `imports`, `lib`, `report` |
+
+Tests and declarations follow their directory's policy, including type references, re-exports,
+literal lazy imports, `require`, Vitest module loaders and Worker module URLs. Put integration
+assertions in the layer that composes the dependencies. Move shared domain fixtures downward
+instead of exempting tests. Computed module targets and `import.meta.glob` are unsupported.
+
+`src/App.tsx` and `src/main.tsx` compose the listed layers and root modules/assets. Only these
+entry points may import root bootstrap `src/zodConfig.ts`; lower directories cannot depend on
+root code. New source directories or root modules require a policy update and regression tests.
+Use relative paths: aliases, absolute paths, file URLs, encoded paths and backslashes are unsupported.
+Tests guard against adding TS/Vite aliases without updating boundary resolution.
+
+The exact `src/format/schema.ts` import of repository `package.json` is version metadata.
+Supported `virtual:crownguard-content/shared`, `platforms`, `report` and `platform/<id>` identifiers
+are content data and follow content permissions, including the identifier named `report`.
+Declared packages, their subpaths, Node built-ins and source assets remain available. This checks
+internal dependencies, not third-party purity or arbitrary JavaScript execution. Content already
+includes a React hook, disk reader and YAML loader.
+
+Tooling under `scripts/`, root tooling configs and `e2e/` may consume source. Source cannot import
+those consumers. Ordinary filesystem fixture, CSS and Rust-source reads remain unaffected.
+
 ## Privacy is a feature
 
 crownguard must never send assessment data anywhere. Don't add analytics, remote fonts, CDNs or any
