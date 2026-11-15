@@ -33,14 +33,16 @@ verify native filesystem permissions.
    paths are an index, not grants; reopening a recent file after restart asks the picker again. There are no static
    denies, so an explicitly selected destination inside app-data remains usable. Rust manages `crownguard.db`, its
    journal and `crownguard.lock` directly through std/rusqlite, outside plugin-fs scopes. This is not an OS sandbox.
-3. **App to the network.** Nothing, except the optional update check run by the Rust updater plugin.
+3. **App and external handlers to the network.** The Rust updater can make optional update requests. The native
+   opener can also hand any HTTPS URL to the default browser, which may send data carried in that URL. Webview
+   `connect-src` restrictions do not govern those native opener calls.
 
 ## Threats and controls
 
 | Threat | Control |
 |---|---|
 | A bug or injected script in the webview reads files | No ambient frontend fs paths. Native dialogs and validated OS-open paths grant file access. `scripts/check-desktop-config.ts` requires the exact local main-window capability and command inventory, rejecting all static fs scopes and scoped fs command objects, including app-data allows and denies. |
-| A bug or injected script sends data out | CSP `connect-src 'self' ipc: http://ipc.localhost`, no `http` or `shell` plugin, native opener scoped to generic `https://*` URLs in the default handler. Normal UI asks for confirmation; that frontend prompt is not a native authorisation boundary or a host restriction. Asset protocol disabled. |
+| A bug or injected script sends data out | CSP `connect-src 'self' ipc: http://ipc.localhost`, no `http` or `shell` plugin. Asset protocol disabled. Residual risk: the native opener accepts any HTTPS URL in the default handler, so an injected script with access to that granted command can send data to any host through the default browser. Normal UI asks for confirmation; that frontend prompt is not a native authorisation boundary or a host restriction. |
 | Script injection (XSS) | The web CSP ported to `app.security.csp`, including `require-trusted-types-for 'script'`; `freezePrototype: true` against prototype pollution; `withGlobalTauri: false` so the IPC API isn't on `window`; no `innerHTML` or `eval` in `src/`. |
 | Two copies of the app overwrite each other's autosave | One copy per user owns the database: it holds an OS lock on `crownguard.lock` in the app data folder for its whole life. A second copy (on Windows and Linux a double-click while crownguard is open starts one) gets no database and its window says crownguard is already open. The database also waits up to five seconds for a busy lock instead of failing. |
 | Recent-file summaries kept while the user asked for nothing to be kept | With "Don't keep this assessment on this device" on, opened and saved files are not added to the recent list. |
@@ -61,7 +63,7 @@ verify native filesystem permissions.
 | `recent_record` | absolute `.json` path, size cap | Index a file the user opened or saved. Contents are only summarised (and not at all when encrypted). |
 | `launch_file_take` | none | Hand over a file the operating system asked the app to open. |
 | `settings_get`, `settings_set_update_check` | boolean | The update setting. |
-| `update_check`, `update_install` | refuses unless the setting is on and the build has an update key | The only network access. |
+| `update_check`, `update_install` | refuses unless the setting is on and the build has an update key | Optional native updater network access; browser traffic through the opener is separate. |
 
 `recent_forget` remains declared in the native command manifest and registered, but has no capability grant or
 frontend wrapper. `core:app:allow-version` is also ungranted. The deprecated `dialog:allow-ask` alias is removed;
