@@ -51,6 +51,8 @@ test("passphrase encrypts localStorage; reload unlocks; wrong passphrase fails c
   const stored = await page.evaluate(() => localStorage.getItem("crownguard:v1"));
   expect(stored).not.toContain("Encrypted Org");
   expect(stored).not.toContain('"answers"');
+  await expect(page.getByRole("status").filter({ hasText: /Saved in this browser.*encrypted/ })).toBeVisible();
+  await expect(page.getByText("Local protection incomplete.", { exact: false })).toHaveCount(0);
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Enter passphrase" })).toBeVisible();
@@ -134,6 +136,28 @@ test("no-persistence reload leaves no assessment in localStorage or sessionStora
   expect(await page.evaluate(() => localStorage.getItem("crownguard:v1:ephemeral"))).toBe("1");
   expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
 });
+
+for (const kind of ["plaintext", "encrypted"]) {
+  test(`leaving ephemeral mode restores ${kind} recovery without an active passphrase`, async ({ page }) => {
+    const raw = kind === "plaintext" ? "{original recovery\r\n" : await readFile("e2e/fixtures/encrypted-progress-v1.json", "utf8");
+    await page.goto("./");
+    await page.evaluate((value) => localStorage.setItem("crownguard:v1:unreadable", value), raw);
+    await page.reload();
+    const downloadButton = page.getByRole("button", { name: "Download the unreadable data" });
+    await expect(downloadButton).toBeVisible();
+    page.once("dialog", (dialog) => dialog.accept());
+    const ephemeral = page.getByLabel(/Don't keep this assessment in this browser/);
+    await ephemeral.check();
+    await expect(downloadButton).toBeEnabled();
+    expect(await page.evaluate(() => localStorage.getItem("crownguard:v1:unreadable"))).toBeNull();
+    await ephemeral.uncheck();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("crownguard:v1:unreadable"))).toBe(raw);
+    await page.reload();
+    const download = page.waitForEvent("download");
+    await downloadButton.click();
+    expect(await readFile(await (await download).path(), "utf8")).toBe(raw);
+  });
+}
 
 test("Remove from this browser clears the storage key", async ({ page }) => {
   await startNamed(page, "Wipe Me Co");

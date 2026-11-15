@@ -292,6 +292,49 @@ describe("opaque recovery protection", () => {
 const currentValue = () => ({ state: { assessment: named("Current Co") }, version: 4 });
 
 describe("recovery protection boundaries", () => {
+  it.each(["new assessment", "different file passphrase"])("confirms protection after %s without hiding genuine failures", async (transition) => {
+    const disk = fakeDisk();
+    const { useStore } = await import("./store");
+    await useStore.persist.rehydrate();
+    expect(await rewriteProtection("original-passphrase", currentValue)).toBe(true);
+    const saves: Promise<unknown>[] = [];
+    const setItem = checkedStorage.setItem;
+    vi.spyOn(checkedStorage, "setItem").mockImplementation((name, value) => {
+      const saved = setItem(name, value);
+      saves.push(Promise.resolve(saved));
+      return saved;
+    });
+
+    if (transition === "new assessment") useStore.getState().reset();
+    else {
+      setSessionPassphrase("file-passphrase");
+      useStore.getState().load(named("Opened file"));
+    }
+    expect(saves).toHaveLength(1);
+    await Promise.all(saves);
+    const saved = JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), getSessionPassphrase()!));
+    expect(saved.state.assessment.org.name).toBe(transition === "new assessment" ? "" : "Opened file");
+    expect(storageWriteFailed()).toBe(false);
+    expect(protectionSnapshot()).toBe("protected");
+  });
+
+  it.each(["plaintext", "encrypted"])("restores %s recovery after leaving ephemeral mode without an active passphrase", async (kind) => {
+    const disk = fakeDisk();
+    const raw = kind === "plaintext" ? "  {original recovery\r\n" : readFileSync(new URL("../../e2e/fixtures/encrypted-progress-v1.json", import.meta.url), "utf8");
+    disk.items.set(UNREADABLE_KEY, raw);
+    setEphemeralMode(true);
+    expect(await rewriteProtection(null, currentValue)).toBe(true);
+    expect(recoveryDownload()).toBe(raw);
+    expect(disk.items.has(UNREADABLE_KEY)).toBe(false);
+
+    setEphemeralMode(false);
+    expect(await rewriteProtection(null, currentValue)).toBe(true);
+    expect(protectionSnapshot()).toBe("plain");
+    expect(disk.items.get(UNREADABLE_KEY)).toBe(raw);
+    expect(unreadableBackup()).toBe(raw);
+    expect(recoveryDownload()).toBe(raw);
+  });
+
   it.each(["", " \r\n{bad 秘密 🐦", '{"state":{"assessment":{"schemaVersion":99,"org":"unknown"}}}', '{"crownguardEncrypted":7,"unknown":true}'])("round-trips opaque bytes %j", async (raw) => {
     const disk = fakeDisk();
     disk.items.set(UNREADABLE_KEY, raw);

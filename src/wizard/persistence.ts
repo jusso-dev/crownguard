@@ -52,7 +52,8 @@ export function invalidateProtection() {
   protectionRevision++;
   encryptGeneration++;
   backupWork = undefined;
-  status(protectionStatus === "idle" ? "idle" : "error");
+  // Invalidation cancels earlier completion; only an actual failure stays sticky until explicit retry.
+  status(protectionStatus === "error" ? "error" : "idle");
 }
 onPassphraseChange(invalidateProtection);
 const cancelled = () => new Error("Protection changed or was cancelled. Retry with the current settings.");
@@ -433,7 +434,8 @@ async function saveProtected(name: string, value: StorageValue<Persisted>, pass:
   if (removals.size) await Promise.all(removals);
   guard(revision);
   const generation = ++encryptGeneration;
-  const work = pass ? prepareBackup(pass, revision) : undefined;
+  // Leaving ephemeral mode must restore recovery even when active progress has no passphrase.
+  const work = pass || restoreSessionBackup ? prepareBackup(pass, revision) : undefined;
   const json = JSON.stringify(value);
   const active = pass ? JSON.stringify(await encrypt(json, pass)) : json;
   guard(revision);
