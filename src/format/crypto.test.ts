@@ -1,5 +1,7 @@
+import { createDecipheriv, createHash, pbkdf2Sync } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { CryptoError, decrypt, encrypt, isEncryptedEnvelope, ITERATIONS, KDF } from "./crypto";
+import { CryptoError, decrypt, decryptJson, encrypt, isEncryptedEnvelope, ITERATIONS, KDF } from "./crypto";
 
 describe("encrypt / decrypt", () => {
   it("round-trips plaintext", async () => {
@@ -61,5 +63,66 @@ describe("encrypt / decrypt", () => {
   it("rejects non-envelopes", async () => {
     await expect(decrypt({ hello: "world" }, "pass")).rejects.toThrow(/Not an encrypted/);
     await expect(decrypt(null, "pass")).rejects.toThrow(/Not an encrypted/);
+  });
+});
+
+/**
+ * A frozen envelope, written once by `encrypt()` at commit 0e5fdf0 and never regenerated: these tests only ever read
+ * it. A change that makes them fail has locked people out of files they already hold, so fix the reader, not the
+ * fixture. The passphrase is public and synthetic; it protects nothing. The plaintext is the committed
+ * `schema5.crownguard.json`, byte for byte.
+ */
+describe("a frozen envelope from envelope version 1", () => {
+  const FIXTURE_PASSPHRASE = "crownguard-public-fixture-passphrase";
+  const fixtureText = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
+  const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+  const bytes = (b64: string) => Buffer.from(b64, "base64");
+  const frozen = () => JSON.parse(fixtureText("encrypted-file-v1.json")) as Record<string, string | number>;
+
+  /** PBKDF2-SHA-256 then AES-256-GCM with the tag in the last 16 bytes, by node:crypto rather than the code under test. */
+  const independentDecrypt = (env: { salt: string; iv: string; ciphertext: string; iterations: number }, passphrase: string) => {
+    const key = pbkdf2Sync(passphrase, bytes(env.salt), env.iterations, 32, "sha256");
+    const data = bytes(env.ciphertext);
+    const decipher = createDecipheriv("aes-256-gcm", key, bytes(env.iv));
+    decipher.setAuthTag(data.subarray(data.length - 16));
+    return Buffer.concat([decipher.update(data.subarray(0, data.length - 16)), decipher.final()]).toString("utf8");
+  };
+
+  it("is byte-for-byte the file that was committed, with the parameters it was written with", () => {
+    expect(sha256(fixtureText("encrypted-file-v1.json"))).toBe("072b6dedd2cc09c11cfe77a6ad86db1dd671c8518f2336d936e9f28d2b1545c3");
+    const env = frozen();
+    expect(Object.keys(env)).toEqual(["crownguardEncrypted", "kdf", "iterations", "salt", "iv", "ciphertext"]);
+    expect(env.crownguardEncrypted).toBe(1);
+    expect(env.kdf).toBe("PBKDF2-SHA-256");
+    expect(env.iterations).toBe(600_000);
+    expect(bytes(env.salt as string)).toHaveLength(16);
+    expect(bytes(env.iv as string)).toHaveLength(12);
+    // AES-GCM adds a 16 byte tag and nothing else.
+    expect(bytes(env.ciphertext as string)).toHaveLength(Buffer.byteLength(fixtureText("schema5.crownguard.json")) + 16);
+    expect(isEncryptedEnvelope(env)).toBe(true);
+  });
+
+  it("decrypts to exactly the bytes that were encrypted", async () => {
+    const plain = await decrypt(frozen(), FIXTURE_PASSPHRASE);
+    expect(sha256(plain)).toBe("e81355a4d79c5c0f4bb64ab6fdbd2123453e888bd0dcfd946c6cf87b3ee109d5");
+    expect(plain).toBe(fixtureText("schema5.crownguard.json"));
+    expect(await decryptJson(frozen(), FIXTURE_PASSPHRASE)).toEqual(JSON.parse(fixtureText("schema5.crownguard.json")));
+  });
+
+  it("still refuses the wrong passphrase and a tampered copy", async () => {
+    await expect(decrypt(frozen(), "crownguard-public-fixture-passphrasE")).rejects.toThrow(/Wrong passphrase, or the encrypted data is damaged/);
+    const env = frozen();
+    const data = bytes(env.ciphertext as string);
+    data[data.length - 1] ^= 0x01;
+    await expect(decrypt({ ...env, ciphertext: data.toString("base64") }, FIXTURE_PASSPHRASE)).rejects.toThrow(CryptoError);
+  });
+
+  it("agrees with an independent implementation, on the frozen envelope and on one written now", async () => {
+    const env = frozen() as unknown as { salt: string; iv: string; ciphertext: string; iterations: number };
+    expect(independentDecrypt(env, FIXTURE_PASSPHRASE)).toBe(fixtureText("schema5.crownguard.json"));
+    // What this build writes must stay readable by anything that implements envelope version 1, older builds included.
+    const fresh = await encrypt("written now: “quotes”, 200–999 staff", FIXTURE_PASSPHRASE);
+    expect(Object.keys(fresh)).toEqual(["crownguardEncrypted", "kdf", "iterations", "salt", "iv", "ciphertext"]);
+    expect(independentDecrypt(fresh, FIXTURE_PASSPHRASE)).toBe("written now: “quotes”, 200–999 staff");
   });
 });
