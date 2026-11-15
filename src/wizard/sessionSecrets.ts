@@ -5,9 +5,17 @@
 
 let passphrase: string | null = null;
 let lockedRaw: string | null = null;
+const listeners = new Set<() => void>();
+export function onPassphraseChange(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
 
 export function setSessionPassphrase(value: string | null) {
-  passphrase = value && value.length > 0 ? value : null;
+  const next = value && value.length > 0 ? value : null;
+  if (next === passphrase) return;
+  passphrase = next;
+  for (const listener of listeners) listener();
 }
 
 export function getSessionPassphrase(): string | null {

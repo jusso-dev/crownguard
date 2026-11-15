@@ -10,7 +10,7 @@ import type { ScanResult } from "../imports/types";
 import { autosaveKeys, isDesktop, platform } from "../platform";
 import { emptyAssessment } from "../format/empty";
 import { clampStep, currentStep, migrateProgress, modeOf, reachableStep, STEP_LAYOUT } from "./flow";
-import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
+import { checkedStorage, invalidateProtection, rewriteProtection, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
 
 /** True when the platform can keep progress between visits (false in some private windows or locked-down browser profiles). */
@@ -201,6 +201,7 @@ export const useStore = create<State>()(
         },
         // A fresh assessment is the user's own, so it is never read-only, even after a newer file or newer progress.
         reset: () => {
+          invalidateProtection();
           setStorageReadOnly(false);
           set({ assessment: blank(), readOnly: false });
         },
@@ -230,3 +231,11 @@ export const useStore = create<State>()(
 
 export const useStep = () => useStore((s) => currentStep(s.assessment));
 export const useReachable = () => useStore((s) => reachableStep(s.assessment));
+
+/** Await the actual persistence operation, rather than Zustand's void update action. */
+export function applyProtection(pass: string | null) {
+  return rewriteProtection(pass, () => {
+    const options = useStore.persist.getOptions();
+    return { state: options.partialize!(useStore.getState()), version: options.version };
+  });
+}

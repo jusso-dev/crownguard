@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SCHEMA_VERSION, type Assessment } from "../format/schema";
 import * as crypto from "../format/crypto";
 import {
@@ -8,6 +8,9 @@ import {
   dropProgress,
   readProgress,
   rehydrateNotices,
+  protectionSnapshot,
+  recoveryDownload,
+  rewriteProtection,
   setEphemeralMode,
   setStorageReadOnly,
   STORAGE_KEY,
@@ -16,7 +19,7 @@ import {
   unreadableBackup,
   writeProgress,
 } from "./persistence";
-import { setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
+import { getSessionPassphrase, setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
 import { emptyAssessment } from "../format/empty";
 
 const named = (name: string): Assessment => ({ ...emptyAssessment(), org: { ...emptyAssessment().org, name } });
@@ -48,11 +51,13 @@ function fakeDisk() {
       if (disk.full) throw new DOMException("quota", "QuotaExceededError");
       items.set(k, v);
     },
-    removeItem: (k: string) => void items.delete(k),
+    removeItem: (k: string): void => { items.delete(k); },
   };
   vi.stubGlobal("localStorage", disk);
   return disk;
 }
+
+beforeEach(() => { fakeDisk(); });
 
 afterEach(() => {
   setSessionPassphrase(null);
@@ -109,7 +114,7 @@ describe("progress from a newer crownguard", () => {
     writeProgress(STORAGE_KEY, raw);
     expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(unreadableBackup()).toBe(raw);
-    expect(rehydrateNotices().at(-1)).toMatchObject({ kind: "error", backup: raw });
+    expect(rehydrateNotices().at(-1)).toMatchObject({ kind: "error", backup: true });
   });
 
   it("never takes the read-only flag from what's stored", async () => {
@@ -264,4 +269,269 @@ describe("frozen encrypted progress", () => {
     expect(unreadableBackup()).toBeNull();
     setLockedEnvelope(null);
   });
+});
+
+
+describe("opaque recovery protection", () => {
+  it("acknowledges encrypted backup on durable storage before completing protection", async () => {
+    const disk = fakeDisk();
+    const raw = "  {broken: 秘密\r\n";
+    writeProgress(STORAGE_KEY, raw);
+    await checkedStorage.getItem(STORAGE_KEY);
+    setSessionPassphrase("recovery-pass-1234");
+    await checkedStorage.setItem(STORAGE_KEY, { state: { assessment: named("Still intact") }, version: 4 });
+    const backup = disk.items.get(UNREADABLE_KEY)!;
+    expect(backup).not.toBe(raw);
+    expect(await crypto.decrypt(JSON.parse(backup), "recovery-pass-1234")).toBe(raw);
+    const active = JSON.parse(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "recovery-pass-1234"));
+    expect(active.state.assessment.org.name).toBe("Still intact");
+  });
+});
+
+
+const currentValue = () => ({ state: { assessment: named("Current Co") }, version: 4 });
+
+describe("recovery protection boundaries", () => {
+  it.each(["", " \r\n{bad 秘密 🐦", '{"state":{"assessment":{"schemaVersion":99,"org":"unknown"}}}', '{"crownguardEncrypted":7,"unknown":true}'])("round-trips opaque bytes %j", async (raw) => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, raw);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(true);
+    expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "new-passphrase")).toBe(raw);
+    expect(protectionSnapshot()).toBe("protected");
+  });
+
+  it("preserves a frozen encrypted backup through apply, change and clear", async () => {
+    const disk = fakeDisk();
+    const raw = readFileSync(new URL("../../e2e/fixtures/encrypted-progress-v1.json", import.meta.url), "utf8");
+    disk.items.set(UNREADABLE_KEY, raw);
+    for (const pass of ["new-passphrase", "another-passphrase", null]) {
+      expect(await rewriteProtection(pass, currentValue)).toBe(true);
+      expect(disk.items.get(UNREADABLE_KEY)).toBe(raw);
+    }
+    expect(await crypto.decrypt(JSON.parse(raw), "crownguard-public-fixture-passphrase")).toContain("Schema Five Co");
+    await expect(crypto.decrypt(JSON.parse(raw), "new-passphrase")).rejects.toThrow();
+  });
+
+  it("protects set-aside data when a session already has a key", async () => {
+    const disk = fakeDisk();
+    disk.items.set(STORAGE_KEY, "{unreadable");
+    setSessionPassphrase("existing-passphrase");
+    await checkedStorage.getItem(STORAGE_KEY);
+    expect(disk.items.has(STORAGE_KEY)).toBe(false);
+    expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "existing-passphrase")).toBe("{unreadable");
+  });
+
+  it("shares backup conversion across a newer active edit", async () => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "{raw");
+    const gate = gateFirstEncrypt();
+    let value = currentValue();
+    const applied = rewriteProtection("new-passphrase", () => value);
+    value = { state: { assessment: named("Newest Co") }, version: 4 };
+    const edit = checkedStorage.setItem(STORAGE_KEY, value);
+    gate.release();
+    await edit;
+    expect(await applied).toBe(true);
+    expect((await checkedStorage.getItem(STORAGE_KEY))?.state.assessment?.org.name).toBe("Newest Co");
+    expect(gate.spy.mock.calls.filter(([raw]) => raw === "{raw")).toHaveLength(1);
+  });
+
+  it.each(["clear", "new key", "forget", "read-only", "ephemeral", "replace"])("cancels pending conversion on %s", async (change) => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "{raw");
+    const gate = gateFirstEncrypt();
+    const old = rewriteProtection("old-passphrase", currentValue);
+    let newer: Promise<boolean> | undefined;
+    if (change === "clear") newer = rewriteProtection(null, currentValue);
+    if (change === "new key") newer = rewriteProtection("new-passphrase", currentValue);
+    if (change === "forget") { dropProgress(STORAGE_KEY); setSessionPassphrase(null); }
+    if (change === "read-only") setStorageReadOnly(true);
+    if (change === "ephemeral") setEphemeralMode(true);
+    if (change === "replace") disk.items.set(UNREADABLE_KEY, "{replacement");
+    if (newer) expect(await newer).toBe(true);
+    gate.release();
+    expect(await old).toBe(false);
+    if (change === "forget" || change === "ephemeral") {
+      expect(disk.items.has(UNREADABLE_KEY)).toBe(false);
+      expect(disk.items.has(STORAGE_KEY)).toBe(false);
+    } else if (change === "new key") {
+      expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "new-passphrase")).toBe("{raw");
+    } else expect(disk.items.get(UNREADABLE_KEY)).toBe(change === "replace" ? "{replacement" : "{raw");
+  });
+
+  it.each(["backup", "active", "encrypt"])("keeps recovery on %s failure and retries", async (failure) => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "{original");
+    disk.items.set(STORAGE_KEY, JSON.stringify(currentValue()));
+    const set = disk.setItem;
+    const spy = vi.spyOn(disk, "setItem").mockImplementation((key, value) => {
+      if (key === (failure === "backup" ? UNREADABLE_KEY : STORAGE_KEY) && failure !== "encrypt") throw new Error("quota");
+      set(key, value);
+    });
+    const encryption = failure === "encrypt" ? vi.spyOn(crypto, "encrypt").mockRejectedValue(new Error("crypto unavailable")) : undefined;
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    expect(protectionSnapshot()).toBe("error");
+    expect(disk.items.get(STORAGE_KEY)).toContain("Current Co");
+    if (failure === "active") expect(await crypto.decrypt(JSON.parse(disk.items.get(UNREADABLE_KEY)!), "new-passphrase")).toBe("{original");
+    else expect(disk.items.get(UNREADABLE_KEY)).toBe("{original");
+    spy.mockRestore();
+    encryption?.mockRestore();
+    // Later ordinary saves cannot erase the failed privacy operation's status.
+    await checkedStorage.setItem(STORAGE_KEY, currentValue());
+    expect(protectionSnapshot()).toBe("error");
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(true);
+  });
+
+  it.each(["backup write", "active removal", "different backup"])("retains source and blocks blank autosave after %s failure", async (failure) => {
+    const disk = fakeDisk();
+    disk.items.set(STORAGE_KEY, "{source");
+    if (failure === "different backup") disk.items.set(UNREADABLE_KEY, "{earlier");
+    if (failure === "backup write") disk.full = true;
+    if (failure === "active removal") vi.spyOn(disk, "removeItem").mockImplementation(() => { throw new Error("locked"); });
+    await checkedStorage.getItem(STORAGE_KEY);
+    await checkedStorage.setItem(STORAGE_KEY, currentValue());
+    expect(disk.items.get(STORAGE_KEY)).toBe("{source");
+    expect(disk.items.get(UNREADABLE_KEY)).toBe(failure === "different backup" ? "{earlier" : failure === "active removal" ? "{source" : undefined);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    expect(rehydrateNotices().at(-1)?.text).toContain("Local writes are blocked");
+  });
+
+  it("rejects lossy encoding and unavailable or throwing storage", async () => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "bad \ud800");
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    expect(disk.items.get(UNREADABLE_KEY)).toBe("bad \ud800");
+    vi.spyOn(disk, "getItem").mockImplementation(() => { throw new Error("denied"); });
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    vi.stubGlobal("localStorage", undefined);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+  });
+
+  it("keeps read-only keys unchanged and protects ephemeral downloads without claiming durability", async () => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "{raw");
+    disk.items.set(STORAGE_KEY, "original");
+    setStorageReadOnly(true);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    expect([...disk.items.values()]).toEqual(["{raw", "original"]);
+    setStorageReadOnly(false);
+    setEphemeralMode(true);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(true);
+    expect(protectionSnapshot()).toBe("session");
+    expect(disk.items.has(UNREADABLE_KEY)).toBe(false);
+    expect(disk.items.has(STORAGE_KEY)).toBe(false);
+    expect(await crypto.decrypt(JSON.parse(recoveryDownload()!), "new-passphrase")).toBe("{raw");
+    setEphemeralMode(false);
+    expect(protectionSnapshot()).not.toBe("protected");
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(true);
+    expect(disk.items.get(UNREADABLE_KEY)).toBe(recoveryDownload());
+  });
+
+  it("does not report session-only safety after failed disk removal", async () => {
+    const disk = fakeDisk();
+    disk.items.set(UNREADABLE_KEY, "{raw");
+    vi.spyOn(disk, "removeItem").mockImplementation(() => { throw new Error("locked"); });
+    setEphemeralMode(true);
+    expect(await rewriteProtection("new-passphrase", currentValue)).toBe(false);
+    expect(disk.items.get(UNREADABLE_KEY)).toBe("{raw");
+  });
+});
+
+
+it("failed clear retains the key for active ciphertext and can retry", async () => {
+  const disk = fakeDisk();
+  disk.items.set(UNREADABLE_KEY, "{raw");
+  expect(await rewriteProtection("original-passphrase", currentValue)).toBe(true);
+  const before = new Map(disk.items);
+  disk.full = true;
+  expect(await rewriteProtection(null, currentValue)).toBe(false);
+  expect(getSessionPassphrase()).toBe("original-passphrase");
+  expect(disk.items).toEqual(before);
+  expect(protectionSnapshot()).toBe("error");
+  disk.full = false;
+  expect(await rewriteProtection(null, currentValue)).toBe(true);
+  expect(disk.items.get(UNREADABLE_KEY)).toBe(before.get(UNREADABLE_KEY));
+});
+
+it("a cancelled set-aside cannot permit blank autosave over its retained source", async () => {
+  const disk = fakeDisk();
+  disk.items.set(STORAGE_KEY, "{source");
+  setSessionPassphrase("original-passphrase");
+  const gate = gateFirstEncrypt();
+  const hydration = checkedStorage.getItem(STORAGE_KEY);
+  setSessionPassphrase("new-passphrase");
+  gate.release();
+  await hydration;
+  await checkedStorage.setItem(STORAGE_KEY, currentValue());
+  expect(disk.items.get(STORAGE_KEY)).toBe("{source");
+  expect(protectionSnapshot()).toBe("error");
+});
+
+
+it.each([null, "{old backup"])("rechecks backup %j after active acknowledgement", async (backup) => {
+  const disk = fakeDisk();
+  if (backup !== null) disk.items.set(UNREADABLE_KEY, backup);
+  const original = disk.setItem;
+  let release!: () => void;
+  vi.spyOn(disk, "setItem").mockImplementation((key, value) => {
+    if (key === STORAGE_KEY) return new Promise<void>((resolve) => {
+      release = () => { original(key, value); resolve(); };
+    });
+    original(key, value);
+  });
+  const pending = rewriteProtection("new-passphrase", currentValue);
+  await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+  disk.items.set(UNREADABLE_KEY, "{replacement during active write");
+  release();
+  expect(await pending).toBe(false);
+  expect(protectionSnapshot()).toBe("error");
+  expect(disk.items.get(UNREADABLE_KEY)).toBe("{replacement during active write");
+});
+
+it("does not resurrect a removed durable backup from an old memory copy", async () => {
+  const disk = fakeDisk();
+  disk.items.set(STORAGE_KEY, "{raw");
+  await checkedStorage.getItem(STORAGE_KEY);
+  disk.items.delete(UNREADABLE_KEY);
+  expect(recoveryDownload()).toBeNull();
+  expect(await rewriteProtection("new-passphrase", currentValue)).toBe(true);
+  expect(disk.items.has(UNREADABLE_KEY)).toBe(false);
+});
+
+
+it("cancelled recovery cannot re-block writes after queued forget succeeds", async () => {
+  const disk = fakeDisk();
+  disk.items.set(STORAGE_KEY, "{source");
+  setSessionPassphrase("original-passphrase");
+  const gate = gateFirstEncrypt();
+  const hydration = checkedStorage.getItem(STORAGE_KEY);
+  const releases: (() => void)[] = [];
+  const pending: Promise<void>[] = [];
+  vi.spyOn(disk, "removeItem").mockImplementation((key) => {
+    const removal = new Promise<void>((resolve) => { releases.push(() => { disk.items.delete(key); resolve(); }); });
+    pending.push(removal);
+    return removal;
+  });
+  dropProgress(STORAGE_KEY);
+  gate.release();
+  await hydration;
+  for (const release of releases) release();
+  await Promise.all(pending);
+  await checkedStorage.setItem(STORAGE_KEY, currentValue());
+  expect(await crypto.decrypt(JSON.parse(disk.items.get(STORAGE_KEY)!), "original-passphrase")).toContain("Current Co");
+  vi.restoreAllMocks();
+});
+
+
+it("retains ephemeral mode on reload when deleting stale disk data throws", async () => {
+  const disk = fakeDisk();
+  disk.items.set("crownguard:v1:ephemeral", "1");
+  disk.items.set(STORAGE_KEY, "{stale");
+  vi.spyOn(disk, "removeItem").mockImplementation(() => { throw new Error("locked"); });
+  vi.resetModules();
+  const fresh = await import("./persistence");
+  expect(fresh.isEphemeralMode()).toBe(true);
+  expect(fresh.protectionSnapshot()).toBe("error");
+  await fresh.checkedStorage.setItem(STORAGE_KEY, currentValue());
+  expect(disk.items.get(STORAGE_KEY)).toBe("{stale");
 });

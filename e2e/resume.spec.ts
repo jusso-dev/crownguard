@@ -147,3 +147,19 @@ test("answers for questions that are gone are reported and kept", async ({ page 
   await expect(page.getByRole("status").filter({ hasText: /MS-RETIRED-001/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Orphan Co" })).toBeVisible();
 });
+
+
+test("an existing empty recovery backup survives reload and disappears after explicit forget", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => localStorage.setItem("crownguard:v1:unreadable", ""));
+  await page.reload();
+  const dl = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download the unreadable data" }).click();
+  expect(await readFile(await (await dl).path(), "utf8")).toBe("");
+  await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Remove from this browser" }).click();
+  await expect(page.getByRole("button", { name: "Download the unreadable data" })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Download the unreadable data" })).toHaveCount(0);
+});
