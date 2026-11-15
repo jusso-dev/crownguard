@@ -6,6 +6,8 @@ is sent anywhere: the file is the whole of your data, and you choose where it li
 - Published JSON Schema: [`public/schema/crownguard-assessment.v6.json`](../public/schema/crownguard-assessment.v6.json),
   generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
+- The [schema 5 document](../public/schema/crownguard-assessment.v5.json) remains published unchanged so existing
+  files' schema links keep working. Future format bumps retain previously published schemas.
 - Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
 
 ## Reading a file safely
