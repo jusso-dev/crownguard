@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
 import type { ImportMapping } from "../content/schema";
+import { emptyAssessment } from "../format/empty";
+import { applyScan } from "./apply";
 import { m365SecureImporter } from "./m365Secure";
 import { prowlerImporter } from "./prowler";
 import { detectImporter } from "./index";
@@ -55,6 +57,42 @@ describe("M365-Secure import", () => {
     expect(licence(["O365_BUSINESS_ESSENTIALS", "SPE_E5"])).toBe("microsoft-365-e5");
     expect(licence(["ENTERPRISEPACK"])).toBe("office-365-e3");
     expect(licence(["FLOW_FREE"])).toBeUndefined();
+  });
+
+  it.each([
+    { skus: ["O365_BUSINESS_PREMIUM"], expected: "business-standard" },
+    { skus: ["o365_business_premium"], expected: "business-standard" },
+    { skus: ["O365_BUSINESS"], expected: "business-standard" },
+    { skus: ["SPB"], expected: "business-premium" },
+    { skus: ["spb"], expected: "business-premium" },
+    { skus: ["BUSINESS_PREMIUM"], expected: "business-premium" },
+    { skus: ["business_premium"], expected: "business-premium" },
+    { skus: ["O365_BUSINESS_PREMIUM", "SPB"], expected: "business-premium" },
+    { skus: ["SPB", "O365_BUSINESS_PREMIUM"], expected: "business-premium" },
+    { skus: ["O365_BUSINESS_PREMIUM", "BUSINESS_PREMIUM"], expected: "business-premium" },
+    { skus: ["BUSINESS_PREMIUM", "O365_BUSINESS_PREMIUM"], expected: "business-premium" },
+    { skus: ["O365_BUSINESS_PREMIUM", "SPB", "SPE_E5"], expected: "microsoft-365-e5" },
+    { skus: ["SPE_E5", "SPB", "O365_BUSINESS_PREMIUM"], expected: "microsoft-365-e5" },
+    { skus: ["UNKNOWN_BUSINESS_PREMIUM"], expected: undefined },
+    { skus: ["UNKNOWN_BUSINESS_PREMIUM", "O365_BUSINESS_PREMIUM"], expected: "business-standard" },
+  ])("suggests $expected for licence SKUs $skus", ({ skus, expected }) => {
+    expect(read(file([{ check_id: "CA-1", status: "pass" }], skus)).licence).toBe(expected);
+  });
+
+  it.each([
+    { licence: true, expected: "business-standard" },
+    { licence: false, expected: "business-premium" },
+  ])("applies a Standard scan with licence updates set to $licence", ({ licence, expected }) => {
+    const assessment = emptyAssessment();
+    assessment.licence = { microsoft: "business-premium" };
+    const scan = read(file([{ check_id: "LEG-1", status: "pass" }], ["O365_BUSINESS_PREMIUM"]));
+
+    const result = applyScan(assessment, scan, { platform: "microsoft", overwrite: false, licence });
+
+    expect(result.assessment.licence.microsoft).toBe(expected);
+    expect(result.applied).toBe(1);
+    expect(result.assessment.answers["MS-ID-002"]).toBe("yes");
+    expect(assessment.licence.microsoft).toBe("business-premium");
   });
 
   it("recognises a results file with no license_skus as M365-Secure, not Prowler", () => {

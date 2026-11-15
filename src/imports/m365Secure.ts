@@ -31,7 +31,7 @@ const skuTiers: [RegExp, string][] = [
   [/^SPE_E5|^M365_E5/i, "microsoft-365-e5"],
   [/^SPE_E3|^M365_E3/i, "microsoft-365-e3"],
   [/^ENTERPRISEPACK$|^OFFICE_365_E3/i, "office-365-e3"],
-  [/^SPB$|BUSINESS_PREMIUM$/i, "business-premium"],
+  [/^SPB$|^BUSINESS_PREMIUM$/i, "business-premium"],
   [/^O365_BUSINESS_PREMIUM$|^O365_BUSINESS$/i, "business-standard"],
   [/^O365_BUSINESS_ESSENTIALS$/i, "business-basic"],
 ];
