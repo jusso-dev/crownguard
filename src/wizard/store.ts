@@ -41,7 +41,7 @@ const at = (a: Assessment, patch: Partial<NonNullable<Assessment["progress"]>>):
 });
 
 const editEntry = (a: Assessment, id: string, fn: (e: AiUseCase) => AiUseCase): Partial<Assessment> => ({
-  aiRegister: { entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
+  aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
 });
 
 interface State {
@@ -156,25 +156,25 @@ export const useStore = create<State>()(
         addAiUseCase: (kind) => {
           const id = crypto.randomUUID();
           update((a) => ({
-            aiRegister: { entries: [...(a.aiRegister?.entries ?? []), newUseCase(kind, id)] },
+            aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []), newUseCase(kind, id)] },
             ...at(a, { aiSection: id }),
           }));
           return id;
         },
         addImportedAiUseCase: (entry) => update((a) => ({ aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []), entry] } })),
         updateAiUseCase: (id, patch) => update((a) => editEntry(a, id, (e) => ({ ...e, ...patch }))),
-        removeAiUseCase: (id) => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
+        removeAiUseCase: (id) => update((a) => ({ aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
         setAiAnswer: (id, q, answer) => update((a) => editEntry(a, id, (e) => ({ ...e, answers: { ...e.answers, [q]: answer } }))),
         setAiNote: (id, q, note) => update((a) => editEntry(a, id, (e) => ({ ...e, notes: { ...e.notes, [q]: note.slice(0, NOTE_MAX) } }))),
         loadAiExamples: () =>
           update((a) => {
             const examples = exampleEntries(a);
             return {
-              aiRegister: { entries: [...(a.aiRegister?.entries ?? []).filter((e) => !e.example), ...examples] },
+              aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []).filter((e) => !e.example), ...examples] },
               ...at(a, { aiSection: examples[0].id }),
             };
           }),
-        removeAiExamples: () => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => !e.example) } })),
+        removeAiExamples: () => update((a) => ({ aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).filter((e) => !e.example) } })),
         upsertJewel: (j) =>
           update((a) => ({
             jewels: a.jewels.some((x) => x.id === j.id) ? a.jewels.map((x) => (x.id === j.id ? j : x)) : [...a.jewels, j],
@@ -182,7 +182,7 @@ export const useStore = create<State>()(
         removeJewel: (id) =>
           update((a) => ({
             jewels: a.jewels.filter((j) => j.id !== id),
-            ...(a.aiRegister && { aiRegister: { entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
+            ...(a.aiRegister && { aiRegister: { ...a.aiRegister, entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
           })),
         applyScan: (scan, opts) => {
           let applied = 0;
