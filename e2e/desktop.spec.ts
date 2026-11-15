@@ -2,8 +2,8 @@
  * The desktop build (`vite build --mode desktop`) under the desktop webview's rules: the CSP from tauri.conf.json
  * (connect-src limited to the IPC bridge), a frozen Object.prototype (`freezePrototype: true`) and no global Tauri
  * object. The Rust side is replaced by an in-memory stand-in for SQLite, the native dialogs and the file system, so
- * these journeys check everything the webview does without a display. The real binary is checked by
- * docs/desktop/offline-test.md on each operating system.
+ * these journeys check frontend wiring, not Tauri ACL enforcement or native runtime behaviour. Native checks
+ * remain a separate manual checklist in docs/desktop/offline-test.md.
  */
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -13,6 +13,7 @@ import { expectReport, pdfText, runJourney } from "./journey";
 interface Desktop {
   beforeAutosave?: (cmd: string, key: string, value?: string) => Promise<void>;
   cancelSave?: boolean;
+  cancelAsk?: boolean;
   failSave?: boolean;
   /** The autosave table, key → value, as the Rust side would hold it. */
   db: Map<string, string>;
@@ -55,7 +56,6 @@ async function desktop(page: Page, baseURL: string, state?: Desktop): Promise<De
         d.db.delete(a.key as string);
         return null;
       case "recent_record":
-      case "recent_forget":
       case "settings_set_update_check":
         return null;
       case "recent_list":
@@ -74,10 +74,10 @@ async function desktop(page: Page, baseURL: string, state?: Desktop): Promise<De
       case "plugin:dialog|open":
         return d.openPaths.shift() ?? null;
       case "plugin:dialog|message": {
-        // The user picks the first (OK / Yes) button; the plugin returns its label.
+        // Return the selected native button label, including cancellation when requested.
         d.asked.push(String(a.message));
         const buttons = a.buttons as { OkCancelCustom?: string[]; OkCustom?: string } | string | undefined;
-        if (typeof buttons === "object") return buttons.OkCancelCustom?.[0] ?? buttons.OkCustom;
+        if (typeof buttons === "object") return buttons.OkCancelCustom?.[d.cancelAsk ? 1 : 0] ?? buttons.OkCustom;
         return buttons === "YesNo" ? "Yes" : "Ok";
       }
       case "plugin:fs|write_text_file":
@@ -150,7 +150,7 @@ for (const platform of ["Microsoft 365", "Google Workspace", "Amazon Web Service
   });
 }
 
-test("scan imports (M365-Secure, Prowler, ScubaGoggles) and the XLSX register export work offline", async ({ page, baseURL }) => {
+test("scan imports and XLSX/CSV exports work offline, including cancelled output", async ({ page, baseURL }) => {
   const d = await desktop(page, baseURL!);
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
@@ -180,6 +180,24 @@ test("scan imports (M365-Secure, Prowler, ScubaGoggles) and the XLSX register ex
   await expect.poll(() => [...d.files.keys()].find((k) => k.endsWith(".xlsx"))).toBeTruthy();
   const xlsx = d.files.get([...d.files.keys()].find((k) => k.endsWith(".xlsx"))!)!;
   expect(text(xlsx.slice(0, 2))).toBe("PK");
+  const beforeFiles = [...d.files.entries()];
+  const beforeWrites = d.calls.filter((c) => c.cmd === "plugin:fs|write_file").length;
+  const beforeDialogs = d.calls.filter((c) => c.cmd === "plugin:dialog|save").length;
+  d.cancelSave = true;
+  await page.getByRole("button", { name: "Download CSV" }).click();
+  await expect.poll(() => d.calls.filter((c) => c.cmd === "plugin:dialog|save").length).toBe(beforeDialogs + 1);
+  expect(d.calls.filter((c) => c.cmd === "plugin:fs|write_file")).toHaveLength(beforeWrites);
+  expect([...d.files.entries()]).toEqual(beforeFiles);
+  d.cancelSave = false;
+  await page.getByRole("button", { name: "Download CSV" }).click();
+  await expect.poll(() => [...d.files.keys()].find((k) => k.endsWith(".csv"))).toBeTruthy();
+  const csvPath = [...d.files.keys()].find((k) => k.endsWith(".csv"))!;
+  expect(csvPath).toMatch(/^\/home\/tester\/Documents\/.*\.csv$/);
+  expect(text(d.files.get(csvPath))).toContain("Microsoft 365 Copilot");
+  expect(d.calls.filter((c) => c.cmd === "plugin:fs|write_file")).toHaveLength(beforeWrites + 1);
+  expect(d.calls.filter((c) => c.cmd === "plugin:dialog|save").at(-1)?.args).toMatchObject({
+    options: { filters: [{ name: "CSV file", extensions: ["csv"] }] },
+  });
   expect(d.external).toEqual([]);
   expect(d.unknown).toEqual([]);
 });
@@ -212,6 +230,7 @@ test("closing and reopening restores the assessment, step and section from SQLit
   await again.getByRole("button", { name: "Continue where you left off" }).click();
   await expect(again.getByRole("heading", { name: section, level: 2 })).toBeVisible();
   await expect(again.locator("article[data-question]").first().getByRole("radio", { name: "No", exact: true })).toHaveAttribute("aria-checked", "true");
+  expect(d.unknown).toEqual([]);
 });
 
 test("an encrypted assessment reaches SQLite and disk only as its envelope", async ({ page, baseURL }) => {
@@ -233,6 +252,7 @@ test("an encrypted assessment reaches SQLite and disk only as its envelope", asy
   expect(everything).not.toContain("Secretive Holdings");
   expect(JSON.parse(d.db.get("crownguard:v1")!)).toHaveProperty("crownguardEncrypted", 1);
   expect(JSON.parse(text([...d.files.values()][0]))).toHaveProperty("crownguardEncrypted", 1);
+  expect(d.unknown).toEqual([]);
 });
 
 test("files round-trip between the web app and the desktop app, and Ctrl/⌘ S saves back to the opened file", async ({ page, browser, baseURL }) => {
@@ -286,7 +306,12 @@ test("the CSP blocks network requests from the webview, and external links open 
   await page.getByRole("link", { name: "GitHub issue" }).click();
   await expect.poll(() => d.opened).toEqual(["https://github.com/jusso-dev/crownguard/issues"]);
   expect(d.asked[0]).toContain("https://github.com/jusso-dev/crownguard/issues");
+  d.cancelAsk = true;
+  await page.getByRole("link", { name: "GitHub issue" }).click();
+  await expect.poll(() => d.asked.length).toBe(2);
+  expect(d.opened).toEqual(["https://github.com/jusso-dev/crownguard/issues"]);
   expect(new URL(page.url()).origin).toBe(new URL(baseURL!).origin);
+  expect(d.unknown).toEqual([]);
 });
 
 test("the PDF is generated from bundled fonts only", async ({ page, baseURL }) => {
@@ -309,6 +334,7 @@ test("the PDF is generated from bundled fonts only", async ({ page, baseURL }) =
   expect((await pdfText(pdf))[0]).toContain("Riverbend Health");
   expect(new Set(fonts)).toEqual(new Set([new URL(baseURL!).origin]));
   expect(d.external).toEqual([]);
+  expect(d.unknown).toEqual([]);
 });
 
 

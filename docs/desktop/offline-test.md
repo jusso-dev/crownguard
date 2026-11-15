@@ -2,7 +2,8 @@
 
 Run this on macOS, Windows and Linux with the installers from a draft release before publishing it, and attach the
 filled-in results to the release pull request or draft. It checks the guarantees in [README.md](README.md) on the real
-app; `e2e/desktop.spec.ts` checks the same behaviour in CI against the desktop build with the desktop CSP.
+app. `e2e/desktop.spec.ts` exercises frontend flows with the desktop CSP and in-memory native mocks; it does not
+verify Tauri ACL enforcement or native runtime behaviour.
 
 You need: the installer, `e2e/fixtures/m365-secure-scan.json`, `e2e/fixtures/prowler-aws.csv`,
 `e2e/fixtures/ScubaResults.json`, and a `.crownguard.json` file saved by the web app at
@@ -63,3 +64,27 @@ https://jusso-dev.github.io/crownguard/.
 | System and version | Installer | Tester | Date | Sections passed | Notes |
 |---|---|---|---|---|---|
 | | | | | | |
+
+## Finding 9 native capability release checklist
+
+**Native runtime: NOT RUN.** This implementation used no local Cargo/native build or run and no installed-app
+manipulation. This is a manual release check, not an additional executor or PR approval gate. Report hosted Linux
+compilation/Rust checks separately from browser mocks and these runtime results; neither proves OS coverage.
+
+For future native testing, use disposable profile/data and a release-equivalent capability configuration, initially
+offline with updates off. Do not use an existing user database or run the live-update/network recipes above for this
+change. Record tested SHA, OS/version, build mode, tester and date; leave untested rows explicitly **NOT RUN**.
+
+| Tested SHA | OS/version | Build mode | Tester/date |
+|---|---|---|---|
+| NOT RUN | NOT RUN | NOT RUN | NOT RUN |
+
+| Check | Expected | Result |
+|---|---|---|
+| Fresh autosave, flush, quit and restart; repeat with protected autosave and unreadable backup | Resume and backup persist through native custom commands, without frontend app-data scope. | NOT RUN |
+| Open selected external assessment; first Save, save-back, cancel picker; fail output then choose another destination | Selected paths work; cancellation writes nothing; failed path is forgotten and retry asks again. | NOT RUN |
+| Recent reopen after restart; inspect native runtime scope using synthetic paths | Picker required. Selection grants that file, not parent/siblings. Use scope predicates, not real unrelated file operations. | NOT RUN |
+| OS-open cold start and macOS running-app event; Windows/Linux second instance | Validated file handed over once and supports save-back. Windows/Linux retain existing single-instance refusal, not hot-instance forwarding. | NOT RUN |
+| PDF, CSV, XLSX and unreadable-JSON export outside app-data, then inside disposable app-data | Exact output bytes; explicitly chosen app-data destination remains selectable. Cancel/failure leaves recovery material intact. | NOT RUN |
+| Confirm/cancel HTTPS, including a non-vendor host, with browser invocation stubbed or offline | Native message dialog still handles `ask()` without alias grant. Confirm uses default browser; cancel opens nothing. No real provider contact. | NOT RUN |
+| Effective resolved ACL/source audit and pure scope predicates on synthetic selected/unselected paths | No static fs allow/deny paths, version or recent-forget permission. Selected-file runtime scope still works. | NOT RUN |

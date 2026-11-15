@@ -2,9 +2,8 @@
  * Guards the desktop app's security settings so a later change can't quietly widen them. Run in CI (`pnpm
  * check:desktop`) and from scripts/desktop-config.test.ts. Exits non-zero with one line per problem.
  *
- * - No file-system permission or scope over the home directory (or any user folder, or the root), and no `**`
- *   wildcard outside the app's own data directory. Files the user picks are added to the scope at run time by the
- *   dialog plugin, so the capability never needs them.
+ * - No static frontend file-system paths. Native dialogs and validated OS-open paths grant runtime access.
+ * - Exactly the supported command inventory in one local main-window capability.
  * - No http or shell plugin, and the opener may open https:// links only.
  * - The webview CSP is the web CSP with connect-src narrowed to the IPC bridge (vite.config.ts), with Trusted Types.
  * - freezePrototype on, withGlobalTauri off, asset protocol off, updater over https only.
@@ -17,41 +16,49 @@ import { repoPath } from "./lib/repo";
 
 const tauriDir = repoPath("src-tauri");
 
-type Permission = string | { identifier: string; allow?: Record<string, unknown>[]; deny?: Record<string, unknown>[] };
-interface Capability {
-  identifier: string;
-  permissions: Permission[];
+// Deliberately explicit product policy, not a general Tauri schema validator.
+const REQUIRED_PERMISSIONS = new Set([
+  "allow-autosave-load", "allow-autosave-set", "allow-autosave-remove", "allow-recent-list", "allow-recent-record",
+  "allow-launch-file-take", "allow-settings-get", "allow-settings-set-update-check", "allow-update-check", "allow-update-install",
+  "core:event:allow-listen", "core:event:allow-unlisten", "core:window:allow-destroy",
+  "dialog:allow-open", "dialog:allow-save", "dialog:allow-message",
+  "fs:allow-read-text-file", "fs:allow-write-text-file", "fs:allow-write-file",
+]);
+const CAPABILITY_FIELDS = new Set(["$schema", "identifier", "description", "windows", "local", "permissions"]);
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+
+function isHttpsOpener(permission: Record<string, unknown>): boolean {
+  if (permission.identifier !== "opener:allow-open-url" || Object.keys(permission).length !== 2) return false;
+  const allow = permission.allow;
+  return Array.isArray(allow) && allow.length === 1 && isRecord(allow[0]) &&
+    Object.keys(allow[0]).length === 1 && allow[0].url === "https://*";
 }
 
-/** Base directories a capability may scope the file system to: the app's own folders and nothing of the user's. */
-const APP_DIRS = ["$APPDATA", "$APPLOCALDATA", "$APPCONFIG", "$APPCACHE", "$APPLOG"];
-
-/** Tauri's prebuilt fs permission sets that name a user folder, e.g. fs:allow-home-read-recursive, fs:scope-download. */
-const USER_DIR_PERMISSION = /^fs:(allow|scope|read|write)-(home|desktop|document|download|picture|video|audio|public|resource|temp|cache|config|data|localdata|font|exe|runtime|template)\b/;
-
-const FORBIDDEN_PLUGINS = /^(http|shell|sql|process|os|clipboard-manager|global-shortcut|websocket|upload|updater):/;
-
-export function checkCapability(name: string, cap: Capability): string[] {
+export function checkCapability(name: string, cap: unknown): string[] {
   const problems: string[] = [];
-  for (const p of cap.permissions) {
-    const id = typeof p === "string" ? p : p.identifier;
-    if (FORBIDDEN_PLUGINS.test(id)) problems.push(`${name}: ${id} is not allowed in the desktop app`);
-    if (USER_DIR_PERMISSION.test(id)) problems.push(`${name}: ${id} grants file access to a user folder`);
-    if (id === "fs:default" || id === "opener:default" || id === "opener:allow-open-path" || id === "opener:allow-reveal-item-in-dir")
-      problems.push(`${name}: ${id} is wider than the app needs`);
-    if (typeof p === "string") continue;
-    for (const entry of [...(p.allow ?? [])]) {
-      if (id.startsWith("fs:")) {
-        const path = String(entry.path ?? "");
-        const base = path.split("/")[0];
-        if (!APP_DIRS.includes(base))
-          problems.push(`${name}: ${id} scope "${path}" is outside the app data directory (no $HOME, user folders, absolute paths or wildcards)`);
-      }
-      if (id.startsWith("opener:")) {
-        const url = String(entry.url ?? entry.path ?? "");
-        if (!url.startsWith("https://")) problems.push(`${name}: ${id} scope "${url}" must be https:// only`);
-      }
+  if (!isRecord(cap)) return [`${name}: expected a capability object`];
+  for (const key of Object.keys(cap)) {
+    if (!CAPABILITY_FIELDS.has(key)) problems.push(`${name}: capability field ${key} is not allowed`);
+  }
+  if (cap.identifier !== "default") problems.push(`${name}: identifier must be default`);
+  if (JSON.stringify(cap.windows) !== '["main"]') problems.push(`${name}: windows must be exactly ["main"]`);
+  if ("local" in cap && cap.local !== true) problems.push(`${name}: capability must be local-only`);
+  if (!Array.isArray(cap.permissions)) return [...problems, `${name}: permissions must be an array`];
+  const seen = new Set<string>();
+  for (const permission of cap.permissions) {
+    const id = typeof permission === "string" ? permission : isRecord(permission) ? permission.identifier : undefined;
+    if (typeof id !== "string") {
+      problems.push(`${name}: invalid permission`);
+      continue;
     }
+    if (seen.has(id)) problems.push(`${name}: duplicate permission ${id}`);
+    seen.add(id);
+    if (typeof permission === "string" && REQUIRED_PERMISSIONS.has(permission)) continue;
+    if (isRecord(permission) && isHttpsOpener(permission)) continue;
+    problems.push(`${name}: ${id} must match the supported command policy (no static fs paths; HTTPS default opener only)`);
+  }
+  for (const id of [...REQUIRED_PERMISSIONS, "opener:allow-open-url"]) {
+    if (!seen.has(id)) problems.push(`${name}: missing required permission ${id}`);
   }
   return problems;
 }
@@ -60,6 +67,8 @@ export function checkConfig(conf: Record<string, unknown>): string[] {
   const problems: string[] = [];
   const app = conf.app as { withGlobalTauri?: boolean; security?: Record<string, unknown> };
   const security = app?.security ?? {};
+  if (JSON.stringify(security.capabilities) !== '["default"]')
+    problems.push('tauri.conf.json: app.security.capabilities must be exactly ["default"]');
   const csp = security.csp;
   if (csp !== desktopCspDirectives.join("; "))
     problems.push(`tauri.conf.json: app.security.csp must be exactly desktopCspDirectives from vite.config.ts:\n  ${desktopCspDirectives.join("; ")}`);
@@ -84,9 +93,11 @@ export function checkCargo(toml: string): string[] {
 export function checkDesktopConfig(dir = tauriDir): string[] {
   const problems: string[] = [];
   const capDir = join(dir, "capabilities");
-  for (const f of readdirSync(capDir).filter((f) => f.endsWith(".json"))) {
-    problems.push(...checkCapability(f, JSON.parse(readFileSync(join(capDir, f), "utf8")) as Capability));
-  }
+  const files = readdirSync(capDir, { withFileTypes: true });
+  if (files.length !== 1 || files[0].name !== "default.json" || !files[0].isFile())
+    problems.push("capabilities: expected only default.json");
+  if (files.some((file) => file.name === "default.json" && file.isFile()))
+    problems.push(...checkCapability("default.json", JSON.parse(readFileSync(join(capDir, "default.json"), "utf8"))));
   problems.push(...checkConfig(JSON.parse(readFileSync(join(dir, "tauri.conf.json"), "utf8")) as Record<string, unknown>));
   problems.push(...checkCargo(readFileSync(join(dir, "Cargo.toml"), "utf8")));
   return problems;

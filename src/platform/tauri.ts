@@ -268,5 +268,4 @@ export const desktopSettings = {
   setUpdateCheck: (enabled: boolean) => invoke<void>("settings_set_update_check", { enabled }),
   checkForUpdate: () => invoke<{ version: string; notes?: string | null } | null>("update_check"),
   installUpdate: () => invoke<void>("update_install"),
-  forgetRecent: (path: string) => invoke<void>("recent_forget", { path }),
 };
