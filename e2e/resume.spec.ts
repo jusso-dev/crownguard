@@ -93,7 +93,7 @@ test("a bad file is rejected and the current assessment is untouched", async ({ 
 });
 
 test("a file from a newer crownguard is offered read-only and can't be written over", async ({ page }) => {
-  const newer = JSON.parse(await readFile("e2e/fixtures/current.crownguard.json", "utf8"));
+  const newer = JSON.parse(await readFile("e2e/fixtures/schema3.crownguard.json", "utf8"));
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("My Own Work");

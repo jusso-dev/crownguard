@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Assessment } from "../format/schema";
 import * as crypto from "../format/crypto";
@@ -14,7 +16,7 @@ import {
   unreadableBackup,
   writeProgress,
 } from "./persistence";
-import { setSessionPassphrase } from "./sessionSecrets";
+import { setLockedEnvelope, setSessionPassphrase } from "./sessionSecrets";
 import { emptyAssessment } from "../format/empty";
 
 const named = (name: string): Assessment => ({ ...emptyAssessment(), org: { ...emptyAssessment().org, name } });
@@ -223,5 +225,43 @@ describe("progress saved in this browser", () => {
     checkedStorage.removeItem(STORAGE_KEY);
     setStorageReadOnly(false);
     expect((await checkedStorage.getItem(STORAGE_KEY))?.state.assessment?.updatedAt).not.toBe("later");
+  });
+});
+
+/**
+ * Progress as this app autosaved it under a passphrase at commit 0e5fdf0: the zustand value
+ * `{ state: { assessment }, version: 4 }`, encrypted once and never regenerated. The passphrase is public and
+ * synthetic. A change that makes these fail has locked people out of progress already in their browser.
+ */
+describe("frozen encrypted progress", () => {
+  const FIXTURE_PASSPHRASE = "crownguard-public-fixture-passphrase";
+  const fixtureText = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
+  const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+
+  it("unlocks with its passphrase and comes back whole", async () => {
+    const raw = fixtureText("encrypted-progress-v1.json");
+    expect(sha256(raw)).toBe("0181d825ea807f4f6e0dd9372f9d77f856bd12923ad2008e81f9e08bf3054a20");
+    const expected = JSON.parse(fixtureText("schema5.crownguard.json")) as Record<string, unknown>;
+    expect(await crypto.decrypt(JSON.parse(raw), FIXTURE_PASSPHRASE)).toBe(JSON.stringify({ state: { assessment: expected }, version: 4 }));
+
+    writeProgress(STORAGE_KEY, raw);
+    setSessionPassphrase(FIXTURE_PASSPHRASE);
+    const stored = await checkedStorage.getItem(STORAGE_KEY);
+    expect(stored?.version).toBe(4);
+    expect(JSON.parse(JSON.stringify(stored?.state.assessment))).toEqual(expected);
+    expect(stored?.state.assessment?.progress).toEqual({ step: 3, section: "microsoft:identity", socSection: "people", aiSection: "register", layout: 2 });
+    // Reading it changes nothing on disk.
+    expect(readProgress(STORAGE_KEY)).toBe(raw);
+    expect(unreadableBackup()).toBeNull();
+  });
+
+  it("stays locked, and is not set aside, under the wrong passphrase", async () => {
+    const raw = fixtureText("encrypted-progress-v1.json");
+    writeProgress(STORAGE_KEY, raw);
+    setSessionPassphrase("not-the-fixture-passphrase");
+    expect(await checkedStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(readProgress(STORAGE_KEY)).toBe(raw);
+    expect(unreadableBackup()).toBeNull();
+    setLockedEnvelope(null);
   });
 });

@@ -230,7 +230,7 @@ test("an encrypted assessment reaches SQLite and disk only as its envelope", asy
 test("files round-trip between the web app and the desktop app, and Ctrl/⌘ S saves back to the opened file", async ({ page, browser, baseURL }) => {
   const d = await desktop(page, baseURL!);
   // A file saved by the web app opens on desktop through the native dialog.
-  const webFile = await readFile("e2e/fixtures/current.crownguard.json");
+  const webFile = await readFile("e2e/fixtures/schema3.crownguard.json");
   d.files.set("/home/tester/from-web.crownguard.json", new Uint8Array(webFile));
   d.openPaths.push("/home/tester/from-web.crownguard.json");
   await page.goto("./");

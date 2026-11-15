@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { assessmentSchema, formatIssues, SCHEMA_VERSION, type Assessment } from "./schema";
@@ -6,7 +7,8 @@ import { parseAssessment } from "./parse";
 import { toSaveFile } from "./saveFile";
 import { emptyAssessment } from "./empty";
 
-const fixture = (name: string) => JSON.parse(readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8")) as Record<string, unknown>;
+const fixtureText = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
+const fixture = (name: string) => JSON.parse(fixtureText(name)) as Record<string, unknown>;
 const questionIds = new Set(["MS-ID-001", "MS-ID-002"]);
 
 describe("schema versions", () => {
@@ -222,7 +224,7 @@ describe("opening a file", () => {
   });
 
   it("opens the committed fixtures from every past shape", () => {
-    for (const name of ["legacy.crownguard.json", "branded.crownguard.json", "current.crownguard.json"]) {
+    for (const name of ["legacy.crownguard.json", "branded.crownguard.json", "schema3.crownguard.json", "schema4.crownguard.json", "schema5.crownguard.json"]) {
       const result = parseAssessment(fixture(name), { questionIds: new Set(["MS-ID-001"]) });
       expect(result.kind, name).toBe("ok");
     }
@@ -270,5 +272,107 @@ describe("the saved file format", () => {
   it("passes its own schema", () => {
     const result = assessmentSchema.safeParse(JSON.parse(toSaveFile(emptyAssessment())));
     expect(result.success).toBe(true);
+  });
+});
+
+/**
+ * Frozen files, one per schema version, as a build of that era wrote them. They are never regenerated: a change that
+ * makes one of these tests fail has broken reading of files people already hold, so fix the reader, not the fixture.
+ * Provenance: schema3 is the web-app save committed with schema 3 (formerly `current.crownguard.json`); schema4 and
+ * schema5 are synthetic, hand-written against the schemas at 2d9ca88 (schema 4) and 0e5fdf0 (schema 5), with one
+ * unknown field in every loose object. The schema 4 build at 2d9ca88 opens schema4 unchanged and refuses to edit schema5.
+ */
+describe("frozen files from schema 3, 4 and 5", () => {
+  const sha256 = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
+  const plain = (value: unknown) => JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  const userData = (file: Record<string, unknown>) => Object.fromEntries(Object.entries(file).filter(([k]) => k !== "$schema" && k !== "savedBy"));
+
+  it("are byte-for-byte the files that were committed", () => {
+    expect(sha256(fixtureText("schema3.crownguard.json"))).toBe("cc0c6da86c5503c1a8b6e8ca774e34e635faa8f9b31ed6168bdeefd4bdc493f4");
+    expect(sha256(fixtureText("schema4.crownguard.json"))).toBe("65600f658919fb92bfba6e04b910451442a5bca318f168996dd0b2d40c9d4651");
+    expect(sha256(fixtureText("schema5.crownguard.json"))).toBe("e81355a4d79c5c0f4bb64ab6fdbd2123453e888bd0dcfd946c6cf87b3ee109d5");
+  });
+
+  it("opens the schema 4 file with its register metadata, parts and every unknown field intact", () => {
+    const raw = fixture("schema4.crownguard.json");
+    expect(raw.schemaVersion).toBe(4);
+    const result = parseAssessment(raw, { questionIds });
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+
+    // Nothing is added, dropped or reshaped on the way in: only the version moves.
+    expect(plain(result.assessment)).toEqual({ ...raw, schemaVersion: 5 });
+    expect(result.notices).toEqual([
+      { kind: "info", text: "Opened a file saved in the older 4 format and brought it up to schema 5." },
+      { kind: "warn", text: "Kept 1 field this version doesn't understand: fixtureTopLevelExtra. Save the file only if you mean to keep them." },
+    ]);
+
+    const register = plain(result.assessment.aiRegister);
+    expect(register.createdAt).toBe("2026-10-20");
+    expect(register.lastSharedWithDta).toBe("2026-11-01");
+    expect(register.dateConfirmation).toEqual({ by: "Alex Example, Chief Information Officer", on: "2026-11-02", fixtureConfirmationExtra: "kept" });
+    expect(register.fixtureRegisterExtra).toEqual(["kept"]);
+    const entries = result.assessment.aiRegister!.entries;
+    expect(entries.map((e) => e.groupOf)).toEqual(["Microsoft 365 Copilot", undefined]);
+    expect(entries.map((e) => e.foundBy)).toEqual([undefined, "Consent import"]);
+    expect(entries.map((e) => e.usagePatterns)).toEqual([["workplace-productivity", "analytics"], ["decision-making", "image-processing"]]);
+    expect(plain(entries[0]).fixtureEntryExtra).toBe("kept");
+    expect(result.assessment.orphans).toEqual({
+      "MS-OLD-014": { answer: "no", note: "Question retired in the September content update.", fixtureOrphanExtra: "kept" },
+    });
+    expect(plain(result.assessment.soc).fixtureSocExtra).toEqual({ kept: true });
+    expect(plain(result.assessment).fixtureTopLevelExtra).toEqual({ kept: true, list: [1, 2, 3] });
+    // An evidence check id at the 80 character limit, and the schema 3 provenance fields, survive.
+    const evidence = result.assessment.evidence!["MS-ID-001"];
+    expect(evidence.checks[1].id).toBe("fixture_check_id_exactly_eighty_characters_long_0123456789_0123456789_0123456789");
+    expect(evidence.checks[1].id).toHaveLength(80);
+    expect(evidence).toMatchObject({ tool: "m365-secure", toolVersion: "2.4.1", account: "scanner@schemafour.example" });
+    expect(result.assessment.progress).toEqual({ step: 3, section: "microsoft:identity", socSection: "people", aiSection: "register", layout: 2 });
+  });
+
+  it("opens the schema 5 file with the v2.1 usage patterns and nothing to report but the unknown field", () => {
+    const raw = fixture("schema5.crownguard.json");
+    expect(raw.schemaVersion).toBe(5);
+    const result = parseAssessment(raw, { questionIds });
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+
+    expect(plain(result.assessment)).toEqual(raw);
+    expect(result.notices).toEqual([
+      { kind: "warn", text: "Kept 1 field this version doesn't understand: fixtureTopLevelExtra. Save the file only if you mean to keep them." },
+    ]);
+    const entries = result.assessment.aiRegister!.entries;
+    expect(entries.map((e) => e.usagePatterns)).toEqual([["workplace-productivity", "strategic-support", "workflow-automation"], ["coding"]]);
+    expect(entries.map((e) => e.groupOf)).toEqual(["Microsoft 365 Copilot", undefined]);
+    expect(result.assessment.aiRegister).toMatchObject({ createdAt: "2026-10-20", lastSharedWithDta: "2026-11-01" });
+  });
+
+  it.each(["schema4.crownguard.json", "schema5.crownguard.json"])("carries everything in %s through a save and a reopen", (name) => {
+    const raw = fixture(name);
+    const opened = parseAssessment(raw, { questionIds });
+    expect(opened.kind).toBe("ok");
+    if (opened.kind !== "ok") return;
+
+    const saved = JSON.parse(toSaveFile(opened.assessment, { now: new Date("2026-11-15T00:00:00.000Z") })) as Record<string, unknown>;
+    // `$schema` and `savedBy` are the writer's to set; everything else is the user's and must come back untouched.
+    expect(userData(saved)).toEqual({ ...userData(raw), schemaVersion: 5 });
+    expect(saved.savedBy).toMatchObject({ app: "crownguard", contentHash: (raw.savedBy as { contentHash: string }).contentHash, savedAt: "2026-11-15T00:00:00.000Z" });
+
+    const reopened = parseAssessment(saved, { questionIds });
+    expect(reopened.kind).toBe("ok");
+    if (reopened.kind !== "ok") return;
+    expect(plain(reopened.assessment)).toEqual(saved);
+  });
+
+  it("moves an answer this build no longer asks beside the orphan the schema 5 file already carried", () => {
+    const result = parseAssessment(fixture("schema5.crownguard.json"), { questionIds: new Set(["MS-ID-001"]) });
+    expect(result.kind).toBe("ok");
+    if (result.kind !== "ok") return;
+    expect(result.assessment.answers).toEqual({ "MS-ID-001": "yes" });
+    expect(result.assessment.notes).toEqual({});
+    expect(result.assessment.orphans).toEqual({
+      "MS-OLD-014": { answer: "no", note: "Question retired in the September content update.", fixtureOrphanExtra: "kept" },
+      "MS-ID-002": { answer: "partial", note: "Rolled out to admins first." },
+    });
   });
 });

@@ -102,6 +102,18 @@ test("encrypted save and open round trip", async ({ page }) => {
   await expect(page.getByLabel("Organisation name")).toHaveValue("Secret Crown Co");
 });
 
+// The file is frozen: written once by the build at 0e5fdf0 and never regenerated. The passphrase is public and synthetic.
+test("a passphrase-protected file saved by an earlier build still opens", async ({ page }) => {
+  await page.goto("./");
+  await page.getByTestId("import-input").setInputFiles("e2e/fixtures/encrypted-file-v1.json");
+  await expect(page.getByText(/protected with a passphrase/i)).toBeVisible();
+  await page.getByLabel(/Passphrase for this file/).fill("crownguard-public-fixture-passphrase");
+  await page.getByRole("button", { name: "Unlock file" }).click();
+  await expect(page.getByText(/Opened Schema Five Co\. Picking up at/)).toBeVisible();
+  await page.getByRole("navigation", { name: "Steps" }).getByRole("button", { name: /Organisation/ }).click();
+  await expect(page.getByLabel("Organisation name")).toHaveValue("Schema Five Co");
+});
+
 test("no-persistence reload leaves no assessment in localStorage or sessionStorage", async ({ page }) => {
   await page.goto("./");
   page.once("dialog", (d) => d.accept());

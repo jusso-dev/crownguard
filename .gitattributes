@@ -1,0 +1,6 @@
+# Frozen compatibility fixtures must keep their exact committed bytes on every OS.
+e2e/fixtures/schema3.crownguard.json -text
+e2e/fixtures/schema4.crownguard.json -text
+e2e/fixtures/schema5.crownguard.json -text
+e2e/fixtures/encrypted-file-v1.json -text
+e2e/fixtures/encrypted-progress-v1.json -text
