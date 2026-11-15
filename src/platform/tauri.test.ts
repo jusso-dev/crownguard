@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/** In-memory stand-ins for the Tauri bridge and plugins. Every call is recorded so tests can see what crossed IPC. */
+import { parseHTML } from "linkedom";
+
+/** In-memory Tauri mocks prove adapter wiring, not native permissions or selected-path scope enforcement. */
 const tauri = vi.hoisted(() => {
   const state = {
     db: new Map<string, string>(),
@@ -35,8 +37,10 @@ vi.mock("@tauri-apps/api/core", () => ({
       }
       case "recent_list":
         return [{ id: "/a/b.crownguard.json", platforms: [], encrypted: false, filePath: "/a/b.crownguard.json", updatedAt: "2026-01-01T00:00:00Z" }];
-      default:
+      case "recent_record":
         return null;
+      default:
+        throw new Error(`unexpected command ${cmd}`);
     }
   }),
 }));
@@ -64,16 +68,20 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
     tauri.files.set(p, c);
   }),
   writeFile: vi.fn(async (p: string, c: Uint8Array) => {
+    if (tauri.failWrite) throw new Error("read-only file system");
     tauri.files.set(p, c);
   }),
 }));
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn(async () => undefined) }));
 
 import { invoke } from "@tauri-apps/api/core";
-import { ask, save } from "@tauri-apps/plugin-dialog";
+import { ask, message, open, save } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { encrypt } from "../format/crypto";
 import { basename, confirmAndOpen, createNativeFileSaver, createTauriPlatform, saveAs, SqliteAutosave } from "./tauri";
+
+afterEach(() => vi.unstubAllGlobals());
 
 beforeEach(() => {
   tauri.db.clear();
@@ -97,7 +105,7 @@ describe("SqliteAutosave", () => {
   });
 
   it("writes through to SQLite in the order the app made them", async () => {
-    const store = new SqliteAutosave({});
+    const store = await SqliteAutosave.load();
     store.setItem("crownguard:v1", "1");
     store.setItem("crownguard:v1", "2");
     store.removeItem("crownguard:v1:unreadable");
@@ -105,12 +113,16 @@ describe("SqliteAutosave", () => {
     expect(store.getItem("crownguard:v1")).toBe("3");
     await store.flush();
     expect(tauri.calls.map((c) => [c.cmd, c.args?.value])).toEqual([
+      ["autosave_load", undefined],
       ["autosave_set", "1"],
       ["autosave_set", "2"],
       ["autosave_remove", undefined],
       ["autosave_set", "3"],
     ]);
     expect(tauri.db.get("crownguard:v1")).toBe("3");
+    expect(readTextFile).not.toHaveBeenCalled();
+    expect(writeTextFile).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
   });
 
   it("keeps working, and reports, when a write fails", async () => {
@@ -145,6 +157,7 @@ describe("native file saver", () => {
     expect(await saver.save("acme.crownguard.json", "{\"a\":1}")).toEqual({ kind: "saved", file: "Acme.crownguard.json", reused: false });
     expect(await saver.save("acme.crownguard.json", "{\"a\":2}")).toEqual({ kind: "saved", file: "Acme.crownguard.json", reused: true });
     expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ defaultPath: "acme.crownguard.json", filters: [{ name: "crownguard assessment", extensions: ["json"] }] });
     expect(tauri.files.get("/Users/me/Acme.crownguard.json")).toBe('{"a":2}');
     expect(tauri.calls.filter((c) => c.cmd === "recent_record")).toHaveLength(2);
   });
@@ -162,34 +175,104 @@ describe("native file saver", () => {
   it("reports a cancelled dialog and a failed write, then asks again", async () => {
     const saver = createNativeFileSaver();
     expect(await saver.save("a.crownguard.json", "{}")).toEqual({ kind: "cancelled" });
+    expect(writeTextFile).not.toHaveBeenCalled();
     tauri.saveAnswer = "/ro/a.crownguard.json";
+    expect(await saver.save("a.crownguard.json", "original")).toMatchObject({ kind: "saved", reused: false });
     tauri.failWrite = true;
     expect(await saver.save("a.crownguard.json", "{}")).toEqual({ kind: "failed", file: "a.crownguard.json", error: "read-only file system" });
     expect(saver.fileName).toBeUndefined();
+    expect(save).toHaveBeenCalledTimes(2);
+    tauri.failWrite = false;
+    tauri.saveAnswer = "/new/retry.crownguard.json";
+    expect(await saver.save("a.crownguard.json", "retry")).toEqual({ kind: "saved", file: "retry.crownguard.json", reused: false });
+    expect(save).toHaveBeenCalledTimes(3);
+    expect(tauri.files.get("/ro/a.crownguard.json")).toBe("original");
+    expect(tauri.files.get("/new/retry.crownguard.json")).toBe("retry");
   });
 });
 
 describe("saveAs", () => {
-  it("writes the bytes where the user chose, with a filter for the file type", async () => {
-    tauri.saveAnswer = "/out/report.pdf";
-    expect(await saveAs("acme-report.pdf", new Uint8Array([37, 80, 68, 70]), "application/pdf")).toBe("saved");
-    expect(save).toHaveBeenCalledWith({ defaultPath: "acme-report.pdf", filters: [{ name: "PDF document", extensions: ["pdf"] }] });
-    expect(Array.from(tauri.files.get("/out/report.pdf") as Uint8Array)).toEqual([37, 80, 68, 70]);
+  const exports = [
+    { filename: "report.pdf", type: "application/pdf", filter: "PDF document", bytes: new Uint8Array([37, 80, 68, 70]) },
+    { filename: "register.csv", type: "text/csv;charset=utf-8", filter: "CSV file", bytes: new TextEncoder().encode("name,notes\r\nExample,秘密\r\n") },
+    { filename: "register.xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filter: "Excel workbook", bytes: new Uint8Array([80, 75, 3, 4, 0, 255]) },
+    { filename: "crownguard-unreadable.json", type: "application/json", filter: "JSON file", bytes: new TextEncoder().encode(" {broken backup\r\n秘密") },
+  ];
+  it.each(exports)("writes exact $filename bytes to the chosen target with its filter", async ({ filename, type, filter, bytes }) => {
+    tauri.saveAnswer = `/chosen/${filename}`;
+    expect(await saveAs(filename, bytes, type)).toBe("saved");
+    expect(save).toHaveBeenCalledWith({ defaultPath: filename, filters: [{ name: filter, extensions: [filename.split(".").pop()] }] });
+    expect(writeFile).toHaveBeenCalledExactlyOnceWith(`/chosen/${filename}`, bytes);
+    expect(tauri.files.get(`/chosen/${filename}`)).toEqual(bytes);
   });
 
-  it("does nothing when the dialog is cancelled", async () => {
-    expect(await saveAs("a.xlsx", "x", "application/octet-stream")).toBe("cancelled");
+  it.each(exports)("cancelling $filename writes nothing", async ({ filename, bytes, type }) => {
+    expect(await saveAs(filename, bytes, type)).toBe("cancelled");
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(tauri.files.size).toBe(0);
+  });
+
+  it("reports export failure without touching recovery material", async () => {
+    const raw = " {unreadable\r\n秘密";
+    tauri.db.set("crownguard:v1:unreadable", raw);
+    tauri.saveAnswer = "/chosen/crownguard-unreadable.json";
+    tauri.failWrite = true;
+    expect(await saveAs("crownguard-unreadable.json", raw, "application/json")).toBe("failed");
+    expect(message).toHaveBeenCalledExactlyOnceWith("Couldn't save crownguard-unreadable.json: read-only file system", { title: "Save failed", kind: "error" });
+    expect(tauri.db.get("crownguard:v1:unreadable")).toBe(raw);
+    expect(tauri.calls).toEqual([]);
     expect(tauri.files.size).toBe(0);
   });
 });
 
 describe("external links", () => {
-  it("open https links only after the user confirms", async () => {
-    expect(await confirmAndOpen("https://learn.microsoft.com/x")).toBe(true);
-    expect(openUrl).toHaveBeenCalledWith("https://learn.microsoft.com/x");
+  // Literal representatives respect the platform layer boundary; no catalogue imports here.
+  it.each([
+    "https://www.w3.org/WAI/standards-guidelines/wcag/",
+    "https://creativecommons.org/licenses/by/4.0/", "https://www.soc-cmm.com/",
+    "https://developers.openai.com/", "https://knowledge.workspace.google.com/",
+    "https://reference.example/assessment/123?section=one#notes",
+    "https://REFERENCE.example:443/assessment/../assessment/123?section=one#notes",
+  ])("confirms generic HTTPS and preserves the full canonical URL: %s", async (href) => {
+    const canonical = new URL(href).href;
+    expect(await confirmAndOpen(href)).toBe(true);
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(ask).toHaveBeenCalledWith(expect.stringContaining(canonical), expect.objectContaining({ title: "Open external link" }));
+    // Exactly one argument: leave handler choice to the default browser.
+    expect(openUrl).toHaveBeenCalledExactlyOnceWith(canonical);
     tauri.askAnswer = false;
-    expect(await confirmAndOpen("https://example.com/")).toBe(false);
+    expect(await confirmAndOpen(href)).toBe(false);
     expect(openUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["click", "auxclick"])("intercepts %s without navigation and honours cancellation", async (eventType) => {
+    const { document, Event } = parseHTML('<html><head><base href="https://app.example/"></head><body><a href="https://reference.example/assessment/123?section=one#notes"><span>Reference</span></a></body></html>');
+    vi.stubGlobal("document", document);
+    await createTauriPlatform();
+    const event = new Event(eventType, { bubbles: true, cancelable: true });
+    document.querySelector("span")!.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    await vi.waitFor(() => expect(openUrl).toHaveBeenCalledExactlyOnceWith("https://reference.example/assessment/123?section=one#notes"));
+    expect(ask).toHaveBeenCalledTimes(1);
+    tauri.askAnswer = false;
+    document.querySelector("span")!.dispatchEvent(new Event(eventType, { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(ask).toHaveBeenCalledTimes(2));
+    expect(openUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["#notes", "/assessment", "https://app.example/help", "blob:https://app.example/report"])("leaves local/blob link untouched: %s", async (href) => {
+    const { document, Event } = parseHTML('<html><head><base href="https://app.example/"></head><body><a>Local</a></body></html>');
+    vi.stubGlobal("document", document);
+    await createTauriPlatform();
+    const anchor = document.querySelector("a")!;
+    anchor.setAttribute("href", href);
+    for (const eventType of ["click", "auxclick"]) {
+      const event = new Event(eventType, { bubbles: true, cancelable: true });
+      anchor.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(ask).not.toHaveBeenCalled();
+    expect(openUrl).not.toHaveBeenCalled();
   });
 
   it("never open anything but https", async () => {
@@ -209,7 +292,25 @@ describe("createTauriPlatform", () => {
     expect(tauri.calls.some((c) => c.cmd === "recent_record" && c.args?.path === "/docs/acme.crownguard.json")).toBe(true);
     tauri.openAnswer = null;
     expect(await platform.openFile()).toBeNull();
+    expect(readTextFile).toHaveBeenCalledTimes(1);
     expect(await platform.listRecent()).toHaveLength(1);
+  });
+
+  it("recent default paths still require a picker; the chosen path supports save-back", async () => {
+    const platform = await createTauriPlatform();
+    const recentPath = "/previous/recent.crownguard.json";
+    expect(await platform.openFile({ defaultPath: recentPath })).toBeNull();
+    expect(open).toHaveBeenCalledExactlyOnceWith({ defaultPath: recentPath, multiple: false, directory: false, filters: [{ name: "crownguard assessment", extensions: ["json"] }] });
+    expect(readTextFile).not.toHaveBeenCalled();
+    tauri.openAnswer = "/chosen/other.crownguard.json";
+    tauri.files.set(tauri.openAnswer, "{}");
+    const picked = await platform.openFile({ defaultPath: recentPath });
+    expect(readTextFile).toHaveBeenCalledExactlyOnceWith(tauri.openAnswer);
+    const saver = platform.createFileSaver();
+    saver.adopt(picked!);
+    expect(await saver.save("suggested.json", "changed")).toMatchObject({ kind: "saved", reused: true });
+    expect(writeTextFile).toHaveBeenCalledExactlyOnceWith(tauri.openAnswer, "changed");
+    expect(save).not.toHaveBeenCalled();
   });
 
   it("hands over a file the operating system opened, once, at start-up and on each nudge", async () => {
@@ -218,7 +319,8 @@ describe("createTauriPlatform", () => {
     tauri.files.set("/d/two.crownguard.json", "{}");
     tauri.launch = "/d/one.crownguard.json";
     const opened: string[] = [];
-    const stop = platform.onOpenRequest((f) => opened.push(f.path!));
+    const saver = platform.createFileSaver();
+    const stop = platform.onOpenRequest((f) => { opened.push(f.path!); saver.adopt(f); });
     await vi.waitFor(() => expect(opened).toEqual(["/d/one.crownguard.json"]));
     tauri.launch = "/d/two.crownguard.json";
     tauri.listeners.get("open-file")!();
@@ -227,6 +329,9 @@ describe("createTauriPlatform", () => {
     tauri.listeners.get("open-file")!();
     await new Promise((r) => setTimeout(r, 10));
     expect(opened).toHaveLength(2);
+    expect(await saver.save("other.json", "updated")).toMatchObject({ kind: "saved", reused: true });
+    expect(writeTextFile).toHaveBeenCalledExactlyOnceWith("/d/two.crownguard.json", "updated");
+    expect(save).not.toHaveBeenCalled();
     stop();
   });
 
