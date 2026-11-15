@@ -103,7 +103,7 @@ test("example entries are labelled, export to CSV and XLSX, and come out in one 
   await expect(page.getByRole("button", { name: "Download CSV" })).toBeDisabled();
 });
 
-test("the register's dates are recorded, the DTA share clock is worked out, and both survive a save and reopen", async ({ page }) => {
+test("the register's dates and DTA share clock survive entry edits and a save and reopen", async ({ page }) => {
   // Use the download fallback rather than the browser's native save dialog, which can't be driven from a test.
   await page.addInitScript(() => {
     delete (window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker;
@@ -132,6 +132,15 @@ test("the register's dates are recorded, the DTA share clock is worked out, and 
   await dates.getByLabel("Worked-out dates confirmed by").fill("the accountable official");
   await dates.getByLabel("and confirmed on").fill("2026-09-15");
 
+  await page.getByRole("button", { name: "Add AI use case: Microsoft 365 Copilot" }).click();
+  const entry = page.locator("[data-ai-entry]");
+  await entry.getByLabel("Use case name").fill("Agency Copilot");
+  const question = entry.locator("article[data-ai-question]").first();
+  await question.getByRole("radio", { name: "N/A", exact: true }).click();
+  await question.getByLabel(/Why doesn't this apply/).fill("Covered by the service owner.");
+  await expect(dates.getByLabel("Register created")).toHaveValue("2025-12-01");
+  await expect(share).toContainText("Next share with the DTA due 1 December 2026");
+
   const dl = page.waitForEvent("download");
   await page.getByRole("button", { name: "Save file" }).click();
   const file = await (await dl).path();
@@ -145,6 +154,8 @@ test("the register's dates are recorded, the DTA share clock is worked out, and 
   await expect(reopened.getByLabel("Last shared with the DTA")).toHaveValue("2026-06-01");
   await expect(reopened.getByLabel("Worked-out dates confirmed by")).toHaveValue("the accountable official");
   await expect(reopened.getByLabel("and confirmed on")).toHaveValue("2026-09-15");
+  await expect(page.locator("[data-ai-entry]").getByLabel("Use case name")).toHaveValue("Agency Copilot");
+  await expect(page.locator("article[data-ai-question]").first().getByLabel(/Why doesn't this apply/)).toHaveValue("Covered by the service owner.");
 });
 
 test("warns when one product is registered both whole and in parts", async ({ page }) => {
