@@ -1,3 +1,4 @@
+import { assertImportRows, assertImportText } from "./limits";
 import type { ScanStatus } from "../format/vocab";
 import { buildScanResult, type CheckRow } from "./aggregate";
 import { parseCsv, readTable, yesNo } from "./csv";
@@ -69,7 +70,7 @@ function toFinding(row: Record<Exclude<Column, "muted">, string>, muted: boolean
 }
 
 function readCsv(text: string): Finding[] {
-  const { found, records } = readTable(parseCsv(text), columns);
+  const { found, records } = readTable(parseCsv(text, { label: "Prowler scan" }), columns);
   if (!found.has("check") || !found.has("status")) throw new Error("this isn't a Prowler CSV: it needs at least the CHECK_ID and STATUS columns");
   return records.map((r) => toFinding(r, yesNo(r.muted) === true));
 }
@@ -89,6 +90,7 @@ type OcsfFinding = {
 function readOcsf(text: string): Finding[] {
   const parsed = JSON.parse(text) as OcsfFinding | OcsfFinding[];
   const rows = Array.isArray(parsed) ? parsed : [parsed];
+  assertImportRows(rows.length, undefined, "Prowler scan");
   if (!rows.length || rows.some((r) => !r?.metadata?.event_code))
     throw new Error("this isn't Prowler JSON-OCSF output: findings need metadata.event_code");
 
@@ -179,8 +181,12 @@ export function prowlerImporter(platform: "aws" | "microsoft"): ScanImporter {
     hint: azure ? "prowler-output-<subscription>-<date>.csv or .json" : "prowler-output-<account>-<date>.csv or .json",
     url: "https://github.com/prowler-cloud/prowler",
     accept: ".csv,.json,text/csv,application/json",
-    detect: (text) => (looksLikeCsv(text) || looksLikeOcsf(text)) && [provider, ""].includes(providerOf(text)),
+    detect: (text) => {
+      assertImportText(text);
+      return (looksLikeCsv(text) || looksLikeOcsf(text)) && [provider, ""].includes(providerOf(text));
+    },
     read: (text, mapping) => {
+      assertImportText(text);
       const findings = looksLikeCsv(text) ? readCsv(text) : readOcsf(text);
       if (!findings.length) throw new Error(`this ${name} file has no findings in it`);
 

@@ -4,6 +4,8 @@
  * JSON on stdout, human messages on stderr.
  * Exit codes: 0 ok, 1 invalid input, 2 content error, 3 unexpected.
  */
+import { ImportLimitError } from "../imports/limits";
+import { readScanFile } from "./readScanFile";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -178,7 +180,7 @@ export async function run(argv: string[]): Promise<number> {
   } catch (e) {
     const raw = typeof e === "object" && e && "code" in e ? (e as { code: unknown }).code : undefined;
     // node:util parseArgs rejects unknown or malformed options with ERR_PARSE_ARGS_* codes: that's bad input.
-    const code = typeof raw === "number" ? raw : typeof raw === "string" && raw.startsWith("ERR_PARSE_ARGS_") ? EXIT.INVALID : EXIT.UNEXPECTED;
+    const code = e instanceof ImportLimitError ? EXIT.INVALID : typeof raw === "number" ? raw : typeof raw === "string" && raw.startsWith("ERR_PARSE_ARGS_") ? EXIT.INVALID : EXIT.UNEXPECTED;
     err((e as Error).message ?? String(e));
     return code === EXIT.INVALID || code === EXIT.CONTENT ? code : EXIT.UNEXPECTED;
   }
@@ -274,7 +276,7 @@ function cmdImport(argv: string[]): number {
   const assessment = loadAssessment(assessmentPath, new Set(answerableQuestionIds(catalogue)), { writesBack: true });
   let text: string;
   try {
-    text = readText(scanPath);
+    text = readScanFile(scanPath);
   } catch (e) {
     err(`cannot read ${scanPath}: ${(e as Error).message}`);
     return EXIT.INVALID;

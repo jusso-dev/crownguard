@@ -1,3 +1,4 @@
+import { assertImportRows, assertImportText } from "./limits";
 import type { ScanStatus } from "../format/vocab";
 import { buildScanResult, type CheckRow } from "./aggregate";
 import type { ScanImporter } from "./types";
@@ -102,6 +103,7 @@ const str = (v: unknown) => (typeof v === "string" ? v : "");
  * unit names and audit log events that have no business being in a crownguard assessment.
  */
 const read: ScanImporter["read"] = (text, mapping) => {
+  assertImportText(text);
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -120,11 +122,14 @@ const read: ScanImporter["read"] = (text, mapping) => {
     );
 
   const controls: ScubaControl[] = [];
+  let rawControls = 0;
   for (const groups of Object.values(doc.Results ?? {})) {
     if (!Array.isArray(groups)) continue;
     for (const group of groups) {
       const list = (group as { Controls?: unknown })?.Controls;
       if (!Array.isArray(list)) continue;
+      rawControls += list.length;
+      assertImportRows(rawControls, undefined, "ScubaGoggles scan");
       for (const c of list) {
         const row = c as Record<string, unknown>;
         const id = str(row["Control ID"]).trim();
@@ -168,6 +173,9 @@ export const scubagogglesImporter: ScanImporter = {
   hint: "ScubaResults*.json",
   url: "https://github.com/cisagov/ScubaGoggles",
   accept: ".json,application/json",
-  detect: looksLike,
+  detect: (text) => {
+    assertImportText(text);
+    return looksLike(text);
+  },
   read,
 };

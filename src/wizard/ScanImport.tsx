@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { assertImportBytes } from "../imports/limits";
+import { useEffect, useRef, useState } from "react";
 import { catalogue } from "../content/catalogue";
 import { activeQuestions } from "../engine/risk";
 import { answerLabels, type ScanStatus } from "../format/vocab";
@@ -25,6 +26,8 @@ export function ScanImport() {
   const assessment = useStore((s) => s.assessment);
   const applyScan = useStore((s) => s.applyScan);
   const input = useRef<HTMLInputElement>(null);
+  const generation = useRef(0);
+  useEffect(() => () => { generation.current++; }, []);
   const [preview, setPreview] = useState<ScanResult>();
   const [previewer, setPreviewer] = useState<ScanImporter>();
   const [error, setError] = useState<string>();
@@ -38,11 +41,17 @@ export function ScanImport() {
   const last = assessment.imports?.at(-1);
 
   async function onFile(file: File) {
+    const request = ++generation.current;
+    const started = useStore.getState().assessment;
+    setPreviewer(undefined);
     setError(undefined);
     setDone(undefined);
     setPreview(undefined);
     try {
+      assertImportBytes(file.size);
       const text = await file.text();
+      if (request !== generation.current) return;
+      if (started !== useStore.getState().assessment) throw new Error("the assessment changed while reading. Choose the scan again");
       const found = detectImporter(text);
       if (!found) {
         // Nothing recognises it. Let a scanner say why, so the message names the file that was expected.
@@ -55,12 +64,20 @@ export function ScanImport() {
       setOverwrite(false);
       setSetLicence(!!result.licence && result.licence !== assessment.licence[found.platform]);
     } catch (e) {
+      if (request !== generation.current) return;
       setError(`Couldn't import that scan: ${(e as Error).message}.`);
     }
   }
 
   function apply() {
     if (!preview || !previewer) return;
+    const reason = unusable(catalogue, previewer, useStore.getState().assessment);
+    if (reason) {
+      setError(`Couldn't apply that scan: ${reason}. Choose the scan again.`);
+      setPreview(undefined);
+      setPreviewer(undefined);
+      return;
+    }
     const n = applyScan(preview, { platform: previewer.platform, overwrite, licence: setLicence });
     setDone(`Imported ${n} answer${n === 1 ? "" : "s"} from the scan of ${preview.tenant}. Each one shows its evidence; check and adjust as needed.`);
     setPreview(undefined);
@@ -82,7 +99,8 @@ export function ScanImport() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">Already run a scan? Pre-fill answers from it.</p>
           <p className="mt-0.5 text-xs text-muted">
-            Optional. Each file is read in your browser only.{" "}
+            Optional. Each file is read in your browser only. Up to 8 MB (8,000,000 bytes) and 50,000 input records,
+            or 5,000 M365-Secure findings. Larger exports are refused in full; choose a smaller scoped export.{" "}
             {usable.map((i, n) => (
               <span key={i.id}>
                 {n > 0 && " "}

@@ -1,3 +1,4 @@
+import { assertImportBytes, assertImportRows, assertImportText } from "./limits";
 import { aiAppCategories, type AiAppCategory, type AiKind, type KnownAiApp, type OAuthScope } from "../content/schema";
 import { newUseCase } from "../engine/aiRegister";
 import type { AiDataKind } from "../format/aiOptions";
@@ -67,16 +68,6 @@ export interface FoundInventory {
 const importLabels: Record<ConsentSource, string> = {
   microsoft: "Microsoft consent inventory import",
   google: "Google OAuth log import",
-};
-
-/** Files bigger than this are refused rather than parsed: a consent export is small. */
-const MAX_BYTES = 8_000_000;
-/** And a single file can't carry more rows than this. */
-const MAX_ITEMS = 50_000;
-
-const checkSize = (text: string, what: string) => {
-  if (text.length > MAX_BYTES)
-    throw new Error(`this ${what} is too large to be a consent export (${Math.round(text.length / 1_000_000)} MB; crownguard reads up to ${MAX_BYTES / 1_000_000} MB)`);
 };
 
 /** Short form of an OAuth scope: the last path segment of a URL, otherwise the token as written. */
@@ -230,6 +221,7 @@ function collectItems(value: unknown, rows: JsonObject[], depth = 0): void {
   if (!value || typeof value !== "object") return;
   const o = lowerKeys(value as JsonObject);
   if (isGrant(o) || "appid" in o || "displayname" in o || "appownerorganizationid" in o) {
+    assertImportRows(rows.length + 1, undefined, "Microsoft consent export");
     rows.push(o);
     return;
   }
@@ -243,9 +235,14 @@ function collectItems(value: unknown, rows: JsonObject[], depth = 0): void {
  * name the app and its publisher. The users are counted and dropped.
  */
 export function readGraphConsent(text: string | string[], known: KnownAiApp[], scopes: OAuthScope[]): FoundInventory {
+  const files = Array.isArray(text) ? text : [text];
+  let bytes = 0;
+  for (const file of files) {
+    bytes += assertImportText(file, "consent export selection");
+    assertImportBytes(bytes, "consent export selection");
+  }
   const rows: JsonObject[] = [];
-  for (const file of Array.isArray(text) ? text : [text]) {
-    checkSize(file, "file");
+  for (const file of files) {
     let json: unknown;
     try {
       json = JSON.parse(file);
@@ -258,7 +255,6 @@ export function readGraphConsent(text: string | string[], known: KnownAiApp[], s
   const sps = rows.filter((o) => !isGrant(o));
   if (!grants.length && !sps.length)
     throw new Error("this isn't a Microsoft consent export: no OAuth2 permission grants or service principals in it. Look for the Get-MgOauth2PermissionGrant and Get-MgServicePrincipal output");
-  if (grants.length + sps.length > MAX_ITEMS) throw new Error(`this export has more than ${MAX_ITEMS} rows; narrow it with Where-Object and try again`);
   if (!grants.length)
     throw new Error("this export has service principals but no consent grants. Pick the Get-MgOauth2PermissionGrant export too (both files can be selected together)");
 
@@ -322,7 +318,7 @@ const googleColumns = {
  * emails are counted and dropped here.
  */
 export function readGoogleConsent(text: string, known: KnownAiApp[], scopes: OAuthScope[]): FoundInventory {
-  checkSize(text, "file");
+  assertImportText(text, "Google consent export");
   if (!text.trim()) throw new Error("this isn't a Google OAuth log export: the file is empty");
   const lines = text.split(/\r?\n/);
   // The header can sit below preamble lines, and the preamble can carry punctuation (a ";" throws the delimiter
@@ -338,14 +334,13 @@ export function readGoogleConsent(text: string, known: KnownAiApp[], scopes: OAu
   if (headerAt < 0)
     throw new Error("this isn't a Google OAuth log export: no header row with an Application name column. Export from Reporting > Audit and investigation > OAuth log events");
 
-  const { found, records } = readTable(parseCsv(lines.slice(headerAt).join("\n")), googleColumns);
+  const { found, records } = readTable(parseCsv(lines.slice(headerAt).join("\n"), { label: "Google consent export" }), googleColumns);
   const agentColumn = found.has("byAgent");
 
   const byApp = new Map<string, MutableApp>();
   const people = new Set<string>();
   let grants = 0;
   for (const row of records) {
-    if (grants > MAX_ITEMS) throw new Error(`this export has more than ${MAX_ITEMS} rows; narrow the date range and try again`);
     const event = row.event.trim();
     if (/revok|remov|delet|block/i.test(event)) continue;
     const name = row.name.trim();

@@ -83,7 +83,7 @@ describe("Microsoft consent export", () => {
   });
 
   it("refuses an oversized export rather than parsing it", () => {
-    expect(() => readGraphConsent("[".concat("x".repeat(8_000_000), "]"), known, scopes)).toThrow(/too large/);
+    expect(() => readGraphConsent("[".concat("x".repeat(8_000_000), "]"), known, scopes)).toThrow(/8 MB.*Nothing was applied/);
   });
 });
 
@@ -138,7 +138,7 @@ describe("Google OAuth log export", () => {
   });
 
   it("refuses an oversized export rather than parsing it", () => {
-    expect(() => readGoogleConsent("x".repeat(8_000_001), known, scopes)).toThrow(/too large/);
+    expect(() => readGoogleConsent("x".repeat(8_000_001), known, scopes)).toThrow(/8 MB.*Nothing was applied/);
   });
 });
 

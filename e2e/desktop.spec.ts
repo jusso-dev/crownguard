@@ -1,3 +1,4 @@
+import { rejectScanBeforeRead } from "./import-files";
 /**
  * The desktop build (`vite build --mode desktop`) under the desktop webview's rules: the CSP from tauri.conf.json
  * (connect-src limited to the IPC bridge), a frozen Object.prototype (`freezePrototype: true`) and no global Tauri
@@ -163,6 +164,9 @@ test("scan imports and XLSX/CSV exports work offline, including cancelled output
     await page.getByRole("button", { name: "Save crown jewel" }).click();
   }
   await next(page);
+  const beforeImport = d.db.get("crownguard:v1");
+  await rejectScanBeforeRead(page);
+  expect(d.db.get("crownguard:v1")).toBe(beforeImport);
   for (const fixture of ["m365-secure-scan.json", "prowler-aws.csv", "ScubaResults.json"]) {
     await page.getByTestId("scan-input").setInputFiles(`e2e/fixtures/${fixture}`);
     const preview = page.getByTestId("scan-preview");
@@ -200,6 +204,7 @@ test("scan imports and XLSX/CSV exports work offline, including cancelled output
   });
   expect(d.external).toEqual([]);
   expect(d.unknown).toEqual([]);
+  expect(await cspViolations(page)).toEqual([]);
 });
 
 test("closing and reopening restores the assessment, step and section from SQLite", async ({ page, context, baseURL }) => {

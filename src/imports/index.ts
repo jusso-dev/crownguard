@@ -1,3 +1,4 @@
+import { assertImportText } from "./limits";
 import { m365SecureImporter } from "./m365Secure";
 import { prowlerImporter } from "./prowler";
 import { scubagogglesImporter } from "./scubagoggles";
@@ -13,6 +14,7 @@ export const importers: ScanImporter[] = [m365SecureImporter, prowlerImporter("a
 
 /** The importer that recognises this file, whichever platform it belongs to. */
 export function detectImporter(text: string): ScanImporter | undefined {
+  assertImportText(text);
   return importers.find((i) => i.detect(text));
 }
 
@@ -48,6 +50,7 @@ export function unusable(catalogue: Catalogue, importer: ScanImporter, assessmen
 
 /** Read a scan file for this assessment. Throws with a message for the assessor when nothing can be applied. */
 export function readScan(catalogue: Catalogue, importer: ScanImporter, text: string, assessment: Assessment): ScanResult {
+  assertImportText(text);
   const reason = unusable(catalogue, importer, assessment);
   if (reason) throw new Error(`This is a ${importer.label} scan. ${reason}, so nothing was applied`);
   const result = importer.read(text, catalogue.imports.get(importer.id)!);
