@@ -23,11 +23,15 @@ const summary = z
 
 const ID_LINE = /^(#.*|[A-Za-z0-9._-]+)$/;
 
-for (const path of summary.files) {
+const prepared = summary.files.map((path) => {
   const src = join(dir, "files", path);
   if (!existsSync(src)) throw new Error(`summary lists ${path} but the run did not include it`);
   const text = readFileSync(src, "utf8");
   if (path.endsWith(".txt") && !text.trimEnd().split("\n").every((l) => ID_LINE.test(l))) throw new Error(`${path} has a line that is neither a comment nor an id`);
+  return { path, text };
+});
+
+for (const { path, text } of prepared) {
   writeFileSync(repoPath(path), text);
   console.log(`applied ${path}`);
 }
