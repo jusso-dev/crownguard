@@ -69,10 +69,10 @@
   licence: [defender-for-cloud, defender-cspm]
   sources: [ms-mdc-email-notifications]
   refs:
-    - { framework: cis-azure, ref: "8.1.12" }
-    - { framework: cis-azure, ref: "8.1.13" }
     - { framework: cis-azure, ref: "8.1.14" }
     - { framework: cis-azure, ref: "8.1.15" }
+    - { framework: cis-azure, ref: "8.1.16" }
+    - { framework: cis-azure, ref: "8.1.17" }
     - { framework: nist-csf-2, ref: DE.AE-06 }
     - { framework: mcsb, ref: IR-2 }
   essentials:
@@ -222,8 +222,8 @@
   sources: [ms-vnet-flow-logs]
   refs:
     - { framework: cis-azure, ref: "6.1.1.6" }
+    - { framework: cis-azure, ref: "7.5" }
     - { framework: cis-azure, ref: "7.6" }
-    - { framework: cis-azure, ref: "7.8" }
     - { framework: nist-csf-2, ref: DE.CM-01 }
     - { framework: mcsb, ref: LT-4 }
     - { framework: ism, ref: ISM-1405 }
@@ -269,6 +269,10 @@
     - { framework: cis-azure, ref: "6.1.2.8" }
     - { framework: cis-azure, ref: "6.1.2.9" }
     - { framework: cis-azure, ref: "6.1.2.10" }
+    - { framework: cis-azure, ref: "6.1.2.12" }
+    - { framework: cis-azure, ref: "6.1.2.13" }
+    - { framework: cis-azure, ref: "6.1.2.15" }
+    - { framework: cis-azure, ref: "6.1.2.16" }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: nist-csf-2, ref: DE.AE-02 }
     - { framework: mcsb, ref: LT-1 }
@@ -304,7 +308,7 @@
   licence: []
   sources: [ms-azure-policy, ms-azure-management-groups, ms-mdc-security-policy, ms-mdc-manage-mcsb]
   refs:
-    - { framework: cis-azure, ref: "8.1.11" }
+    - { framework: cis-azure, ref: "8.1.13" }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: PV-1 }
     - { framework: mcsb, ref: PV-2 }
@@ -344,7 +348,6 @@
   refs:
     - { framework: cis-azure, ref: "6.2" }
     - { framework: cis-azure, ref: "5.5" }
-    - { framework: cis-azure, ref: "9.3.9" }
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: mcsb, ref: AM-3 }
   essentials:

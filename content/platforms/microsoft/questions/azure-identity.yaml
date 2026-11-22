@@ -167,7 +167,6 @@
   licence: [entra-p1]
   sources: [ms-ca-azure-mgmt, ms-auth-strengths, ms-mandatory-mfa]
   refs:
-    - { framework: cis-azure, ref: "3.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: mcsb, ref: IM-6 }
     - { framework: mcsb, ref: IM-7 }
