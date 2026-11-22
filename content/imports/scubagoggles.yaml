@@ -169,7 +169,7 @@ mappings:
     rationale: Conversation history enabled and conversation retention set to at least 18 months is the question's Yes state; whether Vault then retains them is GO-BAK-004's business.
   - question: GO-GEM-007
     checks: [GWS.GEMINI.2.1v1, GWS.GEMINI.4.1v1]
-    rationale: Gemini Alpha features disabled and conversation sharing by link off; the extension, integration and Gems sharing settings the question names aren't checked.
+    rationale: Gemini Beta features disabled and conversation sharing by link off; the extension, integration and Gems sharing settings the question names aren't checked.
     cap: partial
   - question: GO-MEET-001
     checks: [GWS.MEET.1.1v1, GWS.MEET.2.1v1, GWS.MEET.3.1v1, GWS.MEET.4.1v1]

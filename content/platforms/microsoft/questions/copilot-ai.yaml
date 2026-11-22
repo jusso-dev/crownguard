@@ -112,6 +112,9 @@
     In the Power Platform admin centre enable Managed Environments, create data policies for the
     default and production environments, limit who can create and share agents, require Microsoft
     authentication for agents, and review the Microsoft 365 admin centre agent registry regularly.
+    Turn on Sharing agents with embedded maker credentials (in preview) so an agent whose connections
+    run with the maker's own credentials can't be shared, and have makers switch those connections to
+    end-user credentials.
   effort: M
   licence: []
   sources: [ms-copilot-studio-security, ms-copilot-studio-sharing, ms-power-platform-dlp, ms-agent-registry]
