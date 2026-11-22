@@ -14,6 +14,14 @@ export const ratingLabels = {
 } as const;
 export type EssentialsRating = keyof typeof ratingLabels;
 
+/**
+ * What crownguard deliberately doesn't ask about (issue #51). These actions are organisation-wide, not platform
+ * settings, so they stay not assessed and the Governance and culture and Visibility and response ratings rest on the
+ * platform questions alone. Shown on the review card, in the report section and in the method notes.
+ */
+export const essentialsScopeNote =
+  "crownguard doesn't assess Governance and culture as a whole. It doesn't ask about executive accountability and risk appetite, the risk management plan, cyber security staffing and resourcing, supplier assurance, or using threat information in risk assessments, so those actions show as not assessed. Governance and culture and Visibility and response ratings come from the platform questions only.";
+
 /** Weight of each assessed rating in ASD's domain percentage. Not assessed has none: it is left out, not scored 0. */
 export const ratingWeights = { "not-effective": 0, "partially-effective": 0.5, "fully-effective": 1 } as const;
 

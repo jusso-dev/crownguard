@@ -138,6 +138,10 @@ Essentials domains the question's subject sits in (only ones the action lists), 
   tagged with, naming the candidate actions. Tag it, or record why not in `essentialsReviewed: <reason>`.
 - Never change an `e8:` tag to make an Essentials result look better, and never tag from an E8 level. Nothing in the
   Essentials results reads `e8:`.
+- Organisation-wide governance is out of scope (#51): IT.GOV-01.1, IT.GOV-03.1, IT.GOV-04.1, IT.GOV-04.2, IT.GOV-11.1
+  and IT.IDE-04.1 have no question and stay not assessed. They are not platform settings, and a governance module
+  would have no crown jewel to score. The review card and the report say so (`essentialsScopeNote` in
+  `src/engine/essentials.ts`); keep that note in step if you add a question for one of them.
 
 **How results are worked out** (`src/engine/essentials.ts`, indicative only): an action in a domain is not effective
 if any tagged question is No; fully effective if every tagged question is Yes or N/A and at least one Yes covers the

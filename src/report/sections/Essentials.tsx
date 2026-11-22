@@ -1,5 +1,5 @@
 import { Text, View } from "@react-pdf/renderer";
-import { gapLabels, ratingLabels, type DomainResult, type EssentialsRating } from "../../engine/essentials";
+import { essentialsScopeNote, gapLabels, ratingLabels, type DomainResult, type EssentialsRating } from "../../engine/essentials";
 import { Section } from "../layout";
 import type { ReportModel } from "../model";
 import { Badge, essentialsColors, Table, useTheme } from "../primitives";
@@ -24,6 +24,7 @@ export function EssentialsSection({ essentials: e }: { essentials: NonNullable<R
         Phases are ASD&apos;s order for doing the work, not a rating. Capability domains run across every phase. Not assessed principles are counted
         separately and left out of the percentage.
       </Text>
+      <Text style={{ ...s.small, marginBottom: 6 }}>{essentialsScopeNote}</Text>
       <Table
         rows={e.domains}
         columns={[
