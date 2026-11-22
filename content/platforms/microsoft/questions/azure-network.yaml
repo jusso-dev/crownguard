@@ -21,9 +21,11 @@
   licence: []
   sources: [ms-azure-nsg, ms-mdc-jit]
   refs:
-    - { framework: cis-azure, ref: "7.1" }
-    - { framework: cis-azure, ref: "7.2" }
-    - { framework: cis-azure, ref: "7.3" }
+    - { framework: cis-azure, ref: "7.1.1" }
+    - { framework: cis-azure, ref: "7.1.5" }
+    - { framework: cis-azure, ref: "7.1.4" }
+    - { framework: cis-azure, ref: "7.1.2" }
+    - { framework: cis-azure, ref: "7.1.6" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-1 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
@@ -88,9 +90,10 @@
   licence: []
   sources: [ms-waf-app-gateway, ms-waf-front-door]
   refs:
+    - { framework: cis-azure, ref: "7.2.6" }
+    - { framework: cis-azure, ref: "7.2.5" }
+    - { framework: cis-azure, ref: "7.2.4" }
     - { framework: cis-azure, ref: "7.10" }
-    - { framework: cis-azure, ref: "7.14" }
-    - { framework: cis-azure, ref: "7.15" }
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-6 }
   essentials:

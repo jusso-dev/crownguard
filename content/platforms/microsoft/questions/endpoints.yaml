@@ -340,7 +340,7 @@
   licence: [defender-endpoint-p2]
   sources: [ms-mdvm, ms-device-discovery, ms-defender-servers, ms-e8-patch-applications, asd-e8-maturity-model]
   refs:
-    - { framework: cis-azure, ref: "8.1.10" }
+    - { framework: cis-azure, ref: "8.1.11" }
     - { framework: nist-csf-2, ref: ID.AM-01 }
     - { framework: nist-csf-2, ref: ID.RA-01 }
     - { framework: mcsb, ref: AM-1 }

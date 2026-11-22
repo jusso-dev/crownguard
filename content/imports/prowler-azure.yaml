@@ -105,7 +105,7 @@ mappings:
     cap: partial
   - question: MS-AZ-029
     checks: [defender_ensure_notify_emails_to_owners, defender_additional_email_configured_with_a_security_contact, defender_ensure_notify_alerts_severity_is_high, defender_attack_path_notifications_properly_configured]
-    rationale: Owner notification, an additional security contact, high-severity alert emails and attack path notifications are CIS 8.1.12-8.1.15, which the question groups; the SIEM routing clause isn't checked but the email settings are the question.
+    rationale: Owner notification, an additional security contact, high-severity alert emails and attack path notifications are CIS 8.1.14-8.1.17, which the question groups; the SIEM routing clause isn't checked but the email settings are the question.
   - question: MS-AZ-030
     checks: [defender_ensure_defender_cspm_is_on]
     rationale: Defender CSPM on is a prerequisite for attack paths, critical assets and governance rules; classification and remediation ownership aren't checked, so a pass caps at Partial.
@@ -124,12 +124,12 @@ mappings:
     failIsInconclusive: true
   - question: MS-AZ-034
     checks: [monitor_alert_create_update_nsg, monitor_alert_delete_nsg, monitor_alert_create_update_sqlserver_fr, monitor_alert_delete_sqlserver_fr, monitor_alert_create_update_public_ip_address_rule, monitor_alert_delete_public_ip_address_rule, monitor_alert_create_policy_assignment, monitor_alert_delete_policy_assignment, monitor_alert_create_update_security_solution, monitor_alert_delete_security_solution]
-    rationale: Activity log alerts for the ten CIS 6.1.2.x operations; privileged role assignments, lock deletion and diagnostic setting deletion aren't checked, so a pass caps at Partial. Alerts built in Sentinel instead fail these checks, so a fail goes to review.
+    rationale: Activity log alerts for CIS 6.1.2.1-6.1.2.10; privileged role assignments, lock deletion and diagnostic setting deletion (6.1.2.12, 6.1.2.13, 6.1.2.15, 6.1.2.16) aren't checked, so a pass caps at Partial. Alerts built in Sentinel instead fail these checks, so a fail goes to review.
     cap: partial
     failIsInconclusive: true
   - question: MS-AZ-035
     checks: [policy_ensure_asc_enforcement_enabled]
-    rationale: Confirms no Microsoft cloud security benchmark policy is disabled (CIS 8.1.11); management group hierarchy and Deny guardrails aren't checked, so a pass caps at Partial.
+    rationale: Confirms no Microsoft cloud security benchmark policy is disabled (CIS 8.1.13); management group hierarchy and Deny guardrails aren't checked, so a pass caps at Partial.
     cap: partial
   - question: MS-AZ-036
     checks: [iam_custom_role_has_permissions_to_administer_resource_locks]
