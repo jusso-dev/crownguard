@@ -41,7 +41,9 @@ impl LineEdit {
     }
 
     pub fn handle(&mut self, key: KeyEvent) -> EditOutcome {
-        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
+        // Windows reports AltGr as Ctrl+Alt, so a character typed with AltGr (such as @ on many European layouts) is
+        // text, not a shortcut.
+        let ctrl = key.modifiers.contains(KeyModifiers::CONTROL) && !key.modifiers.contains(KeyModifiers::ALT);
         match key.code {
             KeyCode::Enter => return EditOutcome::Commit(self.value()),
             KeyCode::Esc => return EditOutcome::Cancel,
@@ -90,6 +92,18 @@ mod tests {
 
     fn key(code: KeyCode) -> KeyEvent {
         KeyEvent::new(code, KeyModifiers::NONE)
+    }
+
+    #[test]
+    fn altgr_characters_are_typed() {
+        let mut e = LineEdit::new("", 10, false);
+        e.handle(KeyEvent::new(
+            KeyCode::Char('@'),
+            KeyModifiers::CONTROL | KeyModifiers::ALT,
+        ));
+        assert_eq!(e.value(), "@");
+        e.handle(KeyEvent::new(KeyCode::Char('u'), KeyModifiers::CONTROL));
+        assert_eq!(e.value(), "", "plain Ctrl+U still clears");
     }
 
     #[test]

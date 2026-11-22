@@ -335,9 +335,13 @@ pub fn to_save_file(a: &Assessment) -> Result<String> {
 /// Write via a temporary file and rename, so a crash mid-write never leaves half a file.
 pub fn save(a: &Assessment, path: &Path) -> Result<()> {
     let text = to_save_file(a)?;
-    let tmp = path.with_extension("json.tmp");
+    // The process id keeps two instances saving the same file from sharing one temporary file.
+    let tmp = path.with_extension(format!("json.{}.tmp", std::process::id()));
     fs::write(&tmp, text).with_context(|| format!("can't write {}", tmp.display()))?;
-    fs::rename(&tmp, path).with_context(|| format!("can't write {}", path.display()))?;
+    if let Err(e) = fs::rename(&tmp, path) {
+        let _ = fs::remove_file(&tmp);
+        return Err(e).with_context(|| format!("can't write {}", path.display()));
+    }
     Ok(())
 }
 
