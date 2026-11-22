@@ -1,5 +1,5 @@
 //! Scoring, ported from `src/engine/risk.ts`, `maturity.ts` and `roadmap.ts`. The TypeScript engine is the reference:
-//! `tui/parity.ts` checks this port against `pnpm cg score` on the e2e fixtures, so keep the two in step.
+//! `scripts/tui-parity.ts` (`pnpm tui:parity`) checks this port against `pnpm cg score`, so keep the two in step.
 
 use std::collections::{HashMap, HashSet};
 
@@ -178,7 +178,11 @@ pub fn assess_all<'a>(cat: &'a Catalogue, a: &'a Assessment) -> Vec<JewelRisk<'a
         .jewels
         .iter()
         .filter(|j| a.platforms.contains(&j.platform))
-        .map(|j| assess_jewel(j, &questions, &answers))
+        .map(|j| {
+            // Only the jewel's own platform's questions: platform-wide ("*") questions match every asset type.
+            let own: Vec<&Question> = questions.iter().copied().filter(|q| q.platform == j.platform).collect();
+            assess_jewel(j, &own, &answers)
+        })
         .collect();
     risks.sort_by(|x, y| y.score.cmp(&x.score).then(y.impact.cmp(&x.impact)));
     risks
@@ -348,7 +352,7 @@ pub fn build_roadmap<'a>(questions: &[&'a Question], jewels: &[&'a Jewel], answe
             let protects: Vec<&Jewel> = jewels
                 .iter()
                 .copied()
-                .filter(|j| question.applies_to_type(&j.asset_type))
+                .filter(|j| j.platform == question.platform && question.applies_to_type(&j.asset_type))
                 .collect();
             let impact_sum: u32 = protects.iter().map(|j| u32::from(impact_of(j))).sum();
             let impact_sum = if impact_sum == 0 { 1.0 } else { f64::from(impact_sum) };

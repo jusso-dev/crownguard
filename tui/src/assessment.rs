@@ -1,6 +1,7 @@
-//! The `.crownguard.json` file, read and written in the same format as the web app (schema 4), so a file can move
-//! between the browser and the terminal. Fields the TUI doesn't edit (SOC answers, the AI register, scan evidence,
-//! the logo, wizard progress and anything newer) are carried through a save untouched.
+//! The `.crownguard.json` file, read and written in the same format as the web app (schema 6), so a file can move
+//! between the browser and the terminal. Fields the TUI doesn't edit (SOC answers, the AI register and its usage
+//! patterns, scan evidence, the ISM baseline, the ASD Essentials chapter, the logo, wizard progress and anything
+//! newer) are carried through a save untouched.
 
 use std::fs;
 use std::path::Path;
@@ -10,9 +11,9 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
-/// File format version this build writes, as `SCHEMA_VERSION` in `src/wizard/assessmentSchema.ts`.
-pub const SCHEMA_VERSION: u64 = 4;
-pub const SCHEMA_URL: &str = "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v4.json";
+/// File format version this build writes, as `SCHEMA_VERSION` in `src/format/schema.ts`.
+pub const SCHEMA_VERSION: u64 = 6;
+pub const SCHEMA_URL: &str = "https://jusso-dev.github.io/crownguard/schema/crownguard-assessment.v6.json";
 pub const NOTE_MAX: usize = 4000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -251,7 +252,7 @@ pub struct Opened {
     pub web_only: Vec<&'static str>,
 }
 
-/// Parse a saved file, migrating older formats as the web app does (`src/wizard/migrations.ts`).
+/// Parse a saved file, migrating older formats as the web app does (`src/format/migrations.ts`).
 pub fn parse(text: &str) -> Result<(Assessment, Opened)> {
     let mut raw: Map<String, Value> = match serde_json::from_str(text).context("not valid JSON")? {
         Value::Object(m) => m,
@@ -272,7 +273,8 @@ pub fn parse(text: &str) -> Result<(Assessment, Opened)> {
     if from > SCHEMA_VERSION {
         opened.read_only = true;
     } else if from < SCHEMA_VERSION {
-        // 1 → 2 drops the legacy `version` marker; 2 → 3 and 3 → 4 only added optional fields.
+        // 1 → 2 drops the legacy `version` marker. Every later step (up to 5 → 6) only moves the version: 2 → 3 and
+        // 3 → 4 added optional fields, 4 → 5 widened the AI register's usage patterns and 5 → 6 longer evidence check ids.
         raw.remove("version");
         raw.insert("schemaVersion".into(), json!(SCHEMA_VERSION));
         opened.migrated_from = Some(from);
@@ -355,19 +357,26 @@ mod tests {
 
     #[test]
     fn round_trip_keeps_fields_the_tui_does_not_edit() {
-        let path = format!("{FIXTURES}/current.crownguard.json");
-        let original: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
-        let (a, opened) = load(Path::new(&path)).unwrap();
-        assert!(opened.web_only.contains(&"SOC maturity"));
-        let saved: Value = serde_json::from_str(&to_save_file(&a).unwrap()).unwrap();
-        for (key, value) in original.as_object().unwrap() {
-            if ["schemaVersion", "savedBy", "$schema"].contains(&key.as_str()) {
-                continue;
+        // schema4 and schema5 carry the AI register (schema5 with the DTA v2.1 usage patterns), the ISM baseline,
+        // the ASD Essentials chapter and a top-level field no build knows.
+        for (name, from) in [("schema3", 3), ("schema4", 4), ("schema5", 5)] {
+            let path = format!("{FIXTURES}/{name}.crownguard.json");
+            let original: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+            let (a, opened) = load(Path::new(&path)).unwrap();
+            assert_eq!(opened.migrated_from, Some(from), "{name}");
+            assert!(!opened.read_only, "{name}");
+            assert!(opened.web_only.contains(&"SOC maturity"), "{name}");
+            let saved: Value = serde_json::from_str(&to_save_file(&a).unwrap()).unwrap();
+            for (key, value) in original.as_object().unwrap() {
+                if ["schemaVersion", "savedBy", "$schema"].contains(&key.as_str()) {
+                    continue;
+                }
+                assert_eq!(saved.get(key), Some(value), "{name}: {key} survives a save");
             }
-            assert_eq!(saved.get(key), Some(value), "{key} survives a save");
+            assert_eq!(saved["savedBy"]["app"], "crownguard-tui");
+            assert_eq!(saved["schemaVersion"], SCHEMA_VERSION);
+            assert_eq!(saved["$schema"], SCHEMA_URL);
         }
-        assert_eq!(saved["savedBy"]["app"], "crownguard-tui");
-        assert_eq!(saved["schemaVersion"], SCHEMA_VERSION);
     }
 
     #[test]
@@ -391,7 +400,7 @@ mod tests {
     fn saved_files_match_the_published_schema() {
         let schema_path = concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../public/schema/crownguard-assessment.v4.json"
+            "/../public/schema/crownguard-assessment.v6.json"
         );
         let schema: Value = serde_json::from_str(&fs::read_to_string(schema_path).unwrap()).unwrap();
         let validator = jsonschema::validator_for(&schema).unwrap();
@@ -402,7 +411,7 @@ mod tests {
         filled.answers.insert("MS-ID-001".into(), Answer::Na);
         filled.notes.insert("MS-ID-001".into(), "No users".into());
         let mut cases = vec![filled, Assessment::empty()];
-        for f in ["legacy", "current", "branded"] {
+        for f in ["legacy", "branded", "schema3", "schema4", "schema5"] {
             cases.push(load(Path::new(&format!("{FIXTURES}/{f}.crownguard.json"))).unwrap().0);
         }
         for a in cases {
@@ -418,7 +427,7 @@ mod tests {
     #[test]
     fn refuses_ratings_outside_one_to_five() {
         let mut v: Value =
-            serde_json::from_str(&fs::read_to_string(format!("{FIXTURES}/current.crownguard.json")).unwrap()).unwrap();
+            serde_json::from_str(&fs::read_to_string(format!("{FIXTURES}/schema5.crownguard.json")).unwrap()).unwrap();
         v["jewels"][0]["integrity"] = json!(9);
         assert!(parse(&v.to_string()).unwrap_err().to_string().contains("integrity"));
     }

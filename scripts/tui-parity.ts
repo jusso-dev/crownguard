@@ -9,7 +9,14 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildReport, emptyAssessment, loadCatalogueFromDisk, parseAssessment, questionIdsOf, scoreSummary, toSaveFile, type Assessment } from "../src/lib";
+import { scoreSummary } from "../src/cli/views";
+import { loadCatalogueFromDisk } from "../src/content/disk";
+import { answerableQuestionIds } from "../src/content/schema";
+import { emptyAssessment } from "../src/format/empty";
+import { parseAssessment } from "../src/format/parse";
+import { toSaveFile } from "../src/format/saveFile";
+import type { Assessment } from "../src/format/schema";
+import { buildReport } from "../src/report/model";
 
 const BIN = process.env.CROWNGUARD_TUI_BIN ?? "tui/target/debug/crownguard";
 const RUNS = Number(process.env.PARITY_RUNS ?? 300);
@@ -18,7 +25,7 @@ const KEYS = ["posture", "inPlace", "partial", "assessed", "inScope", "unanswere
 
 const { catalogue, errors } = loadCatalogueFromDisk();
 if (errors.length) throw new Error(`content errors:\n${errors.join("\n")}`);
-const questionIds = questionIdsOf(catalogue);
+const questionIds = new Set(answerableQuestionIds(catalogue));
 
 // Small seeded PRNG so a failure can be reproduced from its seed.
 function rng(seed: number) {

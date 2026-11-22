@@ -46,7 +46,9 @@ web app:
 - **The PDF report**, logo and colours. Open the file in the web app (**Open file**) or run
   `pnpm cg render <file> report.pdf`.
 - **Scan import.** Use the web app or `pnpm cg import`. Evidence already in the file is shown on each question.
-- **SOC maturity** and the **AI use-case register**, including AI-register-only files, which it won't open.
+- **The ISM baseline** and **ASD Essentials** chapter chosen for the report.
+- **SOC maturity** and the **AI use-case register** (including the DTA usage patterns), and AI-register-only files,
+  which it won't open.
 - **Encrypted files.** Open them in the web app and save an unencrypted copy.
 
 A file from a newer crownguard opens read-only, as it does in the web app.
@@ -63,5 +65,8 @@ The scoring in `tui/src/engine.rs` is a port of `src/engine/`. The TypeScript en
 `pnpm tui:parity` scores the e2e fixtures and 300 random assessments with both and fails on any difference. CI runs it
 along with `cargo fmt`, `clippy` and `cargo test`. If you change the scoring rules, change both.
 
-The file format follows `src/wizard/assessmentSchema.ts`: a test checks that what the terminal app saves passes the
-published JSON Schema in `public/schema/`.
+The file format follows `src/format/schema.ts` (schema 6). Older files are brought up to schema 6 on open, as
+`src/format/migrations.ts` does, and a test checks that what the terminal app saves passes the published JSON Schema
+in `public/schema/crownguard-assessment.v6.json`. When the web app moves to a new schema version, bump
+`SCHEMA_VERSION` and `SCHEMA_URL` in `tui/src/assessment.rs` to match; until then the terminal app opens new files
+read-only.

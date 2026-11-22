@@ -1037,7 +1037,7 @@ mod tests {
     fn every_screen_renders() {
         let fixture = Path::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../e2e/fixtures/current.crownguard.json"
+            "/../e2e/fixtures/schema3.crownguard.json"
         ));
         let (a, opened) = assessment::load(fixture).unwrap();
         for (w, h) in [(140, 45), (50, 14), (20, 6)] {
