@@ -1,6 +1,6 @@
-# Control ids in the CISA SCuBA Google Workspace baselines at ScubaGoggles tag v1.0.1 (2026-07-28),
+# Control ids in the CISA SCuBA Google Workspace baselines at ScubaGoggles tag v1.1.0 (2026-10-22),
 # taken from the policy headings in
-# https://github.com/cisagov/ScubaGoggles/tree/v1.0.1/scubagoggles/baselines
+# https://github.com/cisagov/ScubaGoggles/tree/v1.1.0/scubagoggles/baselines
 # (each `#### GWS.<PRODUCT>.<group>.<policy>v<version>` policy heading).
 # One id per line, including the policy version suffix. Regenerate when
 # content/imports/scubagoggles.yaml moves to a newer ScubaGoggles release.
@@ -140,4 +140,5 @@ GWS.MEET.5.1v1
 GWS.MEET.5.2v1
 GWS.MEET.6.1v1
 GWS.MEET.6.2v1
+GWS.MEET.6.3v1
 GWS.SITES.1.1v1

@@ -57,8 +57,8 @@
 - id: ms-ir-playbooks
   title: Incident response playbooks
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/security/operations/incident-response-playbooks
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/security/zero-trust/security-operations-incident-response-playbooks
+  retrieved: 2026-11-04
 - id: ms-entra-secops-privileged
   title: Security operations for privileged accounts in Microsoft Entra ID
   publisher: Microsoft
@@ -304,11 +304,6 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/microsoft-365/copilot/secure-govern-copilot-foundational-deployment-guidance
   retrieved: 2026-10-08
-- id: ms-copilot-configure-foundation
-  title: Configure a secure and governed foundation for Microsoft Copilot
-  publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/configure-secure-governed-data-foundation-microsoft-365-copilot
-  retrieved: 2026-10-08
 - id: ms-copilot-studio-security
   title: Security and governance in Microsoft Copilot Studio
   publisher: Microsoft
@@ -327,8 +322,8 @@
 - id: ms-agent-registry
   title: Manage agent registry in Microsoft 365 admin center
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/admin/manage/agent-registry?view=o365-worldwide
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/microsoft-agent-365/admin/agent-registry-overview
+  retrieved: 2026-11-04
 - id: ms-mdca-discovered-apps
   title: Discover and manage cloud apps (Microsoft Defender for Cloud Apps)
   publisher: Microsoft
@@ -349,6 +344,11 @@
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/sharepoint/restricted-access-control
   retrieved: 2026-10-08
+- id: ms-spo-app-restrictions
+  title: Restrict SharePoint site access for applications and agents with Application Restrictions
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/sharepoint/restrict-application-agent-access
+  retrieved: 2026-11-04
 - id: ms-restricted-content-discovery
   title: Restrict discovery of SharePoint sites and content
   publisher: Microsoft
@@ -1343,12 +1343,64 @@
   url: https://learn.microsoft.com/en-us/graph/permissions-reference
   retrieved: 2026-10-10
 - id: ms-copilot-overview
-  title: Microsoft 365 Copilot documentation
+  title: Microsoft Copilot overview
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/copilot/microsoft-365/
-  retrieved: 2026-10-10
+  url: https://learn.microsoft.com/en-us/copilot/plan/copilot-overview
+  retrieved: 2026-11-04
 - id: ms-copilot-studio
   title: Microsoft Copilot Studio documentation
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/microsoft-copilot-studio/
   retrieved: 2026-10-10
+
+# Essentials gaps: awareness training, credential scanning, outbound blocking, detection and post-incident review
+- id: ms-ast-get-started
+  title: Get started using Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-get-started
+  retrieved: 2026-11-04
+- id: ms-ast-training-campaigns
+  title: Training campaigns in Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-training-campaigns
+  retrieved: 2026-11-04
+- id: ms-ast-simulation-automations
+  title: Simulation automations for Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-simulation-automations
+  retrieved: 2026-11-04
+- id: ms-ast-training-modules
+  title: Training modules for Training campaigns in Attack simulation training
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-office-365/attack-simulation-training-training-modules
+  retrieved: 2026-11-04
+- id: ms-sit-all-credentials
+  title: All Credential Types entity definition
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/purview/sit-defn-all-creds
+  retrieved: 2026-11-04
+- id: ms-mde-network-protection
+  title: Use network protection to help prevent connections to malicious or suspicious sites
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/network-protection
+  retrieved: 2026-11-04
+- id: ms-mde-web-content-filtering
+  title: Web content filtering in Microsoft Defender for Endpoint
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/web-content-filtering
+  retrieved: 2026-11-04
+- id: ms-mde-indicators-ip-url
+  title: Create indicators for IPs and URLs/domains
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-endpoint/indicator-ip-domain
+  retrieved: 2026-11-04
+- id: ms-xdr-incidents
+  title: Incidents and alerts in the Microsoft Defender portal
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/defender-xdr/incidents-overview
+  retrieved: 2026-11-04
+- id: ms-secops-incident-adoption
+  title: Plan for incident response in the security adoption model
+  publisher: Microsoft
+  url: https://learn.microsoft.com/en-us/security/zero-trust/security-adoption-discipline-security-operations-incidents
+  retrieved: 2026-11-04

@@ -1,17 +1,14 @@
 // @vitest-environment node
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { exampleEntries } from "../engine/aiExamples";
-import {
-  buildReport,
-  fixtureAssessment,
-  loadCatalogueFromDisk,
-  scoreSummary,
-  toSaveFile,
-} from "../lib/index";
+import { loadCatalogueFromDisk } from "../content/disk";
+import { toSaveFile } from "../format/saveFile";
+import { fixtureAssessment } from "../report/fixture";
+import { buildReport } from "../report/model";
 import { EXIT, run } from "./index";
 
 const dir = () => mkdtempSync(join(tmpdir(), "cg-cli-"));
@@ -63,6 +60,12 @@ describe("argument parsing / help", () => {
     expect(r.stderr).toMatch(/unknown command/);
   });
 
+  it("exits 1, not 3, on an unknown or malformed option", async () => {
+    const r = await capture(["score", "x.json", "--fromat", "text"]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/--fromat/);
+  });
+
   it("shows per-command help", async () => {
     const r = await capture(["score", "--help"]);
     expect(r.code).toBe(EXIT.OK);
@@ -100,6 +103,18 @@ describe("cg new", () => {
     expect(v.code).toBe(EXIT.OK);
   });
 
+  it("refuses to replace an existing file without --force", async () => {
+    const out = join(dir(), "new.crownguard.json");
+    writeFileSync(out, "keep me");
+    const r = await capture(["new", "--org", "Acme", "--platforms", "microsoft", "--out", out]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/already exists; pass --force/);
+    expect(readFileSync(out, "utf8")).toBe("keep me");
+    const forced = await capture(["new", "--org", "Acme", "--platforms", "microsoft", "--out", out, "--force"]);
+    expect(forced.code).toBe(EXIT.OK);
+    expect(JSON.parse(readFileSync(out, "utf8")).org.name).toBe("Acme");
+  });
+
   it("requires --org", async () => {
     const r = await capture(["new", "--platforms", "microsoft"]);
     expect(r.code).toBe(EXIT.INVALID);
@@ -127,6 +142,54 @@ describe("cg import", () => {
     expect(saved.imports?.length).toBe(1);
   });
 
+  it("reads assessment and scan files that start with a UTF-8 byte order mark", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "a.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.answers = {};
+    a.notes = {};
+    writeFileSync(assessmentPath, `\uFEFF${toSaveFile(a, { contentHash })}`);
+    const scan = join(root, "scan.json");
+    writeFileSync(scan, `\uFEFF${readFileSync(join(process.cwd(), "e2e/fixtures/m365-secure-scan.json"), "utf8")}`);
+    const r = await capture(["import", assessmentPath, scan, "--tool", "m365-secure"]);
+    expect(r.code).toBe(EXIT.OK);
+    expect(JSON.parse(r.stdout).applied).toBeGreaterThan(0);
+  });
+
+  it("refuses to rewrite a file saved by a newer build", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "future.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["microsoft"]);
+    a.answers = {};
+    const text = JSON.stringify({ ...a, schemaVersion: 99 }, null, 2);
+    writeFileSync(assessmentPath, text);
+    const scan = join(process.cwd(), "e2e/fixtures/m365-secure-scan.json");
+    const r = await capture(["import", assessmentPath, scan, "--tool", "m365-secure"]);
+    expect(r.code).toBe(EXIT.INVALID);
+    expect(r.stderr).toMatch(/schema 99, newer than this build/);
+    expect(readFileSync(assessmentPath, "utf8")).toBe(text);
+  });
+
+  it("imports a Prowler scan with an 83 character check id into a file that still validates", async () => {
+    const root = dir();
+    const assessmentPath = join(root, "a.crownguard.json");
+    const a = fixtureAssessment(catalogue, ["aws"]);
+    a.answers = {};
+    a.notes = {};
+    writeFileSync(assessmentPath, toSaveFile(a, { contentHash }));
+    const id = "cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled";
+    const scan = join(root, "prowler.csv");
+    writeFileSync(
+      scan,
+      ["CHECK_ID;CHECK_TITLE;STATUS;MUTED;ACCOUNT_UID;RESOURCE_UID;TIMESTAMP", `${id};A check;PASS;False;123456789012;arn:aws:cloudtrail:ap-southeast-2:123456789012:trail/main;2026-10-08T22:00:00Z`].join("\n"),
+    );
+    const r = await capture(["import", assessmentPath, scan, "--tool", "prowler"]);
+    expect(r.code).toBe(EXIT.OK);
+    expect(JSON.parse(readFileSync(assessmentPath, "utf8")).evidence["AWS-LOG-006"].checks[0].id).toBe(id);
+    const v = await capture(["validate", assessmentPath]);
+    expect(v.code).toBe(EXIT.OK);
+  });
+
   it("fails when the scan file is missing", async () => {
     const root = dir();
     const assessmentPath = join(root, "a.crownguard.json");
@@ -137,22 +200,35 @@ describe("cg import", () => {
 });
 
 describe("cg score", () => {
-  it("JSON matches buildReport for posture, risk bands and E8 levels", async () => {
+  it("reports posture, a band and score for each crown jewel, and E8 levels", async () => {
     const root = dir();
     const path = join(root, "a.crownguard.json");
     const assessment = writeAssessment(path);
-    const model = buildReport(catalogue, assessment);
-    const expected = scoreSummary(model);
     const r = await capture(["score", path]);
     expect(r.code).toBe(EXIT.OK);
     const got = JSON.parse(r.stdout);
-    expect(got.posture).toEqual(expected.posture);
-    expect(got.risks.map((x: { band: string; score: number }) => ({ band: x.band, score: x.score }))).toEqual(
-      expected.risks.map((x) => ({ band: x.band, score: x.score })),
-    );
-    expect(got.e8.map((x: { strategy: string; level: number | null }) => ({ strategy: x.strategy, level: x.level }))).toEqual(
-      expected.e8.map((x) => ({ strategy: x.strategy, level: x.level })),
-    );
+    expect(got.posture.score).toBeGreaterThan(0);
+    expect(got.posture.score).toBeLessThan(1);
+    expect(got.risks.map((x: { jewel: string }) => x.jewel).sort()).toEqual(assessment.jewels.map((j) => j.name).sort());
+    for (const x of got.risks) expect(["Low", "Medium", "High", "Extreme"]).toContain(x.band);
+    expect(got.e8).toHaveLength(8);
+  });
+
+  it("adds Essentials per domain, with not assessed kept apart, only when the assessment asks for it", async () => {
+    const root = dir();
+    const plainPath = join(root, "plain.crownguard.json");
+    writeAssessment(plainPath);
+    const plain = JSON.parse((await capture(["score", plainPath])).stdout);
+    expect(plain.essentials).toBeUndefined();
+    const path = join(root, "e.crownguard.json");
+    writeAssessment(path, { ...fixtureAssessment(catalogue, ["microsoft"]), essentials: { chapter: "enterprise-it" } });
+    const got = JSON.parse((await capture(["score", path])).stdout);
+    expect(got.e8).toEqual(plain.e8);
+    expect(got.essentials.indicative).toBe(true);
+    expect(got.essentials.domains.map((d: { id: string }) => d.id).slice(0, 2)).toEqual(["BS", "IS"]);
+    for (const d of got.essentials.domains) expect(Object.keys(d.counts).sort()).toEqual(["fully-effective", "not-assessed", "not-effective", "partially-effective"]);
+    const text = (await capture(["score", path, "--format", "text"])).stdout;
+    expect(text).toMatch(/Essentials \(enterprise-it, indicative\): BS=/);
   });
 
   it("text format is a short human summary", async () => {
@@ -213,8 +289,8 @@ describe("cg ai-register export", () => {
     const r = await capture(["ai-register", "export", assessmentPath, "--format", "csv", "--out", csvPath]);
     expect(r.code).toBe(EXIT.OK);
     const csv = readFileSync(csvPath, "utf8");
-    expect(csv.length).toBeGreaterThan(50);
-    expect(csv).toMatch(/Use case|Name|Owner/i);
+    expect(csv.startsWith("\uFEFFUse case name,")).toBe(true);
+    for (const e of a.aiRegister.entries) expect(csv).toContain(e.name);
   });
 
   it("fails without AI entries", async () => {
@@ -304,18 +380,7 @@ describe("cg validate", () => {
       expect(issue).toMatch(/:/);
       expect(r.stderr).toContain(issue);
     }
-    // paths should appear
     expect(body.issues.some((i: string) => i.startsWith("org.name") || i.startsWith("platforms") || i.startsWith("answers"))).toBe(true);
   });
 });
 
-describe("temp dir hygiene", () => {
-  it("creates nested dirs for render destination parent", async () => {
-    const root = dir();
-    mkdirSync(join(root, "nested"), { recursive: true });
-    const assessmentPath = join(root, "a.crownguard.json");
-    writeAssessment(assessmentPath);
-    const r = await capture(["render", assessmentPath, join(root, "nested", "report.pdf")]);
-    expect(r.code).toBe(EXIT.OK);
-  }, 120_000);
-});

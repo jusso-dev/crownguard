@@ -1,0 +1,685 @@
+{
+ "mapping-collection": {
+  "uuid": "49a0e6ad-441a-51da-83a6-109c9c093fa8",
+  "metadata": {
+   "title": "Assessment evidence guide for enterprise IT - Potential Evidence Sources OSCAL Control Mapping",
+   "published": "2026-10-15T00:30:23Z",
+   "last-modified": "2026-10-15T00:30:23Z",
+   "version": "2026.10.15",
+   "oscal-version": "1.2.3",
+   "links": [
+    {
+     "href": "#8e4f50f1-53ec-5301-bf5a-b17a08f876fc",
+     "rel": "canonical"
+    },
+    {
+     "href": "#ada31379-f5b0-5364-8ad1-87dabc2aa68e",
+     "rel": "latest-version"
+    },
+    {
+     "href": "#33d1a9e6-e89f-5b96-a0b7-2ecd16fee613",
+     "rel": "predecessor-version"
+    },
+    {
+     "href": "#d57f31dd-45cd-5769-bd3b-d495305476be",
+     "rel": "successor-version"
+    },
+    {
+     "href": "#44d6ca4f-32cc-5107-be7f-0a269c1a61ad",
+     "rel": "alternate"
+    }
+   ],
+   "roles": [
+    {
+     "id": "prepared-by",
+     "title": "Document creator"
+    }
+   ],
+   "parties": [
+    {
+     "uuid": "15ea53b3-4eae-5a76-b56f-393a0a7bd5c5",
+     "type": "organization",
+     "name": "Australian Cyber Security Centre",
+     "short-name": "ACSC",
+     "links": [
+      {
+       "href": "https://www.cyber.gov.au",
+       "rel": "website"
+      }
+     ],
+     "email-addresses": [
+      "asd.assist@defence.gov.au"
+     ],
+     "addresses": [
+      {
+       "type": "work",
+       "addr-lines": [
+        "Australian Cyber Security Centre",
+        "General enquiries",
+        "PO Box 5076"
+       ],
+       "city": "Kingston",
+       "state": "ACT",
+       "postal-code": "2604",
+       "country": "AU"
+      }
+     ]
+    }
+   ],
+   "responsible-parties": [
+    {
+     "role-id": "prepared-by",
+     "party-uuids": [
+      "15ea53b3-4eae-5a76-b56f-393a0a7bd5c5"
+     ]
+    }
+   ],
+   "remarks": "Consumers of this file should refer to the [Essentials OSCAL NS 1.0](#c2407c9f-5c53-5e04-abad-5d03214d73d5) page for information regarding the Essentials specific representation used in this OSCAL file."
+  },
+  "mappings": [
+   {
+    "uuid": "4d5dc78b-0116-5332-81bf-8ee3862065bf",
+    "source-resource": {
+     "type": "catalog",
+     "href": "#7f378fe9-e4fa-58d2-9b7b-c5d237a511c7"
+    },
+    "target-resource": {
+     "type": "catalog",
+     "href": "#ba65d2ff-04ad-5dc4-bc96-9434d0d6606e"
+    },
+    "maps": [
+     {
+      "uuid": "5170d6f8-02a1-558a-99a6-5e965e07e74b",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1997"
+       }
+      ]
+     },
+     {
+      "uuid": "74049260-d10c-5cba-99fd-34dec7036227",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1998"
+       }
+      ]
+     },
+     {
+      "uuid": "86e88a9c-9045-5c5d-87b9-92e297bfb72d",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1999"
+       }
+      ]
+     },
+     {
+      "uuid": "10336efa-901e-53f4-ae42-a47aca02ec66",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-2000"
+       }
+      ]
+     },
+     {
+      "uuid": "3599c2e1-c025-5fe4-a97b-5b4fcb0b347d",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-2005"
+       }
+      ]
+     },
+     {
+      "uuid": "3d7c64e3-d4f2-541c-bb20-d002a90917e5",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1875"
+       }
+      ]
+     }
+    ],
+    "mapping-description": "E4EIT to ISM (excl. E8)"
+   },
+   {
+    "uuid": "f8ecf621-5c56-550f-a621-20491cd3d474",
+    "source-resource": {
+     "type": "catalog",
+     "href": "#7f378fe9-e4fa-58d2-9b7b-c5d237a511c7"
+    },
+    "target-resource": {
+     "type": "catalog",
+     "href": "#37446879-18f3-5df1-bb6b-b517fa3ee8d3"
+    },
+    "maps": [
+     {
+      "uuid": "05849ae1-8a9c-5f73-813c-500736b46f7c",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1504"
+       }
+      ]
+     },
+     {
+      "uuid": "a21d36e5-2721-53aa-8c4d-c0a0992e609d",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1679"
+       }
+      ]
+     },
+     {
+      "uuid": "870de1ac-45f1-5303-b518-5c62ae9167a2",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1680"
+       }
+      ]
+     },
+     {
+      "uuid": "dff5bea6-bf25-5841-b304-0cb15d04e9a0",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1892"
+       }
+      ]
+     },
+     {
+      "uuid": "21cf081e-5698-5712-9cab-d7e93b5abb39",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1893"
+       }
+      ]
+     },
+     {
+      "uuid": "eeece033-7450-5990-bb74-b1a2d195662e",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.4"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ism-1681"
+       }
+      ]
+     }
+    ],
+    "mapping-description": "E4EIT to E8"
+   },
+   {
+    "uuid": "d91fb4f8-17bd-5468-ba70-4078bcc56533",
+    "source-resource": {
+     "type": "catalog",
+     "href": "#7f378fe9-e4fa-58d2-9b7b-c5d237a511c7"
+    },
+    "target-resource": {
+     "type": "catalog",
+     "href": "#ece7f821-0580-5877-a1ca-f9db28e8cea1"
+    },
+    "maps": [
+     {
+      "uuid": "20a733e7-b13f-50aa-a1c6-619a0384a8b9",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "GV.OC-01"
+       }
+      ]
+     },
+     {
+      "uuid": "ff37ae28-b531-5d93-a5b1-304e5db487b9",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "GV.RR-01"
+       }
+      ]
+     },
+     {
+      "uuid": "9cab04c4-361d-5c5a-92b9-2a69b6ab45c3",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "GV.RR-02"
+       }
+      ]
+     },
+     {
+      "uuid": "1f27cc0f-a588-52f2-9060-a207a423f573",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "GV.RM-01"
+       }
+      ]
+     },
+     {
+      "uuid": "7cde6ced-3143-54be-9392-bfd82151877b",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "GV.RM-02"
+       }
+      ]
+     },
+     {
+      "uuid": "707fdc0e-f842-5f82-9295-e1935a3d9024",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "PR.AA-01"
+       }
+      ]
+     }
+    ],
+    "mapping-description": "E4EIT to CSF"
+   },
+   {
+    "uuid": "364764c1-65f3-5b6e-ad07-18e2d1776b90",
+    "source-resource": {
+     "type": "catalog",
+     "href": "#7f378fe9-e4fa-58d2-9b7b-c5d237a511c7"
+    },
+    "target-resource": {
+     "type": "catalog",
+     "href": "#91d98ca7-6715-5afb-a39b-493fef3cb886"
+    },
+    "maps": [
+     {
+      "uuid": "48fd8697-fbde-5531-b389-2daf508dadc1",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.15.01"
+       }
+      ]
+     },
+     {
+      "uuid": "50a7fece-b291-5f57-8842-8f5d909d271a",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.11.01"
+       }
+      ]
+     },
+     {
+      "uuid": "2a2144b6-0cdc-577c-908c-a116f647071c",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.11.04"
+       }
+      ]
+     },
+     {
+      "uuid": "0e4f86e6-9ae2-5f3d-9d3b-27b803e3a59c",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.05.12"
+       }
+      ]
+     },
+     {
+      "uuid": "f6842788-c133-5e93-8381-c7879d9f5eb9",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.11.02"
+       }
+      ]
+     },
+     {
+      "uuid": "d003162c-f3a0-511c-8d6d-efd37242ec80",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "03.05.07"
+       }
+      ]
+     }
+    ],
+    "mapping-description": "E4EIT to 800-171r3"
+   },
+   {
+    "uuid": "813cc0d7-eed5-5260-885b-816c48e159c0",
+    "source-resource": {
+     "type": "catalog",
+     "href": "#7f378fe9-e4fa-58d2-9b7b-c5d237a511c7"
+    },
+    "target-resource": {
+     "type": "non-oscal-catalog",
+     "href": "#b735bf82-45ef-59e6-a184-c3101ee5774b",
+     "remarks": "The mapped resource is a control catalog that is not provided in an OSCAL format."
+    },
+    "maps": [
+     {
+      "uuid": "3a55ba4a-308e-571f-b807-c1d4d9c2873c",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "PROGRAM-2a"
+       }
+      ]
+     },
+     {
+      "uuid": "d3a4be2f-fea3-5247-9ecd-61daa650218f",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "PROGRAM-2c"
+       }
+      ]
+     },
+     {
+      "uuid": "8c339b74-0da9-59e3-8977-cb9e442992fb",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "RISK-1e"
+       }
+      ]
+     },
+     {
+      "uuid": "57cdfa53-5d5b-5582-8906-8522d532003e",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "RISK-1f"
+       }
+      ]
+     },
+     {
+      "uuid": "2856d47f-c798-5ca5-8bfe-9a493fbd5581",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.GOV-01.1"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "PROGRAM-1d"
+       }
+      ]
+     },
+     {
+      "uuid": "9c44f0f3-61ee-5088-98c7-6c6557fdbcaf",
+      "relationship": "intersects-with",
+      "sources": [
+       {
+        "type": "control",
+        "id-ref": "IT.PRO-13.3"
+       }
+      ],
+      "targets": [
+       {
+        "type": "control",
+        "id-ref": "ACCESS-1b"
+       }
+      ]
+     }
+    ],
+    "mapping-description": "E4EIT to AESCSF"
+   }
+  ],
+  "back-matter": {
+   "resources": [
+    {
+     "uuid": "8e4f50f1-53ec-5301-bf5a-b17a08f876fc",
+     "title": "Assessment evidence guide for enterprise IT OSCAL mapping-collection v2026.10.15"
+    },
+    {
+     "uuid": "ada31379-f5b0-5364-8ad1-87dabc2aa68e",
+     "title": "Assessment evidence guide for enterprise IT OSCAL mapping-collection - latest version"
+    },
+    {
+     "uuid": "33d1a9e6-e89f-5b96-a0b7-2ecd16fee613",
+     "title": "Assessment evidence guide for enterprise IT OSCAL mapping-collection v2026.10.15 - predecessor version"
+    },
+    {
+     "uuid": "d57f31dd-45cd-5769-bd3b-d495305476be",
+     "title": "Assessment evidence guide for enterprise IT OSCAL mapping-collection v2026.10.15 - successor version"
+    },
+    {
+     "uuid": "7f378fe9-e4fa-58d2-9b7b-c5d237a511c7",
+     "title": "Assessment evidence guide for enterprise IT OSCAL catalog v2026.10.15"
+    },
+    {
+     "uuid": "44d6ca4f-32cc-5107-be7f-0a269c1a61ad",
+     "title": "Assessment evidence guide for enterprise IT"
+    },
+    {
+     "uuid": "ba65d2ff-04ad-5dc4-bc96-9434d0d6606e",
+     "title": "ASD\u2019s Information Security Manual v2026.09.4"
+    },
+    {
+     "uuid": "37446879-18f3-5df1-bb6b-b517fa3ee8d3",
+     "title": "ASD\u2019s Essential Eight 02 Oct 2024"
+    },
+    {
+     "uuid": "ece7f821-0580-5877-a1ca-f9db28e8cea1",
+     "title": "NIST Cybersecurity Framework 2.0"
+    },
+    {
+     "uuid": "91d98ca7-6715-5afb-a39b-493fef3cb886",
+     "title": "NIST SP 800-171r3 publication, \u201cProtecting Controlled Unclassified Information in Nonfederal Systems and Organizations\u201d"
+    },
+    {
+     "uuid": "b735bf82-45ef-59e6-a184-c3101ee5774b",
+     "title": "AEMO\u2019s Australian Energy Sector Cyber Security Framework v2"
+    },
+    {
+     "uuid": "c2407c9f-5c53-5e04-abad-5d03214d73d5",
+     "title": "Essentials OSCAL NS 1.0"
+    }
+   ]
+  }
+ }
+}

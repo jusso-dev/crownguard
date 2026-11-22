@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { pdfText } from "./journey";
 
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
 
@@ -30,8 +32,11 @@ test("choosing only Google loads no Microsoft or AWS question data", async ({ pa
   expect(joined, joined).not.toMatch(/\/assets\/aws-/);
 });
 
-test("UI stays responsive while a large PDF renders (or records main-thread fallback)", async ({ page }) => {
+test("large PDF uses the worker and keeps the UI responsive", async ({ page }) => {
   test.setTimeout(180_000);
+  await page.addInitScript(() => {
+    delete (window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker;
+  });
   await page.goto("./");
   await page.getByRole("button", { name: "Full crown-jewel assessment" }).click();
   await page.getByLabel("Organisation name").fill("Riverbend Health");
@@ -72,28 +77,31 @@ test("UI stays responsive while a large PDF renders (or records main-thread fall
   await next(page); // → Report
   await expect(page.getByRole("button", { name: "Generate PDF report" })).toBeVisible({ timeout: 30_000 });
 
-  const downloadPromise = page.waitForEvent("download", { timeout: 120_000 });
+  const downloadPromise = page.waitForEvent("download", {
+    predicate: (download) => download.suggestedFilename().endsWith(".pdf"),
+    timeout: 120_000,
+  });
   await page.getByRole("button", { name: "Generate PDF report" }).click();
   await expect(page.getByRole("button", { name: "Building PDF…" })).toBeVisible();
 
+  const savedPromise = page.waitForEvent("download", {
+    predicate: (download) => download.suggestedFilename().endsWith(".crownguard.json"),
+  });
   const t0 = Date.now();
   await page.getByRole("button", { name: "Save file" }).click({ timeout: 1_000 });
   const reactedIn = Date.now() - t0;
 
-  await downloadPromise;
+  const download = await downloadPromise;
+  const bytes = await readFile(await download.path());
+  expect(bytes.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+  const pages = await pdfText(new Uint8Array(bytes));
+  expect(pages[0]).toContain("Riverbend Health");
+  expect(pages.join("\n")).toContain("Crown-jewel register");
+  expect(await (await savedPromise).failure()).toBeNull();
   const path = await page.evaluate(() => (window as unknown as { __crownguardPdfPath?: string }).__crownguardPdfPath);
 
-  if (path === "main-thread") {
-    // Documented fallback — do not treat a slow main-thread click as a worker pass.
-    test.info().annotations.push({
-      type: "pdf-path",
-      description: `PDF rendered on main thread. Save-file click took ${reactedIn}ms. Worker path unavailable or failed.`,
-    });
-    expect(path).toBe("main-thread");
-  } else {
-    expect(path, "expected worker render path").toBe("worker");
-    expect(reactedIn, `UI click during PDF render took ${reactedIn}ms`).toBeLessThanOrEqual(200);
-  }
+  expect(path, "expected worker render path").toBe("worker");
+  expect(reactedIn, `UI click during PDF render took ${reactedIn}ms`).toBeLessThanOrEqual(200);
 });
 
 test("PDF worker falls back when Worker is stubbed out", async ({ page }) => {
@@ -109,9 +117,16 @@ test("PDF worker falls back when Worker is stubbed out", async ({ page }) => {
   await next(page);
   await next(page);
   await next(page);
-  const download = page.waitForEvent("download");
+  const downloadPromise = page.waitForEvent("download", {
+    predicate: (download) => download.suggestedFilename().endsWith(".pdf"),
+  });
   await page.getByRole("button", { name: "Generate PDF report" }).click();
-  await download;
+  const download = await downloadPromise;
+  const bytes = await readFile(await download.path());
+  expect(bytes.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+  const pages = await pdfText(new Uint8Array(bytes));
+  expect(pages[0]).toContain("Riverbend Health");
+  expect(pages.join("\n")).toContain("Microsoft 365 Copilot");
   const path = await page.evaluate(() => (window as unknown as { __crownguardPdfPath?: string }).__crownguardPdfPath);
   expect(path).toBe("main-thread");
 });

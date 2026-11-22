@@ -23,6 +23,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Google Chat" }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-COL-002
   module: core
@@ -48,6 +51,9 @@
     - { framework: cis-gws, ref: "3.1.4.4.2" }
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-16.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [BUS], coverage: partial }
 
 - id: GO-COL-003
   module: core
@@ -76,6 +82,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Google Groups" }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-COL-004
   module: core
@@ -101,6 +110,9 @@
     - { framework: cis-gws, ref: "3.1.1.2.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Checklist: Calendar" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-MEET-001
   module: core
@@ -126,6 +138,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-MEET-002
   module: core
@@ -150,6 +165,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: GO-MEET-003
   module: core
@@ -179,3 +197,8 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: ism, ref: ISM-1852 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.1 and IT.PRO-12.3 not tagged: the question is not a periodic review, and IT.PRO-12.3 does not apply to business systems, so the cloud least privilege action is tagged instead."

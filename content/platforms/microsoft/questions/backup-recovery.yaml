@@ -27,6 +27,12 @@
     - { framework: ism, ref: ISM-1811 }
   e8:
     - { strategy: regular-backups, level: 1 }
+  essentials:
+    - { action: IT.PRO-10.1, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-10.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [CPS], coverage: partial }
+  essentialsReviewed: "IT.PRO-10.3 not tagged: the question checks backups are taken, not that restores are tested."
 
 - id: MS-BCK-002
   module: core
@@ -53,6 +59,9 @@
     - { framework: ism, ref: ISM-1515 }
   e8:
     - { strategy: regular-backups, level: 1 }
+  essentials:
+    - { action: IT.PRO-10.3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x3, domains: [BUS], coverage: partial }
 
 - id: MS-BCK-003
   module: core
@@ -88,6 +97,9 @@
     - { framework: ism, ref: ISM-1707 }
   e8:
     - { strategy: regular-backups, level: 2 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [BUS], coverage: partial }
 
 - id: MS-BCK-004
   module: core
@@ -121,6 +133,10 @@
     - { framework: ism, ref: ISM-2151 }
   e8:
     - { strategy: regular-backups, level: 3 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [BUS], coverage: partial }
 
 - id: MS-BCK-005
   module: core
@@ -158,3 +174,6 @@
     - { framework: ism, ref: ISM-1813 }
   e8:
     - { strategy: regular-backups, level: 3 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [BUS], coverage: partial }

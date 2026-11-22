@@ -1,8 +1,9 @@
+import { USER_AGENT } from "./hosts";
 import type { FetchOutcome, FetchResult, Fetcher, RedirectHop } from "./types";
-import { hostOf, isHttpUrl, limiter, sleep as defaultSleep } from "./util";
+import { hostOf, isHttpUrl, limiter, readCapped, sleep as defaultSleep } from "./util";
 
-/** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
-export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
+/** Redirect hops followed before a page counts as broken. */
+const MAX_REDIRECTS = 10;
 
 /** Hosts a redirect only reaches when a page wants a signed-in or consenting user: never a real page move. */
 const SIGN_IN_HOSTS = new Set([
@@ -28,19 +29,19 @@ const CHALLENGE_MARKERS = [
 
 const TEXT_TYPES = /^(?:text\/|application\/(?:xhtml\+xml|xml|atom\+xml|rss\+xml|json|ld\+json))/i;
 
-export interface FetcherOptions {
+interface FetcherOptions {
   /** Per-host request concurrency. */
   concurrencyFor?: (host: string) => number;
   /** Per-host pause after each request, in milliseconds (robots.txt crawl-delay). */
   delayFor?: (host: string) => number;
   /** Per-host retries; falls back to `retries`. */
   retriesFor?: (host: string) => number | undefined;
+  /** Per-host user agent; falls back to the watch's own. */
+  userAgentFor?: (host: string) => string | undefined;
   timeoutMs?: number;
   /** Extra attempts after a network error, 5xx or 429. */
   retries?: number;
-  maxRedirects?: number;
   maxBytes?: number;
-  userAgent?: string;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -50,11 +51,10 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
     concurrencyFor = () => 4,
     delayFor = () => 0,
     retriesFor = () => undefined,
+    userAgentFor = () => undefined,
     timeoutMs = 30_000,
     retries = 2,
-    maxRedirects = 10,
     maxBytes = 20 * 1024 * 1024,
-    userAgent = USER_AGENT,
     fetchImpl = fetch,
     sleep = defaultSleep,
   } = opts;
@@ -79,7 +79,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
       ...extra,
     });
 
-    for (let hop = 0; hop <= maxRedirects; hop++) {
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       if (!isHttpUrl(current)) return result("http-error", 0, { error: "redirected to a non-http URL" });
       if (SIGN_IN_HOSTS.has(hostOf(current))) return result("challenge", 0, { error: `redirected to sign-in (${hostOf(current)})` });
       let res: Response;
@@ -87,7 +87,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         res = await fetchImpl(current, {
           redirect: "manual",
           signal: AbortSignal.timeout(timeoutMs),
-          headers: { "user-agent": userAgent, accept, "accept-language": "en-US,en;q=0.9" },
+          headers: { "user-agent": userAgentFor(hostOf(current)) ?? USER_AGENT, accept, "accept-language": "en-US,en;q=0.9" },
         });
       } catch (e) {
         const err = e as Error & { cause?: { code?: string; message?: string } };
@@ -116,8 +116,8 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
       let body: string | undefined;
       let bytes: Uint8Array | undefined;
       try {
-        const buf = new Uint8Array(await res.arrayBuffer());
-        if (buf.byteLength > maxBytes) return result("http-error", res.status, { contentType, error: `body larger than ${maxBytes} bytes` });
+        const buf = await readCapped(res, maxBytes);
+        if (!buf) return result("http-error", res.status, { contentType, error: `body larger than ${maxBytes} bytes` });
         if (TEXT_TYPES.test(contentType) || (!contentType && !looksBinary(buf))) body = new TextDecoder().decode(buf);
         else bytes = buf;
       } catch (e) {
@@ -140,7 +140,7 @@ export function createFetcher(opts: FetcherOptions = {}): Fetcher {
         ...(retryAfter !== undefined ? { retryAfterMs: retryAfter } : {}),
       };
     }
-    return result("http-error", 0, { error: `more than ${maxRedirects} redirects` });
+    return result("http-error", 0, { error: `more than ${MAX_REDIRECTS} redirects` });
   }
 
   return {

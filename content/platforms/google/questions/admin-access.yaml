@@ -24,6 +24,9 @@
     - { framework: ism, ref: ISM-0414 }
     - { framework: ism, ref: ISM-1883 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
 
 - id: GO-ADM-002
   module: core
@@ -54,6 +57,10 @@
     - { framework: ism, ref: ISM-1175 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.2 not tagged: separate admin accounts and devices do not show who may change accounts and roles."
 
 - id: GO-ADM-003
   module: core
@@ -87,6 +94,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [PE, IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [PE, IS], coverage: partial }
 
 - id: GO-ADM-004
   module: core
@@ -114,6 +124,12 @@
     - { framework: ism, ref: ISM-1508 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [PE], coverage: partial }
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-01.1 and IT.PRO-12.1 not tagged: the question checks current role scope, not system design or a periodic access review."
 
 - id: GO-ADM-005
   module: core
@@ -139,6 +155,9 @@
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: google-security-guidance, ref: "Admin accounts: Super admins" }
     - { framework: ism, ref: ISM-1593 }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [PE], coverage: partial }
 
 - id: GO-ADM-006
   module: core
@@ -167,6 +186,9 @@
     - { framework: ism, ref: ISM-1610 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: CL.PRO-16.x4, domains: [PE, IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers access when the identity provider is down, so only the cloud action on identity provider dependency is tagged."
 
 - id: GO-ADM-007
   module: core
@@ -192,6 +214,9 @@
   refs:
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }
 
 - id: GO-ADM-008
   module: core
@@ -219,6 +244,11 @@
     - { framework: idcf, ref: "DSL-3 Authorised person" }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-13.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [PE], coverage: partial }
 
 - id: GO-ADM-009
   module: core
@@ -249,6 +279,10 @@
     - { framework: ism, ref: ISM-1507 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-12.1 not tagged: approval when access is requested is not a periodic access review."
 
 - id: GO-ADM-010
   module: core
@@ -279,6 +313,10 @@
     - { framework: ism, ref: ISM-1688 }
   e8:
     - { strategy: restrict-admin-privileges, level: 1 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+  essentialsReviewed: "IT.PRO-18.2 not tagged: the question is about where administrators work, not network pathways between segments."
 
 - id: GO-ADM-011
   module: core
@@ -306,6 +344,9 @@
     - { framework: ism, ref: ISM-1687 }
   e8:
     - { strategy: restrict-admin-privileges, level: 2 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
 
 - id: GO-ADM-012
   module: core
@@ -335,6 +376,11 @@
     - { framework: ism, ref: ISM-1898 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.1, domains: [PE], coverage: partial }
+    - { action: IT.PRO-07.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x1, domains: [PE], coverage: partial }
+    - { action: CL.PRO-07.x1, domains: [PE], coverage: partial }
 
 - id: GO-ADM-013
   module: core
@@ -364,3 +410,6 @@
     - { framework: ism, ref: ISM-1649 }
   e8:
     - { strategy: restrict-admin-privileges, level: 3 }
+  essentials:
+    - { action: IT.PRO-05.2, domains: [PE], coverage: partial }
+    - { action: CL.PRO-05.x2, domains: [PE], coverage: partial }

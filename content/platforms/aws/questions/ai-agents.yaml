@@ -21,6 +21,10 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: ism, ref: ISM-2133 }
     - { framework: ism, ref: ISM-2156 }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-13.x6, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: AWS-AI-002
   module: core
@@ -45,6 +49,9 @@
     - { framework: aws-fsbp, ref: BedrockAgentCore.1 }
     - { framework: aws-fsbp, ref: BedrockAgentCore.5 }
     - { framework: nist-csf-2, ref: PR.IR-01 }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [CPS], coverage: partial }
 
 - id: AWS-AI-003
   module: core
@@ -67,6 +74,8 @@
   refs:
     - { framework: aws-fsbp, ref: BedrockAgentCore.2 }
     - { framework: nist-csf-2, ref: PR.AA-05 }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [BUS], coverage: partial }
 
 - id: AWS-AI-004
   module: core
@@ -92,6 +101,9 @@
   sources: [aws-securityhub-bedrockagentcore-controls, aws-securityhub-bedrock-controls, aws-bedrock-agentcore-security]
   refs:
     - { framework: nist-csf-2, ref: PR.DS-01 }
+  essentials:
+    - { action: CL.PRO-08.x3, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: AWS-AI-005
   module: core
@@ -114,6 +126,9 @@
     - { framework: aws-fsbp, ref: BedrockAgentCore.6 }
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: dta-agentic-ai, ref: AGT.8.1 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [CPS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [CPS], coverage: partial }
 
 - id: AWS-AI-006
   module: core
@@ -138,6 +153,12 @@
     - { framework: nist-csf-2, ref: DE.CM-03 }
     - { framework: dta-agentic-ai, ref: AGT.8.1 }
     - { framework: ism, ref: ISM-0585 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [BUS], coverage: partial }
+    - { action: IT.DET-01.1, domains: [BUS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [BUS], coverage: partial }
+    - { action: CL.DET-01.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.PRO-05.3 and IT.DET-02.1 not tagged: model invocation logs are not records of admin actions, and the question does not test normalisation."
 
 - id: AWS-AI-007
   module: core
@@ -163,3 +184,7 @@
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: dta-agentic-ai, ref: AGT.3.3 }
     - { framework: ism, ref: ISM-2156 }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }

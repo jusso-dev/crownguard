@@ -27,6 +27,9 @@
     - { framework: ism, ref: ISM-0574 }
     - { framework: ism, ref: ISM-0861 }
     - { framework: ism, ref: ISM-1540 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: GO-GML-002
   module: core
@@ -52,6 +55,9 @@
     - { framework: nist-csf-2, ref: PR.DS-02 }
     - { framework: google-security-guidance, ref: "Checklist: Gmail" }
     - { framework: idcf, ref: Movement }
+  essentials:
+    - { action: IT.PRO-09.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
 
 - id: GO-GML-003
   module: core
@@ -90,6 +96,9 @@
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: google-security-guidance, ref: "Checklist: Gmail" }
     - { framework: ism, ref: ISM-1234 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: GO-GML-004
   module: core
@@ -113,6 +122,9 @@
   refs:
     - { framework: nist-csf-2, ref: DE.CM-09 }
     - { framework: ism, ref: ISM-1389 }
+  essentials:
+    - { action: IT.PRO-09.3, domains: [BS], coverage: partial }
+    - { action: CL.PRO-09.x3, domains: [BS], coverage: partial }
 
 - id: GO-GML-005
   module: core
@@ -138,3 +150,6 @@
     - { framework: cis-gws, ref: "3.1.3.1.1" }
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [BUS], coverage: partial }

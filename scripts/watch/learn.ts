@@ -1,7 +1,7 @@
 import { normalizeUrl } from "./util";
 
 /** One entry of a Learn `toc.json`. Grouping entries have no URL. */
-export interface TocNode {
+interface TocNode {
   title: string;
   url?: string;
   children: TocNode[];
@@ -44,7 +44,7 @@ export function parseToc(json: unknown, tocUrl: string): TocNode[] {
   return walk((json as { items?: unknown })?.items);
 }
 
-export interface TocSection {
+interface TocSection {
   /** Titles from the TOC root down to the section holding the page, e.g. `Plan and deploy > Conditional Access`. */
   path: string;
   /** Every page in that section (the page itself included), with titles. */

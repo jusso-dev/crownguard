@@ -125,6 +125,7 @@ domains:
   - id: oauth-apps
     name: Third-party apps & delegation
     description: OAuth apps, Marketplace apps and domain-wide delegation that can read or change Workspace data.
+    appGrants: true
   - id: drive-data
     name: Drive & data protection
     description: Sharing, classification and data loss prevention for Drive, shared drives and Docs.

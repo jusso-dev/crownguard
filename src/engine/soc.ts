@@ -1,29 +1,15 @@
 import type { SocModel, SocQuestion } from "../content/schema";
+import { socScaleTop, type SocAnswer, type SocRating } from "../format/vocab";
+import type { SocTargets } from "../format/schema";
 
-/** A rating against a question's level descriptions: 0-5 for maturity, 0-3 for capability. */
-export type SocRating = 0 | 1 | 2 | 3 | 4 | 5;
-export type SocAnswer = SocRating | "unknown";
-/** Who runs the organisation's security operations. */
-export type SocProvider = "in-house" | "outsourced" | "hybrid" | "none";
-
-export const socProviders: Record<SocProvider, string> = {
-  "in-house": "In house",
-  outsourced: "Managed provider (MSSP or MDR)",
-  hybrid: "Hybrid (in house and a provider)",
-  none: "We don't have a SOC",
-};
-
-/** Per-domain overrides of the model's default targets. */
-export type SocTargets = Record<string, { maturity?: number; capability?: number }>;
-
-export interface SocInput {
+interface SocInput {
   answers: Record<string, SocAnswer>;
   /** Technology and service aspects left out of scoring. */
   outOfScope: string[];
   targets?: SocTargets;
 }
 
-export interface SocAspectResult {
+interface SocAspectResult {
   id: string;
   name: string;
   domain: string;
@@ -38,7 +24,7 @@ export interface SocAspectResult {
   total: number;
 }
 
-export interface SocDomainResult {
+interface SocDomainResult {
   id: string;
   name: string;
   /** Mean of the in-scope aspect maturities, or null when every aspect is out of scope. */
@@ -49,7 +35,7 @@ export interface SocDomainResult {
   aspects: SocAspectResult[];
 }
 
-export interface SocPriority {
+interface SocPriority {
   aspect: SocAspectResult;
   domain: string;
   kind: "maturity" | "capability";
@@ -85,14 +71,13 @@ const mean = (xs: (number | null)[]) => {
   return ns.length ? two(ns.reduce((n, x) => n + x, 0) / ns.length) : null;
 };
 
-/** The highest rating a question takes: 5 for maturity, 3 for capability. */
-export const maxRating = (q: SocQuestion) => q.levels.length - 1;
+const maxRating = (q: SocQuestion) => socScaleTop[q.kind];
 
 /** True for a rating the question takes; Unknown and out-of-range answers (say 5 on a 0-3 question) are not. */
 export const isRating = (q: SocQuestion, answer: SocAnswer | undefined): answer is SocRating => typeof answer === "number" && answer <= maxRating(q);
 
 /** The rating a question scores: Unknown, unanswered and out-of-range answers all score 0. */
-export const ratingOf = (q: SocQuestion, answer: SocAnswer | undefined): number => (isRating(q, answer) ? answer : 0);
+const ratingOf = (q: SocQuestion, answer: SocAnswer | undefined): number => (isRating(q, answer) ? answer : 0);
 
 /** Level whose name describes a score: the floor of the score, so 2.6 is level 2, never rounded up. */
 export function levelFor<L extends { level: number }>(scale: L[], score: number): L {

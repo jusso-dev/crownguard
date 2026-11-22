@@ -1,10 +1,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import { SCHEMA_VERSION } from "../src/wizard/assessmentSchema";
-import { detectSchemaVersion, migrate } from "../src/wizard/migrations";
-import { toSaveFile } from "../src/wizard/saveFile";
-import { emptyAssessment } from "../src/wizard/store";
+import { SCHEMA_VERSION } from "../src/format/schema";
+import { detectSchemaVersion, migrate } from "../src/format/migrations";
+import { toSaveFile } from "../src/format/saveFile";
+import { emptyAssessment } from "../src/format/empty";
 import { SCHEMA_PATH, schemaDocument, schemaText } from "./gen-schema";
 
 const validate = () => {

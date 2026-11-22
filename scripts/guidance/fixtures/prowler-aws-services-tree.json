@@ -1,0 +1,611 @@
+{
+  "sha": "da1725dc76181f183c0f8e586fc9541b23d5311d",
+  "truncated": false,
+  "tree": [
+    {
+      "path": "backup/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_client.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_plans_exist",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "backup/backup_plans_exist/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_plans_exist/backup_plans_exist.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_plans_exist/backup_plans_exist.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_recovery_point_encrypted",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "backup/backup_recovery_point_encrypted/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_recovery_point_encrypted/backup_recovery_point_encrypted.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_recovery_point_encrypted/backup_recovery_point_encrypted.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_reportplans_exist",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "backup/backup_reportplans_exist/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_reportplans_exist/backup_reportplans_exist.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_reportplans_exist/backup_reportplans_exist.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_service.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_encrypted",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "backup/backup_vaults_encrypted/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_encrypted/backup_vaults_encrypted.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_encrypted/backup_vaults_encrypted.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_exist",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "backup/backup_vaults_exist/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_exist/backup_vaults_exist.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "backup/backup_vaults_exist/backup_vaults_exist.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_alarm_state_configured",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_alarm_state_configured/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_alarm_state_configured/cloudwatch_alarm_actions_alarm_state_configured.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_alarm_state_configured/cloudwatch_alarm_actions_alarm_state_configured.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_enabled/cloudwatch_alarm_actions_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_alarm_actions_enabled/cloudwatch_alarm_actions_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_acls_alarm_configured",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_acls_alarm_configured/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_acls_alarm_configured/cloudwatch_changes_to_network_acls_alarm_configured.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_acls_alarm_configured/cloudwatch_changes_to_network_acls_alarm_configured.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_gateways_alarm_configured",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_gateways_alarm_configured/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_gateways_alarm_configured/cloudwatch_changes_to_network_gateways_alarm_configured.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_gateways_alarm_configured/cloudwatch_changes_to_network_gateways_alarm_configured.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_route_tables_alarm_configured",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_route_tables_alarm_configured/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_route_tables_alarm_configured/cloudwatch_changes_to_network_route_tables_alarm_configured.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_network_route_tables_alarm_configured/cloudwatch_changes_to_network_route_tables_alarm_configured.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_vpcs_alarm_configured",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_vpcs_alarm_configured/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_vpcs_alarm_configured/cloudwatch_changes_to_vpcs_alarm_configured.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_changes_to_vpcs_alarm_configured/cloudwatch_changes_to_vpcs_alarm_configured.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_client.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_cross_account_sharing_disabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_cross_account_sharing_disabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_cross_account_sharing_disabled/cloudwatch_cross_account_sharing_disabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_cross_account_sharing_disabled/cloudwatch_cross_account_sharing_disabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_agentcore_data_protection_policy_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_agentcore_data_protection_policy_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_agentcore_data_protection_policy_enabled/cloudwatch_log_group_agentcore_data_protection_policy_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_agentcore_data_protection_policy_enabled/cloudwatch_log_group_agentcore_data_protection_policy_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_kms_encryption_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_kms_encryption_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_kms_encryption_enabled/cloudwatch_log_group_kms_encryption_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_kms_encryption_enabled/cloudwatch_log_group_kms_encryption_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_no_secrets_in_logs",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_no_secrets_in_logs/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_no_secrets_in_logs/cloudwatch_log_group_no_secrets_in_logs.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_no_secrets_in_logs/cloudwatch_log_group_no_secrets_in_logs.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_not_publicly_accessible",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_not_publicly_accessible/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_not_publicly_accessible/cloudwatch_log_group_not_publicly_accessible.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_not_publicly_accessible/cloudwatch_log_group_not_publicly_accessible.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_retention_policy_specific_days_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_retention_policy_specific_days_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_retention_policy_specific_days_enabled/cloudwatch_log_group_retention_policy_specific_days_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_group_retention_policy_specific_days_enabled/cloudwatch_log_group_retention_policy_specific_days_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled/cloudwatch_log_metric_filter_and_alarm_for_aws_config_configuration_changes_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled/cloudwatch_log_metric_filter_and_alarm_for_cloudtrail_configuration_changes_enabled.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_authentication_failures",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_authentication_failures/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_authentication_failures/cloudwatch_log_metric_filter_authentication_failures.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_authentication_failures/cloudwatch_log_metric_filter_authentication_failures.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_aws_organizations_changes",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_aws_organizations_changes/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_aws_organizations_changes/cloudwatch_log_metric_filter_aws_organizations_changes.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_aws_organizations_changes/cloudwatch_log_metric_filter_aws_organizations_changes.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk/cloudwatch_log_metric_filter_disable_or_scheduled_deletion_of_kms_cmk.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes/cloudwatch_log_metric_filter_for_s3_bucket_policy_changes.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_policy_changes",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_policy_changes/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_policy_changes/cloudwatch_log_metric_filter_policy_changes.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_policy_changes/cloudwatch_log_metric_filter_policy_changes.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_root_usage",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_root_usage/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_root_usage/cloudwatch_log_metric_filter_root_usage.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_root_usage/cloudwatch_log_metric_filter_root_usage.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_security_group_changes",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_security_group_changes/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_security_group_changes/cloudwatch_log_metric_filter_security_group_changes.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_security_group_changes/cloudwatch_log_metric_filter_security_group_changes.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_sign_in_without_mfa",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_sign_in_without_mfa/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_sign_in_without_mfa/cloudwatch_log_metric_filter_sign_in_without_mfa.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_sign_in_without_mfa/cloudwatch_log_metric_filter_sign_in_without_mfa.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_unauthorized_api_calls",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_unauthorized_api_calls/__init__.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_unauthorized_api_calls/cloudwatch_log_metric_filter_unauthorized_api_calls.metadata.json",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_log_metric_filter_unauthorized_api_calls/cloudwatch_log_metric_filter_unauthorized_api_calls.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/cloudwatch_service.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/lib",
+      "mode": "040000",
+      "type": "tree"
+    },
+    {
+      "path": "cloudwatch/lib/metric_filters.py",
+      "mode": "100644",
+      "type": "blob"
+    },
+    {
+      "path": "cloudwatch/logs_client.py",
+      "mode": "100644",
+      "type": "blob"
+    }
+  ]
+}

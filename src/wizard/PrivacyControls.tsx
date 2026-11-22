@@ -1,14 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Button, Field, inputClass } from "./ui";
-import { isEphemeralMode, setEphemeralMode } from "./persistence";
-import { getSessionPassphrase, hasSessionPassphrase, setSessionPassphrase } from "./sessionSecrets";
-import { useStore } from "./store";
+import { isEphemeralMode, protectionError, protectionOperation, protectionSnapshot, setEphemeralMode, subscribeProtection } from "./persistence";
+import { getSessionPassphrase, hasSessionPassphrase } from "./sessionSecrets";
+import { applyProtection } from "./store";
 import { unlockProgress } from "./unlock";
-
-/** Touch the assessment so zustand persist rewrites (plain or encrypted) under the current session settings. */
-export function repersist() {
-  useStore.getState().update(() => ({}));
-}
+import { HERE, THIS } from "./where";
 
 /** Passphrase fields: optional protection for browser progress and/or a saved file. */
 export function PassphraseFields({
@@ -16,54 +12,67 @@ export function PassphraseFields({
   onApplied,
 }: {
   idPrefix: string;
-  /** Called after a passphrase is set or cleared and storage has been asked to rewrite. */
+  /** Called only after the current protection operation is acknowledged. */
   onApplied?: (protectedWithPassphrase: boolean) => void;
 }) {
+  const protection = useSyncExternalStore(subscribeProtection, protectionSnapshot);
+  const pending = protection === "pending";
   const active = hasSessionPassphrase();
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const [open, setOpen] = useState(false);
   const [pass, setPass] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  function apply(e: FormEvent) {
+  async function apply(e: FormEvent) {
     e.preventDefault();
+    if (protectionSnapshot() === "pending") return;
     setError(null);
-    if (pass.length < 8) {
-      setError("Use at least 8 characters.");
-      return;
-    }
-    if (pass !== confirm) {
-      setError("Passphrases do not match.");
-      return;
-    }
-    setSessionPassphrase(pass);
-    repersist();
+    if (pass.length < 8) { setError("Use at least 8 characters."); return; }
+    if (pass !== confirm) { setError("Passphrases do not match."); return; }
+    const operation = applyProtection(pass);
+    const revision = protectionOperation();
+    const ok = await operation;
+    if (!mounted.current || !ok || protectionOperation() !== revision) return;
     setPass("");
     setConfirm("");
     setOpen(false);
     onApplied?.(true);
   }
 
-  function clearProtection() {
-    if (!window.confirm("Remove passphrase protection? Progress in this browser will be stored as plain JSON again.")) return;
-    setSessionPassphrase(null);
-    repersist();
+  async function clearProtection() {
+    if (protectionSnapshot() === "pending") return;
+    if (!window.confirm(`Remove passphrase protection? Progress ${HERE} will be stored as plain JSON again. Any encrypted recovery backup stays unchanged and still requires its original passphrase.`)) return;
+    const operation = applyProtection(null);
+    const revision = protectionOperation();
+    const ok = await operation;
+    if (!mounted.current || !ok || protectionOperation() !== revision) return;
     setOpen(false);
     onApplied?.(false);
   }
+
+  const feedback = <>
+    {pending && <p role="status">Updating protection…</p>}
+    {protection === "error" && <p role="alert" className="text-sm text-danger">{protectionError} Read-only progress cannot be rewritten.</p>}
+    <p className="mt-2 text-xs text-muted">Encrypted recovery backups stay unchanged when protection changes or is removed. Keep their original passphrase. They contain raw recovery data, which may need manual repair.</p>
+  </>;
 
   if (active && !open) {
     return (
       <div className="text-sm text-ink-2">
         <p>
-          Protected with a passphrase. The key stays in memory only for this visit — you will need it again after a
-          reload. There is <strong className="font-medium text-ink">no recovery</strong> if you forget it.
+          {protection === "protected" ? "Protected with a passphrase." : protection === "session" ? "Passphrase set for saved files and session data only. Local protection is not confirmed." : "Passphrase set. Local protection is not confirmed."} The key stays in memory only for this visit. You will need it again after a reload. There is <strong className="font-medium text-ink">no recovery</strong> if you forget it.
         </p>
+        {feedback}
         <div className="mt-2 flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setOpen(true)}>
+          <Button variant="secondary" disabled={pending} onClick={() => setOpen(true)}>
             Change passphrase
           </Button>
-          <Button variant="ghost" onClick={clearProtection}>
+          <Button variant="ghost" disabled={pending} onClick={() => void clearProtection()}>
             Remove protection
           </Button>
         </div>
@@ -74,24 +83,28 @@ export function PassphraseFields({
   if (!open) {
     return (
       <div>
-        <Button variant="secondary" onClick={() => setOpen(true)}>
+        <Button variant="secondary" disabled={pending} onClick={() => setOpen(true)}>
           Protect with a passphrase
         </Button>
+        {feedback}
         <p className="mt-2 text-xs leading-relaxed text-muted">
-          Optional. Encrypts the copy kept in this browser and any file you save while the passphrase is set. There is no
-          recovery if you forget it.
+          {isEphemeralMode()
+            ? "Optional. Protects saved files and recovery data for this session. Local protection is not confirmed."
+            : `Optional. Encrypts the copy kept ${HERE} and any file you save while the passphrase is set.`} There is no recovery if you forget it.
         </p>
       </div>
     );
   }
 
   return (
-    <form className="space-y-3" onSubmit={apply}>
+    <form className="space-y-3" onSubmit={(e) => void apply(e)}>
+      {feedback}
       <Field label="Passphrase" hint="At least 8 characters. Kept in memory only for this visit.">
         <input
           id={`${idPrefix}-pass`}
           type="password"
           autoComplete="new-password"
+          disabled={pending}
           className={inputClass}
           value={pass}
           onChange={(e) => setPass(e.target.value)}
@@ -104,6 +117,7 @@ export function PassphraseFields({
           id={`${idPrefix}-confirm`}
           type="password"
           autoComplete="new-password"
+          disabled={pending}
           className={inputClass}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -121,10 +135,11 @@ export function PassphraseFields({
         passphrase will not partially load the assessment.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button type="submit">Apply passphrase</Button>
+        <Button type="submit" disabled={pending}>Apply passphrase</Button>
         <Button
           variant="ghost"
           type="button"
+          disabled={pending}
           onClick={() => {
             setOpen(false);
             setPass("");
@@ -153,7 +168,7 @@ export function EphemeralToggle({
     if (next) {
       if (
         !window.confirm(
-          "Don't keep this assessment in this browser? Use Save file first if you want a copy. Reloading will lose the assessment. The choice itself is remembered.",
+          `Don't keep this assessment ${HERE}? Use Save file first if you want a copy. Reloading will lose the assessment. The choice itself is remembered.`,
         )
       ) {
         return;
@@ -163,7 +178,7 @@ export function EphemeralToggle({
     setEphemeralMode(next);
     setOn(next);
     onChange?.(next);
-    if (!next) repersist();
+    void applyProtection(getSessionPassphrase());
   }
 
   return (
@@ -175,7 +190,7 @@ export function EphemeralToggle({
         onChange={(e) => toggle(e.target.checked)}
       />
       <span>
-        <span className="font-medium text-ink">Don&apos;t keep this assessment in this browser</span>
+        <span className="font-medium text-ink">Don&apos;t keep this assessment {HERE}</span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted">
           Progress stays in memory only. Reloading loses it. A small flag is kept so the choice survives a reload — the
           assessment is not. Save a file before you leave.
@@ -185,7 +200,7 @@ export function EphemeralToggle({
   );
 }
 
-/** Unlock card when localStorage holds an envelope and no session passphrase is set. */
+/** Unlock card when autosaved progress is an encryption envelope and no session passphrase is set. */
 export function UnlockCard({
   onUnlocked,
   onForget,
@@ -220,7 +235,7 @@ export function UnlockCard({
         <p className="mono-label text-accent">Protected</p>
         <h1 className="mt-2 text-[1.75rem] font-semibold leading-tight">Enter passphrase</h1>
         <p className="mt-3 text-sm leading-relaxed text-ink-2">
-          Progress in this browser is encrypted. Enter the passphrase to unlock it. A wrong passphrase will not load
+          Progress {HERE} is encrypted. Enter the passphrase to unlock it. A wrong passphrase will not load
           anything. There is no recovery if you have forgotten it.
         </p>
         <div className="mt-5">
@@ -250,12 +265,12 @@ export function UnlockCard({
             variant="danger"
             type="button"
             onClick={() => {
-              if (window.confirm("Remove the encrypted progress from this browser? You will need a saved file to get it back.")) {
+              if (window.confirm(`Remove the encrypted progress from ${THIS}? You will need a saved file to get it back.`)) {
                 onForget();
               }
             }}
           >
-            Remove from this browser
+            Remove from {THIS}
           </Button>
         </div>
       </form>
@@ -281,6 +296,3 @@ export function LegacyOriginBanner() {
     </div>
   );
 }
-
-/** Current passphrase if set — for encrypting a save without re-prompting. */
-export { getSessionPassphrase, hasSessionPassphrase };

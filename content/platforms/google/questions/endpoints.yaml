@@ -31,6 +31,9 @@
     - { framework: idcf, ref: "DSL-2 Physical" }
     - { framework: idcf, ref: "DSL-3 Physical" }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-002
   module: core
@@ -66,6 +69,11 @@
     - { framework: ism, ref: ISM-1585 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-003
   module: core
@@ -90,6 +98,8 @@
   refs:
     - { framework: nist-csf-2, ref: PR.PS-05 }
     - { framework: ism, ref: ISM-1592 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
 
 - id: GO-END-004
   module: core
@@ -121,6 +131,9 @@
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-005
   module: core
@@ -163,6 +176,11 @@
   e8:
     - { strategy: patch-applications, level: 1 }
     - { strategy: patch-operating-systems, level: 1 }
+  essentials:
+    - { action: IT.IDE-01.1, domains: [VR], coverage: partial }
+    - { action: IT.PRO-06.1, domains: [UD], coverage: partial }
+    - { action: CL.IDE-01.x1, domains: [VR], coverage: partial }
+  essentialsReviewed: "IT.DET-05.1 not tagged: finding devices for patch scanning is not a review of detection coverage."
 
 - id: GO-END-006
   module: core
@@ -201,6 +219,9 @@
     - { framework: ism, ref: ISM-1704 }
   e8:
     - { strategy: patch-applications, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-007
   module: core
@@ -238,6 +259,11 @@
     - { framework: ism, ref: ISM-1695 }
   e8:
     - { strategy: patch-operating-systems, level: 1 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
 
 - id: GO-END-008
   module: core
@@ -271,6 +297,10 @@
     - { framework: ism, ref: ISM-1700 }
   e8:
     - { strategy: patch-applications, level: 2 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-009
   module: core
@@ -306,6 +336,9 @@
     - { framework: ism, ref: ISM-1692 }
   e8:
     - { strategy: patch-applications, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-010
   module: core
@@ -341,6 +374,9 @@
     - { framework: ism, ref: ISM-1696 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-011
   module: core
@@ -372,6 +408,9 @@
     - { framework: ism, ref: ISM-1407 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
 
 - id: GO-END-012
   module: core
@@ -403,6 +442,13 @@
     - { framework: ism, ref: ISM-0304 }
   e8:
     - { strategy: patch-applications, level: 3 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: IT.GOV-14.1, domains: [GC], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
+    - { action: CL.GOV-14.x1, domains: [GC], coverage: partial }
 
 - id: GO-END-013
   module: core
@@ -438,6 +484,10 @@
     - { framework: ism, ref: ISM-1903 }
   e8:
     - { strategy: patch-operating-systems, level: 3 }
+  essentials:
+    - { action: IT.PRO-06.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-06.3, domains: [UD], coverage: partial }
 
 - id: GO-END-014
   module: core
@@ -477,6 +527,9 @@
     - { framework: ism, ref: ISM-1870 }
   e8:
     - { strategy: application-control, level: 1 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+  essentialsReviewed: "IT.PRO-07.2 not tagged: general application control does not restrict admin tooling to approved locations."
 
 - id: GO-END-015
   module: core
@@ -511,6 +564,11 @@
     - { framework: ism, ref: ISM-1657 }
   e8:
     - { strategy: application-control, level: 1 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
+  essentialsReviewed: "IT.PRO-07.2 not tagged: general application control does not restrict admin tooling to approved locations."
 
 - id: GO-END-016
   module: core
@@ -545,6 +603,10 @@
     - { framework: ism, ref: ISM-1871 }
   e8:
     - { strategy: application-control, level: 2 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [UD], coverage: partial }
 
 - id: GO-END-017
   module: core
@@ -575,6 +637,10 @@
     - { framework: ism, ref: ISM-1660 }
   e8:
     - { strategy: application-control, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD], coverage: partial }
+  essentialsReviewed: "IT.DET-02.2 and IT.DET-04.1 not tagged: collecting application control events does not show detection logic or behaviour analysis runs on them."
 
 - id: GO-END-018
   module: core
@@ -609,6 +675,8 @@
     - { framework: ism, ref: ISM-1659 }
   e8:
     - { strategy: application-control, level: 3 }
+  essentials:
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
 
 - id: GO-END-019
   module: core
@@ -644,6 +712,12 @@
     - { framework: ism, ref: ISM-1672 }
   e8:
     - { strategy: office-macros, level: 1 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-020
   module: core
@@ -673,6 +747,12 @@
     - { framework: ism, ref: ISM-1673 }
   e8:
     - { strategy: office-macros, level: 2 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-021
   module: core
@@ -716,6 +796,12 @@
     - { framework: ism, ref: ISM-1891 }
   e8:
     - { strategy: office-macros, level: 3 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: IT.PRO-07.1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-022
   module: core
@@ -747,6 +833,11 @@
     - { framework: ism, ref: ISM-1485 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-023
   module: core
@@ -780,6 +871,11 @@
     - { framework: ism, ref: ISM-1654 }
   e8:
     - { strategy: user-application-hardening, level: 1 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-024
   module: core
@@ -817,6 +913,11 @@
     - { framework: ism, ref: ISM-1670 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-025
   module: core
@@ -851,6 +952,11 @@
     - { framework: ism, ref: ISM-1412 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-026
   module: core
@@ -890,6 +996,11 @@
     - { framework: ism, ref: ISM-1860 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-END-027
   module: core
@@ -925,6 +1036,10 @@
     - { framework: ism, ref: ISM-1889 }
   e8:
     - { strategy: user-application-hardening, level: 2 }
+  essentials:
+    - { action: IT.DET-01.2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.DET-01.x2, domains: [UD, BUS], coverage: partial }
+  essentialsReviewed: "IT.DET-04.1 not tagged: collecting PowerShell and process creation logs does not show software execution is analysed."
 
 - id: GO-END-028
   module: core
@@ -958,3 +1073,8 @@
     - { framework: ism, ref: ISM-1655 }
   e8:
     - { strategy: user-application-hardening, level: 3 }
+  essentials:
+    - { action: IT.PRO-04.1, domains: [UD, BUS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD, BUS], coverage: partial }
+    - { action: CL.PRO-04.x1, domains: [UD, BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD, BUS], coverage: partial }

@@ -4,16 +4,21 @@ import { SOURCES_LAST_CHECKED } from "../../content/sourcesChecked";
 import { useEnsurePlatforms, useEnsureReportContent } from "../../content/useCatalogue";
 import { buildReport } from "../../report/model";
 import { formatAbn, isValidAbn } from "../../engine/abn";
-import { download, requestOpenFile, slug } from "../download";
-import { modeOf, stepsFor, useStore } from "../store";
+import { platform } from "../../platform";
+import { fileNames, requestOpenFile } from "../files";
+import { useStore } from "../store";
+import { modeOf, stepIndex } from "../flow";
 import { IsmBaselinePicker, useIsmSummary } from "../IsmBaseline";
+import { EssentialsPicker } from "../EssentialsOption";
 import { Button, Card, StepHeader } from "../ui";
+import { HERE } from "../where";
 
 export function ReportStep() {
   const assessment = useStore((s) => s.assessment);
   const setMode = useStore((s) => s.setMode);
   const ism = useIsmSummary();
   const [status, setStatus] = useState<"idle" | "working" | "done" | "error">("idle");
+  const [saved, setSaved] = useState<"downloaded" | "saved">("downloaded");
   const [error, setError] = useState<string>();
   const standalone = modeOf(assessment) === "ai-register";
   const platformsReady = useEnsurePlatforms(assessment.platforms);
@@ -25,17 +30,16 @@ export function ReportStep() {
     setError(undefined);
     try {
       await Promise.all([ensurePlatforms(assessment.platforms), ensureReportContent()]);
-      // PDF render runs in a worker when possible (see renderPdfInWorker).
-      const { renderPdfInWorker } = await import("../../report/pdfClient");
+      const { renderPdf } = await import("../../report/pdfClient");
       const now = new Date();
-      const p2 = (n: number) => String(n).padStart(2, "0");
-      const date = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}-${p2(now.getHours())}${p2(now.getMinutes())}`;
-      const blob = await renderPdfInWorker({
-        kind: standalone ? "ai-register" : "report",
-        assessment,
-        generatedAt: now,
-      });
-      download(standalone ? `${slug(assessment.org.name)}-ai-register.pdf` : `${slug(assessment.org.name)}-crown-jewel-risk-${date}.pdf`, blob, "application/pdf");
+      const blob = await renderPdf(standalone ? "ai-register" : "report", assessment, now);
+      const result = await platform.saveAs(fileNames.report(assessment.org.name, standalone, now), blob, "application/pdf");
+      // On desktop the save dialog can be cancelled, or the write can fail (the user has already been told why).
+      if (result === "cancelled" || result === "failed") {
+        setStatus("idle");
+        return;
+      }
+      setSaved(result);
       setStatus("done");
     } catch (e) {
       console.error(e);
@@ -106,6 +110,8 @@ export function ReportStep() {
             <dd>
               {ism ? `${ism.label} — ${ism.findings.length} of ${ism.totalFindings} findings annotated` : "Not shown"}
             </dd>
+            <dt className="text-muted">ASD Essentials</dt>
+            <dd>{model?.essentials ? `${model.essentials.framework.name}, indicative` : "Not shown"}</dd>
             {model?.aiRegister && (
               <>
                 <dt className="text-muted">AI use cases</dt>
@@ -129,6 +135,9 @@ export function ReportStep() {
         {!standalone && (
           <div className="mb-5">
             <IsmBaselinePicker />
+            <div className="mt-4">
+              <EssentialsPicker />
+            </div>
           </div>
         )}
         <Button
@@ -139,7 +148,11 @@ export function ReportStep() {
         >
           {status === "working" ? "Building PDF…" : "Generate PDF report"}
         </Button>
-        {status === "done" && <p className="mt-3 text-sm text-ok" role="status">Report downloaded. Check your downloads folder.</p>}
+        {status === "done" && (
+          <p className="mt-3 text-sm text-ok" role="status">
+            {saved === "saved" ? "Report saved." : "Report downloaded. Check your downloads folder."}
+          </p>
+        )}
         <p className="mt-3 text-xs text-muted">Each report is stamped with the date and time it was generated, and the time the answers were last changed.</p>
         {status === "error" && <p className="mt-3 text-sm text-danger" role="alert">Couldn't build the PDF: {error}</p>}
         {standalone && (
@@ -151,15 +164,15 @@ export function ReportStep() {
             <Button
               variant="secondary"
               className="mt-3"
-              onClick={() => setMode("full", stepsFor("full").indexOf("Environment"))}
+              onClick={() => setMode("full", stepIndex("full", "environment"))}
             >
               Turn this into a full crown-jewel assessment
             </Button>
           </div>
         )}
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Your progress is saved in this browser. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
-          <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={requestOpenFile}>
+          Your progress is saved {HERE}. Use <strong className="font-medium text-ink-2">Save file</strong> at the top to keep a copy, then <strong className="font-medium text-ink-2">Open file</strong> later to update the assessment and regenerate the report. Updating an older report?{" "}
+          <button type="button" className="font-medium text-accent underline decoration-accent/30 underline-offset-2" onClick={() => requestOpenFile()}>
             Open its saved file
           </button>
           , add the logo or ABN on the Organisation step, then generate again.

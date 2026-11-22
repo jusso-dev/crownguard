@@ -1,3 +1,4 @@
+import { chooseImportFiles, importReads, releaseImport } from "./import-files";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
@@ -145,4 +146,55 @@ test("a file that isn't a consent export is rejected with a plain-English messag
   await toAiStep(page);
   await page.getByTestId("consent-input").setInputFiles("e2e/fixtures/m365-secure-scan.json");
   await expect(page.getByTestId("consent-error")).toContainText("no OAuth2 permission grants or service principals");
+});
+
+
+test("consent combined byte rejection happens before any read, preserves register and supports retry", async ({ page }) => {
+  await toAiStep(page);
+  await page.getByTestId("consent-input").setInputFiles("e2e/fixtures/consent-graph.json");
+  await page.getByRole("button", { name: "Add to AI register: Fathom Meeting Assistant" }).click();
+  // Accepted preview survives the intended layout remount when the first entry is added.
+  await expect(page.getByTestId("consent-preview")).toBeVisible();
+  const before = await page.evaluate(() => localStorage.getItem("crownguard:v1"));
+  const text = await readFile("e2e/fixtures/consent-graph.json", "utf8");
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await chooseImportFiles(page, "consent-input", [{ name: "grants", text, size: 4_000_000 }, { name: "principals", text, size: 4_000_001 }]);
+    await expect(page.getByTestId("consent-error")).toContainText("consent export selection exceeds the 8 MB");
+    await expect(page.getByTestId("consent-preview")).toHaveCount(0);
+    await expect(page.getByTestId("consent-input")).toHaveValue("");
+  }
+  expect(await importReads(page)).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem("crownguard:v1"))).toBe(before);
+  // Two ordinary Graph files are one import, just like the single-file fixture.
+  const rows = JSON.parse(text);
+  await chooseImportFiles(page, "consent-input", [{ name: "grants", text: JSON.stringify(rows.grants) }, { name: "principals", text: JSON.stringify(rows.servicePrincipals) }]);
+  await expect(page.getByTestId("consent-preview")).toBeVisible();
+  await expect(app(page, "Fathom Meeting Assistant").getByTestId("found-added")).toBeVisible();
+});
+
+test("consent pending reads cannot replace newer results or attach after unmount/assessment changes", async ({ page }) => {
+  await toAiStep(page);
+  const text = await readFile("e2e/fixtures/consent-graph.json", "utf8");
+  await chooseImportFiles(page, "consent-input", [{ name: "slow", text, deferred: true }]);
+  await chooseImportFiles(page, "consent-input", [{ name: "too-large", text: "{}", size: 8_000_001 }]);
+  await releaseImport(page, "slow");
+  await expect(page.getByTestId("consent-error")).toContainText("8 MB");
+  await expect(page.getByTestId("consent-preview")).toHaveCount(0);
+  await chooseImportFiles(page, "consent-input", [{ name: "failure", text, deferred: true }]);
+  await chooseImportFiles(page, "consent-input", [{ name: "valid", text }]);
+  await releaseImport(page, "failure", true);
+  await expect(page.getByTestId("consent-preview")).toBeVisible();
+  await expect(page.getByTestId("consent-error")).toHaveCount(0);
+  await chooseImportFiles(page, "consent-input", [{ name: "unmounted", text, deferred: true }]);
+  await page.getByRole("button", { name: /Back$/ }).click();
+  await next(page);
+  await releaseImport(page, "unmounted");
+  await expect(page.getByTestId("consent-preview")).toHaveCount(0);
+  // Include register and add an example, then change an entry without unmounting the panel.
+  await page.getByRole("button", { name: "Load example entries" }).click();
+  await chooseImportFiles(page, "consent-input", [{ name: "changed", text, deferred: true }]);
+  await page.getByLabel("Underpinning product").fill("Changed product");
+  await releaseImport(page, "changed");
+  await expect(page.getByTestId("consent-error")).toContainText("assessment changed while reading");
+  await expect(page.getByTestId("consent-preview")).toHaveCount(0);
 });

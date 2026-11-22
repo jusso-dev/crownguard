@@ -1,4 +1,4 @@
-import { contrast, readableOn, textOn } from "../../theme/color";
+import { readableOn, textOn, tooLightForText } from "../../theme/color";
 import { ColorField } from "../ColorField";
 import { LogoField } from "../LogoField";
 import { useStore } from "../store";
@@ -11,7 +11,6 @@ export function BrandingStep() {
   const b = assessment.branding;
   const custom = !markings.includes(b.marking);
 
-  const primaryContrast = contrast(b.primary, "#ffffff");
 
   return (
     <>
@@ -55,7 +54,7 @@ export function BrandingStep() {
             <ColorField label="Primary colour" value={b.primary} onChange={(primary) => setBranding({ primary })} />
             <ColorField label="Accent colour" value={b.accent} onChange={(accent) => setBranding({ accent })} />
           </div>
-          {primaryContrast < 4.5 && (
+          {tooLightForText(b.primary) && (
             <p className="text-sm text-warn">
               The primary colour is light, so headings will use a darker shade ({readableOn(b.primary).toUpperCase()}) to stay readable.
             </p>

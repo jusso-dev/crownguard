@@ -1,0 +1,29 @@
+{
+ "profile": {
+  "uuid": "4ecd696f-44bb-5844-9630-e6c1b2eb5efc",
+  "metadata": {
+   "title": "Assessment evidence guide for enterprise IT - Identity services OSCAL Profile",
+   "published": "2026-10-15T00:30:23Z",
+   "last-modified": "2026-10-15T00:30:23Z",
+   "version": "2026.10.15",
+   "oscal-version": "1.2.3",
+   "props": [
+    {
+     "name": "domain",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "identity-services"
+    },
+    {
+     "name": "domain-description",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "Enterprise-wide identity, credential and access management services such as directories, authentication and authorisation services or credential stores."
+    },
+    {
+     "name": "domain-priority-phase",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "phase-1"
+    }
+   ]
+  }
+ }
+}

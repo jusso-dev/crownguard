@@ -1,13 +1,13 @@
 # CISA ScubaGoggles control ids mapped to crownguard questions, for importing a ScubaGoggles
 # ScubaResults*.json report of a Google Workspace tenant.
-# Control ids were checked against ScubaGoggles release v1.0.1 (the SCuBA Google Workspace
+# Control ids were checked against ScubaGoggles release v1.1.0 (the SCuBA Google Workspace
 # baselines in scubagoggles/baselines at that tag); `checkedAgainst` records that. Policy ids carry
 # a version suffix (v1 here, v0.x on older runs), and the importer matches on the id without the
 # suffix, warning when the suffix in the report differs.
 # Privacy: the importer reads only MetaData and Results. It never touches the `Raw` section, which
 # holds super admin and break-glass accounts, organisational unit names and audit log events.
 #
-# Coverage (of the SCuBA policies at v1.0.1): Gmail 26 of 36, Drive and Docs 13 of 17,
+# Coverage (of the SCuBA policies at v1.1.0): Gmail 26 of 36, Drive and Docs 13 of 17,
 # Common Controls 27 of 42, Gemini 5 of 5. Everything not mapped is listed here with the reason.
 #
 # Gmail not mapped:
@@ -46,7 +46,10 @@
 #     Studio sharing and Pinpoint. No question asks whether unused Google services are turned off.
 #
 # Gemini: all five policies map.
-# Meet: all eight policies map.
+# Meet not mapped:
+#   GWS.MEET.6.3v1  Screenshots of presented content only captured in notes when recording is on
+#     (new in v1.1.0). A manual check with no setting ScubaGoggles reads, so it can't pre-fill an
+#     answer; GO-MEET-003 asks about who can open notes, not what goes into them.
 # Other products:
 #   GWS.CHAT.5.1v1, GWS.CHAT.5.2v1  Chat content reporting (user moderation). Not a crown-jewel
 #     control.
@@ -62,7 +65,7 @@ id: scubagoggles
 name: ScubaGoggles
 platform: google
 url: https://github.com/cisagov/ScubaGoggles
-checkedAgainst: v1.0.1
+checkedAgainst: v1.1.0
 mappings:
   - question: GO-GML-001
     checks: [GWS.GMAIL.2.1v1, GWS.GMAIL.3.1v1, GWS.GMAIL.4.1v1, GWS.GMAIL.4.2v1]

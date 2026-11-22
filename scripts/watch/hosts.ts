@@ -1,7 +1,16 @@
 import type { HostProfile } from "./types";
 
+/** English pages, including US English: the language every crownguard source is cited in. */
+const ENGLISH = /^en(?:-US)?$/i;
+
+/** Identifies the watch honestly. No URL in it: cyber.gov.au's firewall resets connections whose user agent contains one. */
+export const USER_AGENT = "Mozilla/5.0 (compatible; crownguard-source-watch/1.0)";
+
+/** The same identity without the "Mozilla/5.0 (compatible; ...)" wrapper, for hosts that drop requests carrying it. */
+export const PLAIN_USER_AGENT = "crownguard-source-watch/1.0";
+
 /** Fallback for hosts without a profile: the usual main-content containers, no quoting. */
-export const DEFAULT_PROFILE: HostProfile = {
+const DEFAULT_PROFILE: HostProfile = {
   host: "*",
   label: "Other",
   content: ["main article", "article", "main", "[role=main]", "#content", ".content"],
@@ -12,7 +21,7 @@ export const DEFAULT_PROFILE: HostProfile = {
   concurrency: 2,
 };
 
-export const PROFILES: HostProfile[] = [
+const PROFILES: HostProfile[] = [
   {
     host: "learn.microsoft.com",
     label: "Microsoft Learn",
@@ -41,11 +50,13 @@ export const PROFILES: HostProfile[] = [
     // may be quoted (LEARN_MIRROR_LICENCES).
     excerpts: "none",
     concurrency: 4,
+    caseInsensitivePaths: true,
+    tocs: true,
   },
 ];
 
 /** Licences of the public MicrosoftDocs mirrors (checked October 2026). Pages from other Learn repos aren't quoted. */
-export const LEARN_MIRROR_LICENCES: Record<string, { label: string; url: string }> = {
+const LEARN_MIRROR_LICENCES: Record<string, { label: string; url: string }> = {
   "MicrosoftDocs/entra-docs": { label: "MIT licence, © Microsoft Corporation", url: "https://github.com/MicrosoftDocs/entra-docs/blob/main/LICENSE" },
   "MicrosoftDocs/azure-docs": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },
   "MicrosoftDocs/power-platform": { label: "CC BY 4.0, Microsoft", url: "https://creativecommons.org/licenses/by/4.0/" },
@@ -82,7 +93,7 @@ const devsite = (host: string, label: string): HostProfile => ({
   title: "og",
   // Without hl=en, some requests land on a random machine translation.
   fetchParams: { hl: "en" },
-  lang: /^en(?:-US)?$/i,
+  lang: ENGLISH,
   // "Last updated" is stamped on every page at each site rebuild.
   ignoreUpdated: true,
   excerpts: "cc-by-4.0",
@@ -93,7 +104,8 @@ const devsite = (host: string, label: string): HostProfile => ({
 
 PROFILES.push(
   devsite("knowledge.workspace.google.com", "Google Workspace Help"),
-  devsite("docs.cloud.google.com", "Google Cloud documentation"),
+  // Cloud release notes still link to cloud.google.com.
+  { ...devsite("docs.cloud.google.com", "Google Cloud documentation"), formerHosts: ["cloud.google.com"] },
   {
     host: "support.google.com",
     label: "Google Help Center",
@@ -103,7 +115,7 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3",
     fetchParams: { hl: "en" },
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     // Help Center text has no open licence: hashes and section names only.
     excerpts: "none",
     concurrency: 2,
@@ -118,7 +130,7 @@ PROFILES.push(
     sectionHeadings: "h2, h3",
     title: "og",
     fetchParams: { hl: "en" },
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     excerpts: "none",
     concurrency: 1,
   },
@@ -132,7 +144,6 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3, h5",
     excerpts: "none",
-    botProtected: true,
     concurrency: 1,
     // robots.txt asks for 10 seconds between requests.
     delayMs: 10_000,
@@ -151,7 +162,6 @@ PROFILES.push(
     excerpts: "cc-by-4.0",
     licence: "CC BY 4.0, © Commonwealth of Australia (ASD)",
     licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
-    botProtected: true,
     // Its firewall resets or hangs connections it doesn't like instead of answering, so retrying only wastes time.
     blockedOnNetworkError: true,
     retries: 0,
@@ -167,7 +177,6 @@ PROFILES.push(
     sectionHeadings: "h2, h3",
     excerpts: "public-domain",
     licence: "public domain, US Government work (NIST)",
-    botProtected: true,
     concurrency: 1,
   },
   {
@@ -184,8 +193,9 @@ PROFILES.push(
   {
     host: "www.soc-cmm.com",
     label: "SOC-CMM",
-    // Answers 403 to non-browser user agents (checked 2026-10-09). The watch never pretends to be a browser, so these
-    // sources stay "unverifiable" until SOC-CMM allows its user agent; the community feed below covers new releases.
+    // Its firewall drops connections whose user agent starts "Mozilla/5.0 (compatible; ...)" but serves the plain
+    // watch name (checked 2026-11-04). The watch still never pretends to be a browser.
+    userAgent: PLAIN_USER_AGENT,
     content: ["div.content[id^=content_]"],
     expectRoots: 1,
     strip: ["#cookiemelding", ".survey_banner", "#main_nav", ".breadcrumb", "#newsletter", "#cta", "#footer", "#bottom_placeholder"],
@@ -205,7 +215,7 @@ PROFILES.push(
     strip: ["awsdocs-language-banner", "awsdocs-page-header", "awsdocs-filter-selector", "awsdocs-copyright", "awsdocs-thumb-feedback"],
     volatile: [],
     sectionHeadings: "h2, h3",
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     // AWS's site terms don't allow republishing documentation text: hashes and section names only.
     excerpts: "none",
     concurrency: 2,
@@ -219,7 +229,7 @@ PROFILES.push(
     strip: ["nav", "[role=navigation]", "[hidden]", "[aria-hidden=true]"],
     volatile: [],
     sectionHeadings: "h2, h3",
-    lang: /^en(?:-US)?$/i,
+    lang: ENGLISH,
     excerpts: "none",
     concurrency: 1,
   },
@@ -232,8 +242,8 @@ PROFILES.push(
     volatile: [],
     sectionHeadings: "h2, h3",
     excerpts: "none",
-    botProtected: true,
     concurrency: 1,
+    caseInsensitivePaths: true,
   },
   {
     host: "www.digital.gov.au",
@@ -271,3 +281,8 @@ export function hasProfile(host: string): boolean {
 export function profileFor(host: string): HostProfile {
   return byHost.get(host) ?? { ...DEFAULT_PROFILE, host };
 }
+
+const movedTo = new Map(PROFILES.flatMap((p) => (p.formerHosts ?? []).map((h) => [h, p.host] as const)));
+
+/** The host a site lives on now, for a host it has moved away from. */
+export const currentHost = (host: string): string => movedTo.get(host) ?? host;

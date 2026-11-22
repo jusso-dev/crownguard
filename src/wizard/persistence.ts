@@ -1,15 +1,15 @@
+import { allQuestionIds } from "../content/catalogue";
 import type { PersistStorage, StorageValue } from "zustand/middleware";
-import type { Assessment } from "../engine/types";
-import { questionIdSet } from "../content/questionIds";
-import { decrypt, encrypt, isEncryptedEnvelope } from "./crypto";
-import { parseAssessment } from "./parseAssessment";
-import { getSessionPassphrase, hasSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
+import { SCHEMA_VERSION, type Assessment } from "../format/schema";
+import { autosaveKeys, EPHEMERAL_ON, platform, type AutosaveStore } from "../platform";
+import { decrypt, encrypt, isEncryptedEnvelope } from "../format/crypto";
+import { parseAssessment } from "../format/parse";
+import { getSessionPassphrase, onPassphraseChange, setSessionPassphrase, setLockedEnvelope } from "./sessionSecrets";
+import { HERE } from "./where";
 
-export const STORAGE_KEY = "crownguard:v1";
-/** Where a stored assessment is moved when it can't be read, so the user can still download it. */
-export const UNREADABLE_KEY = `${STORAGE_KEY}:unreadable`;
-/** Mode flag only: assessment itself stays out of localStorage when this is "1". */
-export const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
+export const STORAGE_KEY = autosaveKeys.progress;
+export const UNREADABLE_KEY = autosaveKeys.unreadable;
+const EPHEMERAL_FLAG_KEY = autosaveKeys.ephemeral;
 
 /**
  * Opened a file this build must not overwrite: every write to storage is dropped until the page is reloaded.
@@ -17,17 +17,75 @@ export const EPHEMERAL_FLAG_KEY = `${STORAGE_KEY}:ephemeral`;
  */
 let readOnly = false;
 export const setStorageReadOnly = (value: boolean) => {
+  if (readOnly !== value) invalidateProtection();
   readOnly = value;
 };
 
-/** Bumps on every encrypted save so a slower, older PBKDF2 cannot overwrite a newer one. */
+/**
+ * Bumps on every save and every removal, so a slower, older PBKDF2 can't land over a newer save, a plain save, or
+ * progress the user has just removed.
+ */
 let encryptGeneration = 0;
 
-export interface RehydrateNotice {
+/** Small session status shared by forms, save status and recovery downloads. */
+export type ProtectionStatus = "idle" | "pending" | "protected" | "session" | "plain" | "error";
+let protectionStatus: ProtectionStatus = "idle";
+let protectionRevision = 0;
+let recoveryBlocked = false;
+let recovering = false;
+let restoreSessionBackup = false;
+function completion<T>() {
+  let finish!: (value: T) => void;
+  const done = new Promise<T>((resolve) => { finish = resolve; });
+  return { done, finish };
+}
+let explicit: (ReturnType<typeof completion<boolean>> & { revision: number }) | undefined;
+type SaveJob = { name: string; json: string; pass: string; revision: number; generation: number };
+type Drain = ReturnType<typeof completion<void>> & { pending?: SaveJob };
+// Keyed so a caller using another storage key cannot replace the active assessment's pending snapshot.
+const ordinary = new Map<string, Drain>();
+const removals = new Map<Promise<void>, string>();
+const listeners = new Set<() => void>();
+export const protectionSnapshot = () => protectionStatus;
+export const protectionOperation = () => protectionRevision;
+export const subscribeProtection = (listener: () => void) => {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+};
+export const protectionError = "Protection is incomplete. Local storage may still contain unprotected data or data under an earlier passphrase. Keep the entered passphrase and any earlier backup passphrase. Retry, or save your work to a file.";
+function status(next: ProtectionStatus) {
+  protectionStatus = next;
+  for (const listener of listeners) listener();
+}
+export function invalidateProtection() {
+  protectionRevision++;
+  encryptGeneration++;
+  backupWork = undefined;
+  for (const drain of ordinary.values()) {
+    drain.pending = undefined;
+    drain.finish();
+  }
+  ordinary.clear();
+  explicit?.finish(false);
+  explicit = undefined;
+  // Invalidation cancels earlier completion; only an actual failure stays sticky until explicit retry.
+  status(protectionStatus === "error" ? "error" : "idle");
+}
+onPassphraseChange(invalidateProtection);
+const cancelled = () => new Error("Protection changed or was cancelled. Retry with the current settings.");
+function guard(revision: number) {
+  if (revision !== protectionRevision || readOnly || recoveryBlocked) throw cancelled();
+}
+
+/** The last write of the assessment to the autosave store failed (usually full); cleared by the next one that works. */
+let writeFailed = false;
+export const storageWriteFailed = () => writeFailed;
+
+interface RehydrateNotice {
   kind: "error" | "warn" | "info";
   text: string;
-  /** The stored value, kept verbatim when it couldn't be read, so the user can still download it. */
-  backup?: string;
+  /** Recovery data is resolved from storage at click time, never captured here. */
+  backup?: boolean;
 }
 
 const rehydration: RehydrateNotice[] = [];
@@ -35,47 +93,60 @@ const rehydration: RehydrateNotice[] = [];
 export const rehydrateNotices = (): readonly RehydrateNotice[] => rehydration;
 
 /**
- * `localStorage` where the browser offers one; memory otherwise (private windows, and the unit tests). Either way
- * the app behaves the same and nothing throws just because the browser said no.
+ * The platform's autosave store where it offers one: `localStorage` in the browser, SQLite on desktop (see
+ * src/platform/). Memory otherwise (private windows, and the unit tests). Either way the app behaves the same and
+ * nothing throws just because storage said no.
  */
 const memory = new Map<string, string>();
-const disk = (): Storage | undefined => {
-  try {
-    return typeof localStorage === "undefined" ? undefined : localStorage;
-  } catch {
-    return undefined;
-  }
-};
+const disk = (): AutosaveStore | undefined => platform.autosave();
 
-/** Don't keep the assessment in this browser: flag survives reload; the assessment does not. */
-let ephemeralMode = (() => {
-  try {
-    const on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === "1";
-    // A previous session may have left a stale assessment on disk; drop it when the mode is on.
-    if (on) disk()?.removeItem(STORAGE_KEY);
+/**
+ * Don't keep the assessment in this browser: flag survives reload; the assessment does not. Read on first use rather
+ * than at import, so the desktop build reads it from SQLite once the platform is ready.
+ */
+let ephemeralFlag: boolean | undefined;
+const ephemeral = () =>
+  (ephemeralFlag ??= (() => {
+    let on = false;
+    try { on = disk()?.getItem(EPHEMERAL_FLAG_KEY) === EPHEMERAL_ON; } catch { /* No readable flag. */ }
+    // Keep the user's mode even when stale local data could not be removed.
+    if (on) {
+      try {
+        observeRemoval(STORAGE_KEY);
+        observeRemoval(UNREADABLE_KEY);
+      } catch {
+        writeFailed = true;
+        status("error");
+      }
+    }
     return on;
-  } catch {
-    return false;
-  }
-})();
+  })());
 
-export const isEphemeralMode = () => ephemeralMode;
+export const isEphemeralMode = () => ephemeral();
 
 export function setEphemeralMode(on: boolean) {
-  ephemeralMode = on;
+  invalidateProtection();
+  // Preserve committed recovery bytes in session memory before removing disk copies.
+  const backup = unreadableBackup();
+  restoreSessionBackup = !on && ephemeral() && backup !== null;
+  if (backup !== null) memory.set(UNREADABLE_KEY, backup);
+  ephemeralFlag = on;
   if (on) {
-    writeFlag(EPHEMERAL_FLAG_KEY, "1");
+    writeFlag(EPHEMERAL_FLAG_KEY, EPHEMERAL_ON);
     // Drop any autosaved assessment from disk; keep the in-memory Map copy for this session.
     try {
-      disk()?.removeItem(STORAGE_KEY);
+      observeRemoval(STORAGE_KEY);
+      observeRemoval(UNREADABLE_KEY);
     } catch {
-      /* ignore */
+      writeFailed = true;
+      status("error");
     }
   } else {
     try {
-      disk()?.removeItem(EPHEMERAL_FLAG_KEY);
+      observeRemoval(EPHEMERAL_FLAG_KEY);
     } catch {
-      /* ignore */
+      writeFailed = true;
+      status("error");
     }
     memory.delete(EPHEMERAL_FLAG_KEY);
   }
@@ -90,9 +161,10 @@ const writeFlag = (name: string, value: string) => {
   }
 };
 
+const memoryOnly = (name: string) => ephemeral() && (name === STORAGE_KEY || name === UNREADABLE_KEY);
+
 const read = (name: string): string | null => {
-  // Ephemeral: assessment never comes back from disk after a reload.
-  if (name === STORAGE_KEY && ephemeralMode) {
+  if (memoryOnly(name)) {
     return memory.get(name) ?? null;
   }
   try {
@@ -103,53 +175,161 @@ const read = (name: string): string | null => {
 };
 const write = (name: string, value: string) => {
   memory.set(name, value);
-  if (name === STORAGE_KEY && ephemeralMode) return;
+  if (memoryOnly(name)) return;
   try {
-    disk()?.setItem(name, value);
+    const store = disk();
+    const result = store?.setItem(name, value);
+    if (result) void result.then(() => { if (name === STORAGE_KEY) writeFailed = false; }, () => { writeFailed = true; });
+    else if (store && name === STORAGE_KEY) writeFailed = false;
   } catch {
-    // Full or locked: the in-memory copy still keeps this session working.
+    // Full or locked: the in-memory copy still keeps this session working, but the save status must not say "Saved".
+    if (name === STORAGE_KEY) writeFailed = true;
   }
 };
 const drop = (name: string) => {
+  // Whatever encrypted save is still in flight was for the value being removed; it must not land afterwards.
+  invalidateProtection();
   memory.delete(name);
+  if (name === UNREADABLE_KEY) restoreSessionBackup = false;
   try {
-    disk()?.removeItem(name);
+    observeRemoval(name);
   } catch {
-    // Nothing to do; the user has already been told why their progress isn't being kept.
+    writeFailed = true;
+    status("error");
   }
 };
 
 /** Raw access to progress storage, for seeding it with something a hand would write and reading it back. */
 export const readProgress = read;
-export const writeProgress = write;
-export const dropProgress = drop;
-
-/** The stored value kept aside when progress couldn't be read, if there is one. */
-export const unreadableBackup = (): string | null => read(UNREADABLE_KEY);
-
-/** True when localStorage holds an encrypted envelope (locked or not). */
-export function peekEncryptedProgress(): boolean {
-  const raw = (() => {
+export const writeProgress = (name: string, value: string) => {
+  if (name === UNREADABLE_KEY) invalidateProtection();
+  write(name, value);
+};
+/** Remove progress, and the unreadable copy kept beside it: the user asked for this browser to forget it. */
+export const dropProgress = (name: string) => {
+  recoveryBlocked = false;
+  drop(name);
+  if (name === STORAGE_KEY) drop(UNREADABLE_KEY);
+  const revision = protectionRevision;
+  const generation = encryptGeneration;
+  void Promise.all(removals.keys()).then(() => {
+    if (revision !== protectionRevision || generation !== encryptGeneration) return;
     try {
-      return disk()?.getItem(STORAGE_KEY) ?? memory.get(STORAGE_KEY) ?? null;
-    } catch {
-      return memory.get(STORAGE_KEY) ?? null;
-    }
-  })();
-  if (!raw) return false;
-  try {
-    return isEncryptedEnvelope(JSON.parse(raw));
-  } catch {
-    return false;
+      const store = disk();
+      if (!store) return;
+      const get = (key: string) => store.getCommittedItem ? store.getCommittedItem(key) : store.getItem(key);
+      if (get(STORAGE_KEY) === null && get(UNREADABLE_KEY) === null) {
+        recoveryBlocked = false;
+        writeFailed = false;
+        status("idle");
+      }
+    } catch { /* Absence cannot be confirmed. Keep the failure visible. */ }
+  });
+};
+
+export const unreadableBackup = (): string | null => {
+  try { return committed(UNREADABLE_KEY); } catch { return memory.get(UNREADABLE_KEY) ?? null; }
+};
+
+function committed(name: string): string | null {
+  if (memoryOnly(name)) return memory.get(name) ?? null;
+  const store = disk();
+  if (!store) throw new Error("Local storage unavailable.");
+  return store.getCommittedItem ? store.getCommittedItem(name) : store.getItem(name);
+}
+
+function observeRemoval(name: string) {
+  const store = disk();
+  if (!store) throw new Error("Local storage unavailable.");
+  const result = store.removeItem(name);
+  if (result) {
+    const handled = result.catch(() => { writeFailed = true; status("error"); });
+    removals.set(handled, name);
+    void handled.then(() => removals.delete(handled));
   }
 }
 
-export interface Persisted {
+async function confirmEphemeralRemoval() {
+  await Promise.all(removals.keys());
+  const store = disk();
+  if (!store) throw new Error("Local storage absence cannot be confirmed.");
+  for (const key of [STORAGE_KEY, UNREADABLE_KEY]) {
+    const raw = store.getCommittedItem ? store.getCommittedItem(key) : store.getItem(key);
+    if (raw !== null) throw new Error("Local data could not be removed.");
+  }
+}
+
+async function strictWrite(name: string, value: string) {
+  const revision = protectionRevision;
+  if (!memoryOnly(name)) {
+    const store = disk();
+    if (!store) throw new Error("Local storage unavailable.");
+    await store.setItem(name, value);
+  }
+  if (revision === protectionRevision) {
+    memory.set(name, value);
+    if (name === UNREADABLE_KEY && !memoryOnly(name)) restoreSessionBackup = false;
+  }
+}
+
+function confirmPersistentMode() {
+  if (committed(EPHEMERAL_FLAG_KEY) !== null) throw new Error("Local persistence could not be enabled.");
+}
+
+export function backupIsEncrypted(raw: string): boolean {
+  try { return isEncryptedEnvelope(JSON.parse(raw)); } catch { return false; }
+}
+
+// Shared preparation/commit prevents ordinary active edits from restarting backup encryption.
+let backupWork: { source: string | null; raw: string; revision: number; prepared: Promise<string>; commit?: Promise<void> } | undefined;
+function prepareBackup(pass: string | null, revision: number, raw = committed(UNREADABLE_KEY) ?? (restoreSessionBackup ? memory.get(UNREADABLE_KEY) ?? null : null)) {
+  const source = committed(UNREADABLE_KEY);
+  if (raw === null) return undefined;
+  if (backupWork?.revision === revision && backupWork.source === source && backupWork.raw === raw) return backupWork;
+  const prepared = (async () => {
+    if (!pass || backupIsEncrypted(raw)) return raw;
+    if (new TextDecoder().decode(new TextEncoder().encode(raw)) !== raw) throw new Error("Recovery data cannot be encoded without loss.");
+    return JSON.stringify(await encrypt(raw, pass));
+  })();
+  // Preparation can run alongside active encryption. Handle rejection even if that encryption fails first.
+  void prepared.catch(() => {
+    if (backupWork?.prepared === prepared) backupWork = undefined;
+  });
+  return backupWork = { source, raw, revision, prepared };
+}
+async function commitBackup(work: NonNullable<typeof backupWork> | undefined, revision: number) {
+  if (!work) return;
+  const protectedRaw = await work.prepared;
+  guard(revision);
+  if (!work.commit) {
+    if (committed(UNREADABLE_KEY) !== work.source) throw cancelled();
+    work.commit = protectedRaw === work.source ? Promise.resolve() : strictWrite(UNREADABLE_KEY, protectedRaw);
+  }
+  try {
+    await work.commit;
+  } catch (error) {
+    if (backupWork === work) backupWork = undefined;
+    throw error;
+  }
+  guard(revision);
+  if (committed(UNREADABLE_KEY) !== protectedRaw) throw cancelled();
+}
+
+/** Resolve current recovery bytes, never the original notice's plaintext closure. */
+export function recoveryDownload(): string | null {
+  if (protectionStatus === "pending") return null;
+  // No memory fallback for a removed/failed durable backup.
+  try { return committed(UNREADABLE_KEY); } catch { return null; }
+}
+
+interface Persisted {
   assessment?: Assessment;
+  /** Only ever set on the way in, for progress written by a newer crownguard; merged into the store's flag. */
+  readOnly?: boolean;
 }
 
 /** The storage is async when a passphrase is set (WebCrypto); plain path stays a resolved promise. */
-export type CheckedStorage = PersistStorage<Persisted>;
+type CheckedStorage = PersistStorage<Persisted>;
 
 const decode = (value: string | null): StorageValue<Persisted> | null => {
   if (!value) return null;
@@ -161,17 +341,34 @@ const decode = (value: string | null): StorageValue<Persisted> | null => {
 };
 
 async function validateStored(stored: StorageValue<Persisted>, raw: string, name: string): Promise<StorageValue<Persisted> | null> {
-  const assessment = stored.state?.assessment;
+  // `readOnly` is decided here, never taken from what's stored.
+  const state: Persisted = { ...stored.state };
+  delete state.readOnly;
+  stored = { ...stored, state };
+  const assessment = state.assessment;
   if (!assessment) return stored;
 
-  const parsed = parseAssessment(assessment, { questionIds: questionIdSet() });
+  const parsed = parseAssessment(assessment, { questionIds: allQuestionIds });
   if (parsed.kind === "error") {
-    setAside(name, raw, `The progress saved in this browser couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
+    await setAside(name, raw, `The progress saved ${HERE} couldn't be read (${parsed.issues[0] ?? parsed.message}).`);
     return null;
   }
 
+  if (parsed.kind === "newer") {
+    const ahead = `The progress saved ${HERE} was written by a newer version of crownguard (format ${parsed.schemaVersion}; this one reads format ${SCHEMA_VERSION}).`;
+    if (!parsed.assessment) {
+      await setAside(name, raw, `${ahead} This version can't read it${parsed.issues[0] ? ` (${parsed.issues[0]})` : ""}.`);
+      return null;
+    }
+    // Same as opening a newer file: show it, but never write this build's understanding of it back over the original.
+    setStorageReadOnly(true);
+    rehydration.push({ kind: "warn", text: `${ahead} It has been opened read-only, so nothing will be saved over it. Reload the page to update crownguard.` });
+    for (const n of parsed.notices) rehydration.push({ kind: n.kind === "warn" ? "warn" : "info", text: n.text });
+    return { ...stored, state: { ...state, assessment: parsed.assessment, readOnly: true } };
+  }
+
   for (const n of parsed.notices) rehydration.push({ kind: n.kind === "warn" ? "warn" : "info", text: n.text });
-  return { ...stored, state: { ...stored.state, assessment: parsed.assessment } };
+  return { ...stored, state: { ...state, assessment: parsed.assessment } };
 }
 
 /**
@@ -192,7 +389,7 @@ export const checkedStorage: CheckedStorage = {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      await setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
 
@@ -209,14 +406,14 @@ export const checkedStorage: CheckedStorage = {
         setLockedEnvelope(raw);
         rehydration.push({
           kind: "error",
-          text: "Wrong passphrase, or the encrypted progress in this browser is damaged. Nothing has been loaded.",
+          text: `Wrong passphrase, or the encrypted progress ${HERE} is damaged. Nothing has been loaded.`,
         });
         return null;
       }
       setLockedEnvelope(null);
       const stored = decode(plain);
       if (!stored) {
-        setAside(name, raw, "The encrypted progress in this browser couldn't be read after decrypting.");
+        await setAside(name, raw, `The encrypted progress ${HERE} couldn't be read after decrypting.`);
         return null;
       }
       return validateStored(stored, raw, name);
@@ -224,37 +421,175 @@ export const checkedStorage: CheckedStorage = {
 
     const stored = parsed as StorageValue<Persisted>;
     if (!stored || typeof stored !== "object") {
-      setAside(name, raw, "The progress saved in this browser couldn't be read (it isn't valid JSON).");
+      await setAside(name, raw, `The progress saved ${HERE} couldn't be read (it isn't valid JSON).`);
       return null;
     }
     return validateStored(stored, raw, name);
   },
   setItem: (name, value) => {
-    if (readOnly) return;
+    if (readOnly || recoveryBlocked || recovering) return;
+    const generation = ++encryptGeneration;
+    if (explicit?.revision === protectionRevision && name === STORAGE_KEY) return explicit.done.then(() => {});
+    const pass = getSessionPassphrase();
     const json = JSON.stringify(value);
-    // Plain writes stay synchronous so a later tab/load cannot race an in-flight Promise.
-    // Encrypted writes must await WebCrypto; callers that need durability should wait on the returned Promise.
-    if (hasSessionPassphrase()) {
-      const generation = ++encryptGeneration;
-      const pass = getSessionPassphrase()!;
-      return encrypt(json, pass).then((envelope) => {
-        // A later save already started. Its ciphertext is the one that must land.
-        if (generation !== encryptGeneration) return;
-        write(name, JSON.stringify(envelope));
-      });
+    if (!pass) {
+      write(name, json);
+      return;
     }
-    write(name, json);
+    const job = { name, json, pass, revision: protectionRevision, generation };
+    const existing = ordinary.get(name);
+    if (existing) {
+      existing.pending = job;
+      return existing.done;
+    }
+    const drain: Drain = completion<void>();
+    ordinary.set(name, drain);
+    void drainOrdinary(drain, job);
+    return drain.done;
   },
   removeItem: (name) => {
     if (readOnly) return;
-    drop(name);
+    dropProgress(name);
   },
 };
 
-/** Keep unreadable progress to one side rather than deleting it, and say so. */
-function setAside(name: string, raw: string, text: string) {
-  write(UNREADABLE_KEY, raw);
-  drop(name);
-  setLockedEnvelope(null);
-  rehydration.push({ kind: "error", text: `${text} It has been kept aside so you can download it, and a fresh assessment has been started.`, backup: raw });
+/** Leading save starts immediately; overlapping callers share one drain and one latest snapshot. */
+async function drainOrdinary(drain: Drain, first: SaveJob) {
+  let job: SaveJob | undefined = first;
+  try {
+    while (job && ordinary.get(first.name) === drain) {
+      if (readOnly || recoveryBlocked || recovering) break;
+      if (protectionStatus !== "error") status("pending");
+      const saved = await saveProtected(job.name, job.json, job.pass, job.revision, job.generation);
+      if (ordinary.get(first.name) !== drain) break;
+      if (saved && !drain.pending && job.generation === encryptGeneration && protectionStatus !== "error") {
+        status(ephemeral() ? "session" : "protected");
+      }
+      job = drain.pending;
+      drain.pending = undefined;
+    }
+  } catch {
+    // A genuine failure ends this drain, including its pending work. Only explicit retry clears the error.
+    if (first.revision === protectionRevision) { writeFailed = true; status("error"); }
+  } finally {
+    drain.pending = undefined;
+    if (ordinary.get(first.name) === drain) ordinary.delete(first.name);
+    drain.finish();
+  }
+}
+
+/** Prepare both ciphertexts before replacing either key; acknowledge backup before active progress. */
+async function saveProtected(name: string, json: string, pass: string | null, revision: number, generation: number): Promise<boolean> {
+  guard(revision);
+  if (removals.size) await Promise.all(removals.keys());
+  guard(revision);
+  if (!ephemeral()) confirmPersistentMode();
+  if (generation !== encryptGeneration) return false;
+  // Leaving ephemeral mode must restore recovery even when active progress has no passphrase.
+  const work = pass || restoreSessionBackup ? prepareBackup(pass, revision) : undefined;
+  const active = pass ? JSON.stringify(await encrypt(json, pass)) : json;
+  guard(revision);
+  if (pass && !work && committed(UNREADABLE_KEY) !== null) throw cancelled();
+  await commitBackup(work, revision);
+  guard(revision);
+  if (generation !== encryptGeneration) return false;
+  await strictWrite(name, active);
+  guard(revision);
+  // A changed or newly introduced recovery copy during active IPC invalidates completion too.
+  if (pass && !work && committed(UNREADABLE_KEY) !== null) throw cancelled();
+  await commitBackup(work, revision);
+  guard(revision);
+  if (generation !== encryptGeneration) return false;
+  if (ephemeral()) await confirmEphemeralRemoval();
+  else confirmPersistentMode();
+  guard(revision);
+  if (generation !== encryptGeneration) return false;
+  writeFailed = false;
+  return true;
+}
+
+/** Explicit Apply/clear, using the store's current partialisation and version on every retry. */
+export function rewriteProtection(pass: string | null, value: () => StorageValue<Persisted>): Promise<boolean> {
+  if (readOnly || recoveryBlocked || recovering) {
+    status("error");
+    return Promise.resolve(false);
+  }
+  const previousPass = getSessionPassphrase();
+  invalidateProtection();
+  setSessionPassphrase(pass);
+  const revision = protectionRevision;
+  const owner = { ...completion<boolean>(), revision };
+  explicit = owner;
+  status("pending");
+  void (async () => {
+    try {
+      // An explicit retry may need to remove a flag whose earlier removal failed.
+      if (!ephemeral() && committed(EPHEMERAL_FLAG_KEY) !== null && ![...removals.values()].includes(EPHEMERAL_FLAG_KEY)) {
+        observeRemoval(EPHEMERAL_FLAG_KEY);
+      }
+      if (ephemeral()) await confirmEphemeralRemoval();
+      // Edits may supersede active encryption, but do not restart the shared backup conversion.
+      for (;;) {
+        const generation = ++encryptGeneration;
+        const saved = await saveProtected(STORAGE_KEY, JSON.stringify(value()), pass, revision, generation);
+        guard(revision);
+        if (saved && generation === encryptGeneration) break;
+      }
+      guard(revision);
+      // Success listeners may enqueue edits; those must start a new save, not join this finished owner.
+      if (explicit === owner) explicit = undefined;
+      status(ephemeral() ? "session" : pass ? "protected" : "plain");
+      return true;
+    } catch {
+      if (revision === protectionRevision) {
+        // A failed clear may have left active ciphertext on disk. Keep its key for retry and file saving.
+        if (pass === null) setSessionPassphrase(previousPass);
+        writeFailed = true;
+        status("error");
+      }
+      return false;
+    } finally {
+      if (explicit === owner) explicit = undefined;
+    }
+  })().then(owner.finish);
+  return owner.done;
+}
+
+/** Acknowledge recovery before removing its source. A different existing backup is never disposable. */
+async function setAside(name: string, raw: string, text: string) {
+  const revision = protectionRevision;
+  recovering = true;
+  try {
+    guard(revision);
+    const existing = committed(UNREADABLE_KEY);
+    if (existing !== null && existing !== raw) throw new Error("Another recovery copy already exists.");
+    const work = prepareBackup(getSessionPassphrase(), revision, raw);
+    await work?.prepared;
+    guard(revision);
+    if (committed(name) !== raw) throw cancelled();
+    await commitBackup(work, revision);
+    guard(revision);
+    if (committed(name) !== raw) throw cancelled();
+    if (!memoryOnly(name)) {
+      const store = disk();
+      if (!store) throw new Error("Local storage unavailable.");
+      await store.removeItem(name);
+    }
+    guard(revision);
+    memory.delete(name);
+    setLockedEnvelope(null);
+    rehydration.push({ kind: "error", text: `${text} It has been kept aside so you can download it, and a fresh assessment has been started.`, backup: true });
+  } catch {
+    if (revision !== protectionRevision) {
+      // An explicit removal already owns the source. Its own acknowledgement reports failure.
+      if ([...removals.values()].includes(name)) return;
+      try { if (committed(name) !== raw) return; } catch { /* Keep writes blocked when source cannot be checked. */ }
+    }
+    recoveryBlocked = true;
+    writeFailed = true;
+    status("error");
+    rehydration.push({ kind: "error", text: `${text} Recovery could not be saved safely. Existing data has been retained. Local writes are blocked until you explicitly forget this data or reload to retry.`, backup: unreadableBackup() !== null });
+  } finally {
+    recovering = false;
+  }
 }

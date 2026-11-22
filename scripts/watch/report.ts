@@ -1,18 +1,17 @@
 import type { Finding, FindingKind, RunResult } from "./types";
+import { contentGuideUrl } from "../lib/cli";
 import { isHttpUrl, truncate } from "./util";
 
 /** GitHub rejects PR bodies over 65,536 characters. */
 export const PR_BODY_LIMIT = 65_000;
 
-export interface ReportOptions {
+interface ReportOptions {
   /** Link to the workflow run, shown when the report had to be shortened. */
   runUrl?: string;
   /** Absolute link to the content guide's source watch section (a PR body can't use repo-relative links). */
   guideUrl?: string;
   maxChars?: number;
 }
-
-export const DEFAULT_GUIDE_URL = "https://github.com/jusso-dev/crownguard/blob/main/docs/content-guide.md#source-watch";
 
 /**
  * Escape text from fetched pages and feeds for Markdown: no formatting, links, HTML, mentions or issue references
@@ -250,7 +249,7 @@ function render(result: RunResult, parts: RenderParts, guide: string): string {
  */
 export function renderReport(result: RunResult, opts: ReportOptions = {}): string {
   const max = opts.maxChars ?? Infinity;
-  const guide = opts.guideUrl ?? DEFAULT_GUIDE_URL;
+  const guide = opts.guideUrl ?? contentGuideUrl("source-watch", {});
   const full = render(result, { excerpts: true, info: true, runDetails: true }, guide);
   if (full.length <= max) return full;
   const shortened = `Report shortened to fit.${opts.runUrl && safeUrl(opts.runUrl) ? ` The full report is in the [workflow run](${safeUrl(opts.runUrl)}).` : ""}`;

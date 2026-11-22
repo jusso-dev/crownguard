@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { catalogue } from "../content/catalogue";
 import type { Question } from "../content/schema";
+import { emptyAssessment } from "../format/empty";
 import { essentialEight } from "./maturity";
-import { assessJewel, bandOf, gapStats, impactOf, likelihoodOf } from "./risk";
+import { activeQuestions, assessAll, assessJewel, bandOf, gapStats, impactOf, likelihoodOf, scoreOf } from "./risk";
 import { buildRoadmap } from "./roadmap";
-import type { CrownJewel } from "./types";
+import type { Answer } from "../format/vocab";
+import type { Assessment, CrownJewel } from "../format/schema";
 
 const q = (id: string, over: Partial<Question> = {}): Question => ({
   id,
@@ -20,6 +23,7 @@ const q = (id: string, over: Partial<Question> = {}): Question => ({
   sources: ["src"],
   refs: [],
   e8: [],
+  essentials: [],
   ...over,
 });
 
@@ -50,7 +54,8 @@ describe("scoring", () => {
 
   it("excludes N/A from the denominator", () => {
     const s = gapStats([q("MS-ID-001"), q("MS-ID-002")], { "MS-ID-001": "yes", "MS-ID-002": "na" });
-    expect(s).toEqual({ weight: 3, gap: 0, unknownWeight: 0 });
+    expect(scoreOf(s)).toBe(1);
+    expect(scoreOf(gapStats([q("MS-ID-002")], { "MS-ID-002": "na" }))).toBeNull();
   });
 
   it("uplifts impact for regulated or highly confidential data, capped at 5", () => {
@@ -60,10 +65,10 @@ describe("scoring", () => {
   });
 
   it("maps gap ratio and exposures onto likelihood", () => {
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, false)).toBe(1);
-    expect(likelihoodOf({ weight: 10, gap: 10, unknownWeight: 0 }, 0, false)).toBe(5);
-    expect(likelihoodOf({ weight: 10, gap: 5, unknownWeight: 0 }, 2, false)).toBe(4);
-    expect(likelihoodOf({ weight: 10, gap: 0, unknownWeight: 0 }, 0, true)).toBe(3);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, false)).toBe(1);
+    expect(likelihoodOf({ weight: 10, gap: 10}, 0, false)).toBe(5);
+    expect(likelihoodOf({ weight: 10, gap: 5}, 2, false)).toBe(4);
+    expect(likelihoodOf({ weight: 10, gap: 0}, 0, true)).toBe(3);
   });
 
   it("bands the 5x5 matrix", () => {
@@ -146,9 +151,35 @@ describe("roadmap", () => {
       q("MS-ID-005", { severity: "medium", effort: "S" }),
       q("MS-ID-006", { severity: "low", effort: "L" }),
     ];
-    const items = buildRoadmap(qs, [jewel()], { "MS-ID-005": "yes" });
+    const items = buildRoadmap(qs, [jewel()], { "MS-ID-005": "yes" }, () => "microsoft");
     expect(items.map((i) => i.question.id)).toEqual(["MS-ID-002", "MS-ID-004", "MS-ID-001", "MS-ID-003", "MS-ID-006"]);
     expect(items.find((i) => i.question.id === "MS-ID-004")?.phase).toBe("0–30 days");
     expect(items.at(-1)?.phase).toBe("61–90 days");
+  });
+
+  it("only credits a control to jewels on its own platform", () => {
+    const ms = q("MS-ID-001", { appliesTo: ["*"] });
+    const aws = q("AWS-IAM-001", { appliesTo: ["*"] });
+    const tenant = jewel();
+    const account = jewel({ id: "j2", platform: "aws", assetType: "aws-account" });
+    const items = buildRoadmap([ms, aws], [tenant, account], {}, (x) => (x === ms ? "microsoft" : "aws"));
+    expect(items.find((i) => i.question === ms)?.jewels).toEqual([tenant]);
+    expect(items.find((i) => i.question === aws)?.jewels).toEqual([account]);
+  });
+});
+
+describe("crown jewels across platforms", () => {
+  const withPlatforms = (platforms: string[]): Assessment => {
+    const a: Assessment = { ...emptyAssessment(), platforms, jewels: [jewel({ assetType: "ms-entra-tenant" })] };
+    const yes: Record<string, Answer> = {};
+    for (const x of activeQuestions(catalogue, { ...a, platforms: ["microsoft"] })) yes[x.id] = "yes";
+    return { ...a, answers: yes };
+  };
+
+  it("scores a jewel only on its own platform's questions", () => {
+    const alone = assessAll(catalogue, withPlatforms(["microsoft"]))[0]!;
+    const both = assessAll(catalogue, withPlatforms(["microsoft", "aws"]))[0]!;
+    expect(alone.gaps).toEqual([]);
+    expect(both).toEqual(alone);
   });
 });

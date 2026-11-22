@@ -1,50 +1,26 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SocAnswer, SocProvider } from "../engine/soc";
+import type { SocAnswer, SocProvider, Answer, Mode } from "../format/vocab";
 import type { AiKind } from "../content/schema";
 import { exampleEntries } from "../engine/aiExamples";
 import { newUseCase } from "../engine/aiRegister";
-import type { AiUseCase, Answer, Assessment, Branding, CrownJewel, Mode, OrgProfile } from "../engine/types";
+import { NOTE_MAX, type AiUseCase, type Assessment, type Branding, type CrownJewel, type OrgProfile } from "../format/schema";
+import { applyScan as mergeScan } from "../imports/apply";
 import type { ScanResult } from "../imports/types";
-import { NOTE_MAX } from "./assessmentSchema";
-import { emptyAssessment, STEP_LAYOUT } from "./empty";
-import { checkedStorage, setStorageReadOnly, STORAGE_KEY } from "./persistence";
+import { autosaveKeys, isDesktop, platform } from "../platform";
+import { emptyAssessment } from "../format/empty";
+import { clampStep, currentStep, migrateProgress, modeOf, reachableStep, STEP_LAYOUT } from "./flow";
+import { checkedStorage, invalidateProtection, rewriteProtection, setStorageReadOnly, STORAGE_KEY } from "./persistence";
 
-export { STORAGE_KEY, emptyAssessment, STEP_LAYOUT };
 
-export const fullSteps = ["Organisation", "Environment", "Crown jewels", "Controls", "SOC maturity", "AI register", "Review", "Branding", "Report"] as const;
-
-/** The standalone AI register flow: no platforms, crown jewels or Controls, and the register is the point of it. */
-export const aiSteps = ["Organisation", "AI register", "Review", "Branding", "Report"] as const;
-
-/** The step list for a flow. Every step number in a saved file is an index into the list its mode was saved with. */
-export const stepsFor = (mode: Mode = "full"): readonly string[] => (mode === "ai-register" ? aiSteps : fullSteps);
-
-/** Which flow this assessment runs in. Files saved before the standalone flow existed carry no mode and are full. */
-export const modeOf = (a: Assessment): Mode => a.mode ?? "full";
-
-/**
- * Move a saved position onto the current step list: each added step moves positions saved after it on by one.
- *
- * The standalone list was introduced with layout 3 and has never changed, so its positions move nowhere yet; when it
- * does, the `ai-register` branch maps them here, the way the full list does below.
- */
-export function migrateProgress(p: Assessment["progress"], mode: Mode = "full"): Assessment["progress"] {
-  if (!p) return p;
-  if (mode === "ai-register") return { ...p, layout: STEP_LAYOUT };
-  const layout = p.layout ?? 1;
-  let step = p.step;
-  if (layout < 2 && step >= 4) step++;
-  if (layout < 3 && step >= 5) step++;
-  return { ...p, step, layout: STEP_LAYOUT };
-}
-
-/** True when this browser lets us keep progress between visits (false in some private windows or locked-down profiles). */
+/** True when the platform can keep progress between visits (false in some private windows or locked-down browser profiles). */
 export function storageAvailable(): boolean {
   try {
-    const k = `${STORAGE_KEY}:probe`;
-    localStorage.setItem(k, "1");
-    localStorage.removeItem(k);
+    const k = autosaveKeys.probe;
+    const store = platform.autosave();
+    if (!store) return false;
+    store.setItem(k, "1");
+    store.removeItem(k);
     return true;
   } catch {
     return false;
@@ -55,14 +31,17 @@ export function storageAvailable(): boolean {
 export const hasProgress = (a: Assessment) =>
   a.org.name.trim() !== "" || a.jewels.length > 0 || Object.keys(a.answers).length > 0 || (a.aiRegister?.entries.length ?? 0) > 0;
 
-export const clampStep = (n: number | undefined, mode: Mode = "full") => Math.min(stepsFor(mode).length - 1, Math.max(0, Math.trunc(n ?? 0)));
-
-/** The SOC block, or an empty one to change. */
 const soc = (a: Assessment): NonNullable<Assessment["soc"]> => a.soc ?? { answers: {}, outOfScope: [] };
 
-/** Change one AI register entry. */
+const blank = (): Assessment => ({ ...emptyAssessment(), progress: { step: 0, layout: STEP_LAYOUT } });
+
+/** Move within the saved position, which always records the current step layout. */
+const at = (a: Assessment, patch: Partial<NonNullable<Assessment["progress"]>>): Partial<Assessment> => ({
+  progress: { ...a.progress, step: a.progress?.step ?? 0, ...patch, layout: STEP_LAYOUT },
+});
+
 const editEntry = (a: Assessment, id: string, fn: (e: AiUseCase) => AiUseCase): Partial<Assessment> => ({
-  aiRegister: { entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
+  aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).map((e) => (e.id === id ? fn(e) : e)) },
 });
 
 interface State {
@@ -129,21 +108,21 @@ export const useStore = create<State>()(
       const update: State["update"] = (fn) =>
         set((s) => ({ assessment: { ...s.assessment, ...fn(s.assessment), updatedAt: new Date().toISOString() } }));
       return {
-        assessment: emptyAssessment(),
+        assessment: blank(),
         readOnly: false,
         setReadOnly: (readOnly) => {
           setStorageReadOnly(readOnly);
           set({ readOnly });
         },
-        setStep: (step) => update((a) => ({ progress: { ...a.progress, step: clampStep(step, modeOf(a)), layout: STEP_LAYOUT } })),
+        setStep: (step) => update((a) => at(a, { step: clampStep(step, modeOf(a)) })),
         setMode: (mode, step) =>
           update((a) => ({
             // "full" is the default and is left out of saved files, so older crownguards open them without a warning.
             ...(mode === "ai-register" ? { mode } : { mode: undefined }),
-            progress: { ...a.progress, step: clampStep(step ?? 0, mode), layout: STEP_LAYOUT },
+            ...at(a, { step: clampStep(step ?? 0, mode) }),
           })),
-        setSection: (section) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, section, layout: STEP_LAYOUT } })),
-        setSocSection: (socSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, socSection, layout: STEP_LAYOUT } })),
+        setSection: (section) => update((a) => at(a, { section })),
+        setSocSection: (socSection) => update((a) => at(a, { socSection })),
         update,
         setOrg: (org) => update((a) => ({ org: { ...a.org, ...org } })),
         setBranding: (b) => update((a) => ({ branding: { ...a.branding, ...b } })),
@@ -173,29 +152,29 @@ export const useStore = create<State>()(
             aiRegister: included ? { createdAt: new Date().toISOString().slice(0, 10), ...a.aiRegister, entries: a.aiRegister?.entries ?? [] } : undefined,
           })),
         updateAiRegister: (patch) => update((a) => ({ aiRegister: { entries: a.aiRegister?.entries ?? [], ...a.aiRegister, ...patch } })),
-        setAiSection: (aiSection) => update((a) => ({ progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection, layout: STEP_LAYOUT } })),
+        setAiSection: (aiSection) => update((a) => at(a, { aiSection })),
         addAiUseCase: (kind) => {
           const id = crypto.randomUUID();
           update((a) => ({
-            aiRegister: { entries: [...(a.aiRegister?.entries ?? []), newUseCase(kind, id)] },
-            progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection: id, layout: STEP_LAYOUT },
+            aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []), newUseCase(kind, id)] },
+            ...at(a, { aiSection: id }),
           }));
           return id;
         },
         addImportedAiUseCase: (entry) => update((a) => ({ aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []), entry] } })),
         updateAiUseCase: (id, patch) => update((a) => editEntry(a, id, (e) => ({ ...e, ...patch }))),
-        removeAiUseCase: (id) => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
+        removeAiUseCase: (id) => update((a) => ({ aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).filter((e) => e.id !== id) } })),
         setAiAnswer: (id, q, answer) => update((a) => editEntry(a, id, (e) => ({ ...e, answers: { ...e.answers, [q]: answer } }))),
         setAiNote: (id, q, note) => update((a) => editEntry(a, id, (e) => ({ ...e, notes: { ...e.notes, [q]: note.slice(0, NOTE_MAX) } }))),
         loadAiExamples: () =>
           update((a) => {
             const examples = exampleEntries(a);
             return {
-              aiRegister: { entries: [...(a.aiRegister?.entries ?? []).filter((e) => !e.example), ...examples] },
-              progress: { ...a.progress, step: a.progress?.step ?? 0, aiSection: examples[0].id, layout: STEP_LAYOUT },
+              aiRegister: { ...a.aiRegister, entries: [...(a.aiRegister?.entries ?? []).filter((e) => !e.example), ...examples] },
+              ...at(a, { aiSection: examples[0].id }),
             };
           }),
-        removeAiExamples: () => update((a) => ({ aiRegister: { entries: (a.aiRegister?.entries ?? []).filter((e) => !e.example) } })),
+        removeAiExamples: () => update((a) => ({ aiRegister: { ...a.aiRegister, entries: (a.aiRegister?.entries ?? []).filter((e) => !e.example) } })),
         upsertJewel: (j) =>
           update((a) => ({
             jewels: a.jewels.some((x) => x.id === j.id) ? a.jewels.map((x) => (x.id === j.id ? j : x)) : [...a.jewels, j],
@@ -203,36 +182,29 @@ export const useStore = create<State>()(
         removeJewel: (id) =>
           update((a) => ({
             jewels: a.jewels.filter((j) => j.id !== id),
-            ...(a.aiRegister && { aiRegister: { entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
+            ...(a.aiRegister && { aiRegister: { ...a.aiRegister, entries: a.aiRegister.entries.map((e) => (e.jewels.includes(id) ? { ...e, jewels: e.jewels.filter((x) => x !== id) } : e)) } }),
           })),
-        applyScan: (scan, { platform, overwrite, licence }) => {
+        applyScan: (scan, opts) => {
           let applied = 0;
-          update((a) => {
-            const answers = { ...a.answers };
-            const evidence = { ...a.evidence };
-            for (const { question, evidence: ev } of scan.suggestions) {
-              evidence[question] = ev;
-              if (ev.suggested && (overwrite || !answers[question])) {
-                answers[question] = ev.suggested;
-                applied++;
-              }
-            }
-            const now = new Date().toISOString();
-            return {
-              answers,
-              evidence,
-              licence: licence && scan.licence ? { ...a.licence, [platform]: scan.licence } : a.licence,
-              imports: [...(a.imports ?? []), { source: scan.tool, toolVersion: scan.toolVersion, tenant: scan.tenant, scannedAt: scan.scannedAt, importedAt: now, applied }],
-            };
+          set((s) => {
+            const merged = mergeScan(s.assessment, scan, opts);
+            applied = merged.applied;
+            return { assessment: merged.assessment };
           });
           return applied;
         },
         load: (assessment) => {
           const mode = modeOf(assessment);
           const progress = migrateProgress(assessment.progress ?? { step: 0 }, mode)!;
-          set({ assessment: { ...assessment, progress: { ...progress, step: clampStep(progress.step, mode) } } });
+          // A file can say it was on Report with no organisation or crown jewels: open it no further than it can reach.
+          set({ assessment: { ...assessment, progress: { ...progress, step: currentStep({ ...assessment, progress }) } } });
         },
-        reset: () => set({ assessment: emptyAssessment() }),
+        // A fresh assessment is the user's own, so it is never read-only, even after a newer file or newer progress.
+        reset: () => {
+          invalidateProtection();
+          setStorageReadOnly(false);
+          set({ assessment: blank(), readOnly: false });
+        },
       };
     },
     {
@@ -240,6 +212,8 @@ export const useStore = create<State>()(
       // v4: storage may wrap the JSON in an encryption envelope; state shape is unchanged.
       version: 4,
       storage: checkedStorage,
+      // Desktop progress lives in SQLite, which is ready only after the platform has loaded (main.tsx rehydrates then).
+      skipHydration: isDesktop,
       // Only the assessment is persisted; older saves kept the step beside it.
       partialize: (s) => ({ assessment: s.assessment }),
       migrate: (persisted, version) => {
@@ -255,4 +229,13 @@ export const useStore = create<State>()(
   ),
 );
 
-export const useStep = () => useStore((s) => clampStep(s.assessment.progress?.step, modeOf(s.assessment)));
+export const useStep = () => useStore((s) => currentStep(s.assessment));
+export const useReachable = () => useStore((s) => reachableStep(s.assessment));
+
+/** Await the actual persistence operation, rather than Zustand's void update action. */
+export function applyProtection(pass: string | null) {
+  return rewriteProtection(pass, () => {
+    const options = useStore.persist.getOptions();
+    return { state: options.partialize!(useStore.getState()), version: options.version };
+  });
+}

@@ -11,6 +11,9 @@ describe("ABN", () => {
   it("rejects bad checksums, wrong lengths and letters", () => {
     expect(isValidAbn("51 824 753 557")).toBe(false);
     expect(isValidAbn("5182475355")).toBe(false);
+    // A valid ABN with a 12th digit typed on the end is not valid.
+    expect(isValidAbn("518247535561")).toBe(false);
+    expect(isValidAbn("51 824 753 5561")).toBe(false);
     expect(isValidAbn("51 824 753 55a")).toBe(false);
     expect(isValidAbn("")).toBe(false);
   });
@@ -18,5 +21,6 @@ describe("ABN", () => {
   it("formats as 2-3-3-3", () => {
     expect(formatAbn("51824753556")).toBe("51 824 753 556");
     expect(formatAbn("5182")).toBe("51 82");
+    expect(formatAbn("518247535561")).toBe("51 824 753 5561");
   });
 });

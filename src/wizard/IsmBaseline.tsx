@@ -1,7 +1,8 @@
 import { catalogue, ensureReportContent } from "../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "../engine/risk";
-import { ismBaselineReport, ismBaselines, type IsmBaseline, type IsmBaselineSummary } from "../engine/ism";
+import { ismBaselineReport, type IsmBaselineSummary } from "../engine/ism";
+import { ismBaselines, type IsmBaseline } from "../format/vocab";
 import { useStore } from "./store";
 import { Card, Field, inputClass } from "./ui";
 

@@ -1,28 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { catalogue, contentHash, ensurePlatforms } from "./content/catalogue";
-import { questionIdSet } from "./content/questionIds";
+import { lazy, Suspense, useCallback, useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
+import { catalogue, contentHash, ensurePlatforms, allQuestionIds } from "./content/catalogue";
 import { useEnsurePlatforms } from "./content/useCatalogue";
 import { activeQuestions, effectiveAnswers } from "./engine/risk";
-import type { Assessment, Mode } from "./engine/types";
+import type { Mode } from "./format/vocab";
+import { SCHEMA_VERSION, type Assessment } from "./format/schema";
 import { afterStepChange } from "./wizard/a11y";
-import { SCHEMA_VERSION } from "./wizard/assessmentSchema";
-import { decrypt, isEncryptedEnvelope } from "./wizard/crypto";
-import { parseAssessment } from "./wizard/parseAssessment";
-import { dropProgress, isEphemeralMode, rehydrateNotices, STORAGE_KEY } from "./wizard/persistence";
+import { decryptJson, isEncryptedEnvelope } from "./format/crypto";
+import { parseAssessment } from "./format/parse";
+import { backupIsEncrypted, isEphemeralMode, protectionSnapshot, recoveryDownload, rehydrateNotices, storageWriteFailed, subscribeProtection, unreadableBackup } from "./wizard/persistence";
 import {
   EphemeralToggle,
   LegacyOriginBanner,
   PassphraseFields,
   UnlockCard,
-  getSessionPassphrase,
-  hasSessionPassphrase,
 } from "./wizard/PrivacyControls";
-import { toEncryptedSaveFile, toSaveFile } from "./wizard/saveFile";
-import { setSessionPassphrase } from "./wizard/sessionSecrets";
-import { clampStep, hasProgress, modeOf, stepsFor, storageAvailable, useStep, useStore } from "./wizard/store";
+import { toEncryptedSaveFile, toSaveFile } from "./format/saveFile";
+import { getSessionPassphrase, hasLockedEnvelope, setSessionPassphrase } from "./wizard/sessionSecrets";
+import { hasProgress, storageAvailable, useReachable, useStep, useStore } from "./wizard/store";
+import { currentStep, modeOf, stepsFor, stepsOf, type StepId } from "./wizard/flow";
 import { Button, Card, Field, inputClass } from "./wizard/ui";
-import { forgetLockedProgress } from "./wizard/unlock";
-import { createFileSaver, download, OPEN_FILE_EVENT, slug } from "./wizard/download";
+import { forgetProgress } from "./wizard/unlock";
+import { fileNames, OPEN_FILE_EVENT } from "./wizard/files";
+import { platform, type OpenedFile } from "./platform";
 import { OrgStep } from "./wizard/steps/OrgStep";
 import { EnvironmentStep } from "./wizard/steps/EnvironmentStep";
 import { JewelsStep } from "./wizard/steps/JewelsStep";
@@ -33,28 +32,25 @@ import { AiRegisterStep } from "./wizard/steps/AiRegisterStep";
 import { BrandingStep } from "./wizard/steps/BrandingStep";
 import { ReportStep } from "./wizard/steps/ReportStep";
 import { relativeTime } from "./wizard/time";
-import { hasLockedEnvelope } from "./wizard/sessionSecrets";
+import { HERE, THIS } from "./wizard/where";
 
-// One view per entry in each step list (wizard/store.ts), in the same order.
-const views = [OrgStep, EnvironmentStep, JewelsStep, ControlsStep, SocStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
-const aiViews = [OrgStep, AiRegisterStep, ReviewStep, BrandingStep, ReportStep];
-const viewsFor = (mode: Mode) => (mode === "ai-register" ? aiViews : views);
+/** Desktop-only settings and recent files. Folded away at build time on the web, so the web bundle doesn't carry it. */
+const DesktopPanel = import.meta.env.MODE === "desktop" ? lazy(() => import("./wizard/DesktopPanel")) : null;
 
-/** A step can be entered once the steps before it have their minimum inputs. */
-function useReachable(): number {
-  const a = useStore((s) => s.assessment);
-  const mode = modeOf(a);
-  if (!a.org.name.trim()) return 0;
-  // The standalone register needs nothing else: no platform, crown jewels or Controls answers.
-  if (mode === "full") {
-    if (!a.platforms.length) return 1;
-    if (!a.jewels.length) return 2;
-  }
-  return stepsFor(mode).length - 1;
-}
 
-const saveFileName = (a: Assessment) =>
-  modeOf(a) === "ai-register" ? `${slug(a.org.name)}-ai-register.crownguard.json` : `${slug(a.org.name)}.crownguard.json`;
+const views: Record<StepId, () => React.JSX.Element | null> = {
+  org: OrgStep,
+  environment: EnvironmentStep,
+  jewels: JewelsStep,
+  controls: ControlsStep,
+  soc: SocStep,
+  "ai-register": AiRegisterStep,
+  review: ReviewStep,
+  branding: BrandingStep,
+  report: ReportStep,
+};
+
+const saveFileName = (a: Assessment) => fileNames.assessment(a.org.name, modeOf(a) === "ai-register");
 
 /** Start a fresh assessment in the flow given. The register itself is started on its step, as in the full assessment. */
 function startAssessment(mode: Mode) {
@@ -106,8 +102,20 @@ function SaveStatus({
   ephemeral: boolean;
   fileSave?: { file: string; at: string; downloaded: boolean };
 }) {
+  const protection = useSyncExternalStore(subscribeProtection, protectionSnapshot);
   const updatedAt = useStore((s) => s.assessment.updatedAt);
   const now = useNow(fileSave ? 5_000 : 30_000);
+  // A failed autosave comes first: a file saved a minute ago doesn't hold the edits made since. The desktop store reports
+  // its own error; the browser's quota failure is only known to persistence.
+  const autosaveError = platform.autosaveError() ?? (storageWriteFailed() ? "Browser storage is full or unavailable." : undefined);
+  if (protection === "pending") return <span role="status">Updating protection…</span>;
+  if (protection === "error") return <span role="status">Local protection incomplete. Check passphrase settings; keep your passphrases.</span>;
+  if (autosaveError)
+    return (
+      <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn" title={autosaveError}>
+        Couldn&apos;t save {HERE}. Use <strong>Save file</strong> to keep your work.
+      </span>
+    );
   // A file save in the last minute takes over the status line; no toast, nothing moves.
   if (fileSave && now - Date.parse(fileSave.at) < 60_000)
     return (
@@ -119,21 +127,20 @@ function SaveStatus({
   if (ephemeral || !persisted)
     return (
       <span role="status" className="inline-flex items-center gap-1.5 rounded-[4px] bg-warn-soft px-2 py-0.5 text-xs text-warn">
-        Not kept in this browser. Use <strong>Save file</strong> before you leave.
+        Not kept {HERE}. Use <strong>Save file</strong> before you leave.
       </span>
     );
   return (
-    <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted" title="Progress saves automatically in this browser as you go">
+    <span role="status" className="inline-flex items-center gap-1.5 font-mono text-[0.6875rem] text-muted" title={`Progress saves automatically ${HERE} as you go`}>
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-ok" />
-      Saved in this browser · {relativeTime(updatedAt, now)}
-      {hasSessionPassphrase() ? " · encrypted" : ""}
+      Saved {HERE} · {relativeTime(updatedAt, now)}
+      {protection === "protected" ? " · encrypted" : ""}
     </span>
   );
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Keep the tab title in sync with the current screen, step and organisation. */
 function useDocumentTitle(screen: "start" | "resume" | "wizard", stepName: string, orgName: string) {
   useEffect(() => {
     const org = orgName.trim() || "New assessment";
@@ -162,7 +169,7 @@ function ResumeCard({
   const questions = platformsReady ? activeQuestions(catalogue, a) : [];
   const answers = effectiveAnswers(a);
   const answered = questions.filter((q) => answers[q.id]).length;
-  const at = clampStep(a.progress?.step, modeOf(a));
+  const at = currentStep(a);
   return (
     <div className="mx-auto mt-4 max-w-xl overflow-hidden rounded-[var(--radius-card)] border border-rule bg-surface">
       <div className="p-7">
@@ -198,7 +205,7 @@ function ResumeCard({
         <div className="border-t border-rule bg-paper px-7 py-4 text-sm text-ink-2">
           <p>
             You followed a link to the AI use-case register. Starting it gives you a fresh, standalone register and removes
-            this assessment from this browser — use <strong className="font-medium text-ink">Save file</strong> first to keep it.
+            this assessment from {THIS} — use <strong className="font-medium text-ink">Save file</strong> first to keep it.
           </p>
           <Button variant="secondary" className="mt-3" onClick={onStartRegister}>
             Start an AI use-case register instead
@@ -210,7 +217,7 @@ function ResumeCard({
         <EphemeralToggle onChange={() => onPrivacyChange?.()} />
       </div>
       <p className="border-t border-rule px-7 py-3 text-xs leading-relaxed text-muted">
-        Progress is kept in this browser only (unless you turn that off above). To continue on another computer, or to keep a
+        Progress is kept {HERE} only (unless you turn that off above). To continue on another computer, or to keep a
         copy, use <strong className="font-medium text-ink-2">Save file</strong> and open it later.
       </p>
     </div>
@@ -228,7 +235,7 @@ function StartCard({ onPick, onPrivacyChange }: { onPick: (mode: Mode) => void; 
             What would you like to do?
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-2">
-            Everything runs in this browser, and nothing you enter is sent anywhere. You can switch from the register to
+            Everything runs {HERE}, and nothing you enter is sent anywhere. You can switch from the register to
             the full assessment later without losing anything.
           </p>
         </div>
@@ -321,21 +328,33 @@ function FileUnlockForm({
 /** Anything the last rehydrate couldn't use: stale, hand-edited, or written by something else on this origin. */
 function noticeFromRehydrate(): Notice | undefined {
   const notices = rehydrateNotices();
-  if (!notices.length) return undefined;
+  const backup = unreadableBackup();
+  if (!notices.length && backup === null) return undefined;
   const first = notices.find((n) => n.kind === "error") ?? notices[0];
-  const backup = notices.find((n) => n.backup)?.backup;
   return {
-    kind: first.kind === "error" ? "error" : "warn",
-    text: first.text,
+    kind: first?.kind === "error" ? "error" : "warn",
+    text: first?.text ?? "Raw recovery data is available. It may need manual repair. Encrypted recovery data still requires its original passphrase.",
     details: notices.filter((n) => n !== first).map((n) => n.text),
-    actions: backup
-      ? [{ label: "Download the unreadable data", onClick: () => download("crownguard-unreadable.json", backup, "application/json") }]
-      : undefined,
   };
 }
 
+function RecoveryDownload() {
+  const protection = useSyncExternalStore(subscribeProtection, protectionSnapshot);
+  const backup = unreadableBackup();
+  if (backup === null) return null;
+  return <div className="mx-auto max-w-6xl px-6 py-2 text-sm">
+    <Button variant="secondary" disabled={protection === "pending"} onClick={() => {
+      const current = recoveryDownload();
+      if (current !== null) void platform.saveAs("crownguard-unreadable.json", current, "application/json");
+    }}>Download the unreadable data</Button>
+    <p className="mt-1 text-xs text-muted">{backupIsEncrypted(backup)
+      ? "Encrypted raw recovery data. Keep its original passphrase, even after changing or removing active protection. Manual repair may still be needed."
+      : "Unprotected raw recovery data. The download contains the original unprotected data and may need manual repair."}</p>
+  </div>;
+}
+
 export function App() {
-  const { assessment, setStep, load, reset } = useStore();
+  const { assessment, setStep, load } = useStore();
   const step = useStep();
   const reachable = useReachable();
   const mode = modeOf(assessment);
@@ -350,14 +369,15 @@ export function App() {
   const [pendingEncrypted, setPendingEncrypted] = useState<unknown>(null);
   const [screen, setScreen] = useState<"start" | "resume" | "wizard">("start");
   const [fileSave, setFileSave] = useState<{ file: string; at: string; downloaded: boolean }>();
-  const [saver] = useState(createFileSaver);
+  const [saver] = useState(() => platform.createFileSaver());
   const fileSavedThisSession = useRef(false);
+  /** The encrypted file waiting for its passphrase, so a later save can go back to it. */
+  const pendingFile = useRef<OpenedFile | undefined>(undefined);
   const readOnly = useStore((s) => s.readOnly);
-  const View = viewsFor(mode)[step] ?? OrgStep;
-  // Opening a saved assessment (or resuming) preloads the platforms it uses.
+  const View = views[stepsOf(mode)[step]];
   useEnsurePlatforms(assessment.platforms);
 
-  useDocumentTitle(screen, steps[step] ?? "Organisation", assessment.org.name);
+  useDocumentTitle(screen, steps[step], assessment.org.name);
 
   // Focused elements scroll clear of the sticky header (WCAG 2.2 SC 2.4.11): the scroll margin on content (see
   // index.css) matches the header's height, including when it wraps on a narrow screen.
@@ -413,26 +433,27 @@ export function App() {
     if (pass) contents = await toEncryptedSaveFile(contents, pass);
     const result = await saver.save(saveFileName(a), contents);
     if (result.kind === "cancelled") return;
+    if (result.kind === "failed") {
+      setNotice({ kind: "error", text: `Couldn't save ${result.file}: ${result.error}. Choose Save file to pick another location.` });
+      return;
+    }
     fileSavedThisSession.current = true;
     setFileSave({ file: result.file, at: new Date().toISOString(), downloaded: result.kind === "downloaded" });
   }, [saver]);
 
+  // Only the open wizard has something to save: on the Unlock or start screen the store holds a blank assessment,
+  // and saving it could overwrite the user's real file.
+  const canSave = !locked && screen === "wizard";
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        void saveFile();
+        if (canSave) void saveFile();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [saveFile]);
-
-  useEffect(() => {
-    const open = () => fileInput.current?.click();
-    window.addEventListener(OPEN_FILE_EVENT, open);
-    return () => window.removeEventListener(OPEN_FILE_EVENT, open);
-  }, []);
+  }, [saveFile, canSave]);
 
   // Warn before unload only when in-memory work would be lost (ephemeral mode, unsaved).
   useEffect(() => {
@@ -469,15 +490,17 @@ export function App() {
     });
   }
 
-  async function acceptParsed(parsed: Extract<ReturnType<typeof parseAssessment>, { kind: "ok" }>) {
+  async function acceptParsed(parsed: Extract<ReturnType<typeof parseAssessment>, { kind: "ok" }>, file?: OpenedFile) {
     await ensurePlatforms(parsed.assessment.platforms);
     load(parsed.assessment);
     if (useStore.getState().readOnly) useStore.getState().setReadOnly(false);
     saver.reset();
+    // On desktop, Save (Ctrl/⌘ S) now goes back to the file that was opened.
+    if (file) saver.adopt(file);
     setFileSave(undefined);
     setScreen("wizard");
     const opened = useStore.getState().assessment;
-    const stepName = stepsFor(modeOf(opened))[clampStep(opened.progress?.step, modeOf(opened))];
+    const stepName = stepsFor(modeOf(opened))[currentStep(opened)];
     setNotice({
       kind: parsed.notices.some((n) => n.kind === "warn") ? "warn" : "ok",
       // Read the step back from the store: load() moves positions saved under an older step list.
@@ -486,8 +509,8 @@ export function App() {
     });
   }
 
-  function openAssessmentJson(raw: unknown) {
-    const parsed = parseAssessment(raw, { questionIds: questionIdSet() });
+  function openAssessmentJson(raw: unknown, opened?: OpenedFile) {
+    const parsed = parseAssessment(raw, { questionIds: allQuestionIds });
     if (parsed.kind === "error") {
       setNotice({ kind: "error", text: `Couldn't open that file: ${parsed.message}`, details: parsed.issues });
       return;
@@ -507,15 +530,23 @@ export function App() {
       return;
     }
 
-    void acceptParsed(parsed);
+    void acceptParsed(parsed, opened);
   }
 
-  async function onOpen(file: File) {
+  function onOpen(file: File) {
+    file.text().then(
+      (text) => onOpened({ name: file.name, text }),
+      () => setNotice({ kind: "error", text: "Couldn't open that file: it couldn't be read." }),
+    );
+  }
+
+  function onOpened(file: OpenedFile) {
     setNotice(undefined);
     setPendingEncrypted(null);
+    pendingFile.current = undefined;
     let raw: unknown;
     try {
-      raw = JSON.parse(await file.text());
+      raw = JSON.parse(file.text);
     } catch {
       setNotice({ kind: "error", text: "Couldn't open that file: it isn't valid JSON." });
       return;
@@ -523,6 +554,7 @@ export function App() {
 
     if (isEncryptedEnvelope(raw)) {
       setPendingEncrypted(raw);
+      pendingFile.current = file;
       setNotice({
         kind: "warn",
         text: "This file is protected with a passphrase. Enter it below to open the assessment. A wrong passphrase will not load anything.",
@@ -530,64 +562,73 @@ export function App() {
       return;
     }
 
-    openAssessmentJson(raw);
+    openAssessmentJson(raw, file);
   }
 
   async function unlockPendingFile(passphrase: string): Promise<string | null> {
     if (!pendingEncrypted) return "No encrypted file waiting.";
     try {
-      const plain = await decrypt(pendingEncrypted, passphrase);
-      let raw: unknown;
-      try {
-        raw = JSON.parse(plain);
-      } catch {
-        return "Encrypted file could not be read after decrypting.";
-      }
+      const raw = await decryptJson(pendingEncrypted, passphrase);
       // Keep the passphrase for this visit so a re-save stays protected if the user wants.
       setSessionPassphrase(passphrase);
       setPendingEncrypted(null);
-      openAssessmentJson(raw);
+      openAssessmentJson(raw, pendingFile.current);
+      pendingFile.current = undefined;
       return null;
     } catch (e) {
-      return e instanceof Error ? e.message : "Wrong passphrase, or the encrypted data is damaged.";
+      return (e as Error).message;
     }
   }
 
+  /** Forget the assessment, its passphrase and the file it came from, then show `next`. */
+  function closeAssessment(next: "start" | "wizard") {
+    forgetProgress();
+    saver.reset();
+    setFileSave(undefined);
+    setLocked(false);
+    setScreen(next);
+    setNotice(undefined);
+  }
+
   function startNew() {
-    if (!hasProgress(assessment) || window.confirm("Start a new assessment? The current one will be removed from this browser. Choose Cancel, then Save file, if you want to keep it.")) {
-      reset();
-      dropProgress(STORAGE_KEY);
-      setSessionPassphrase(null);
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("start");
-      setNotice(undefined);
-    }
+    if (!hasProgress(assessment) || window.confirm(`Start a new assessment? The current one will be removed from ${THIS}. Choose Cancel, then Save file, if you want to keep it.`)) closeAssessment("start");
   }
 
   /** The deep link on a resumed assessment: start the standalone register only after the user confirms it. */
   function startLinkedRegister() {
-    if (window.confirm("Start a fresh AI use-case register? The assessment saved in this browser will be removed. Choose Cancel, then Save file, if you want to keep it.")) {
+    if (window.confirm(`Start a fresh AI use-case register? The assessment saved in ${THIS} will be removed. Choose Cancel, then Save file, if you want to keep it.`)) {
+      closeAssessment("wizard");
       startAssessment("ai-register");
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("wizard");
-      setNotice(undefined);
     }
   }
 
   function onClear() {
-    if (window.confirm("Remove this assessment from this browser? Use Save file first if you want to keep it.")) {
-      reset();
-      dropProgress(STORAGE_KEY);
-      setSessionPassphrase(null);
-      saver.reset();
-      setFileSave(undefined);
-      setScreen("start");
-      setNotice(undefined);
-      setLocked(false);
-    }
+    if (window.confirm(`Remove this assessment from ${THIS}? Use Save file first if you want to keep it.`)) closeAssessment("start");
   }
+
+  /** The platform's file picker: a native dialog on desktop, the page's hidden file input on the web. */
+  function openPicker(defaultPath?: string) {
+    const picked = platform.openFile({ defaultPath });
+    if (!picked) {
+      fileInput.current?.click();
+      return;
+    }
+    picked.then(
+      (file) => file && onOpened(file),
+      (e: unknown) => setNotice({ kind: "error", text: `Couldn't open that file: ${e instanceof Error ? e.message : String(e)}` }),
+    );
+  }
+
+  const onOpenRequested = useEffectEvent((defaultPath?: string) => openPicker(defaultPath));
+  useEffect(() => {
+    const open = (e: Event) => onOpenRequested((e as CustomEvent<{ defaultPath?: string } | null>).detail?.defaultPath);
+    window.addEventListener(OPEN_FILE_EVENT, open);
+    return () => window.removeEventListener(OPEN_FILE_EVENT, open);
+  }, []);
+
+  // Files the operating system hands the desktop app (double-click, Open With). The web platform never calls this.
+  const openFromSystem = useEffectEvent((file: OpenedFile) => onOpened(file));
+  useEffect(() => platform.onOpenRequest((file) => openFromSystem(file)), []);
 
   if (!hydrated) {
     return <div className="min-h-screen" aria-busy="true" />;
@@ -597,6 +638,7 @@ export function App() {
     return (
       <div className="min-h-screen">
         <LegacyOriginBanner />
+        <RecoveryDownload />
         <div className="px-4 py-10 sm:px-6">
           <UnlockCard
             onUnlocked={() => {
@@ -605,12 +647,7 @@ export function App() {
               setScreen("resume");
               setNotice(undefined);
             }}
-            onForget={() => {
-              forgetLockedProgress();
-              setLocked(false);
-              setScreen("start");
-              setNotice(undefined);
-            }}
+            onForget={() => closeAssessment("start")}
           />
         </div>
       </div>
@@ -624,6 +661,7 @@ export function App() {
       </a>
       <div id="step-announce" className="sr-only" aria-live="polite" aria-atomic="true" />
       <LegacyOriginBanner />
+      <RecoveryDownload />
       <header ref={header} className="sticky top-0 z-10 border-b border-rule bg-paper/90 backdrop-blur-sm [overflow-anchor:none]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="mr-auto flex min-w-0 items-center gap-3">
@@ -642,7 +680,7 @@ export function App() {
             >
               Save file
             </Button>
-            <Button variant="secondary" onClick={() => fileInput.current?.click()} title="Continue from a saved file">
+            <Button variant="secondary" onClick={() => openPicker()} title="Continue from a saved file">
               Open file
             </Button>
             <input
@@ -653,12 +691,12 @@ export function App() {
               data-testid="import-input"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) void onOpen(f);
+                if (f) onOpen(f);
                 e.target.value = "";
               }}
             />
             <Button variant="danger" disabled={readOnly} onClick={onClear}>
-              Remove from this browser
+              Remove from {THIS}
             </Button>
           </div>
         </div>
@@ -789,6 +827,11 @@ export function App() {
       )}
 
       <footer className="border-t border-rule px-4 py-4 text-xs leading-relaxed text-muted sm:px-6">
+        {DesktopPanel && (
+          <Suspense fallback={null}>
+            <DesktopPanel onOpenRecent={(path) => openPicker(path)} />
+          </Suspense>
+        )}
         <div className="mx-auto max-w-6xl">
           crownguard aims for{" "}
           <a className="text-ink-2 underline underline-offset-2" href="https://www.w3.org/TR/WCAG22/">

@@ -34,7 +34,7 @@ function meta(document: Doc, name: string): string | undefined {
 }
 
 /** Learn metadata from `<meta>` tags, when the page is a Learn article. */
-export function learnMeta(document: Doc): LearnMeta | undefined {
+function learnMeta(document: Doc): LearnMeta | undefined {
   const original = meta(document, "original_content_git_url");
   const m = original?.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\/blob\/([^/]+)\/(.+)$/);
   if (!m) return undefined;
@@ -179,7 +179,8 @@ export function extractHtml(html: string, profile: HostProfile): Extracted {
   const { document } = parseHTML(html);
   const title = pageTitle(document, profile.title);
   const learn = learnMeta(document);
-  const lang = document.documentElement?.getAttribute("lang") ?? undefined;
+  // AWS blog posts carry no <html lang>, only og:locale ("en_US").
+  const lang = document.documentElement?.getAttribute("lang") || meta(document, "og:locale")?.replace("_", "-") || undefined;
   const pageText = collapse(document.body?.textContent ?? "");
   const updatedEl = profile.updatedSelector ? document.querySelector(profile.updatedSelector) : null;
   const updated = profile.ignoreUpdated

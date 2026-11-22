@@ -2,8 +2,9 @@
  * Browser catalogue: shared JSON is eager; platform questions and full frameworks load on demand.
  * Content is validated at build time by the Vite plugin — no yaml / Zod content parse here.
  */
+import platformLoaders from "virtual:crownguard-content/platforms";
 import shared from "virtual:crownguard-content/shared";
-import type { PlatformContentJson, ReportContentJson, SharedContentJson } from "../../scripts/vite-content";
+import type { ReportContentJson, SharedContentJson } from "./chunks";
 import type { Catalogue, Framework, PlatformBundle } from "./schema";
 
 function hydrateShared(data: SharedContentJson): Catalogue {
@@ -33,12 +34,6 @@ const loadedPlatforms = new Set<string>();
 const platformInflight = new Map<string, Promise<void>>();
 let reportLoaded = false;
 let reportInflight: Promise<void> | undefined;
-
-const platformLoaders: Record<string, () => Promise<{ default: PlatformContentJson }>> = {
-  microsoft: () => import("virtual:crownguard-content/platform/microsoft"),
-  google: () => import("virtual:crownguard-content/platform/google"),
-  aws: () => import("virtual:crownguard-content/platform/aws"),
-};
 
 function mergeFrameworks(extra: Record<string, Framework>) {
   for (const [id, f] of Object.entries(extra)) catalogue.frameworks.set(id, f);

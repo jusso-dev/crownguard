@@ -23,6 +23,9 @@
     - { framework: nist-csf-2, ref: PR.DS-01 }
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: DP-8 }
+  essentials:
+    - { action: CL.PRO-08.x2, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: MS-AZ-005
   module: azure
@@ -53,6 +56,10 @@
     - { framework: ism, ref: ISM-2151 }
   e8:
     - { strategy: regular-backups, level: 3 }
+  essentials:
+    - { action: IT.PRO-10.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [CPS], coverage: partial }
 
 - id: MS-AZ-006
   module: azure
@@ -87,6 +94,8 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Infrastructure VI }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-012
   module: azure
@@ -116,6 +125,9 @@
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-013
   module: azure
@@ -149,6 +161,9 @@
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: ism, ref: ISM-2141 }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x7, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-014
   module: azure
@@ -181,6 +196,9 @@
     - { framework: ism, ref: ISM-1139 }
     - { framework: ism, ref: ISM-1781 }
     - { framework: idcf, ref: Movement }
+  essentials:
+    - { action: CL.PRO-08.x1, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action covers encryption, as the IT chapter has no cryptography principle, so only the cloud action is tagged."
 
 - id: MS-AZ-015
   module: azure
@@ -212,6 +230,9 @@
     - { framework: nist-csf-2, ref: PR.DS-11 }
     - { framework: mcsb, ref: BR-1 }
     - { framework: mcsb, ref: BR-2 }
+  essentials:
+    - { action: CL.PRO-10.x4, domains: [CPS], coverage: partial }
+  essentialsReviewed: "IT.PRO-10.1 not tagged: soft delete and versioning are recovery features inside the same account, not backups, so only the cloud recovery action is tagged."
 
 - id: MS-AZ-016
   module: azure
@@ -242,6 +263,10 @@
     - { framework: cis-azure, ref: "8.3.9" }
     - { framework: nist-csf-2, ref: PR.AA-01 }
     - { framework: mcsb, ref: DP-6 }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-08.x2, domains: [CPS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for key and secret expiry or rotation (IT.PRO-13.2 covers where secrets are stored), so only the cloud actions are tagged."
 
 - id: MS-AZ-017
   module: azure
@@ -275,6 +300,9 @@
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x7, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-018
   module: azure
@@ -311,6 +339,12 @@
     - { framework: ism, ref: ISM-1814 }
   e8:
     - { strategy: regular-backups, level: 1 }
+  essentials:
+    - { action: IT.PRO-10.1, domains: [CPS], coverage: partial }
+    - { action: IT.PRO-10.2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x2, domains: [CPS], coverage: partial }
+  essentialsReviewed: "IT.PRO-10.3 not tagged: the question checks backups are taken, not that restores are tested."
 
 - id: MS-AZ-019
   module: azure
@@ -341,6 +375,9 @@
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data I }
     - { framework: idcf, ref: Risk assessment }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [BUS], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-037
   module: azure
@@ -373,6 +410,10 @@
     - { framework: mcsb, ref: PA-7 }
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: idcf, ref: "DSL-2 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-08.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: MS-AZ-038
   module: azure
@@ -405,6 +446,9 @@
     - { framework: mcsb, ref: IM-8 }
     - { framework: mcsb, ref: DP-6 }
     - { framework: ism, ref: ISM-2142 }
+  essentials:
+    - { action: IT.PRO-13.2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
 
 - id: MS-AZ-039
   module: azure
@@ -434,6 +478,9 @@
     - { framework: ism, ref: ISM-1515 }
   e8:
     - { strategy: regular-backups, level: 1 }
+  essentials:
+    - { action: IT.PRO-10.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-10.x3, domains: [CPS], coverage: partial }
 
 - id: MS-AZ-040
   module: azure
@@ -461,6 +508,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: IM-8 }
     - { framework: ms-zero-trust, ref: Data III }
+  essentials:
+    - { action: CL.PRO-13.x4, domains: [IS], coverage: partial }
+  essentialsReviewed: "No enterprise IT action asks for short-lived or keyless credentials over long-lived secrets, so only the cloud actions are tagged."
 
 - id: MS-AZ-041
   module: azure
@@ -491,6 +541,10 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Data IV }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: MS-AZ-042
   module: azure
@@ -523,3 +577,7 @@
     - { framework: mcsb, ref: NS-2 }
     - { framework: ms-zero-trust, ref: Data IV }
     - { framework: idcf, ref: "DSL-4 Authorised person" }
+  essentials:
+    - { action: IT.PRO-18.1, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-09.x2, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-18.x1, domains: [CPS], coverage: partial }

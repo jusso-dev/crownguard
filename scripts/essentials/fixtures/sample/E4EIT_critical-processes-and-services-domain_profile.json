@@ -1,0 +1,29 @@
+{
+ "profile": {
+  "uuid": "df9164d3-20c6-5570-bfb7-cfc1ce0dbe6c",
+  "metadata": {
+   "title": "Assessment evidence guide for enterprise IT - Critical processes and services OSCAL Profile",
+   "published": "2026-10-15T00:30:23Z",
+   "last-modified": "2026-10-15T00:30:23Z",
+   "version": "2026.10.15",
+   "oscal-version": "1.2.3",
+   "props": [
+    {
+     "name": "domain",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "critical-processes-and-services"
+    },
+    {
+     "name": "domain-description",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "Core processes and services that are critical to delivering primary organisational outcomes."
+    },
+    {
+     "name": "domain-priority-phase",
+     "ns": "https://www.cyber.gov.au/ns/essentials/oscal/1.0",
+     "value": "phase-2"
+    }
+   ]
+  }
+ }
+}

@@ -29,6 +29,9 @@
     - { framework: ism, ref: ISM-1173 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
 
 - id: GO-ID-002
   module: core
@@ -57,6 +60,9 @@
     - { framework: ism, ref: ISM-2011 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: full, note: "Limiting 2-Step Verification to security keys and passkeys for all users is the whole action for identity services." }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
 
 - id: GO-ID-003
   module: core
@@ -86,6 +92,10 @@
     - { framework: nist-csf-2, ref: PR.IR-01 }
     - { framework: ism, ref: ISM-2136 }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: GO-ID-004
   module: core
@@ -115,6 +125,9 @@
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: ism, ref: ISM-0428 }
     - { framework: ism, ref: ISM-0853 }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [IS], coverage: partial }
 
 - id: GO-ID-005
   module: core
@@ -144,6 +157,11 @@
     - { framework: google-security-guidance, ref: "Checklist: Accounts" }
     - { framework: ism, ref: ISM-0430 }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-13.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-12.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x1, domains: [IS], coverage: partial }
 
 - id: GO-ID-006
   module: core
@@ -167,6 +185,10 @@
   sources: [gws-transfer-tool]
   refs:
     - { framework: nist-csf-2, ref: PR.AA-01 }
+  essentials:
+    - { action: IT.IDE-01.2, domains: [IS], coverage: partial }
+    - { action: CL.IDE-01.x2, domains: [VR], coverage: partial }
+    - { action: CL.IDE-01.x3, domains: [IS], coverage: partial }
 
 - id: GO-ID-007
   module: core
@@ -196,6 +218,9 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: google-security-guidance, ref: "Blueprint: Authentication and authorization" }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [IS], coverage: partial }
+    - { action: CL.PRO-16.x4, domains: [IS], coverage: partial }
 
 - id: GO-ID-008
   module: core
@@ -228,6 +253,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [UD], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [UD], coverage: partial }
 
 - id: GO-ID-009
   module: core
@@ -263,3 +291,7 @@
     - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.2 not tagged: the question is about MFA to reach data, not where secrets are stored."

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Question } from "../content/schema";
 import { idcfRows, jewelDsl, notVerifiedText, suggestDsl, systemCell } from "./idcf";
 import type { E8Result } from "./maturity";
-import type { CrownJewel } from "./types";
+import type { CrownJewel } from "../format/schema";
 
 const q = (id: string, refs: string[], e8: { strategy: string; level: number }[] = []): Question =>
   ({ id, refs: refs.map((ref) => ({ framework: "idcf", ref })), e8 }) as unknown as Question;

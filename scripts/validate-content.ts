@@ -1,5 +1,5 @@
 import { loadCatalogue } from "../src/content/loader";
-import { readContentFiles } from "./read-content";
+import { readContentFiles } from "../src/content/disk";
 
 const { catalogue, errors, warnings } = loadCatalogue(readContentFiles());
 for (const [id, b] of catalogue.platforms)

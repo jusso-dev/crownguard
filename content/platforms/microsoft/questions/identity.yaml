@@ -32,6 +32,9 @@
     - { framework: ism, ref: ISM-1173 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
 
 - id: MS-ID-002
   module: core
@@ -63,6 +66,9 @@
     - { framework: ism, ref: ISM-1919 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.5, domains: [IS], coverage: full, note: "Blocking legacy authentication for all users in Conditional Access, with no successful legacy sign-ins in the logs, is the whole action for identity services." }
+    - { action: CL.PRO-13.x7, domains: [IS], coverage: partial }
 
 - id: MS-ID-003
   module: core
@@ -94,6 +100,9 @@
     - { framework: ism, ref: ISM-1872 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: full, note: "Requiring the phishing-resistant authentication strength for all users and all resources is the whole action for identity services." }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
 
 - id: MS-ID-004
   module: core
@@ -127,6 +136,9 @@
     - { framework: mcsb, ref: IM-6 }
     - { framework: ism, ref: ISM-2011 }
     - { framework: ism, ref: ISM-2077 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
 
 - id: MS-ID-005
   module: core
@@ -156,6 +168,11 @@
     - { framework: nist-csf-2, ref: PR.AA-03 }
     - { framework: mcsb, ref: IM-7 }
     - { framework: ism, ref: ISM-2140 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [IS], coverage: partial }
 
 - id: MS-ID-006
   module: core
@@ -191,6 +208,10 @@
     - { framework: mcsb, ref: LT-2 }
     - { framework: ms-zero-trust, ref: Identity V }
     - { framework: ism, ref: ISM-2136 }
+  essentials:
+    - { action: IT.DET-02.2, domains: [VR], coverage: partial }
+    - { action: CL.DET-04.x1, domains: [IS], coverage: partial }
+    - { action: CL.DET-02.x1, domains: [VR], coverage: partial }
 
 - id: MS-ID-007
   module: core
@@ -221,6 +242,10 @@
     - { framework: ms-zero-trust, ref: Endpoints 2 }
     - { framework: ism, ref: ISM-2136 }
     - { framework: idcf, ref: "Whole system" }
+  essentials:
+    - { action: IT.PRO-01.1, domains: [IS], coverage: partial }
+    - { action: IT.PRO-04.2, domains: [UD], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [UD], coverage: partial }
 
 - id: MS-ID-008
   module: core
@@ -251,6 +276,11 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: PA-3 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-12.2, domains: [IS], coverage: partial }
+    - { action: IT.PRO-12.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x2, domains: [IS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [IS], coverage: partial }
 
 - id: MS-ID-009
   module: core
@@ -276,6 +306,11 @@
     - { framework: nist-csf-2, ref: PR.AA-05 }
     - { framework: mcsb, ref: IM-7 }
     - { framework: ms-zero-trust, ref: Identity II }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [IS], coverage: partial }
+    - { action: IT.PRO-04.3, domains: [IS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [IS], coverage: partial }
+    - { action: CL.PRO-04.x3, domains: [IS], coverage: partial }
 
 - id: MS-ID-010
   module: core
@@ -308,6 +343,9 @@
     - { framework: ism, ref: ISM-1682 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [UD, PE], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [UD, PE], coverage: partial }
 
 - id: MS-ID-011
   module: core
@@ -344,6 +382,10 @@
     - { framework: ism, ref: ISM-1894 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
+  essentialsReviewed: "IT.PRO-13.2 not tagged: the question is about MFA to reach data, not where secrets are stored."
 
 - id: MS-ID-012
   module: core
@@ -371,6 +413,9 @@
     - { framework: ism, ref: ISM-1681 }
   e8:
     - { strategy: mfa, level: 1 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: MS-ID-013
   module: core
@@ -398,6 +443,9 @@
     - { framework: ism, ref: ISM-1873 }
   e8:
     - { strategy: mfa, level: 2 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }
 
 - id: MS-ID-014
   module: core
@@ -427,3 +475,6 @@
     - { framework: ism, ref: ISM-1874 }
   e8:
     - { strategy: mfa, level: 3 }
+  essentials:
+    - { action: IT.PRO-13.4, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-13.x5, domains: [BUS], coverage: partial }

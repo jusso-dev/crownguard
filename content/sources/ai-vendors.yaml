@@ -8,15 +8,15 @@
   url: https://openai.com/chatgpt/enterprise/
   retrieved: 2026-10-10
 - id: openai
-  title: OpenAI
+  title: OpenAI API Platform documentation
   publisher: OpenAI
-  url: https://openai.com/
-  retrieved: 2026-10-10
+  url: https://developers.openai.com/api/docs
+  retrieved: 2026-11-04
 - id: anthropic-claude
-  title: Claude
+  title: Claude product overview
   publisher: Anthropic
-  url: https://www.anthropic.com/claude
-  retrieved: 2026-10-10
+  url: https://claude.com/product/overview
+  retrieved: 2026-11-04
 - id: anthropic
   title: Anthropic
   publisher: Anthropic
@@ -28,10 +28,10 @@
   url: https://www.anthropic.com/news/model-context-protocol
   retrieved: 2026-10-10
 - id: perplexity
-  title: Perplexity documentation
+  title: Perplexity Enterprise
   publisher: Perplexity
-  url: https://docs.perplexity.ai/
-  retrieved: 2026-10-10
+  url: https://www.perplexity.ai/enterprise
+  retrieved: 2026-11-04
 - id: otter-ai
   title: Otter.ai
   publisher: Otter.ai
@@ -43,10 +43,10 @@
   url: https://fireflies.ai/
   retrieved: 2026-10-10
 - id: fathom-video
-  title: Fathom
+  title: Fathom AI Notetaker
   publisher: Fathom Video
-  url: https://fathom.video/
-  retrieved: 2026-10-10
+  url: https://www.fathom.ai/
+  retrieved: 2026-11-04
 - id: grain
   title: Grain
   publisher: Grain
@@ -63,10 +63,10 @@
   url: https://www.gong.io/
   retrieved: 2026-10-10
 - id: zoom-ai-companion
-  title: Zoom AI assistant
+  title: ZoomMate, Zoom's AI assistant
   publisher: Zoom
   url: https://www.zoom.com/en/products/ai-assistant/
-  retrieved: 2026-10-10
+  retrieved: 2026-11-04
 - id: notion-ai
   title: Notion AI
   publisher: Notion

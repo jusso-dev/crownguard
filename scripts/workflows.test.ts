@@ -1,18 +1,20 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { repoPath } from "./lib/repo";
 
 /**
  * The supply-chain rules the workflows have to keep to. They run with the rest of the tests, so a workflow that
  * unpins an action or widens a permission fails locally and in CI, not at the next incident.
  */
-const dir = join(process.cwd(), ".github", "workflows");
+const dir = repoPath(".github", "workflows");
 const files = readdirSync(dir).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
 const text = (f: string) => readFileSync(join(dir, f), "utf8");
 
 describe("GitHub workflows", () => {
   it("finds the workflows it is meant to be policing", () => {
-    expect(files.sort()).toEqual(["ci.yml", "dependency-review.yml", "scorecard.yml", "source-watch.yml"]);
+    // The ones the rules below name; any others are checked too.
+    for (const f of ["ci.yml", "desktop-release.yml", "guidance-update.yml", "source-watch.yml"]) expect(files).toContain(f);
   });
 
   it("pins every action to a full commit SHA, with the version in a comment", () => {
@@ -48,11 +50,12 @@ describe("GitHub workflows", () => {
       for (const job of text(f).split(/\n(?=[ ]{2}\w[\w-]*:\n)/)) {
         const name = /^\s{2}(\w[\w-]*):/m.exec(job)?.[1];
         if (!name) continue;
-        for (const secret of ["pages: write", "attestations: write"]) {
-          if (job.includes(secret)) expect(name, `${f}: ${secret} in ${name}`).toBe("deploy");
-        }
+        if (job.includes("pages: write")) expect(name, `${f}: pages: write in ${name}`).toBe("deploy");
+        // Attestations: the Pages deploy, and the desktop release's checksums job (which builds nothing itself).
+        if (job.includes("attestations: write"))
+          expect(`${f}:${name}`, `${f}: attestations: write in ${name}`).toMatch(/^(ci\.yml:deploy|desktop-release\.yml:publish)$/);
         // The jobs that build and test get no OIDC token. Only the two that publish something may mint one.
-        if (["check", "e2e"].includes(name)) expect(job, `${f}: ${name} must not have id-token: write`).not.toContain("id-token: write");
+        if (["check", "e2e", "desktop", "build"].includes(name)) expect(job, `${f}: ${name} must not have id-token: write`).not.toContain("id-token: write");
       }
     }
   });

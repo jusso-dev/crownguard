@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { loadCatalogue } from "../src/content/loader";
-import { readContentFiles } from "./read-content";
+import { contentDigest, loadCatalogue } from "../src/content/loader";
+import { readRepoFile } from "./lib/repo";
+import { parseIdList } from "./lib/text";
+import { ESSENTIALS_IT } from "./lib/upstreams";
+import { readContentFiles } from "../src/content/disk";
 
 const { catalogue, errors } = loadCatalogue(readContentFiles());
 
@@ -114,6 +117,55 @@ describe("content", () => {
     expect(warnings).toContain("platform microsoft: MS-ID-001: ism ref ISM-9999 names a control ASD has withdrawn");
   });
 
+  it("ships both Essentials chapters and leaves the Essential Eight and ISM files alone", () => {
+    // The pinned action list is what the guidance update moves with each release, so the count comes from it.
+    expect(catalogue.frameworks.get("asd-essentials-enterprise-it")?.controls).toHaveLength(parseIdList(readRepoFile(ESSENTIALS_IT.idsFile)).length);
+    expect(catalogue.frameworks.get("asd-essentials-cloud")?.essentials?.provisional).toBe(true);
+    expect(catalogue.frameworks.get("essential-eight")?.essentials).toBeUndefined();
+    expect(catalogue.frameworks.get("ism")?.essentials).toBeUndefined();
+  });
+
+  it("rejects an Essentials action in an unknown domain, mixing capability and technical domains, or citing a made-up ISM control", () => {
+    const files = readContentFiles();
+    const target = "content/frameworks/asd-essentials-enterprise-it.yaml";
+    const text = files[target];
+    const bad = text
+      .replace(/( {2}- id: IT\.GOV-01\.1\n(?: {4}.*\n)*? {4}domains: )\[GC\]/, "$1[GC, IS]")
+      .replace(/( {2}- id: IT\.GOV-14\.1\n(?: {4}.*\n)*? {4}evidence: \{ ism: \[)/, "$1ISM-9999, ")
+      .replace(/( {2}- id: IT\.IDE-04\.1\n(?: {4}.*\n)*? {4}principle: )IDE-04/, "$1IDE-99");
+    expect(bad).not.toBe(text);
+    const { errors: found } = loadCatalogue({ ...files, [target]: bad });
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.GOV-01.1: mixes capability and technical domains");
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.GOV-14.1: evidence ISM-9999 is not in the ISM");
+    expect(found).toContain("framework asd-essentials-enterprise-it: IT.IDE-04.1: unknown principle IDE-99");
+    expect(found).toContain("framework asd-essentials-enterprise-it: principle IDE-04 has no actions");
+  });
+
+  /** MS-ID-001's YAML block with its Essentials fields replaced by `extra` (raw YAML lines, or nothing). */
+  const withMsId001 = (extra: string) => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const block = files[target].split(/\n(?=- id: )/)[0];
+    const stripped = block.replace(/\n {2}essentials:(?: \[\])?(?:\n {4}- .*)*/, "").replace(/\n {2}essentialsReviewed: .*/, "");
+    return loadCatalogue({ ...files, [target]: files[target].replace(block, `${stripped.trimEnd()}${extra}\n`) });
+  };
+
+  it("rejects an Essentials tag naming an unknown action or a domain the action doesn't apply to, and a full tag without a note", () => {
+    const { errors: found } = withMsId001(
+      "\n  essentialsReviewed: Overridden for this test only.\n  essentials:\n    - { action: IT.PRO-99.1, domains: [IS], coverage: partial }\n    - { action: IT.GOV-01.1, domains: [IS], coverage: partial }",
+    );
+    expect(found).toContain("MS-ID-001: essentials IT.PRO-99.1: unknown action");
+    expect(found).toContain("MS-ID-001: essentials IT.GOV-01.1: action doesn't apply to domain IS");
+    const { errors: full } = withMsId001("\n  essentials:\n    - { action: IT.PRO-13.4, domains: [IS], coverage: full }");
+    expect(full.some((e) => e.endsWith("essentials.0.note: coverage: full needs a note"))).toBe(true);
+  });
+
+  it("warns when a question's ISM refs suggest an Essentials action it isn't tagged with", () => {
+    const { errors: found, warnings } = withMsId001("");
+    expect(found).toEqual([]);
+    expect(warnings.some((w) => w.startsWith("MS-ID-001: ISM refs suggest Essentials IT.PRO-13.4"))).toBe(true);
+  });
+
   it("warns when an e8-tagged question maps to no ISM control in the matching E8 profile", () => {
     const files = readContentFiles();
     const target = "content/platforms/microsoft/questions/identity.yaml";
@@ -123,5 +175,35 @@ describe("content", () => {
     expect(warnings).toContain("MS-ID-001: e8 mfa ML1 maps to no ISM control in the E8 ML1 profile");
     // The gap is a warning, not an error: the Essential Eight tag and the question stand on their own.
     expect(errors).toEqual([]);
+  });
+  it("rejects unknown keys, so a renamed key can't silently drop mappings", () => {
+    const files = readContentFiles();
+    const target = "content/platforms/microsoft/questions/identity.yaml";
+    const renamed = files[target].replace(/^ {2}refs:/m, "  ref:").replace(/^ {2}e8:/m, "  E8:");
+    const { errors: found } = loadCatalogue({ ...files, [target]: renamed });
+    expect(found.filter((e) => e.startsWith(`${target}: `)).join("\n")).toMatch(/Unrecognized keys: "ref", "E8"/);
+  });
+
+  it("rejects a duplicate platform id, a platform outside its own directory and a duplicate import mapping id", () => {
+    const files = readContentFiles();
+    const copy = Object.fromEntries(Object.entries(files).filter(([p]) => p.startsWith("content/platforms/aws/")).map(([p, t]) => [p.replace("/aws/", "/aws2/"), t]));
+    const { errors: found } = loadCatalogue({
+      ...files,
+      ...copy,
+      "content/imports/zz-copy.yaml": files["content/imports/prowler-aws.yaml"],
+    });
+    expect(found).toContain("content/platforms/aws2/platform.yaml: id aws does not match its directory aws2");
+    expect(found).toContain("content/platforms/aws2/platform.yaml: duplicate platform id aws");
+    expect(found).toContain("content/imports/zz-copy.yaml: duplicate import mapping id prowler-aws");
+  });
+
+  it("lists questions in id order and leaves them in place when taking the content digest", () => {
+    const { catalogue: fresh } = loadCatalogue(readContentFiles());
+    const before = [...fresh.platforms.values()].map((b) => b.questions.map((q) => q.id));
+    for (const ids of before) expect(ids).toEqual(ids.slice().sort((x, y) => x.localeCompare(y)));
+    const reversed = new Map([...fresh.platforms].map(([id, b]) => [id, { ...b, questions: b.questions.slice().reverse() }]));
+    const order = [...reversed.values()].map((b) => b.questions.map((q) => q.id));
+    expect(contentDigest({ ...fresh, platforms: reversed })).toBe(contentDigest(fresh));
+    expect([...reversed.values()].map((b) => b.questions.map((q) => q.id))).toEqual(order);
   });
 });

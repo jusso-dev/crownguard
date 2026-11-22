@@ -1,0 +1,37 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Least privilege for the main window. No static frontend filesystem paths; native dialogs and validated OS-open paths grant runtime access. External HTTPS URLs open in the default handler.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-autosave-load",
+    "allow-autosave-set",
+    "allow-autosave-remove",
+    "allow-recent-list",
+    "allow-recent-record",
+    "allow-launch-file-take",
+    "allow-settings-get",
+    "allow-settings-set-update-check",
+    "allow-update-check",
+    "allow-update-install",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-destroy",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-write-file",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        }
+      ]
+    }
+  ]
+}

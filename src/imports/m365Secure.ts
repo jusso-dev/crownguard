@@ -1,12 +1,11 @@
+import { assertImportRows, assertImportText, importLimits } from "./limits";
 import { z } from "zod";
-import type { ImportMapping } from "../content/schema";
-import { suggestAll, type CheckRow } from "./aggregate";
-import { clip, type ScanImporter, type ScanResult } from "./types";
-
-const status = z.enum(["pass", "fail", "warning", "review", "info", "unknown", "notlicensed"]);
+import { scanStatuses } from "../format/vocab";
+import { buildScanResult } from "./aggregate";
+import type { ScanImporter } from "./types";
 
 /** The parts of an M365-Secure `_Assessment-Results_<domain>.json` file we use. Other fields are ignored. */
-export const scanSchema = z.object({
+const scanSchema = z.object({
   summary: z.object({
     timestamp: z.string(),
     tenant: z.object({
@@ -19,74 +18,61 @@ export const scanSchema = z.object({
     .array(
       z.object({
         check_id: z.string(),
-        status,
+        status: z.enum(scanStatuses),
         setting: z.string().default(""),
         current_value: z.string().default(""),
         expected_value: z.string().default(""),
       }),
     )
-    .max(5000),
+    .max(importLimits.m365MaxRows),
 });
-export type Scan = z.infer<typeof scanSchema>;
-
 
 /** Licence SKU part numbers, highest tier first. */
 const skuTiers: [RegExp, string][] = [
   [/^SPE_E5|^M365_E5/i, "microsoft-365-e5"],
   [/^SPE_E3|^M365_E3/i, "microsoft-365-e3"],
   [/^ENTERPRISEPACK$|^OFFICE_365_E3/i, "office-365-e3"],
-  [/^SPB$|BUSINESS_PREMIUM$/i, "business-premium"],
+  [/^SPB$|^BUSINESS_PREMIUM$/i, "business-premium"],
   [/^O365_BUSINESS_PREMIUM$|^O365_BUSINESS$/i, "business-standard"],
   [/^O365_BUSINESS_ESSENTIALS$/i, "business-basic"],
 ];
 
-export function suggestLicence(skus: string[]): string | undefined {
-  for (const [re, tier] of skuTiers) if (skus.some((s) => re.test(s))) return tier;
-  return undefined;
-}
+const licenceTier = (skus: string[]) => skuTiers.find(([re]) => skus.some((s) => re.test(s)))?.[1];
 
-export function readScan(scan: Scan, mapping: ImportMapping): ScanResult {
-  const byCheck = new Map<string, CheckRow[]>();
-  for (const f of scan.findings) {
-    const row: CheckRow = {
-      id: f.check_id,
-      status: f.status,
-      setting: clip(f.setting, 500),
-      current: clip(f.current_value, 2000),
-      expected: clip(f.expected_value, 2000),
-    };
-    byCheck.set(f.check_id, [...(byCheck.get(f.check_id) ?? []), row]);
-  }
-  const mapped = new Set(mapping.mappings.flatMap((m) => m.checks));
-  const tenant = scan.summary.tenant.display_name || scan.summary.tenant.primary_domain;
-  const unmappedIds = [...new Set(scan.findings.map((f) => f.check_id).filter((id) => !mapped.has(id)))];
-
-  return {
-    tool: mapping.name,
-    tenant,
-    domain: scan.summary.tenant.primary_domain,
-    scannedAt: scan.summary.timestamp,
-    suggestions: suggestAll(mapping, byCheck, { tool: mapping.name, tenant, scannedAt: scan.summary.timestamp }),
-    unmapped: unmappedIds.length,
-    unmappedFailing: unmappedIds.filter((id) => scan.findings.some((f) => f.check_id === id && f.status === "fail")),
-    licence: suggestLicence(scan.summary.tenant.license_skus.map((s) => s.sku_part_number)),
-  };
-}
-
-const looksLike = (text: string) => text.includes('"summary"') && text.includes('"findings"') && text.includes("license_skus");
+/**
+ * The fields the schema needs: `summary.tenant.primary_domain` and `findings`. `license_skus` is optional (the schema
+ * defaults it), so a file without one is still M365-Secure rather than falling through to another importer.
+ */
+const looksLike = (text: string) => ['"summary"', '"findings"', '"primary_domain"'].every((k) => text.includes(k));
 
 export const m365SecureImporter: ScanImporter = {
   id: "m365-secure",
+  tool: "m365-secure",
   platform: "microsoft",
   label: "M365-Secure",
   hint: "_Assessment-Results_<domain>.json",
   url: "https://github.com/jusso-dev/M365-Secure",
   accept: ".json,application/json",
-  detect: looksLike,
+  detect: (text) => {
+    assertImportText(text);
+    return looksLike(text);
+  },
   read: (text, mapping) => {
-    const parsed = scanSchema.safeParse(JSON.parse(text));
+    assertImportText(text);
+    const raw = JSON.parse(text);
+    if (Array.isArray(raw?.findings)) assertImportRows(raw.findings.length, importLimits.m365MaxRows, "M365-Secure scan", "findings");
+    const parsed = scanSchema.safeParse(raw);
     if (!parsed.success) throw new Error("this doesn't look like an M365-Secure results file (_Assessment-Results_<domain>.json)");
-    return readScan(parsed.data, mapping);
+    const { summary, findings } = parsed.data;
+    return buildScanResult(
+      mapping,
+      findings.map((f) => ({ id: f.check_id, status: f.status, setting: f.setting, current: f.current_value, expected: f.expected_value })),
+      {
+        tenant: summary.tenant.display_name || summary.tenant.primary_domain,
+        domain: summary.tenant.primary_domain,
+        scannedAt: summary.timestamp,
+        licence: licenceTier(summary.tenant.license_skus.map((s) => s.sku_part_number)),
+      },
+    );
   },
 };
-

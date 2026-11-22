@@ -1,4 +1,6 @@
-import type { Catalogue, ImportMapping } from "../../src/content/schema";
+import type { Catalogue } from "../../src/content/schema";
+import { checkDrift, checkFamily, mappedChecks } from "../lib/scanner-checks";
+import { mappingFile } from "../lib/upstreams";
 import type { Finding } from "./types";
 
 /** Upstream check list for one import mapping, injected by the watch run or a test. */
@@ -7,23 +9,6 @@ export interface UpstreamChecks {
   mappingId: string;
   /** Check ids currently published upstream. */
   ids: Iterable<string>;
-}
-
-/** Strip a ScubaGoggles policy version suffix (`GWS.GMAIL.7.3v1` → `GWS.GMAIL.7.3`). */
-export function scubaBaseId(id: string): string {
-  return id.replace(/v\d+$/i, "");
-}
-
-/** Family used to suggest new checks near ones already mapped (M365 `ENTRA-ENTAPP-*`, Prowler `backup_*`). */
-export function checkFamily(id: string): string {
-  const m365 = id.match(/^([A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*)-\d+/);
-  if (m365) return m365[1];
-  const prowler = id.match(/^([a-z][a-z0-9]*)_/);
-  if (prowler) return prowler[1];
-  // Product family only (`GWS.GMAIL`), so a new policy in the same product is a suggestion.
-  const scuba = id.match(/^(GWS\.[A-Z]+)/i);
-  if (scuba) return scuba[1].toUpperCase();
-  return id;
 }
 
 /** Check ids from an M365-Secure `docs/CHECKS.md` table. */
@@ -36,80 +21,38 @@ export function parseM365ChecksMd(text: string): string[] {
   return ids;
 }
 
-/** One id per non-comment line (Prowler / ScubaGoggles pin files). */
-export function parseIdList(text: string): string[] {
-  return text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"));
-}
-
 /**
  * Compare crownguard's import mappings with upstream check lists. Missing mapped ids are actionable; new checks in a
- * family that already has mappings are suggestions. `baseId` normalises ids before comparison (Scuba version suffixes).
+ * family that already has mappings are suggestions.
  */
-export function checkMappingDrift(
-  catalogue: Catalogue,
-  upstream: UpstreamChecks[],
-  opts: { baseId?: (mappingId: string, id: string) => string } = {},
-): Finding[] {
+export function checkMappingDrift(catalogue: Catalogue, upstream: UpstreamChecks[]): Finding[] {
   const findings: Finding[] = [];
   for (const u of upstream) {
     const mapping = catalogue.imports.get(u.mappingId);
     if (!mapping) {
-      findings.push({
-        kind: "mapping",
-        title: u.mappingId,
-        url: "",
-        actionable: false,
-        detail: `No import mapping named ${u.mappingId} in content/imports.`,
-        citedBy: [],
-      });
+      findings.push({ kind: "mapping", title: u.mappingId, url: "", actionable: false, detail: `No import mapping named ${u.mappingId} in content/imports.`, citedBy: [] });
       continue;
     }
-    const base = (id: string) => opts.baseId?.(u.mappingId, id) ?? id;
-    const upstreamSet = new Set([...u.ids].map(base));
-    const mappedByCheck = new Map<string, string[]>();
-    for (const row of mapping.mappings) {
-      for (const check of row.checks) {
-        const key = base(check);
-        const list = mappedByCheck.get(key) ?? [];
-        list.push(row.question);
-        mappedByCheck.set(key, list);
-      }
-    }
-    const mappedFamilies = new Set([...mappedByCheck.keys()].map(checkFamily));
-
-    for (const [check, questions] of [...mappedByCheck.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-      if (upstreamSet.has(check)) continue;
+    const file = mappingFile(mapping.id);
+    const { removed, added } = checkDrift(mappedChecks(mapping.mappings), u.ids);
+    for (const { id, questions } of removed)
       findings.push({
         kind: "mapping",
-        title: `${mapping.name}: ${check} removed upstream`,
+        title: `${mapping.name}: ${id} removed upstream`,
         url: mapping.url,
         actionable: true,
-        detail: `Mapped check ${check} is gone from upstream; used by ${questions.join(", ")} in content/imports/${mappingFile(mapping)}.`,
+        detail: `Mapped check ${id} is gone from upstream; used by ${questions.join(", ")} in ${file}.`,
         citedBy: questions,
       });
-    }
-
-    for (const raw of [...u.ids].sort()) {
-      const check = base(raw);
-      if (mappedByCheck.has(check)) continue;
-      const family = checkFamily(check);
-      if (!mappedFamilies.has(family)) continue;
+    for (const id of added)
       findings.push({
         kind: "mapping",
-        title: `${mapping.name}: new ${check}`,
+        title: `${mapping.name}: new ${id}`,
         url: mapping.url,
         actionable: true,
-        detail: `New upstream check ${raw} in mapped family ${family}; consider adding it to content/imports/${mappingFile(mapping)}.`,
+        detail: `New upstream check ${id} in mapped family ${checkFamily(id)}; consider adding it to ${file}.`,
         citedBy: [],
       });
-    }
   }
   return findings;
-}
-
-function mappingFile(mapping: ImportMapping): string {
-  return `${mapping.id}.yaml`;
 }

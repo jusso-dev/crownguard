@@ -24,9 +24,9 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
 - **Crown-jewel discovery.** Guided prompts per category: identity plane, privileged access, business data,
   collaboration and email, endpoints, cloud infrastructure and AI assistants.
 - **Vendor-grounded questions.** Each question cites the Microsoft, Google or AWS guidance it comes from and maps to
-  CIS Benchmark recommendations, the ASD Essential Eight, NIST CSF 2.0, the Australian Government Information
-  Security Manual (ISM, September 2026 release) and the Department of Home Affairs Industry Data Classification
-  Framework (IDCF).
+  CIS Benchmark recommendations, the ASD Essential Eight, ASD Essentials (enterprise IT and cloud), NIST CSF 2.0, the
+  Australian Government Information Security Manual (ISM, September 2026 release) and the Department of Home Affairs
+  Industry Data Classification Framework (IDCF).
 - **Cloud posture for Azure, Google Cloud and AWS.** Optional Azure and Google Cloud modules and an AWS platform ask
   about the misconfigurations a cloud security posture management (CSPM) tool flags first: privileged access to the
   management plane, public storage, databases and snapshots, secrets in configuration, logging and threat detection,
@@ -44,16 +44,18 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   the question you're on; in Chrome and Edge later saves update the same file. **Open file** carries on from a saved
   copy, including older ones: open it, add a logo or ABN, and regenerate the report.
 - **Optional scan import.** Already run a scanner? Import its results on the Controls step to pre-fill answers where its
-  checks are decisive (all pass = Yes, all fail = No, mixed = Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
+  checks are decisive (all pass = Yes, all fail = No, mixed = Partial; a pass alongside a check the scan couldn't
+  settle, such as one needing review, is Partial). Today that covers [M365-Secure](https://github.com/jusso-dev/M365-Secure)
   for Microsoft 365 (`_Assessment-Results_<domain>.json`, 59 questions) and [Prowler](https://github.com/prowler-cloud/prowler)
   for AWS (56 questions) and Azure (33 questions), as CSV or JSON-OCSF straight from `prowler aws -M csv json-ocsf`.
   Prowler reports one finding per resource, so a check fails when any resource fails it and a suppressed finding is
   never a pass; the evidence carries the counts ("3 of 41 resources failing") and example resources.
   [ScubaGoggles](https://github.com/cisagov/ScubaGoggles) for Google Workspace (`ScubaResults*.json`, 33 questions) is
   read the same way from its policy results only: the report's `Raw` section, which holds super admin and break-glass
-  accounts and audit log events, is never touched. Every pre-filled
-  answer shows its scan evidence, you can change any of them, and the report names the scanner, its version and the
-  account it covered. The file is read in your browser only.
+  accounts and audit log events, is never touched. Account email addresses in any scanner's text are replaced with
+  "[account]" before anything is stored. Every pre-filled answer shows its scan evidence, you can change any of them,
+  and the report names the scanner, its version and the account it covered. An answer you keep keeps its own
+  evidence: a later scan's checks never sit under it. The file is read in your browser only.
 - **N/A must be justified.** Marking a control N/A asks why. Until a reason is given it counts as unanswered.
 - **IDCF Data Security Levels.** Optionally record the IDCF Data Security Level (DSL-0 to DSL-5+) your data owner
   chose for each crown jewel. The report shows, for each platform and for DSL-2 to DSL-4, whether your answers found
@@ -72,7 +74,7 @@ Nothing you enter leaves your device. There is no backend, no account and no ana
   [Standard for accountability](https://www.digital.gov.au/ai/ai-in-government-policy/accountability), mostly by clicking options.
   Each use case gets up to 22 readiness questions on accountability, human oversight, access, data, monitoring,
   switch-off, transparency and assurance, drawn from the
-  [Policy for the responsible use of AI in government](https://www.digital.gov.au/policy/ai/policy) v2.0, its impact
+  [Policy for the responsible use of AI in government](https://www.digital.gov.au/ai/ai-in-government-policy) v2.1, its impact
   assessment guidance, the [agentic AI addendum](https://www.digital.gov.au/policy/ai/agentic-ai-addendum) and ASD's
   guidance on agentic AI. Link a use case to the crown jewels it can reach to see their risk, the related Controls
   answers and the exposures it usually adds. Export the register as CSV or XLSX, with the DTA's fields first, and the
@@ -161,7 +163,9 @@ Both are built in the browser.
 
 Risk for each crown jewel is impact × likelihood on a 5×5 matrix, recalculated as you answer. The Review step shows
 control posture, answer confidence, the heatmap, crown jewels ranked by risk, posture by domain, indicative Essential
-Eight maturity and the biggest gaps, plus the SOC maturity result and the AI register when you included them.
+Eight maturity and the biggest gaps, plus the SOC maturity result and the AI register when you included them. The
+optional "Show ASD Essentials" picker adds indicative Essentials ratings for the enterprise IT or cloud chapter to the
+report, beside the Essential Eight.
 
 <table>
   <tr>
@@ -239,7 +243,7 @@ It works on a phone too: every step fits a 390px screen.
 ## AI register only
 
 If you only need the AI use-case register — the one the
-[Policy for the responsible use of AI in government](https://www.digital.gov.au/policy/ai/policy) asks non-corporate
+[Policy for the responsible use of AI in government](https://www.digital.gov.au/ai/ai-in-government-policy) asks non-corporate
 Commonwealth entities to create and share with the DTA every six months — you don't need to invent a platform or a
 crown jewel to get it. Choose **AI use-case register only** on the start screen, or open the deep link:
 
@@ -320,6 +324,22 @@ pnpm cg render a.crownguard.json report.pdf
 
 See [docs/cli.md](docs/cli.md) for every command, exit codes, and how to replace the old Hermes `cg-bot` helper.
 
+## Desktop app
+
+crownguard also comes as an offline desktop app for macOS, Windows and Linux, built with Tauri v2 from the same code.
+It keeps assessments in local files and a local SQLite database instead of browser storage, saves through the system's
+own dialogs (Ctrl/⌘ S saves back to the same file), and makes no network connections at all unless you turn on the
+optional update check. Files move freely between the web and desktop apps.
+
+```sh
+pnpm tauri:dev     # run it locally (needs Rust and the Tauri prerequisites)
+pnpm tauri:build   # build installers for this system
+```
+
+Signed installers are published as `desktop-v*` releases. Install steps, where data lives, the offline guarantees and
+how to back up assessments: [docs/desktop/README.md](docs/desktop/README.md). Threat model:
+[docs/desktop/security.md](docs/desktop/security.md).
+
 ## The saved file
 
 **Save file** writes one JSON object with the whole assessment. Nothing is sent anywhere: the file is your data, and you
@@ -338,11 +358,12 @@ being dropped.
 | Answers | Yes = 1, Partial = 0.5, No = 0. **Unknown and unanswered also score 0**: uncertainty is never treated as protection. N/A is excluded. |
 | Weights | Critical 4, High 3, Medium 2, Low 1 |
 | Impact (1–5) | Highest of the confidentiality, integrity and availability ratings, +1 for regulated or highly confidential data, max 5 |
-| Likelihood (1–5) | 1 + 4 × weighted gap ratio of the questions relevant to the crown jewel, +0.5 per recorded exposure, rounded. At least 3 while any critical control is missing |
+| Likelihood (1–5) | 1 + 4 × weighted gap ratio of the questions that apply to the crown jewel on its own platform (its asset type plus platform-wide controls; another selected platform never counts), +0.5 per recorded exposure, rounded. At least 3 while any critical control is missing |
 | Bands | 1–4 Low · 5–9 Medium · 10–19 High · 20–25 Extreme |
-| Essential Eight | A maturity level counts only when every question at that level and below is Yes. Indicative only: cloud-platform controls, not a full ASD assessment |
-| Roadmap | Gaps ranked by risk reduced across your crown jewels ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
-| IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes |
+| Essential Eight | A maturity level counts only when every question at that level and below is Yes or N/A with a reason. Indicative only: cloud-platform controls, not a full ASD assessment |
+| Roadmap | Gaps ranked by risk reduced across the crown jewels on that control's platform ÷ effort. Critical gaps with small or medium effort go into the first 30 days |
+| IDCF | Cyber part of DSL-2, 3, 4 read from indicative Essential Eight Maturity Level 1, 2, 3; physical and authorised-person parts from the questions mapped to each level. A level shows gaps when any mapped question at or below it isn't Yes or N/A with a reason |
+| ASD Essentials | Optional. Each action is rated per domain from the questions tagged with it: any No is not effective, fully effective needs every question Yes or N/A and one Yes covering the whole action, Unknown alone is not assessed. Principles take their weakest action; a domain's percentage is NE 0, PE 0.5, FE 1 over the principles assessed. Domains are ordered by ASD's priority phases, which set the order of work, not a rating. Never calculated from Essential Eight levels. Indicative, not a formal Essentials assessment; cloud chapter ids are provisional |
 | ISM | Mapping only, generated from ASD's ISM OSCAL catalog (September 2026 release). The optional "Show ISM baseline" picker annotates findings that touch the NON_CLASSIFIED, OFFICIAL: Sensitive or PROTECTED baselines and adds a count; it never changes a score |
 | SOC maturity | Each question rated 0–5 (capability 0–3) against its level descriptions; Unknown scores 0. An aspect's maturity is the mean of its maturity ratings and, for technology and services, its capability the mean of its capability ratings (never combined); a domain is the unweighted mean of its in-scope aspects. Default targets maturity 3, capability 2. Kept apart from the risk scores |
 | AI readiness | Scored like the controls (Yes 1, Partial 0.5, No, Unknown and unanswered 0, N/A with a reason left out, severity-weighted) over the questions that apply to each use case. Agent questions are asked unless it only gives output. Indicative, not a DTA rating, and kept apart from the risk scores |
@@ -412,6 +433,10 @@ unresolved" in later PRs without reopening one on its own. Page text is never co
 section names and word counts, and the text needed for diffs stays in the Actions cache. `pnpm validate:content`
 separately rejects sources that nothing cites. See [Source watch](docs/content-guide.md#source-watch).
 
+A second nightly workflow ([`guidance-update.yml`](.github/workflows/guidance-update.yml)) regenerates the ISM controls
+and the Prowler and ScubaGoggles check id lists when upstream publishes a new release, and opens a pull request with
+the changes. See [Guidance update](docs/content-guide.md#guidance-update).
+
 CIS Benchmarks are referenced by recommendation number and title only, under CIS's CC BY-NC-SA 4.0 terms. Get the
 benchmarks from [CIS](https://www.cisecurity.org/cis-benchmarks) for full audit and remediation steps.
 
@@ -435,8 +460,8 @@ finding or a DTA assessment, and it doesn't replace your AI impact assessment.
 
 ## Stack
 
-Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. The terminal app
-is Rust with Ratatui. Fonts (all SIL
+Vite, React, TypeScript, Tailwind CSS, Zustand, Zod, `@react-pdf/renderer`, Vitest, Playwright. The desktop app adds
+Tauri v2 and SQLite (`rusqlite`) in `src-tauri/`. The terminal app is Rust with Ratatui in `tui/`. Fonts (all SIL
 Open Font License, self-hosted): Space Grotesk, Inter and JetBrains Mono in the app via `@fontsource`; Inter in the
 PDF (`src/report/fonts/OFL.txt`). The UI design system is documented in [design.md](design.md).
 
@@ -451,7 +476,10 @@ guide to system security" by the Australian Government Department of Home Affair
 terms (CC BY 3.0 AU). The ISM control titles in [`content/frameworks/ism.yaml`](content/frameworks/ism.yaml) are
 shortened statements from the Information Security Manual, © Commonwealth of Australia 2024, generated from ASD's
 ISM OSCAL catalog and licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms and ASD
-logo excepted). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
+logo excepted). The ASD Essentials action titles in `content/frameworks/asd-essentials-*.yaml` are shortened
+statements from ASD's Essentials for enterprise IT (generated from ASD's E4EIT OSCAL release) and Essentials for cloud,
+© Commonwealth of Australia 2026, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (the Coat of Arms
+and ASD logo excepted). The AI register paraphrases Digital Transformation Agency policy, standards and guidance,
 © Commonwealth of Australia, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and draws on ASD
 guidance. CIS Benchmarks are referenced by recommendation number and title only, under CC BY-NC-SA 4.0.
 

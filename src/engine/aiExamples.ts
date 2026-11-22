@@ -1,4 +1,4 @@
-import type { AiUseCase, Assessment } from "./types";
+import type { AiUseCase, Assessment } from "../format/schema";
 
 /**
  * Example register entries, to show how the register works. Every one is flagged `example`, named "Example: …" and
@@ -61,7 +61,7 @@ export function exampleEntries(assessment: Pick<Assessment, "jewels">): AiUseCas
       lifecycle: "discover",
       technicalStandard: "partially-applied",
       domains: ["service-delivery"],
-      usagePatterns: ["decision-making"],
+      usagePatterns: ["decision-making", "workflow-automation"],
       ownerName: "Sam Example",
       ownerEmail: "sam.example@example.com",
       criteria: ["c1", "c2", "c4"],

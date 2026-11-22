@@ -1,10 +1,11 @@
 import { z } from "zod";
-import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../engine/aiOptions";
+import { aiAccess, aiAutonomy, aiBases, aiConditions, aiData, aiDomains, aiTechnologies, aiUsagePatterns } from "../format/aiOptions";
+import { essentialsActionPrefix, essentialsChapters, exposures, isoDate, socScaleTop, type EssentialsChapter, type ExposureId } from "../format/vocab";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "lowercase kebab-case id");
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
+const date = isoDate;
 
-export const sourceSchema = z.object({
+const sourceSchema = z.strictObject({
   id,
   title: z.string().min(3),
   publisher: z.string().min(2),
@@ -15,9 +16,40 @@ export const sourceSchema = z.object({
 });
 
 /** Values of the ISM's own `essential-eight-applicability` prop, carried on generated ISM controls. */
-export const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
+const ismE8Levels = ["ML1", "ML2", "ML3"] as const;
 
-export const frameworkSchema = z.object({
+/**
+ * ASD Essentials domains, keyed the way ASD abbreviates them and the same as the shared catalogue in GRiCk and
+ * Alignr: GC Governance and culture, VR Visibility and response, BS Boundary services, IS Identity services, CPS
+ * Critical processes and services, PE Privileged environments, BUS Business systems, UD User devices.
+ */
+const essentialsDomains = ["GC", "VR", "BS", "IS", "CPS", "PE", "BUS", "UD"] as const;
+export type EssentialsDomain = (typeof essentialsDomains)[number];
+/** Cloud shared responsibility: (C) Customer, (S) Supplied, (P) Provider-inherited. */
+const responsibility = z.enum(["C", "S", "P"]);
+
+/** The chapter structure an ASD Essentials framework file carries on top of its controls (the actions). */
+const essentialsMetaSchema = z.strictObject({
+  chapter: z.enum(essentialsChapters),
+  /** OSCAL release tag, or the publication month for a chapter transcribed from its web page. */
+  release: z.string().min(4),
+  /** True while ASD has published no action ids for the chapter, so ours are placeholders. */
+  provisional: z.boolean().default(false),
+  domains: z
+    .array(
+      z.strictObject({
+        id: z.enum(essentialsDomains),
+        name: z.string().min(3),
+        type: z.enum(["capability", "technical"]),
+        /** Priority phases the domain sits in. Capability domains run across every phase. */
+        phases: z.array(z.union([z.literal(1), z.literal(2), z.literal(3)])).min(1),
+      }),
+    )
+    .min(1),
+  principles: z.array(z.strictObject({ id: z.string().regex(/^[A-Z]{3}-\d{2}$/), name: z.string().min(3) })).min(1),
+});
+
+export const frameworkSchema = z.strictObject({
   id,
   name: z.string(),
   shortName: z.string(),
@@ -30,9 +62,11 @@ export const frameworkSchema = z.object({
   note: z.string().optional(),
   /** Controls the publisher has withdrawn: a ref to one is a warning, not a broken ref. */
   withdrawn: z.array(z.string().min(1)).default([]),
+  /** Present only on ASD Essentials chapter files, whose controls are the chapter's actions. */
+  essentials: essentialsMetaSchema.optional(),
   controls: z
     .array(
-      z.object({
+      z.strictObject({
         id: z.string().min(1),
         title: z.string().min(2),
         group: z.string().optional(),
@@ -41,6 +75,14 @@ export const frameworkSchema = z.object({
         updated: z.string().optional(),
         applicability: z.array(z.string().min(1)).optional(),
         e8: z.array(z.enum(ismE8Levels)).optional(),
+        // Essentials actions: the principle the action serves, the domains it applies to, the ISM controls ASD
+        // lists as potential evidence (outside and inside the Essential Eight), the number of Indicators of Good
+        // Practice statements per tier, and for the cloud chapter the shared responsibility for PaaS and SaaS.
+        principle: z.string().regex(/^[A-Z]{3}-\d{2}$/).optional(),
+        domains: z.array(z.enum(essentialsDomains)).optional(),
+        evidence: z.strictObject({ ism: z.array(z.string()).default([]), e8: z.array(z.string()).default([]) }).optional(),
+        igp: z.strictObject({ ne: z.number().int().min(0), pe: z.number().int().min(0), fe: z.number().int().min(0) }).optional(),
+        responsibility: z.strictObject({ paas: responsibility.optional(), saas: responsibility.optional() }).optional(),
       }),
     )
     .default([]),
@@ -48,34 +90,34 @@ export const frameworkSchema = z.object({
 
 export const tiers = ["identity", "privileged", "data", "collaboration", "endpoint", "cloud", "ai"] as const;
 
-export const exposures = {
-  "external-sharing": "Content can be shared with people outside the organisation",
-  "guest-access": "Guest or external accounts have access",
-  "internet-facing": "Reachable from the internet without a trusted network or device",
-  "standing-admin": "Administrators hold permanent (not just-in-time) privileges",
-  "third-party-apps": "Third-party apps or integrations hold delegated or application access",
-  "unmanaged-devices": "Accessible from unmanaged or personal devices",
-  "ai-grounding": "Indexed by an AI assistant (Copilot / Gemini) that answers users' questions",
-} as const;
-export type ExposureId = keyof typeof exposures;
 const exposureId = z.enum(Object.keys(exposures) as [ExposureId, ...ExposureId[]]);
 
-export const platformSchema = z.object({
+export const platformSchema = z.strictObject({
   id,
   name: z.string(),
   vendor: z.string(),
   description: z.string(),
-  modules: z.array(z.object({ id, name: z.string(), description: z.string(), optional: z.boolean() })).min(1),
+  modules: z.array(z.strictObject({ id, name: z.string(), description: z.string(), optional: z.boolean() })).min(1),
   licenceTiers: z
-    .array(z.object({ id, name: z.string(), features: z.array(id) }))
+    .array(z.strictObject({ id, name: z.string(), features: z.array(id) }))
     .min(1),
-  licenceFeatures: z.array(z.object({ id, name: z.string() })),
-  domains: z.array(z.object({ id, name: z.string(), description: z.string() })).min(1),
+  licenceFeatures: z.array(z.strictObject({ id, name: z.string() })),
+  domains: z
+    .array(
+      z.strictObject({
+        id,
+        name: z.string(),
+        description: z.string(),
+        /** Covers third-party app grants, so the Controls step points to the AI register's "Found apps" panel. */
+        appGrants: z.boolean().default(false),
+      }),
+    )
+    .min(1),
   /** Vendor pages that back the licence tiers and features (edition comparisons, nonprofit offers). */
   sources: z.array(id).default([]),
 });
 
-export const assetTypeSchema = z.object({
+const assetTypeSchema = z.strictObject({
   id,
   module: id,
   tier: z.enum(tiers),
@@ -84,7 +126,7 @@ export const assetTypeSchema = z.object({
   examples: z.array(z.string()).min(1),
   discoveryPrompts: z.array(z.string()).min(1),
   exposures: z.array(exposureId),
-  threats: z.array(z.object({ technique: z.string().regex(/^T\d{4}(\.\d{3})?$/), name: z.string() })).min(1),
+  threats: z.array(z.strictObject({ technique: z.string().regex(/^T\d{4}(\.\d{3})?$/), name: z.string() })).min(1),
 });
 
 export const severities = { critical: 4, high: 3, medium: 2, low: 1 } as const;
@@ -102,7 +144,7 @@ export const e8Strategies = [
 ] as const;
 export type E8Strategy = (typeof e8Strategies)[number];
 
-export const questionSchema = z.object({
+const questionSchema = z.strictObject({
   id: z.string().regex(/^[A-Z]{2,4}-[A-Z]{2,5}-\d{3}$/, "e.g. MS-ID-001"),
   module: id,
   domain: id,
@@ -115,12 +157,30 @@ export const questionSchema = z.object({
   effort: z.enum(["S", "M", "L"]),
   licence: z.array(id).default([]),
   sources: z.array(id).min(1),
-  refs: z.array(z.object({ framework: id, ref: z.string().min(1) })).default([]),
-  e8: z.array(z.object({ strategy: z.enum(e8Strategies), level: z.union([z.literal(1), z.literal(2), z.literal(3)]) })).default([]),
+  refs: z.array(z.strictObject({ framework: id, ref: z.string().min(1) })).default([]),
+  e8: z.array(z.strictObject({ strategy: z.enum(e8Strategies), level: z.union([z.literal(1), z.literal(2), z.literal(3)]) })).default([]),
+  /**
+   * ASD Essentials actions the question gives evidence for, and in which Essentials domains. `partial` means a Yes
+   * shows only part of the action; `full` needs a note saying why the question covers the whole action there.
+   */
+  essentials: z
+    .array(
+      z
+        .strictObject({
+          action: z.string().regex(new RegExp(`^(${Object.values(essentialsActionPrefix).join("|")})\\.[A-Z]{3}-\\d{2}\\.x?\\d+$`), "e.g. IT.PRO-13.4"),
+          domains: z.array(z.enum(essentialsDomains)).min(1),
+          coverage: z.enum(["full", "partial"]),
+          note: z.string().min(10).optional(),
+        })
+        .refine((t) => t.coverage === "partial" || !!t.note, { path: ["note"], message: "coverage: full needs a note" }),
+    )
+    .default([]),
+  /** Set when a reviewer decided no Essentials action fits, with the reason; silences the candidate warning. */
+  essentialsReviewed: z.string().min(10).optional(),
 });
 
 /** Maps an automated scanner's check ids to questions, so its results can pre-fill answers. */
-export const importMappingSchema = z.object({
+export const importMappingSchema = z.strictObject({
   id,
   name: z.string(),
   platform: id,
@@ -129,7 +189,7 @@ export const importMappingSchema = z.object({
   checkedAgainst: z.string().optional(),
   mappings: z
     .array(
-      z.object({
+      z.strictObject({
         question: z.string(),
         checks: z.array(z.string().min(1)).min(1),
         rationale: z.string().min(5),
@@ -147,10 +207,10 @@ export type ImportMapping = z.infer<typeof importMappingSchema>;
  * Optional SOC maturity module. Its structure (domains, aspects, level names, default targets) follows the SOC-CMM®
  * model; the content files carry their own CC BY-SA 4.0 licence (content/soc/NOTICE.md).
  */
-const socLevel = z.object({ level: z.number().int().min(0).max(5), name: z.string().min(3), description: z.string().min(10) });
+const socLevel = z.strictObject({ level: z.number().int().min(0).max(5), name: z.string().min(3), description: z.string().min(10) });
 
 export const socModelSchema = z
-  .object({
+  .strictObject({
     id,
     name: z.string(),
     shortName: z.string(),
@@ -164,12 +224,12 @@ export const socModelSchema = z
     /** Version of the SOC-CMM tool the structure was taken from. */
     basisVersion: z.string().regex(/^\d+\.\d+(\.\d+)?$/),
     attribution: z.string().min(40),
-    scales: z.object({ maturity: z.array(socLevel).length(6), capability: z.array(socLevel).length(4) }),
+    scales: z.strictObject({ maturity: z.array(socLevel).length(socScaleTop.maturity + 1), capability: z.array(socLevel).length(socScaleTop.capability + 1) }),
     /** Default targets: maturity for every domain, capability for the capability domains. */
-    targets: z.object({ maturity: z.number().min(1).max(5), capability: z.number().min(1).max(3) }),
+    targets: z.strictObject({ maturity: z.number().min(1).max(socScaleTop.maturity), capability: z.number().min(1).max(socScaleTop.capability) }),
     domains: z
       .array(
-        z.object({
+        z.strictObject({
           id,
           name: z.string(),
           description: z.string().min(10),
@@ -177,7 +237,7 @@ export const socModelSchema = z
           scopable: z.boolean().default(false),
           /** Aspects in this domain are also rated for capability (0-3). */
           capability: z.boolean().default(false),
-          aspects: z.array(z.object({ id, name: z.string() })).min(1),
+          aspects: z.array(z.strictObject({ id, name: z.string() })).min(1),
         }),
       )
       .length(5),
@@ -185,7 +245,7 @@ export const socModelSchema = z
   .refine((m) => [m.scales.maturity, m.scales.capability].every((scale) => scale.every((l, i) => l.level === i)), "levels must be listed in order from 0");
 
 export const socQuestionSchema = z
-  .object({
+  .strictObject({
     id: z.string().regex(/^SOC-(BUS|PPL|PRC|TEC|SVC)-\d{3}$/, "e.g. SOC-BUS-001"),
     aspect: id,
     /** Maturity questions are rated 0-5, capability questions 0-3. */
@@ -194,11 +254,11 @@ export const socQuestionSchema = z
     why: z.string().min(20),
     /** What each level looks like for this question, from level 0 up. */
     levels: z.array(z.string().min(8).max(260)),
-    refs: z.array(z.object({ framework: id, ref: z.string().min(1) })).default([]),
+    refs: z.array(z.strictObject({ framework: id, ref: z.string().min(1) })).default([]),
   })
-  .refine((q) => q.levels.length === (q.kind === "maturity" ? 6 : 4), {
+  .refine((q) => q.levels.length === socScaleTop[q.kind] + 1, {
     path: ["levels"],
-    message: "maturity questions need 6 levels (0-5), capability questions 4 (0-3)",
+    message: `maturity questions need ${socScaleTop.maturity + 1} levels (0-${socScaleTop.maturity}), capability questions ${socScaleTop.capability + 1} (0-${socScaleTop.capability})`,
   });
 
 export type SocModel = z.infer<typeof socModelSchema>;
@@ -207,7 +267,7 @@ export type SocQuestion = z.infer<typeof socQuestionSchema>;
 /** Optional AI use-case register: themes, presets and dates (content/ai-register/model.yaml). */
 const enumOf = <K extends string>(o: Record<K, unknown>) => z.enum(Object.keys(o) as [K, ...K[]]);
 
-export const aiRegisterModelSchema = z.object({
+export const aiRegisterModelSchema = z.strictObject({
   id,
   name: z.string(),
   sources: z.array(id).min(1),
@@ -215,21 +275,23 @@ export const aiRegisterModelSchema = z.object({
   /** Who the policy applies to, shown before anything else. */
   appliesTo: z.string().min(40),
   /** Dated or recurring requirements. `derived` marks a date worked out from the source's wording, not printed in it. */
-  dates: z.array(z.object({ date: date.optional(), derived: z.boolean().default(false), source: id, text: z.string().min(10) })).min(1),
+  dates: z.array(z.strictObject({ date: date.optional(), derived: z.boolean().default(false), source: id, text: z.string().min(10) })).min(1),
   /** Points the sources leave unclear, shown in the app and the report instead of being guessed. */
-  caveats: z.array(z.object({ sources: z.array(id).default([]), text: z.string().min(40) })).default([]),
-  themes: z.array(z.object({ id, name: z.string(), description: z.string().min(10) })).min(1),
+  caveats: z.array(z.strictObject({ sources: z.array(id).default([]), text: z.string().min(40) })).default([]),
+  themes: z.array(z.strictObject({ id, name: z.string(), description: z.string().min(10) })).min(1),
   kinds: z
     .array(
-      z.object({
+      z.strictObject({
         id,
         name: z.string(),
         description: z.string().min(10),
         product: z.string().default(""),
         /** A public generative AI service used outside the organisation's tenant. */
         publicTool: z.boolean().default(false),
+        /** A catch-all preset: its name describes the preset, not the use case, so a new entry starts unnamed. */
+        catchAll: z.boolean().default(false),
         defaults: z
-          .object({
+          .strictObject({
             technology: z.array(enumOf(aiTechnologies)).default([]),
             usagePatterns: z.array(enumOf(aiUsagePatterns)).default([]),
             domains: z.array(enumOf(aiDomains)).default([]),
@@ -247,7 +309,7 @@ export const aiRegisterModelSchema = z.object({
     .min(1),
 });
 
-export const aiQuestionSchema = z.object({
+export const aiQuestionSchema = z.strictObject({
   id: z.string().regex(/^AIR-[A-Z]{3}-\d{3}$/, "e.g. AIR-ACC-001"),
   theme: id,
   when: enumOf(aiConditions).default("all"),
@@ -258,7 +320,7 @@ export const aiQuestionSchema = z.object({
   yesLooksLike: z.string().min(10),
   remediation: z.string().min(20),
   sources: z.array(id).min(1),
-  refs: z.array(z.object({ framework: id, ref: z.string().min(1) })).default([]),
+  refs: z.array(z.strictObject({ framework: id, ref: z.string().min(1) })).default([]),
 });
 
 export type AiRegisterModel = z.infer<typeof aiRegisterModelSchema>;
@@ -276,7 +338,7 @@ export const aiAppCategories = {
 export type AiAppCategory = keyof typeof aiAppCategories;
 
 /** One well-known AI app, matched offline against the apps in an exported consent inventory. */
-export const knownAiAppSchema = z.object({
+const knownAiAppSchema = z.strictObject({
   id,
   name: z.string().min(2),
   publisher: z.string().min(2),
@@ -290,14 +352,14 @@ export const knownAiAppSchema = z.object({
 });
 export type KnownAiApp = z.infer<typeof knownAiAppSchema>;
 
-export const knownAiAppsFileSchema = z.object({
+export const knownAiAppsFileSchema = z.strictObject({
   /** Bump when the entry shape changes; adding entries doesn't move it. */
   version: z.literal(1),
   entries: z.array(knownAiAppSchema).min(1),
 });
 
 /** One OAuth scope in plain English, for reading consent imports (content/ai-register/oauth-scopes.yaml). */
-export const oauthScopeSchema = z.object({
+const oauthScopeSchema = z.strictObject({
   id,
   provider: z.enum(["microsoft", "google"]),
   /** The scope as the platform writes it. Full URLs are shortened to this before matching. */
@@ -312,7 +374,7 @@ export const oauthScopeSchema = z.object({
 });
 export type OAuthScope = z.infer<typeof oauthScopeSchema>;
 
-export const oauthScopesFileSchema = z.object({
+export const oauthScopesFileSchema = z.strictObject({
   version: z.literal(1),
   scopes: z.array(oauthScopeSchema).min(1),
 });
@@ -351,3 +413,17 @@ export interface Catalogue {
     scopes: OAuthScope[];
   };
 }
+
+/** Every question id an assessment's answers can name: all platforms' questions and the SOC questions. */
+export const answerableQuestionIds = (catalogue: Pick<Catalogue, "platforms" | "soc">): string[] => [
+  ...[...catalogue.platforms.values()].flatMap((b) => b.questions.map((q) => q.id)),
+  ...(catalogue.soc?.questions.map((q) => q.id) ?? []),
+];
+
+/** Framework ids the engine reads by name: the Essential Eight (strategy titles) and the ISM (baselines). */
+export const E8_FRAMEWORK = "essential-eight";
+export const ISM_FRAMEWORK = "ism";
+
+/** The Essentials chapter file for a chapter: the framework whose `essentials` block names it. */
+export const essentialsFramework = (catalogue: Pick<Catalogue, "frameworks">, chapter: EssentialsChapter) =>
+  [...catalogue.frameworks.values()].find((f) => f.essentials?.chapter === chapter);

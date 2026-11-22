@@ -1,46 +1,57 @@
-import type { ImportMapping } from "../content/schema";
-import type { ScanStatus } from "../engine/types";
-import { suggestAll, type CheckRow } from "./aggregate";
-import { clip, type ScanImporter, type ScanResult } from "./types";
+import { assertImportRows, assertImportText } from "./limits";
+import type { ScanStatus } from "../format/vocab";
+import { buildScanResult, type CheckRow } from "./aggregate";
+import type { ScanImporter } from "./types";
 
 /** One SCuBA policy's assessment result, read from `Results.<product>[].Controls[]`. */
-export interface ScubaControl {
+interface ScubaControl {
   /** Policy id, e.g. "GWS.GMAIL.7.3v1". */
   id: string;
-  /** What ScubaGoggles decided, as it wrote it. Normalised by `toStatus`. */
+  /** What ScubaGoggles decided, as it wrote it. */
   result: string;
   /** "Shall", "Should", "Shall/3rd Party", ... */
   criticality: string;
-  /** What the tool said about this tenant, with any HTML stripped out. */
+  /** What the tool said about this tenant, as HTML. */
   details: string;
 }
 
-/** The parts of a `ScubaResults*.json` file crownguard uses. Everything else is ignored. */
-export interface ScubaReport {
-  toolVersion?: string;
-  /** The Google Workspace domain the report covers. */
-  domain: string;
-  scannedAt: string;
-  controls: ScubaControl[];
+/**
+ * Remove tags in one pass. A tag runs to its `>`, so `<scr<script>ipt>` goes whole, and one never closed runs to the
+ * end of the text rather than surviving. Each `>` search starts past the last, so this is linear on any input, which
+ * a regex can't promise for a run of unclosed `<a`.
+ */
+function stripTags(s: string): string {
+  let out = "";
+  let i = 0;
+  for (let lt = s.indexOf("<"); lt >= 0; lt = s.indexOf("<", i)) {
+    out += s.slice(i, lt);
+    const next = s[lt + 1] === "/" ? s[lt + 2] : s[lt + 1];
+    if (!next || !/[a-z]/i.test(next)) {
+      out += "<";
+      i = lt + 1;
+      continue;
+    }
+    const gt = s.indexOf(">", lt);
+    if (gt < 0) return out;
+    i = gt + 1;
+  }
+  return out + s.slice(i);
 }
 
 /**
  * Strip the HTML ScubaGoggles writes into `Details` (line breaks, spans, annotation markup and
  * entities) down to plain text for the evidence field.
  */
-export function stripHtml(s: string): string {
-  const entities: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
-  return s
-    .replace(/<br\s*\/?>/gi, " ")
-    // Tags are stripped whole, and one left open at the end of the text runs to the end rather than surviving.
-    .replace(/<\/?[a-z][^>]*>/gi, "")
-    .replace(/<\/?[a-z][^>]*$/gi, "")
+function stripHtml(s: string): string {
+  const entities = new Map(Object.entries({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }));
+  return stripTags(s.replace(/<br\s*\/?>/gi, " "))
     .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === "#") {
         const code = e[1]?.toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-        return isNaN(code) ? m : String.fromCodePoint(code);
+        // Past U+10FFFF fromCodePoint throws, and a lone surrogate isn't text: either stays as written.
+        return isNaN(code) || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff) ? m : String.fromCodePoint(code);
       }
-      return entities[e.toLowerCase()] ?? m;
+      return entities.get(e.toLowerCase()) ?? m;
     })
     // Decoding entities can put an angle bracket back (`&lt;script&gt;`). Once that's happened the text is done being
     // unescaped, so any bracket that could open a tag comes out. `3 < 4` and similar are untouched: they don't start
@@ -55,7 +66,7 @@ export function stripHtml(s: string): string {
  * `Warning` is a failed SHOULD, so it fails but can only ever cap a question at Partial; everything
  * else (`N/A`, `Omitted`, `Incorrect Result`, `Error*`, `No events found`) needs the assessor.
  */
-export function toStatus(result: string): ScanStatus {
+function toStatus(result: string): ScanStatus {
   const r = result.trim().toLowerCase();
   if (r === "pass") return "pass";
   if (r === "fail") return "fail";
@@ -64,7 +75,7 @@ export function toStatus(result: string): ScanStatus {
 }
 
 /** Product names for the evidence text, from the product block of the policy id. */
-const products: Record<string, string> = {
+const products = new Map(Object.entries({
   ASSUREDCONTROLS: "Assured Controls",
   CALENDAR: "Calendar",
   CHAT: "Chat",
@@ -76,22 +87,23 @@ const products: Record<string, string> = {
   GROUPS: "Groups",
   MEET: "Meet",
   SITES: "Sites",
-};
+}));
 
 /** Policy ids carry a version suffix (`GWS.GMAIL.7.3v1`); questions match on the id without it. */
 const baseId = (id: string) => id.replace(/v[\d.]+$/, "");
-const versionOf = (id: string) => id.match(/v[\d.]+$/)?.[0] ?? "";
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 /**
- * Read a `ScubaResults*.json` file: which tool wrote it and when, which domain it covers, and every
- * policy result under `Results.<product>[].Controls[]`.
+ * Read a `ScubaResults*.json` file and map every policy result under `Results.<product>[].Controls[]` onto questions.
+ * Policies match the mapping on the id without its version suffix, so a run of an older ScubaGoggles still lands; a
+ * suffix that differs from the one crownguard checked against is flagged.
  *
  * Privacy: `Raw` is never read. It holds super admin and break-glass email addresses, organisational
  * unit names and audit log events that have no business being in a crownguard assessment.
  */
-export function parseScubagoggles(text: string): ScubaReport {
+const read: ScanImporter["read"] = (text, mapping) => {
+  assertImportText(text);
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -110,97 +122,43 @@ export function parseScubagoggles(text: string): ScubaReport {
     );
 
   const controls: ScubaControl[] = [];
+  let rawControls = 0;
   for (const groups of Object.values(doc.Results ?? {})) {
     if (!Array.isArray(groups)) continue;
     for (const group of groups) {
       const list = (group as { Controls?: unknown })?.Controls;
       if (!Array.isArray(list)) continue;
+      rawControls += list.length;
+      assertImportRows(rawControls, undefined, "ScubaGoggles scan");
       for (const c of list) {
         const row = c as Record<string, unknown>;
         const id = str(row["Control ID"]).trim();
-        if (!id) continue;
-        controls.push({
-          id,
-          result: str(row.Result),
-          criticality: str(row.Criticality).trim(),
-          details: stripHtml(str(row.Details)),
-        });
+        if (id) controls.push({ id, result: str(row.Result), criticality: str(row.Criticality).trim(), details: str(row.Details) });
       }
     }
   }
   if (!controls.length) throw new Error("this ScubaGoggles report has no policy results in it");
 
-  return {
+  const domain = str(doc.MetaData?.DomainName).trim() || "Google Workspace";
+  return buildScanResult(mapping, controls.map(toRow), {
     toolVersion: str(doc.MetaData?.ToolVersion).trim() || undefined,
-    domain: str(doc.MetaData?.DomainName).trim() || "Google Workspace",
+    tenant: domain,
+    domain,
     scannedAt: str(doc.MetaData?.TimestampZulu).trim() || new Date(0).toISOString(),
-    controls,
-  };
-}
+  }, baseId);
+};
 
-/** Turn one policy result into the evidence row crownguard stores against a question. */
 function toRow(c: ScubaControl): CheckRow {
   const status = toStatus(c.result);
-  const product = products[c.id.split(".")[1] ?? ""] ?? "SCuBA";
+  const product = products.get(c.id.split(".")[1] ?? "") ?? "SCuBA";
   return {
     id: c.id,
     status,
     setting: c.criticality ? `${c.id} (${product}, ${c.criticality.toLowerCase()})` : `${c.id} (${product})`,
-    current: clip(c.details, 2000),
+    // Details can name accounts too ("The following super admins are configured: ..."), not only Raw; the result
+    // builder redacts them.
+    current: stripHtml(c.details),
     expected: status === "review" ? "reviewed by the assessor" : "this control passes",
-  };
-}
-
-/**
- * Map a parsed report onto questions. Policies match the mapping on the id without its version
- * suffix, so a run of an older ScubaGoggles still lands; a suffix that differs from the one
- * crownguard checked against is flagged.
- */
-export function readScuba(report: ScubaReport, mapping: ImportMapping): ScanResult {
-  const byCheck = new Map<string, CheckRow[]>();
-  const versions = new Map<string, string>();
-  const firstSeen = new Map<string, string>();
-  const statuses = new Map<string, ScanStatus>();
-  for (const c of report.controls) {
-    const key = baseId(c.id);
-    versions.set(key, versionOf(c.id));
-    firstSeen.set(key, c.id);
-    statuses.set(key, toStatus(c.result));
-    byCheck.set(key, [...(byCheck.get(key) ?? []), toRow(c)]);
-  }
-
-  const mapped = new Set(mapping.mappings.flatMap((m) => m.checks.map(baseId)));
-  const unmappedIds = [...byCheck.keys()].filter((id) => !mapped.has(id));
-
-  const checked = new Set(mapping.mappings.flatMap((m) => m.checks));
-  const changed = [...checked].filter((c) => byCheck.has(baseId(c)) && versions.get(baseId(c)) !== versionOf(c));
-  const warnings: string[] = [];
-  if (changed.length)
-    warnings.push(
-      `This report carries different SCuBA policy versions than crownguard's mappings, which were checked against ${mapping.checkedAgainst ?? mapping.name}: ` +
-        `${changed.map((c) => `${firstSeen.get(baseId(c))} here against ${c} in crownguard`).join("; ")}. ` +
-        `The questions still line up on the policy numbers, but a policy whose meaning changed may not.`,
-    );
-
-  const checkRows = mapping.mappings.map((m) => ({ ...m, checks: m.checks.map(baseId) }));
-  return {
-    tool: mapping.name,
-    toolVersion: report.toolVersion,
-    tenant: report.domain,
-    domain: report.domain,
-    scannedAt: report.scannedAt,
-    suggestions: suggestAll({ ...mapping, mappings: checkRows }, byCheck, {
-      tool: mapping.name,
-      toolVersion: report.toolVersion,
-      tenant: report.domain,
-      scannedAt: report.scannedAt,
-    }),
-    unmapped: unmappedIds.length,
-    unmappedFailing: unmappedIds
-      .filter((id) => statuses.get(id) === "fail" || statuses.get(id) === "warning")
-      .map((id) => firstSeen.get(id) ?? id)
-      .sort(),
-    warnings: warnings.length ? warnings : undefined,
   };
 }
 
@@ -209,11 +167,15 @@ const looksLike = (text: string) => text.includes('"Results"') && /"Tool"\s*:\s*
 /** CISA's ScubaGoggles: `ScubaResults*.json` from a Google Workspace assessment. */
 export const scubagogglesImporter: ScanImporter = {
   id: "scubagoggles",
+  tool: "scubagoggles",
   platform: "google",
   label: "ScubaGoggles",
   hint: "ScubaResults*.json",
   url: "https://github.com/cisagov/ScubaGoggles",
   accept: ".json,application/json",
-  detect: looksLike,
-  read: (text, mapping) => readScuba(parseScubagoggles(text), mapping),
+  detect: (text) => {
+    assertImportText(text);
+    return looksLike(text);
+  },
+  read,
 };

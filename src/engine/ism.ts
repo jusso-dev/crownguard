@@ -1,20 +1,10 @@
-import type { Catalogue, Question } from "../content/schema";
-import type { Answer } from "./types";
+import { ISM_FRAMEWORK, type Catalogue, type Question } from "../content/schema";
+import { isGap } from "./risk";
+import { ismBaselines, type Answer, type IsmBaseline } from "../format/vocab";
 
-/**
- * The ISM baselines an assessor can annotate a report with, matching ASD's OSCAL baseline profiles. Each maps to the
- * ISM's own `applicability` code on every control in `content/frameworks/ism.yaml`. Annotation only: choosing a
- * baseline never changes a score, it marks which findings touch controls the baseline includes.
- */
-export const ismBaselines = {
-  NON_CLASSIFIED: { label: "NON_CLASSIFIED", applicability: "NC" },
-  OFFICIAL_SENSITIVE: { label: "OFFICIAL: Sensitive", applicability: "OS" },
-  PROTECTED: { label: "PROTECTED", applicability: "P" },
-} as const;
-export type IsmBaseline = keyof typeof ismBaselines;
 
 /** One open finding and the ISM controls in the chosen baseline it relates to. */
-export interface IsmFinding {
+interface IsmFinding {
   question: Question;
   /** Display ids, e.g. ISM-1504. */
   controls: string[];
@@ -31,8 +21,7 @@ export interface IsmBaselineSummary {
   controls: number;
 }
 
-/** Questions that appear in the findings section: anything not answered Yes or N/A. */
-const isFinding = (q: Question, answers: Record<string, Answer>) => !["yes", "na"].includes(answers[q.id] ?? "");
+const isFinding = (q: Question, answers: Record<string, Answer>) => isGap(answers[q.id]);
 
 /**
  * Which open findings touch the chosen ISM baseline. Reads only the `applicability` prop carried on each generated
@@ -45,7 +34,7 @@ export function ismBaselineReport(
   baseline: IsmBaseline,
 ): IsmBaselineSummary {
   const { label, applicability } = ismBaselines[baseline];
-  const ism = catalogue.frameworks.get("ism");
+  const ism = catalogue.frameworks.get(ISM_FRAMEWORK);
   const inBaseline = new Map(
     (ism?.controls ?? [])
       .filter((c) => c.applicability?.includes(applicability))
@@ -54,11 +43,11 @@ export function ismBaselineReport(
   const findings: IsmFinding[] = [];
   for (const q of questions) {
     if (!isFinding(q, answers)) continue;
-    const controls = q.refs.filter((r) => r.framework === "ism" && inBaseline.has(r.ref)).map((r) => r.ref);
+    const controls = q.refs.filter((r) => r.framework === ISM_FRAMEWORK && inBaseline.has(r.ref)).map((r) => r.ref);
     if (controls.length) findings.push({ question: q, controls });
   }
   const mapped = new Set(
-    questions.flatMap((q) => q.refs.filter((r) => r.framework === "ism" && inBaseline.has(r.ref)).map((r) => r.ref)),
+    questions.flatMap((q) => q.refs.filter((r) => r.framework === ISM_FRAMEWORK && inBaseline.has(r.ref)).map((r) => r.ref)),
   );
   return {
     baseline,

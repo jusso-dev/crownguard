@@ -26,6 +26,9 @@
     - { framework: nist-csf-2, ref: PR.PS-01 }
     - { framework: ms-zero-trust, ref: M365 swim lane 1 }
     - { framework: idcf, ref: "Sharing agreement" }
+  essentials:
+    - { action: IT.PRO-04.2, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-04.x2, domains: [BUS], coverage: partial }
 
 - id: MS-TMS-002
   module: core
@@ -52,6 +55,9 @@
     - { framework: mcsb, ref: DP-1 }
     - { framework: ms-zero-trust, ref: Data III }
     - { framework: idcf, ref: "DSL-3 Authorised person" }
+  essentials:
+    - { action: IT.PRO-12.3, domains: [CPS], coverage: partial }
+    - { action: CL.PRO-12.x3, domains: [CPS], coverage: partial }
 
 - id: MS-TMS-003
   module: core
@@ -78,3 +84,6 @@
     - { framework: mcsb, ref: AM-2 }
     - { framework: ms-zero-trust, ref: Applications II }
     - { framework: idcf, ref: "Rule 1" }
+  essentials:
+    - { action: IT.PRO-16.1, domains: [BUS], coverage: partial }
+    - { action: CL.PRO-16.x1, domains: [BUS], coverage: partial }

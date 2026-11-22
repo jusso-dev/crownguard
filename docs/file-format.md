@@ -3,14 +3,16 @@
 A saved assessment is one JSON object. It is written by **Save file** (or Ctrl/⌘ S) and read by **Open file**. Nothing
 is sent anywhere: the file is the whole of your data, and you choose where it lives.
 
-- Published JSON Schema: [`public/schema/crownguard-assessment.v3.json`](../public/schema/crownguard-assessment.v4.json),
-  generated from the same [Zod schema](../src/wizard/assessmentSchema.ts) the app validates with.
+- Published JSON Schema: [`public/schema/crownguard-assessment.v6.json`](../public/schema/crownguard-assessment.v6.json),
+  generated from the same [Zod schema](../src/format/schema.ts) the app validates with.
 - Every saved file carries a `$schema` key pointing at it, so editors and other tools can pick it up automatically.
-- Migrations live in [`src/wizard/migrations.ts`](../src/wizard/migrations.ts); one step per version, in order.
+- The [schema 5 document](../public/schema/crownguard-assessment.v5.json) remains published unchanged so existing
+  files' schema links keep working. Future format bumps retain previously published schemas.
+- Migrations live in [`src/format/migrations.ts`](../src/format/migrations.ts); one step per version, in order.
 
 ## Reading a file safely
 
-`parseAssessment` (`src/wizard/parseAssessment.ts`) is the only place that turns untrusted JSON into an assessment. The
+`parseAssessment` (`src/format/parse.ts`) is the only place that turns untrusted JSON into an assessment. The
 **Open file** flow, the progress saved in the browser and the headless CLI all go through it, so a file behaves the same
 however it arrives.
 
@@ -36,7 +38,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | Field | Type | Notes |
 | --- | --- | --- |
 | `$schema` | string | Written on save. Points at the published JSON Schema for this format. |
-| `schemaVersion` | integer | File format version. **4** is current. |
+| `schemaVersion` | integer | File format version. **6** is current. |
 | `mode` | string | `"ai-register"` for the standalone AI use-case register flow. Omitted, and meaning the full crown-jewel assessment, otherwise. |
 | `savedBy` | object | `{ app, appVersion, contentHash?, savedAt }`. Who wrote the file, and the digest of the questions they saved against. For support and debugging. |
 | `org` | object | Organisation profile: `name`, `abn?`, `sector`, `size`, `jurisdiction`, `regulations`. |
@@ -48,6 +50,7 @@ moved aside rather than deleted, and the app offers a copy to download.
 | `notes` | object | Question id to note. At most 4000 characters each. |
 | `orphans` | object | Answers and notes whose question is no longer asked. `{ answer?, note? }` per question id. |
 | `ismBaseline` | string | Optional ISM baseline shown in the report: `NON_CLASSIFIED`, `OFFICIAL_SENSITIVE` or `PROTECTED`. Annotates which findings touch controls in that baseline and adds a summary count; never changes a score. |
+| `essentials` | object | Optional ASD Essentials section in the report: `{ chapter: "enterprise-it" | "cloud" }`. Adds indicative per-domain effectiveness ratings beside the Essential Eight; never changes a score. |
 | `branding` | object | `logoDataUrl?`, `logoBackdrop?`, `primary`, `accent`, `marking`, `preparedBy`, `preparedFor`. |
 | `evidence` | object | Scan evidence per question id, from an optional automated import. Carries the scanner (`tool`, `toolVersion`), the `account` it covered, and per check a `count` ("3 of 41 resources failing") and up to ten `examples`. |
 | `imports` | object[] | One row per scan import: source, `toolVersion?`, tenant, scanned at, imported at, answers applied. |
@@ -60,8 +63,28 @@ Anything else in the file is allowed and is carried through unchanged.
 
 ## Changelog
 
-### 4 — current
+### 6 (current)
 
+- An evidence check id may now be up to 200 characters, where it was 80. Two check ids Prowler (AWS) reports are 83
+  characters: an earlier build wrote them into the file but then refused to reopen it. A schema 5 file holding a longer
+  id like that now opens. An importer shortens anything over 200 characters (ending it in `…`) and says so. Nothing to
+  migrate. The version moved because a schema 5 build refuses an id over 80. Older builds recognise schema 6 files
+  as newer and offer read-only access only when their contents still fit the older schema.
+
+### 5
+
+- AI register usage patterns: `strategic-support`, `workflow-automation` and `coding`, the three that version 2.1 of
+  the DTA's Policy for the responsible use of AI in government added to its classification system (Appendix D).
+  Nothing to migrate, as every schema 4 value is still valid. The version moved because an entry's `usagePatterns` is
+  a closed list: a schema 4 build would refuse a file that used a new pattern, so it now sees the file as newer and
+  opens it read-only instead.
+
+### 4
+
+
+- `essentials` records the optional ASD Essentials section and its chapter (`enterprise-it` or `cloud`). Optional and
+  presentational like `ismBaseline`, so no version move: a build that has never heard of it carries it through a
+  re-save untouched, and a file without it reports exactly as before.
 - `mode` records which flow the assessment runs in: `"ai-register"` for the standalone AI use-case register with its
   own step list and its own PDF, absent and meaning the full crown-jewel assessment otherwise. Optional and on the
   loose top-level object, so no version move: older builds open a register file in the full assessment and carry the
@@ -103,6 +126,6 @@ tell a file saved yesterday from one saved a year earlier.
 
 If you write `.crownguard.json` files yourself (the Hermes `crown-jewel-risk-assessor` profile does):
 
-1. Set `schemaVersion: 4` and fill in `savedBy`.
+1. Set `schemaVersion: 6` and fill in `savedBy`.
 2. Validate against the published JSON Schema before writing.
 3. Don't drop fields you don't recognise. crownguard keeps them, so keep them too.

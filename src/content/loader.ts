@@ -1,5 +1,6 @@
 import { parse } from "yaml";
 import { z } from "zod";
+import { essentialsActionPrefix } from "../format/vocab";
 import { aiRegisterSources } from "./aiRegisterSources";
 import {
   aiQuestionSchema,
@@ -21,16 +22,17 @@ import {
   type Catalogue,
   type Framework,
   type PlatformBundle,
+  type Question,
   type SocModel,
   type SocQuestion,
+  ISM_FRAMEWORK,
 } from "./schema";
 
-export { aiRegisterSources } from "./aiRegisterSources";
 
 /** Raw content files keyed by path relative to the repo root, e.g. `content/sources/microsoft.yaml`. */
 export type ContentFiles = Record<string, string>;
 
-export interface LoadResult {
+interface LoadResult {
   catalogue: Catalogue;
   errors: string[];
   /** Things worth a maintainer's attention that don't make the content unusable: withdrawn refs, E8 mapping gaps. */
@@ -93,9 +95,13 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     const platform = parseFile(`${prefix}platform.yaml`, platformText, platformSchema, errors);
     const assetTypes = parseFile(`${prefix}assets.yaml`, assetsText, assetFileSchema, errors);
     if (!platform || !assetTypes) continue;
+    // Questions are listed in id order on every path (wizard, CLI, report), whatever file they are written in.
     const questions = entries
       .filter(([p]) => p.startsWith(`${prefix}questions/`))
-      .flatMap(([p, t]) => parseFile(p, t, questionFileSchema, errors) ?? []);
+      .flatMap(([p, t]) => parseFile(p, t, questionFileSchema, errors) ?? [])
+      .sort((x, y) => x.id.localeCompare(y.id));
+    if (platform.id !== dir) errors.push(`${prefix}platform.yaml: id ${platform.id} does not match its directory ${dir}`);
+    if (catalogue.platforms.has(platform.id)) errors.push(`${prefix}platform.yaml: duplicate platform id ${platform.id}`);
     catalogue.platforms.set(platform.id, { platform, assetTypes, questions });
   }
 
@@ -103,6 +109,7 @@ export function loadCatalogue(files: ContentFiles): LoadResult {
     if (!path.startsWith("content/imports/")) continue;
     const m = parseFile(path, text, importMappingSchema, errors);
     if (!m) continue;
+    if (catalogue.imports.has(m.id)) errors.push(`${path}: duplicate import mapping id ${m.id}`);
     const bundle = catalogue.platforms.get(m.platform);
     if (!bundle) errors.push(`${path}: unknown platform ${m.platform}`);
     const seen = new Set<string>();
@@ -314,7 +321,65 @@ function crossCheck({ sources, frameworks, platforms, soc, aiRegister }: Catalog
         );
         if (!mapped) warnings.push(`${q.id}: e8 ${tag.strategy} ${level} maps to no ISM control in the E8 ${level} profile`);
       }
+  const essentials = [...frameworks.values()].filter((f) => f.essentials);
+  for (const f of essentials) errors.push(...checkEssentialsFramework(f, frameworks.get(ISM_FRAMEWORK)));
+  for (const { questions } of platforms.values()) for (const q of questions) checkEssentialsTags(q, essentials, errors, warnings);
   return { errors, warnings };
+}
+
+/** An Essentials chapter file: actions sit in known principles and domains, capability actions stay in GC or VR. */
+function checkEssentialsFramework(f: Framework, ism: Framework | undefined): string[] {
+  const errors: string[] = [];
+  const meta = f.essentials!;
+  const at = `framework ${f.id}`;
+  const domains = new Map(meta.domains.map((d) => [d.id, d]));
+  const principles = new Set(meta.principles.map((p) => p.id));
+  const prefix = essentialsActionPrefix[meta.chapter];
+  const pattern = meta.provisional ? new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.x\\d+$`) : new RegExp(`^${prefix}\\.[A-Z]{3}-\\d{2}\\.\\d+$`);
+  const ismIds = new Set([...(ism?.controls.map((c) => c.id) ?? []), ...(ism?.withdrawn ?? [])]);
+  for (const p of principles) if (!f.controls.some((c) => c.principle === p)) errors.push(`${at}: principle ${p} has no actions`);
+  for (const c of f.controls) {
+    const where = `${at}: ${c.id}`;
+    if (!pattern.test(c.id)) errors.push(`${where}: id should match ${pattern.source}`);
+    if (!c.principle || !principles.has(c.principle)) errors.push(`${where}: unknown principle ${c.principle}`);
+    else if (!c.id.startsWith(`${prefix}.${c.principle}.`)) errors.push(`${where}: id doesn't match its principle ${c.principle}`);
+    if (!c.domains?.length) errors.push(`${where}: applies to no domain`);
+    const types = new Set<string>();
+    for (const d of c.domains ?? []) {
+      const domain = domains.get(d);
+      if (!domain) errors.push(`${where}: unknown domain ${d}`);
+      else types.add(domain.type);
+    }
+    if (types.size > 1) errors.push(`${where}: mixes capability and technical domains`);
+    if (ism) for (const id of [...(c.evidence?.ism ?? []), ...(c.evidence?.e8 ?? [])]) if (!ismIds.has(id)) errors.push(`${where}: evidence ${id} is not in the ISM`);
+  }
+  return errors;
+}
+
+/**
+ * A question's `essentials:` tags name real actions and only domains those actions apply to. When the question's ISM
+ * refs are evidence ASD lists for an action the question isn't tagged with, and no reviewer has recorded why, warn:
+ * ASD says to check controls "rather than assume they are equivalent", so the overlap is a prompt, not a mapping.
+ */
+function checkEssentialsTags(q: Question, chapters: Framework[], errors: string[], warnings: string[]): void {
+  const actions = new Map(chapters.flatMap((f) => f.controls.map((c) => [c.id, c] as const)));
+  const seen = new Set<string>();
+  for (const t of q.essentials) {
+    const where = `${q.id}: essentials ${t.action}`;
+    if (seen.has(t.action)) errors.push(`${where}: tagged twice`);
+    seen.add(t.action);
+    const a = actions.get(t.action);
+    if (!a) {
+      errors.push(`${where}: unknown action`);
+      continue;
+    }
+    for (const d of t.domains) if (!a.domains?.includes(d)) errors.push(`${where}: action doesn't apply to domain ${d}`);
+  }
+  if (q.essentialsReviewed) return;
+  const ismRefs = new Set(q.refs.filter((r) => r.framework === ISM_FRAMEWORK).map((r) => r.ref));
+  const it = chapters.find((f) => f.essentials?.chapter === "enterprise-it");
+  const suggested = (it?.controls ?? []).filter((c) => !seen.has(c.id) && [...(c.evidence?.ism ?? []), ...(c.evidence?.e8 ?? [])].some((id) => ismRefs.has(id)));
+  if (suggested.length) warnings.push(`${q.id}: ISM refs suggest Essentials ${suggested.map((c) => c.id).join(", ")}; tag them or record essentialsReviewed`);
 }
 
 function checkPlatform(
@@ -392,7 +457,7 @@ export function contentDigest(catalogue: Catalogue): string {
   for (const [id, b] of [...catalogue.platforms].sort(([a], [b]) => a.localeCompare(b))) {
     parts.push(`platform:${id}`);
     for (const a of b.assetTypes) parts.push(`asset:${a.id}`);
-    for (const q of b.questions.sort((x, y) => x.id.localeCompare(y.id))) {
+    for (const q of b.questions.slice().sort((x, y) => x.id.localeCompare(y.id))) {
       parts.push(`question:${q.id}:${q.licence.join(",")}:${q.sources.join(",")}`);
     }
   }

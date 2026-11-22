@@ -12,11 +12,11 @@ pnpm cg --help
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Invalid input (bad args, unreadable or invalid assessment/scan) |
+| 1 | Invalid input (bad args or unknown options, unreadable or invalid assessment/scan, a file that would be overwritten) |
 | 2 | Content error (catalogue YAML failed to load) |
 | 3 | Unexpected failure |
 
-Machine-readable JSON goes to **stdout**. Human messages go to **stderr**.
+Machine-readable JSON goes to **stdout**. Human messages go to **stderr**. Assessment and scan files may start with a UTF-8 byte order mark (as PowerShell writes them); it is ignored.
 
 ## Commands
 
@@ -33,9 +33,15 @@ pnpm cg catalogue   # JSON on stdout
 pnpm cg new --org "Riverbend Health" --platforms microsoft,aws --out riverbend.crownguard.json
 ```
 
+Refuses to replace an existing file (the default `--out` is `assessment.crownguard.json`); pass `--force` to overwrite it.
+
 ### Import a scan
 
-Uses the importer registry (M365-Secure, Prowler AWS/Azure, ScubaGoggles). Writes the assessment back in place.
+Uses the importer registry (M365-Secure, Prowler AWS/Azure, ScubaGoggles). Writes the assessment back in place. A file saved by a newer crownguard (a higher `schemaVersion`) is refused with exit 1 rather than rewritten as this build's schema, which would drop what the newer build added.
+
+Scan input must be a regular file (a symlink to one is allowed). Limits are inclusive: **8 MB (8,000,000 source bytes and UTF-8 bytes of decoded text)** and **50,000 raw input records**, with **5,000 findings for M365-Secure**. CSV counts nonblank logical data rows, excluding the header; quoted newlines stay in one row. JSON counts Prowler findings or ScubaGoggles controls, including duplicate, unmapped and blank-ID records. Either excess rejects the whole import with exit 1 and no success JSON; the assessment stays unchanged, including with `--overwrite --licence`. BOM bytes count towards the source limit before removal.
+
+Use a smaller scoped scanner export or a compact equivalent export if refused. The byte cap can be reached well before the record cap, especially with OCSF or Scuba `Raw` data. Importing manually split files does not recombine checks across those files and can change assessment meaning. These bounds do not guarantee a particular processing time. The browser applies the same scan limits before reading files. Consent imports use 8 MB across the entire selected set of Graph files, with 50,000 combined grants/service principals, or 50,000 raw Google CSV rows.
 
 ```sh
 pnpm cg import riverbend.crownguard.json ./scan.json --tool auto --licence
@@ -50,6 +56,11 @@ pnpm cg score riverbend.crownguard.json --format text
 ```
 
 JSON includes posture, risks, domains, Essential Eight blockers, roadmap, and SOC / IDCF / AI register summaries when present.
+When the assessment has `essentials: { chapter }` set, it also has an `essentials` object: per domain the phases,
+`percentage` (null when nothing was assessed), `counts` for each rating including `not-assessed`, and each
+principle's rating and actions, plus `gaps` with ASD's transition `gapAnalysisFinding` per principle. The text
+format adds a line such as `Essentials (enterprise-it, indicative): BS=50% (FE 0, PE 2, NE 0, NA 1), ...`. All of
+it is indicative and none of it is calculated from Essential Eight levels.
 
 ### Render PDF
 
@@ -82,9 +93,9 @@ Lists every Zod issue and path; exits 1 on failure.
 pnpm cg validate riverbend.crownguard.json
 ```
 
-## Library surface
+## Using it from other tools
 
-Stable Node imports live in `src/lib/index.ts` (`loadCatalogueFromDisk`, `parseAssessment`, `applyScan`, `buildReport`, `renderReportToFile`, `registerTable`, …). Prefer that entry over reaching into other `src/` modules.
+The CLI is the stable interface: its commands, JSON output and exit codes are what other tools should depend on. The modules behind it are internal. The file format lives in `src/format/`, scan import in `src/imports/`, scoring in `src/engine/` and PDF rendering in `src/report/`.
 
 ## Replacing the Hermes helper
 

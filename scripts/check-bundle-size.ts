@@ -1,13 +1,15 @@
 /**
- * After `pnpm build`, check gzip sizes and that the entry chunk has no yaml / raw YAML questions.
+ * After `pnpm build`, check gzip sizes and that the entry chunk has neither the yaml library nor question text.
  * Thresholds = recorded baseline + 10%. Fail the process on breach.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { loadCatalogue } from "../src/content/loader";
+import { repoPath } from "./lib/repo";
+import { readContentFiles } from "../src/content/disk";
 
-const root = join(import.meta.dirname, "..");
-const assets = join(root, "dist", "assets");
+const assets = repoPath("dist", "assets");
 
 /** Baselines recorded after the #13 split (bytes, gzip level 9). Update when intentionally growing. */
 const BASELINE = {
@@ -72,14 +74,11 @@ const yamlLibHints = [/parseDocument\s*\(/, /YAMLError/, /yaml\.parse/, /"yaml"/
 for (const re of yamlLibHints) {
   if (re.test(entry.text)) failures.push(`entry chunk matches yaml-library pattern ${re}`);
 }
-// Distinctive question stems from platform YAML that should only live in lazy chunks.
-const rawYamlHints = [
-  "Does your organisation use Conditional Access",
-  "Have you configured Google Workspace",
-  "Is AWS Organizations",
-];
-for (const hint of rawYamlHints) {
-  if (entry.text.includes(hint)) failures.push(`entry chunk contains raw YAML question text: ${JSON.stringify(hint)}`);
+// Question text belongs in the lazy platform chunks: one question from each platform must not be in the entry.
+const { catalogue } = loadCatalogue(readContentFiles());
+for (const { platform, questions } of catalogue.platforms.values()) {
+  const stem = questions[0]?.question.slice(0, 60);
+  if (stem && entry.text.includes(stem)) failures.push(`entry chunk contains ${platform.id} question text: ${JSON.stringify(stem)}`);
 }
 
 if (failures.length) {

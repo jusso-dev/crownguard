@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import Ajv2020 from "ajv/dist/2020.js";
 
 const next = (page: Page) => page.getByRole("button", { name: /^Next:/ }).click();
@@ -125,7 +124,7 @@ test("an older saved file can be reopened to add a logo and ABN, then regenerate
   expect(pages.join("\n")).toContain("About this report");
 });
 
-test("the file it writes matches the published JSON Schema", async ({ page }) => {
+test("the file it writes matches the published JSON Schema", async ({ page, request }) => {
   await page.addInitScript(() => {
     const w = window as unknown as { __writes: string[]; showSaveFilePicker: unknown };
     w.__writes = [];
@@ -139,15 +138,31 @@ test("the file it writes matches the published JSON Schema", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => (window as unknown as { __writes: string[] }).__writes.length)).toBe(1);
 
   const saved = JSON.parse(await page.evaluate(() => (window as unknown as { __writes: string[] }).__writes[0]));
-  // The published schema is versioned; find it rather than pinning the name, so bumping the format can't break this.
-  const published = (await readdir(join("public", "schema"))).filter((f) => /^crownguard-assessment\.v\d+\.json$/.test(f));
-  expect(published).toHaveLength(1);
-  const schema = JSON.parse(await readFile(join("public", "schema", published[0]), "utf8"));
+  // Fetch the saved file's version from the production build; historical schemas remain published too.
+  const published = `crownguard-assessment.v${saved.schemaVersion}.json`;
+  const response = await request.get(`./schema/${published}`);
+  expect(response.ok()).toBe(true);
+  expect(response.headers()["content-type"]).toContain("application/json");
+  const schema = await response.json();
   const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
   expect(validate(saved), JSON.stringify(validate.errors, null, 2)).toBe(true);
 
-  expect(saved.$schema).toContain(published[0]);
-  expect(saved.schemaVersion).toBe(Number(/v(\d+)\.json$/.exec(published[0])![1]));
+  expect(saved.$schema).toBe(schema.$id);
+  expect(saved.schemaVersion).toBe(schema.properties.schemaVersion.default);
   expect(saved.savedBy.app).toBe("crownguard");
   expect(saved.savedBy.contentHash).toMatch(/^[0-9a-f]{16}$/);
+});
+
+test("the schema 5 URL still serves the unchanged historical schema", async ({ request }) => {
+  const response = await request.get("./schema/crownguard-assessment.v5.json");
+  expect(response.ok()).toBe(true);
+  expect(response.headers()["content-type"]).toContain("application/json");
+  const text = await response.text();
+  expect(text).toBe(await readFile("public/schema/crownguard-assessment.v5.json", "utf8"));
+  const schema = JSON.parse(text);
+  const saved = JSON.parse(await readFile("e2e/fixtures/schema5.crownguard.json", "utf8"));
+  expect(schema.$id).toBe(saved.$schema);
+  expect(schema.properties.schemaVersion.default).toBe(5);
+  const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
+  expect(validate(saved), JSON.stringify(validate.errors, null, 2)).toBe(true);
 });

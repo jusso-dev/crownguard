@@ -7,6 +7,8 @@ import "@fontsource/jetbrains-mono/latin-400.css";
 import "@fontsource/jetbrains-mono/latin-500.css";
 import "./index.css";
 import { App } from "./App";
+import { isDesktop, platformReady } from "./platform";
+import { useStore } from "./wizard/store";
 
 /**
  * React sets some DOM properties via innerHTML (style/script hoistables). With
@@ -29,8 +31,26 @@ if (tt && !tt.defaultPolicy) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const render = () =>
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+
+if (isDesktop) {
+  // Desktop: load progress from SQLite before the first render (see src/platform/).
+  platformReady
+    .then(() => useStore.persist.rehydrate())
+    .then(render, (e: unknown) => {
+      // No React yet: say what went wrong in plain text rather than leave an empty window.
+      console.error("crownguard: desktop start-up failed", e);
+      const p = document.createElement("p");
+      p.setAttribute("role", "alert");
+      p.style.cssText = "max-width:40rem;margin:4rem auto;padding:0 1rem;font:16px/1.5 system-ui,sans-serif";
+      p.textContent = `crownguard couldn't start: ${e instanceof Error ? e.message : String(e)}`;
+      document.getElementById("root")!.replaceChildren(p);
+    });
+} else {
+  render();
+}

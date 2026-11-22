@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { assertImportBytes } from "../imports/limits";
+import { useEffect, useRef, useState } from "react";
 import { catalogue } from "../content/catalogue";
 import { activeQuestions } from "../engine/risk";
-import { answerLabels, type Assessment, type ScanStatus } from "../engine/types";
-import { detectImporter, importers, type ScanImporter, type ScanResult } from "../imports";
+import { answerLabels, type ScanStatus } from "../format/vocab";
+import { detectImporter, importers, readScan, unusable, type ScanImporter, type ScanResult } from "../imports";
 import { useStore } from "./store";
 import { relativeTime } from "./time";
 import { Button } from "./ui";
@@ -20,21 +21,13 @@ export const statusStyle: Record<ScanStatus, string> = {
 export const stamp = (iso: string) =>
   new Date(iso).toLocaleString("en-AU", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** Why an importer can't be used with this assessment, in the assessor's words. Undefined when it can be. */
-function unusable(importer: ScanImporter, assessment: Assessment): string | undefined {
-  const platform = catalogue.platforms.get(importer.platform)?.platform;
-  const name = platform?.name ?? importer.platform;
-  if (!assessment.platforms.includes(importer.platform)) return `${name} isn't in scope for this assessment`;
-  if (importer.requiresModule && !Object.values(assessment.modules).some((m) => m.includes(importer.requiresModule!)))
-    return `${platform?.modules.find((m) => m.id === importer.requiresModule)?.name ?? importer.requiresModule} isn't turned on for ${name}`;
-  return undefined;
-}
-
 /** Optional: pre-fill answers from an automated scan (M365-Secure, Prowler). The file is read in your browser only. */
 export function ScanImport() {
   const assessment = useStore((s) => s.assessment);
   const applyScan = useStore((s) => s.applyScan);
   const input = useRef<HTMLInputElement>(null);
+  const generation = useRef(0);
+  useEffect(() => () => { generation.current++; }, []);
   const [preview, setPreview] = useState<ScanResult>();
   const [previewer, setPreviewer] = useState<ScanImporter>();
   const [error, setError] = useState<string>();
@@ -42,47 +35,49 @@ export function ScanImport() {
   const [setLicence, setSetLicence] = useState(true);
   const [done, setDone] = useState<string>();
 
-  const usable = importers.filter((i) => catalogue.imports.has(i.id) && !unusable(i, assessment));
+  const usable = importers.filter((i) => !unusable(catalogue, i, assessment));
   if (!usable.length) return null;
 
   const last = assessment.imports?.at(-1);
 
   async function onFile(file: File) {
+    const request = ++generation.current;
+    const started = useStore.getState().assessment;
+    setPreviewer(undefined);
     setError(undefined);
     setDone(undefined);
     setPreview(undefined);
     try {
+      assertImportBytes(file.size);
       const text = await file.text();
+      if (request !== generation.current) return;
+      if (started !== useStore.getState().assessment) throw new Error("the assessment changed while reading. Choose the scan again");
       const found = detectImporter(text);
       if (!found) {
         // Nothing recognises it. Let a scanner say why, so the message names the file that was expected.
-        for (const i of usable) {
-          const mapping = catalogue.imports.get(i.id);
-          if (!mapping) continue;
-          try {
-            i.read(text, mapping);
-          } catch (e) {
-            throw new Error((e as Error).message, { cause: e });
-          }
-        }
+        for (const i of usable) i.read(text, catalogue.imports.get(i.id)!);
         throw new Error("this file isn't output from a scanner crownguard can read");
       }
-      const mapping = catalogue.imports.get(found.id);
-      const reason = unusable(found, assessment);
-      if (!mapping || reason) throw new Error(`This is a ${found.label} scan. ${reason ?? "crownguard has no mapping for it"}, so nothing was applied`);
-      const result = found.read(text, mapping);
-      if (!result.suggestions.length) throw new Error("none of the checks in this scan match a question");
+      const result = readScan(catalogue, found, text, assessment);
       setPreview(result);
       setPreviewer(found);
       setOverwrite(false);
       setSetLicence(!!result.licence && result.licence !== assessment.licence[found.platform]);
     } catch (e) {
+      if (request !== generation.current) return;
       setError(`Couldn't import that scan: ${(e as Error).message}.`);
     }
   }
 
   function apply() {
     if (!preview || !previewer) return;
+    const reason = unusable(catalogue, previewer, useStore.getState().assessment);
+    if (reason) {
+      setError(`Couldn't apply that scan: ${reason}. Choose the scan again.`);
+      setPreview(undefined);
+      setPreviewer(undefined);
+      return;
+    }
     const n = applyScan(preview, { platform: previewer.platform, overwrite, licence: setLicence });
     setDone(`Imported ${n} answer${n === 1 ? "" : "s"} from the scan of ${preview.tenant}. Each one shows its evidence; check and adjust as needed.`);
     setPreview(undefined);
@@ -104,7 +99,8 @@ export function ScanImport() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">Already run a scan? Pre-fill answers from it.</p>
           <p className="mt-0.5 text-xs text-muted">
-            Optional. Each file is read in your browser only.{" "}
+            Optional. Each file is read in your browser only. Up to 8 MB (8,000,000 bytes) and 50,000 input records,
+            or 5,000 M365-Secure findings. Larger exports are refused in full; choose a smaller scoped export.{" "}
             {usable.map((i, n) => (
               <span key={i.id}>
                 {n > 0 && " "}

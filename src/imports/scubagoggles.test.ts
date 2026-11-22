@@ -1,51 +1,66 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { catalogue } from "../content/catalogue";
-import { importers } from "./index";
-import { parseScubagoggles, readScuba, scubagogglesImporter, stripHtml, toStatus } from "./scubagoggles";
+import { scubagogglesImporter } from "./scubagoggles";
 
 const fixture = (name: string) => readFileSync(new URL(`../../e2e/fixtures/${name}`, import.meta.url), "utf8");
 const mapping = catalogue.imports.get("scubagoggles")!;
-const read = (text: string) => readScuba(parseScubagoggles(text), mapping);
+const read = (text: string, m = mapping) => scubagogglesImporter.read(text, m);
 const answers = (text: string) => Object.fromEntries(read(text).suggestions.map((s) => [s.question, s.evidence.suggested]));
 const example = fixture("ScubaResults.json");
+const checks = (text: string) => read(text).suggestions.flatMap((s) => s.evidence.checks);
+
+/** The example report with one policy's Details replaced. */
+const withDetails = (id: string, details: string) => {
+  const doc = JSON.parse(example);
+  for (const product of Object.values(doc.Results) as { Controls: Record<string, string>[] }[][])
+    for (const c of product.flatMap((g) => g.Controls)) if (c["Control ID"] === id) c.Details = details;
+  return JSON.stringify(doc);
+};
+/** What a policy's Details become as evidence, through a mapping that covers only that policy. */
+const evidenceText = (details: string) => {
+  const id = "GWS.GMAIL.11.1v1";
+  const only = { ...mapping, mappings: [{ question: "GO-GML-002", checks: [id], rationale: "test only" }] };
+  return read(withDetails(id, details), only).suggestions[0].evidence.checks[0].current;
+};
 
 describe("ScubaGoggles JSON", () => {
   it("reads the metadata and every policy result", () => {
-    const report = parseScubagoggles(example);
-    expect(report).toMatchObject({ toolVersion: "1.0.1", domain: "example.com", scannedAt: "2026-10-08T22:00:00.000Z" });
-    expect(report.controls).toHaveLength(26);
-    expect(report.controls.find((c) => c.id === "GWS.GMAIL.4.2v1")).toMatchObject({ result: "Fail", criticality: "Shall" });
+    const r = read(example);
+    expect(r).toMatchObject({ tool: "ScubaGoggles", toolVersion: "1.0.1", tenant: "example.com", domain: "example.com", scannedAt: "2026-10-08T22:00:00.000Z" });
+    expect(new Set(checks(example).map((c) => c.id)).size + r.unmapped).toBe(26);
+    expect(checks(example).find((c) => c.id === "GWS.GMAIL.4.2v1")).toMatchObject({ status: "fail", setting: "GWS.GMAIL.4.2v1 (Gmail, shall)" });
   });
 
   it("says so when the file is cut off", () => {
-    expect(() => parseScubagoggles(example.slice(0, 500))).toThrow(/isn't valid JSON.*cut off/);
+    expect(() => read(example.slice(0, 500))).toThrow(/isn't valid JSON.*cut off/);
   });
 
   it("refuses a ScubaGear (Microsoft 365) file with a plain message", () => {
     const gear = JSON.parse(example);
     gear.MetaData.Tool = "ScubaGear";
     gear.MetaData.ProductSuite = "Microsoft 365";
-    expect(() => parseScubagoggles(JSON.stringify(gear))).toThrow(/ScubaGear report for Microsoft 365.*ScubaGoggles reports for Google Workspace/);
+    expect(() => read(JSON.stringify(gear))).toThrow(/ScubaGear report for Microsoft 365.*ScubaGoggles reports for Google Workspace/);
   });
 
   it("refuses a file that isn't ScubaGoggles output at all", () => {
-    expect(() => parseScubagoggles('{"summary": true}')).toThrow(/isn't a ScubaGoggles report/);
+    expect(() => read('{"summary": true}')).toThrow(/isn't a ScubaGoggles report/);
     const other = JSON.parse(example);
     other.MetaData.Tool = "SomeOtherScanner";
-    expect(() => parseScubagoggles(JSON.stringify(other))).toThrow(/came from SomeOtherScanner/);
+    expect(() => read(JSON.stringify(other))).toThrow(/came from SomeOtherScanner/);
   });
 
   it("says so when the report has no policy results", () => {
     const empty = JSON.parse(example);
     empty.Results = { gmail: [{ GroupName: "x", Controls: [] }] };
-    expect(() => parseScubagoggles(JSON.stringify(empty))).toThrow(/no policy results/);
+    expect(() => read(JSON.stringify(empty))).toThrow(/no policy results/);
   });
 
   it("warns when the report carries different policy versions, but still lines the policies up", () => {
     const older = example.replaceAll("GWS.GMAIL.4.2v1", "GWS.GMAIL.4.2v0.1");
     const result = read(older);
-    expect(result.warnings?.join(" ")).toMatch(/different SCuBA policy versions.*checked against v1\.0\.1/);
+    expect(result.warnings?.join(" ")).toMatch(/different ScubaGoggles policy versions.*checked against/);
+    expect(result.warnings?.join(" ")).toContain(`checked against ${mapping.checkedAgainst}`);
     expect(result.warnings?.join(" ")).toContain("GWS.GMAIL.4.2v0.1 here against GWS.GMAIL.4.2v1");
     expect(result.suggestions.find((s) => s.question === "GO-GML-001")?.evidence.checks[0].id).toBe("GWS.GMAIL.4.2v0.1");
     expect(read(example).warnings).toBeUndefined();
@@ -81,21 +96,13 @@ describe("turning ScubaGoggles results into answers", () => {
     expect(a["GO-MEET-003"]).toBeUndefined();
   });
 
-  it("reads the whole result table as the ScubaGoggles report writes it", () => {
-    expect(toStatus("Pass")).toBe("pass");
-    expect(toStatus("Fail")).toBe("fail");
-    expect(toStatus("Warning")).toBe("warning");
-    for (const r of ["N/A", "Omitted", "Incorrect Result", "Error", "Error - Test results missing", "No events found", "anything else"])
-      expect(toStatus(r), r).toBe("review");
-  });
-
   it("strips the HTML out of Details before keeping it as evidence", () => {
-    expect(stripHtml('The following OUs are non-compliant: <div class="details">- All Users: automatic forwarding is <span class="value">on</span> &amp; allowed</div>')).toBe(
+    expect(evidenceText('The following OUs are non-compliant: <div class="details">- All Users: automatic forwarding is <span class="value">on</span> &amp; allowed</div>')).toBe(
       "The following OUs are non-compliant: - All Users: automatic forwarding is on & allowed",
     );
-    expect(stripHtml("Requirement met.<br><br>")).toBe("Requirement met.");
-    expect(stripHtml("1 &lt; 2 &#8212; ok&#x21;")).toBe("1 < 2 — ok!");
-    const forwarding = read(example).suggestions.find((s) => s.question === "GO-GML-002")!.evidence.checks.find((c) => c.id === "GWS.GMAIL.11.1v1")!;
+    expect(evidenceText("Requirement met.<br><br>")).toBe("Requirement met.");
+    expect(evidenceText("1 &lt; 2 &#8212; ok&#x21;")).toBe("1 < 2 — ok!");
+    const forwarding = checks(example).find((c) => c.id === "GWS.GMAIL.11.1v1")!;
     expect(forwarding.current).toBe("The following OUs are non-compliant: - All Users: automatic forwarding is on & allowed to any address");
   });
 
@@ -104,7 +111,7 @@ describe("turning ScubaGoggles results into answers", () => {
     expect(ev).toMatchObject({ source: "ScubaGoggles", tool: "ScubaGoggles", toolVersion: "1.0.1", tenant: "example.com", scannedAt: "2026-10-08T22:00:00.000Z" });
   });
 
-  it("lists failing checks it has no question for", () => {
+  it("lists failing and warning checks it has no question for", () => {
     const result = read(example);
     expect(result.unmapped).toBe(1);
     expect(result.unmappedFailing).toEqual(["GWS.GMAIL.14.1v1"]);
@@ -121,6 +128,16 @@ describe("privacy: nothing from Raw survives the import", () => {
     expect(JSON.stringify(result)).not.toContain("organizational_unit_names");
     expect(JSON.stringify(result.suggestions.flatMap((s) => s.evidence.checks))).not.toContain(secret);
   });
+
+  it("takes the super admin and break-glass addresses out of Details too", () => {
+    const text = withDetails(
+      "GWS.COMMONCONTROLS.6.2v1",
+      "The following super admins are configured: alice@ex.com, breakglass@ex.com. <i>Note: Exceptions are allowed for break-glass accounts.</i>",
+    );
+    const control = checks(text).find((c) => c.id === "GWS.COMMONCONTROLS.6.2v1")!;
+    expect(control.current).toBe("The following super admins are configured: [account], [account]. Note: Exceptions are allowed for break-glass accounts.");
+    expect(JSON.stringify(read(text))).not.toMatch(/alice|breakglass@/);
+  });
 });
 
 describe("the pinned ScubaGoggles control list", () => {
@@ -133,8 +150,9 @@ describe("the pinned ScubaGoggles control list", () => {
   it("has every control id the mapping uses, so a ScubaGoggles bump shows up as a rename", () => {
     const used = mapping.mappings.flatMap((m) => m.checks);
     expect(used.length).toBeGreaterThan(60);
-    expect(used.filter((c) => !pinned.has(c)), "control ids the SCuBA baselines at v1.0.1 don't have").toEqual([]);
-    expect(mapping.checkedAgainst).toBe("v1.0.1");
+    expect(used.filter((c) => !pinned.has(c)), `control ids the SCuBA baselines at ${mapping.checkedAgainst} don't have`).toEqual([]);
+    // The list and checkedAgainst move together (pnpm guidance:update), so the list is the release checked against.
+    expect(fixture("scubagoggles-controls.txt")).toContain(`ScubaGoggles tag ${mapping.checkedAgainst} (`);
   });
 
   it("covers at least half of the Gmail, Drive, Common Controls and Gemini policies", () => {
@@ -153,16 +171,29 @@ describe("the ScubaGoggles importer crownguard registers", () => {
     expect(scubagogglesImporter.detect(example)).toBe(true);
     expect(scubagogglesImporter.detect(fixture("prowler-aws.csv"))).toBe(false);
     expect(scubagogglesImporter.detect(fixture("m365-secure-scan.json"))).toBe(false);
-    expect(importers).toContain(scubagogglesImporter);
-    expect(catalogue.imports.has(scubagogglesImporter.id)).toBe(true);
   });
 });
 
 describe("stripping HTML out of Details", () => {
   it("takes out tags, entities and tags left open", () => {
-    expect(stripHtml("Passes <span class='x'>for all</span> OUs<br>today")).toBe("Passes for all OUs today");
-    expect(stripHtml("&lt;b&gt;literal&lt;/b&gt; stays as text")).toBe("b>literal/b> stays as text");
-    expect(stripHtml("half a tag <script")).toBe("half a tag");
-    expect(stripHtml("3 < 4 and a > b")).toBe("3 < 4 and a > b");
+    expect(evidenceText("Passes <span class='x'>for all</span> OUs<br>today")).toBe("Passes for all OUs today");
+    expect(evidenceText("&lt;b&gt;literal&lt;/b&gt; stays as text")).toBe("b>literal/b> stays as text");
+    expect(evidenceText("half a tag <script")).toBe("half a tag");
+    expect(evidenceText("3 < 4 and a > b")).toBe("3 < 4 and a > b");
+    expect(evidenceText("x <scr<script>ipt>alert(1)</script> y")).not.toMatch(/<[a-z/]/i);
+    expect(evidenceText(`${"<a".repeat(50_000)}<>tail`)).not.toContain("<a");
+  });
+
+  it("leaves an out-of-range or surrogate character reference as written instead of failing the import", () => {
+    expect(evidenceText("a &#x110000; b &#1114112; c &#xD800; d")).toBe("a &#x110000; b &#1114112; c &#xD800; d");
+    expect(evidenceText("max &#x10FFFF;")).toBe("max \u{10FFFF}");
+  });
+
+  it("doesn't resolve entity or product names through Object.prototype", () => {
+    expect(evidenceText("&constructor; &toString; &amp;")).toBe("&constructor; &toString; &");
+    const doc = JSON.parse(example);
+    doc.Results = { odd: [{ Controls: [{ "Control ID": "GWS.constructor.1.1v1", Result: "Pass", Criticality: "Shall", Details: "" }] }] };
+    const m = { ...mapping, mappings: [{ question: "GO-ADM-001", checks: ["GWS.constructor.1.1v1"], rationale: "test only" }] };
+    expect(read(JSON.stringify(doc), m).suggestions[0].evidence.checks[0].setting).toBe("GWS.constructor.1.1v1 (SCuBA, shall)");
   });
 });

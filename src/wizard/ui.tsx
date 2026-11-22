@@ -15,7 +15,6 @@ const variants: Record<Variant, string> = {
   danger: "border-field bg-surface text-danger [@media(hover:hover)]:hover:border-danger/50 [@media(hover:hover)]:hover:bg-danger-soft",
 };
 
-/** Button with default, hover, focus, active, disabled and loading states. */
 export function Button({
   variant = "primary",
   loading = false,
@@ -54,7 +53,7 @@ export function radioKeys(e: KeyboardEvent<HTMLElement>) {
 /** Roving tab stop for a radio group: only the checked option (or the first, when none is) is in the tab order. */
 export const radioTab = (checked: boolean, index: number, anyChecked: boolean) => (checked || (!anyChecked && index === 0) ? 0 : -1);
 
-export function Spinner() {
+function Spinner() {
   return (
     <span
       aria-hidden
@@ -165,6 +164,22 @@ export function Progress({ value, label }: { value: number; label?: string }) {
       >
         <div className="h-full rounded-full bg-accent transition-[width] duration-300 ease-[var(--ease-out)]" style={{ width: `${Math.round(value * 100)}%` }} />
       </div>
+    </div>
+  );
+}
+
+/** Marks example data, which is never a real use case. */
+export function ExampleBadge() {
+  return <span className="mono-label rounded-[4px] bg-warn-soft px-1.5 py-0.5 text-warn">Example</span>;
+}
+
+/** A summary figure with its label and a line of context. */
+export function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="border-rule p-4 not-first:border-t sm:not-first:border-t-0 sm:not-first:border-l">
+      <div className="mono-label text-muted">{label}</div>
+      <div className="mt-1.5 font-display text-[1.75rem] font-semibold leading-none tabular-nums text-ink">{value}</div>
+      <div className="mt-1.5 text-xs text-muted">{hint}</div>
     </div>
   );
 }

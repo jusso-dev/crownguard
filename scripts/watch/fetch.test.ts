@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createFetcher } from "./fetch";
+import { PLAIN_USER_AGENT, profileFor } from "./hosts";
 
 let server: Server;
 let base = "";
@@ -27,6 +28,22 @@ const routes: Record<string, (req: IncomingMessage, res: ServerResponse) => void
   "/loop": (_req, res) => res.writeHead(302, { location: "/loop" }).end(),
   "/js": (_req, res) => res.writeHead(302, { location: "javascript:alert(1)" }).end(),
   "/pdf": (_req, res) => res.writeHead(200, { "content-type": "application/pdf" }).end(Buffer.from("%PDF-1.7\n\0binary")),
+  // Chunked, with no content-length: the cap has to be enforced while the body streams.
+  "/huge": (_req, res) => {
+    res.writeHead(200, { "content-type": "text/plain" });
+    let sent = 0;
+    const chunk = "x".repeat(64 * 1024);
+    // Every write counts, including the one that fills the buffer; a full buffer only means wait for `drain`.
+    const push = () => {
+      while (sent < 300 && !res.destroyed) {
+        sent++;
+        if (!res.write(chunk)) return void res.once("drain", push);
+      }
+      res.end();
+    };
+    res.on("close", () => hits.set("/huge", sent));
+    push();
+  },
   "/ua": (req, res) => res.writeHead(200, { "content-type": "text/plain" }).end(`${req.headers["user-agent"]}|${req.headers["accept-language"]}`),
 };
 
@@ -84,6 +101,16 @@ describe("fetchPage", () => {
     expect(r.bytes?.byteLength).toBeGreaterThan(5);
   });
 
+  it("stops reading a chunked body as soon as it passes maxBytes", async () => {
+    const r = await createFetcher({ retries: 0, maxBytes: 256 * 1024 }).fetchPage(`${base}/huge`);
+    expect(r.outcome).toBe("http-error");
+    expect(r.error).toMatch(/body larger than 262144 bytes/);
+    expect(r.body).toBeUndefined();
+    // The server saw the download cancelled long before its 300 chunks (about 19 MB) were all read.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(hits.get("/huge")).toBeLessThan(300);
+  });
+
   it("reports network failures", async () => {
     const r = await createFetcher({ retries: 0, timeoutMs: 2000 }).fetchPage("http://127.0.0.1:1/");
     expect(r.outcome).toBe("network");
@@ -93,5 +120,13 @@ describe("fetchPage", () => {
   it("identifies itself and asks for English", async () => {
     const r = await fetcher().fetchPage(`${base}/ua`);
     expect(r.body).toMatch(/^Mozilla\/5\.0 \(compatible; crownguard-source-watch\/1\.0\)\|en-US/);
+  });
+
+  it("uses a host's own user agent when its profile sets one", async () => {
+    const host = new URL(base).hostname;
+    const r = await createFetcher({ userAgentFor: (h) => (h === host ? PLAIN_USER_AGENT : undefined) }).fetchPage(`${base}/ua`);
+    expect(r.body).toMatch(/^crownguard-source-watch\/1\.0\|en-US/);
+    expect(profileFor("www.soc-cmm.com").userAgent).toBe(PLAIN_USER_AGENT);
+    expect(profileFor("learn.microsoft.com").userAgent).toBeUndefined();
   });
 });

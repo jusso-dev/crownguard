@@ -3,7 +3,6 @@ import {
   citedVersion,
   classifyChange,
   compareSections,
-  compareVersions,
   diffTexts,
   equivalentUrls,
   excerpt,
@@ -114,6 +113,9 @@ describe("versions", () => {
     expect(citedVersion("CIS Microsoft 365 Foundations Benchmark v7.0.0")).toEqual({ product: "365 Foundations Benchmark", version: "7.0.0" });
     expect(citedVersion("Microsoft cloud security benchmark v2: Privileged Access")?.version).toBe("2");
     expect(citedVersion("Zero Trust deployment with Microsoft 365")).toBeUndefined();
+    // The version a removal notice names is its subject: the replacement it recommends isn't a newer edition.
+    expect(citedVersion("PowerShell 2.0 removal from Windows")).toBeUndefined();
+    expect(versionsOnPage("PowerShell 2.0 removal from Windows", "Use PowerShell 5.1 or PowerShell 7 instead of PowerShell 2.0.")).toEqual([]);
     const text = "Download CIS Microsoft 365 Foundations Benchmark v8.0.0. Archive: Microsoft 365 Foundations Benchmark v7.0.0. CIS Controls v8.1.";
     expect(versionsOnPage("CIS Microsoft 365 Foundations Benchmark v7.0.0", text)).toEqual(["7.0.0", "8.0.0"]);
     // CIS benchmark pages list "Name (version)", sometimes with "Foundation" for "Foundations", next to other benchmarks.
@@ -121,8 +123,6 @@ describe("versions", () => {
     expect(versionsOnPage("CIS Google Cloud Platform Foundation Benchmark v5.0.0", gcp)).toEqual(["5.0.0"]);
     expect(versionsOnPage("CIS Google Cloud Platform Foundations Benchmark v5.0.0", gcp.replace("5.0.0", "6.0.0"))).toEqual(["6.0.0"]);
     expect(versionsOnPage("CIS Google Workspace Foundations Benchmark v1.4.0", "Google Workspace Foundations  (1.4.0)")).toEqual(["1.4.0"]);
-    expect(compareVersions("1.10.0", "1.9.9")).toBeGreaterThan(0);
-    expect(compareVersions("2", "2.0")).toBe(0);
   });
 });
 
@@ -130,6 +130,8 @@ describe("redirects", () => {
   it("ignores redirects that don't change the page", () => {
     expect(equivalentUrls("https://support.google.com/a/answer/1?hl=en", "https://support.google.com/a/answer/1")).toBe(true);
     expect(equivalentUrls("http://www.cyber.gov.au/x/", "https://cyber.gov.au/x")).toBe(true);
+    // Zoom bounces through a sync page and comes back with cms_guid added.
+    expect(equivalentUrls("https://www.zoom.com/en/products/ai-assistant/", "https://www.zoom.com/en/products/ai-assistant/?cms_guid=false")).toBe(true);
   });
 
   it("tells a move from a redirect elsewhere", () => {
