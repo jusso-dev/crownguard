@@ -2,7 +2,7 @@ import { catalogue, ensureReportContent } from "../content/catalogue";
 import { useEnsurePlatforms, useEnsureReportContent } from "../content/useCatalogue";
 import { essentialsFramework } from "../content/schema";
 import type { EssentialsChapter } from "../format/vocab";
-import { essentials, type EssentialsResult } from "../engine/essentials";
+import { essentials, essentialsScopeNote, type EssentialsResult } from "../engine/essentials";
 import { activeQuestions, effectiveAnswers } from "../engine/risk";
 import { useStore } from "./store";
 import { Card, Field, inputClass } from "./ui";
@@ -69,6 +69,9 @@ export function EssentialsCard() {
       <p className="mt-1 max-w-[68ch] text-xs text-muted">
         Optional. ASD&apos;s Essentials sits beside the Essential Eight during the transition. The report rates each domain from the questions tagged
         with each Essentials action. It never converts maturity levels, and your scores don&apos;t change.
+      </p>
+      <p className="mt-1 max-w-[68ch] text-xs text-muted" data-testid="essentials-scope">
+        {essentialsScopeNote}
       </p>
       <div className="mt-4 max-w-md">
         <EssentialsPicker />
