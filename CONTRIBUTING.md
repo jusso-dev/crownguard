@@ -89,6 +89,14 @@ includes a React hook, disk reader and YAML loader.
 Tooling under `scripts/`, root tooling configs and `e2e/` may consume source. Source cannot import
 those consumers. Ordinary filesystem fixture, CSS and Rust-source reads remain unaffected.
 
+The terminal app in `tui/` has a Rust port of the scoring (`tui/src/engine.rs`). Change it along with
+`src/engine/`, then check the two agree:
+
+```sh
+cargo test --manifest-path tui/Cargo.toml
+cargo build --manifest-path tui/Cargo.toml && pnpm tui:parity
+```
+
 ## Privacy is a feature
 
 crownguard must never send assessment data anywhere. Don't add analytics, remote fonts, CDNs or any

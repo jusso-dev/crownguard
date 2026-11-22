@@ -1,6 +1,6 @@
-# Keeps GitHub Actions and npm dependencies current. Major updates come one at a time so a breaking change is easy to
-# spot; minor and patch updates are grouped to keep the pull request count down. Patch groups and the dev-dependencies
-# group auto-merge once CI passes (see .github/workflows/dependabot-auto-merge.yml).
+# Keeps GitHub Actions, npm and Cargo (the terminal app in tui/) dependencies current. Major updates come one at a
+# time so a breaking change is easy to spot; minor and patch updates are grouped to keep the pull request count down.
+# Patch groups and the dev-dependencies group auto-merge once CI passes (see .github/workflows/dependabot-auto-merge.yml).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -39,3 +39,17 @@ updates:
       runtime-minor:
         dependency-type: production
         update-types: [minor]
+
+  - package-ecosystem: cargo
+    directory: /tui
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:29"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      crates:
+        patterns: ["*"]
+        update-types: [minor, patch]

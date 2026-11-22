@@ -15,6 +15,8 @@
     "typecheck": "tsc",
     "validate:content": "tsx scripts/validate-content.ts",
     "cg": "tsx src/cli/index.ts",
+    "tui": "cargo run --release --manifest-path tui/Cargo.toml --",
+    "tui:parity": "tsx scripts/tui-parity.ts",
     "ism:build": "tsx scripts/ism/build.ts",
     "essentials:build": "tsx scripts/essentials/build.ts",
     "essentials:cloud": "tsx scripts/essentials/cloud.ts",
