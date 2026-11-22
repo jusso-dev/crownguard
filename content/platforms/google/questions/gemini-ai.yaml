@@ -192,14 +192,14 @@
   question: Are Gemini extensions, shared Gems and early or agent features restricted to what you have reviewed?
   why: >-
     Extensions and Workspace integrations let Gemini read third-party services, shared Gems spread
-    prompts and the files attached to them across teams, early (alpha) features skip full testing,
-    and a shared conversation link can show a whole chat to whoever receives it.
+    prompts and the files attached to them across teams, early (beta) features reach users before
+    general release, and a shared conversation link can show a whole chat to whoever receives it.
   yesLooksLike: >-
-    Gemini Alpha features are off, sharing conversations by link is off, Gem sharing is off or
-    limited to the teams that need it, and the integrations and extensions Gemini can use are only
-    ones you have reviewed. They install from the Marketplace, so your allowlist covers them.
+    Gemini Beta features (formerly Gemini Alpha) are off, sharing conversations by link is off, Gem
+    sharing is off or limited to the teams that need it, and the integrations and extensions Gemini
+    can use are only ones you have reviewed. They install from the Marketplace, so your allowlist covers them.
   remediation: >-
-    In the Admin console under Generative AI, turn off Alpha Gemini features and conversation
+    In the Admin console under Generative AI, turn off Gemini Beta features and conversation
     sharing by link, control Gem sharing, and allow only reviewed Workspace integrations. Keep the
     Marketplace app allowlist in place so no new extension or agent feature can be installed
     without review.

@@ -470,7 +470,7 @@
     rewrite important detections to query the normalised fields so they correlate across sources.
   effort: M
   licence: []
-  sources: [aws-security-lake, aws-wa-correlate-alerts]
+  sources: [aws-security-lake, aws-wa-log-locations]
   refs:
     - { framework: nist-csf-2, ref: DE.AE-03 }
     - { framework: ism, ref: ISM-1959 }

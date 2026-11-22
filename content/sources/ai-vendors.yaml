@@ -5,8 +5,8 @@
 - id: openai-chatgpt
   title: ChatGPT Enterprise
   publisher: OpenAI
-  url: https://openai.com/chatgpt/enterprise/
-  retrieved: 2026-10-10
+  url: https://chatgpt.com/business/enterprise/
+  retrieved: 2026-11-22
 - id: openai
   title: OpenAI API Platform documentation
   publisher: OpenAI

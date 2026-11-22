@@ -536,10 +536,10 @@
   url: https://docs.aws.amazon.com/singlesignon/latest/userguide/emergency-access.html
   retrieved: 2026-10-09
 - id: aws-wa-emergency-access
-  title: SEC03-BP03 Establish emergency access process
+  title: FND05-BP02 Establish emergency access mechanisms
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_permissions_emergency_process.html
-  retrieved: 2026-10-09
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/fnd05-bp02.html
+  retrieved: 2026-11-22
 - id: aws-alb-authenticate
   title: Authenticate users using an Application Load Balancer
   publisher: Amazon Web Services
@@ -761,10 +761,10 @@
   url: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html
   retrieved: 2026-10-09
 - id: aws-wa-ir-playbooks
-  title: SEC10-BP04 Develop and test security incident response playbooks
+  title: SEC10-BP03 Develop and test security incident response playbooks
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_playbooks.html
-  retrieved: 2026-10-09
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec10-bp03.html
+  retrieved: 2026-11-22
 - id: aws-backup-access-control
   title: Access control
   publisher: Amazon Web Services
@@ -802,26 +802,26 @@
   publisher: Amazon Web Services
   url: https://docs.aws.amazon.com/security-lake/latest/userguide/what-is-security-lake.html
   retrieved: 2026-11-04
-- id: aws-wa-correlate-alerts
-  title: "SEC04-BP03 Correlate and enrich security alerts"
+- id: aws-wa-log-locations
+  title: "FND05-BP04 Configure standardized locations for logs, traces, and metrics"
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_detect_investigate_events_security_alerts.html
-  retrieved: 2026-11-04
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/fnd05-bp04.html
+  retrieved: 2026-11-22
 - id: aws-wa-learning-from-incidents
-  title: "SEC10-BP08 Establish a framework for learning from incidents"
+  title: "SEC10-BP05 Establish a framework for learning from incidents"
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_establish_incident_framework.html
-  retrieved: 2026-11-04
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec10-bp05.html
+  retrieved: 2026-11-22
 - id: aws-wa-automate-security-controls
-  title: "SEC01-BP06 Automate deployment of standard security controls"
+  title: "SEC01-BP05 Automate deployment of standard security controls"
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_securely_operate_automate_security_controls.html
-  retrieved: 2026-11-04
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/sec01-bp05.html
+  retrieved: 2026-11-22
 - id: aws-wa-automate-deployment
-  title: "OPS05-BP10 Fully automate integration and deployment"
+  title: "OPS03-BP04 Fully automate integration and deployment"
   publisher: Amazon Web Services
-  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/ops_dev_integ_auto_integ_deploy.html
-  retrieved: 2026-11-04
+  url: https://docs.aws.amazon.com/wellarchitected/latest/framework/ops03-bp04.html
+  retrieved: 2026-11-22
 - id: aws-health-aggregate-events
   title: Aggregating AWS Health events across accounts
   publisher: Amazon Web Services

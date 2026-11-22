@@ -150,10 +150,10 @@
   url: https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-deploy-phishing-resistant-passwordless-authentication
   retrieved: 2026-10-08
 - id: ms-auth-methods-manage
-  title: Manage authentication methods for Microsoft Entra ID
+  title: Authentication methods policy overview
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-methods-manage
-  retrieved: 2026-10-08
+  retrieved: 2026-11-22
 - id: ms-mandatory-mfa
   title: Mandatory multifactor authentication for Azure and admin portals
   publisher: Microsoft
@@ -300,10 +300,10 @@
   url: https://learn.microsoft.com/en-us/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-purview-service-description
   retrieved: 2026-10-08
 - id: ms-copilot-secure-govern
-  title: "Secure and governed data foundation for Microsoft Copilot: foundational deployment guidance"
+  title: "Secure and govern Microsoft Copilot: Foundational deployment guidance"
   publisher: Microsoft
-  url: https://learn.microsoft.com/en-us/microsoft-365/copilot/secure-govern-copilot-foundational-deployment-guidance
-  retrieved: 2026-10-08
+  url: https://learn.microsoft.com/en-us/copilot/plan/secure-govern-copilot-foundational-deployment-guidance
+  retrieved: 2026-11-22
 - id: ms-copilot-studio-security
   title: Security and governance in Microsoft Copilot Studio
   publisher: Microsoft
@@ -445,10 +445,10 @@
   url: https://learn.microsoft.com/en-us/microsoft-365-apps/security/internet-macros-blocked
   retrieved: 2026-10-08
 - id: ms-app-control
-  title: Application Control for Windows
+  title: App Control for Business
   publisher: Microsoft
   url: https://learn.microsoft.com/en-us/windows/security/application-security/application-control/app-control-for-business/appcontrol
-  retrieved: 2026-10-08
+  retrieved: 2026-11-22
 - id: ms-intune-windows-updates
   title: Manage Windows updates with Microsoft Intune
   publisher: Microsoft

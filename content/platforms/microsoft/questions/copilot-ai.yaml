@@ -40,14 +40,14 @@
     rephrased or pasted into other documents by an AI assistant. DLP for Copilot keeps labelled items
     out of responses and can block prompts that contain sensitive information.
   yesLooksLike: >-
-    A DLP policy for the Microsoft 365 Copilot and Copilot Chat location excludes Highly Confidential
-    (and similar) labelled items from processing, and a separate rule blocks prompts containing
-    sensitive information types such as tax file numbers.
+    A DLP policy for the Microsoft Copilot, Copilot Chat, and Copilot Cowork location excludes Highly
+    Confidential (and similar) labelled items from processing, and a separate rule blocks prompts
+    containing sensitive information types such as tax file numbers.
   remediation: >-
-    In the Purview portal create a custom DLP policy with the Microsoft 365 Copilot and Copilot Chat
-    location, add a rule using the sensitivity labels condition with "Prevent Copilot from processing
-    content", and a separate rule for sensitive information types in prompts; test in simulation
-    mode first.
+    In the Purview portal create a custom DLP policy with the Microsoft Copilot, Copilot Chat, and
+    Copilot Cowork location, add a rule using the sensitivity labels condition with "Prevent Copilot
+    from processing content", and a separate rule for sensitive information types in prompts (still in
+    preview); test in simulation mode first.
   effort: S
   licence: [purview-dlp-advanced]
   sources: [ms-dlp-copilot, ms-purview-licensing]
@@ -112,6 +112,9 @@
     In the Power Platform admin centre enable Managed Environments, create data policies for the
     default and production environments, limit who can create and share agents, require Microsoft
     authentication for agents, and review the Microsoft 365 admin centre agent registry regularly.
+    Turn on Sharing agents with embedded maker credentials (in preview) so an agent whose connections
+    run with the maker's own credentials can't be shared, and have makers switch those connections to
+    end-user credentials.
   effort: M
   licence: []
   sources: [ms-copilot-studio-security, ms-copilot-studio-sharing, ms-power-platform-dlp, ms-agent-registry]
