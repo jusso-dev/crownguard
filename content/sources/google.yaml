@@ -751,10 +751,10 @@
   url: https://knowledge.workspace.google.com/admin/generative-ai/support-access-to-workspace-integrations
   retrieved: 2026-10-10
 - id: gws-gemini-alpha
-  title: "Turn access to Google Workspace with Gemini Alpha on or off"
+  title: "Turn access to Google Workspace with Gemini Beta on or off"
   publisher: Google
   url: https://knowledge.workspace.google.com/admin/generative-ai/workspace-with-gemini/turn-access-to-google-workspace-with-gemini-beta-on-or-off
-  retrieved: 2026-11-17
+  retrieved: 2026-11-22
 - id: gws-meet-settings
   title: "Manage Meet settings"
   publisher: Google
