@@ -29,4 +29,4 @@ codegen-units = 1
 strip = true
 
 [dev-dependencies]
-jsonschema = { version = "0.30", default-features = false }
+jsonschema = { version = "0.61", default-features = false }
