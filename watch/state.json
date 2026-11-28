@@ -39,9 +39,9 @@
       ]
     },
     "gcp-bigquery": {
-      "latest": "2026-11-19T08:00:00.000Z",
+      "latest": "2026-11-25T08:00:00.000Z",
       "seen": [
-        "7c00b47e3544"
+        "dfd1833dec97"
       ]
     },
     "gcp-cloud-sql-mysql": {
@@ -108,9 +108,9 @@
       "seen": []
     },
     "prowler-releases": {
-      "latest": "2026-11-19T11:13:35.000Z",
+      "latest": "2026-11-27T12:02:34.000Z",
       "seen": [
-        "16129e11e6cb"
+        "931248f65fde"
       ]
     },
     "scubagoggles-releases": {
@@ -120,13 +120,15 @@
       ]
     },
     "soc-cmm-community": {
-      "latest": "2026-09-03T12:56:46.000Z",
-      "seen": []
+      "latest": "2026-11-27T16:14:52.000Z",
+      "seen": [
+        "da79792a314b"
+      ]
     },
     "workspace-updates": {
-      "latest": "2026-11-05T17:30:01.617Z",
+      "latest": "2026-11-24T17:02:59.959Z",
       "seen": [
-        "7aefb4a06991"
+        "d2575cc658bf"
       ]
     }
   },
@@ -767,6 +769,11 @@
       "https://learn.microsoft.com/en-us/copilot/plan/copilot-subprocessor-overview",
       "https://learn.microsoft.com/en-us/copilot/plan/gov-overview"
     ],
+    "https://learn.microsoft.com/en-us/copilot/toc.json#Plan > Security": [
+      "https://learn.microsoft.com/en-us/copilot/plan/copilot-prompt-defense-in-depth",
+      "https://learn.microsoft.com/en-us/copilot/plan/secure-govern-copilot-foundational-deployment-guidance",
+      "https://learn.microsoft.com/en-us/copilot/plan/security-microsoft-copilot"
+    ],
     "https://learn.microsoft.com/en-us/defender-business/toc.json#Microsoft Defender for Business > Overview": [
       "https://learn.microsoft.com/en-us/defender-business/mdb-overview",
       "https://learn.microsoft.com/en-us/defender-business/mdb-requirements",
@@ -1011,6 +1018,7 @@
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/beforeunloadeventcancelbypreventdefaultenabled",
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/bingadssuppression",
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/blockthirdpartycookies",
+      "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/blueprintgwaavailability",
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/browseraddprofileenabled",
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/browsercodeintegritysetting",
       "https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies/browserguestmodeenabled",
@@ -1834,6 +1842,10 @@
       "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/connected-platforms",
       "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/graph-api",
       "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/sync-agent-activity-azure-monitor",
+      "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/total-agent-count"
+    ],
+    "https://learn.microsoft.com/en-us/microsoft-agent-365/toc.json#Discover and monitor agents > Agent registry": [
+      "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/agent-registry-overview",
       "https://learn.microsoft.com/en-us/microsoft-agent-365/admin/total-agent-count"
     ],
     "https://learn.microsoft.com/en-us/microsoft-copilot-studio/toc.json#Administration > Govern at scale": [
@@ -5242,7 +5254,7 @@
       "words": 3516
     },
     "asd-patching": {
-      "contentHash": "601a6463333df306",
+      "contentHash": "cf93ceb60546d431",
       "httpStatus": 200,
       "passed": [],
       "sections": [
@@ -5253,8 +5265,8 @@
         },
         {
           "h": "Introduction",
-          "hash": "a3bb517f0fc1",
-          "words": 67
+          "hash": "06f36d9af68d",
+          "words": 27
         },
         {
           "h": "Applying patches",
@@ -5317,11 +5329,6 @@
           "words": 95
         },
         {
-          "h": "Further information",
-          "hash": "d6f77070f439",
-          "words": 40
-        },
-        {
           "h": "Contact details",
           "hash": "e79be5188b71",
           "words": 52
@@ -5332,7 +5339,7 @@
       "title": "Patching applications and operating systems",
       "updated": "2023-11-27",
       "url": "https://www.cyber.gov.au/publication/patching-applications-and-operating-systems",
-      "words": 1894
+      "words": 1812
     },
     "asd-report-incident": {
       "contentHash": "ccd6a906943764f6",
@@ -13772,34 +13779,196 @@
       "words": 440
     },
     "aws-wa-automate-deployment": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/ops_dev_integ_auto_integ_deploy.html"
+      "contentHash": "1f82459472e5e1b0",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "615fa1626574",
+          "words": 304
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "5acd2bee80b9",
+          "words": 396
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "f9634042bdc3",
+          "words": 253
+        },
+        {
+          "h": "Resources",
+          "hash": "709884ceab05",
+          "words": 62
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "OPS03-BP04 Fully automate integration and deployment",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/ops03-bp04.html",
+      "words": 1020
     },
     "aws-wa-automate-security-controls": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_securely_operate_automate_security_controls.html"
-    },
-    "aws-wa-correlate-alerts": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_detect_investigate_events_security_alerts.html"
+      "contentHash": "900b81c68aadc9e6",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "9ba23d5f3102",
+          "words": 226
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "bc2097b2d37c",
+          "words": 413
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "1be9e5aea8b7",
+          "words": 211
+        },
+        {
+          "h": "Resources",
+          "hash": "5124ff8a9dc7",
+          "words": 107
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "SEC01-BP05 Automate deployment of standard security controls",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec01-bp05.html",
+      "words": 962
     },
     "aws-wa-emergency-access": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_permissions_emergency_process.html"
+      "contentHash": "2f5332a157f3e8fd",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "48a79bff3ded",
+          "words": 375
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "26d4ca824162",
+          "words": 624
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "0bb3c3c68f8a",
+          "words": 440
+        },
+        {
+          "h": "Resources",
+          "hash": "0d8766bb0e47",
+          "words": 82
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "FND05-BP02 Establish emergency access mechanisms",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/fnd05-bp02.html",
+      "words": 1526
     },
     "aws-wa-ir-playbooks": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_playbooks.html"
+      "contentHash": "22441be333af55b8",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "e63535b1db6a",
+          "words": 244
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "72bca254f28c",
+          "words": 256
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "d86824a51a82",
+          "words": 166
+        },
+        {
+          "h": "Resources",
+          "hash": "3796a0d3c094",
+          "words": 51
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "SEC10-BP03 Develop and test security incident response playbooks",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec10-bp03.html",
+      "words": 722
     },
     "aws-wa-learning-from-incidents": {
-      "httpStatus": 404,
-      "status": "broken",
-      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec_incident_response_establish_incident_framework.html"
+      "contentHash": "44e83b0e05586207",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "9f9ece01f2f7",
+          "words": 215
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "9277655a4595",
+          "words": 231
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "6f7842cac1bd",
+          "words": 186
+        },
+        {
+          "h": "Resources",
+          "hash": "dbc5eec0a895",
+          "words": 46
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "SEC10-BP05 Establish a framework for learning from incidents",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/sec10-bp05.html",
+      "words": 683
+    },
+    "aws-wa-log-locations": {
+      "contentHash": "26032d97b74a648f",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "1c0873bd910d",
+          "words": 308
+        },
+        {
+          "h": "Implementation guidance",
+          "hash": "a989bbf7e993",
+          "words": 503
+        },
+        {
+          "h": "Implementation steps",
+          "hash": "b0d53626cec9",
+          "words": 569
+        },
+        {
+          "h": "Resources",
+          "hash": "f71b7acb69ac",
+          "words": 132
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "FND05-BP04 Configure standardized locations for logs, traces, and metrics",
+      "url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/fnd05-bp04.html",
+      "words": 1517
     },
     "aws-waf": {
       "contentHash": "a3b2bd08845ed146",
@@ -13841,7 +14010,7 @@
       "words": 326
     },
     "aws-waf-pricing": {
-      "contentHash": "cf7de45e5c9fd866",
+      "contentHash": "9f75d6c369fde042",
       "httpStatus": 200,
       "passed": [],
       "sections": [
@@ -13851,89 +14020,104 @@
           "words": 54
         },
         {
-          "h": "AWS Web Application Firewall Pricing",
-          "hash": "1b42a3341898",
-          "words": 256
+          "h": "AWS WAF pricing is changing on February 1, 2027",
+          "hash": "f8890bba2eee",
+          "words": 60
         },
         {
-          "h": "AWS Pricing Calculator",
-          "hash": "2f7290f840f1",
-          "words": 668
+          "h": "AWS Web Application Firewall Pricing",
+          "hash": "b9e79d25ccd3",
+          "words": 329
+        },
+        {
+          "h": "What base protection includes",
+          "hash": "38d73fc2b450",
+          "words": 181
         },
         {
           "h": "Managed rule groups from AWS Marketplace",
-          "hash": "6ea51d13af04",
-          "words": 42
-        },
-        {
-          "h": "Case A: No managed rule group and 19 rules written by you",
-          "hash": "933df3dc5875",
+          "hash": "a7157f82d416",
           "words": 40
         },
         {
-          "h": "Case B: One managed rule group from AWS Marketplace seller and 9 rules written by you",
-          "hash": "57025ac7bcca",
-          "words": 106
-        },
-        {
-          "h": "Case C: One rule group containing 5 rules and 9 rules written by you",
-          "hash": "776760adb23d",
-          "words": 45
-        },
-        {
-          "h": "Case D: Bot Control enabled on web ACL and 7 rules written by you",
-          "hash": "655c2eefbd84",
-          "words": 75
-        },
-        {
-          "h": "Case E: Common Bot Control with scope down statement enabled on WebACL and 7 rules written by you",
-          "hash": "d0e220034fe2",
-          "words": 104
-        },
-        {
-          "h": "Case F: Targeted Bot Control enabled on 3 WebACLs and 21 rules written by you processing 35 million requests",
-          "hash": "3ce0da0fd8e5",
-          "words": 81
-        },
-        {
-          "h": "Case G: Web ACL with CAPTCHA enabled and containing 4 rules inspecting 100M requests",
-          "hash": "25ff9a8404ed",
-          "words": 133
-        },
-        {
-          "h": "Case H: Web ACL with 1500 WCUs inspecting 100M and 1M requests with 16KB and 32KB body size, respectively",
-          "hash": "b197c0467053",
-          "words": 74
-        },
-        {
-          "h": "Case I: Web ACL with 2000 WCUs inspecting 100 million requests, with a default request body inspection limit of 16KB",
-          "hash": "a85c65cd4fc9",
+          "h": "AWS Shield Advanced customers",
+          "hash": "219ae211acd4",
           "words": 51
         },
         {
-          "h": "Case J: Web ACL with account takeover prevention applied on login pages and account creation fraud prevention on registration page, with 3 rules written by you at 1500 WCU and 16kb body inspection, sending 40M requests",
-          "hash": "9cdf93cf5864",
-          "words": 116
+          "h": "Amazon CloudFront flat-rate pricing plans",
+          "hash": "a3d6b7de9ba7",
+          "words": 127
         },
         {
-          "h": "Case K: Web ACL with only Account creation fraud prevention on registration page, with 3 rules written by you at 1500 WCU and 16kb body inspection, sending 5M requests",
-          "hash": "32d0edbae6d9",
-          "words": 88
+          "h": "What premium protection includes",
+          "hash": "d428109ef15c",
+          "words": 105
         },
         {
-          "h": "Case L: Web ACL with only Account takeover prevention applied on sign-in pages, with 3 rules written by you at 1500 WCU and 16kb body inspection, sending 15M requests",
-          "hash": "a8fd58a6ee3e",
-          "words": 91
+          "h": "AWS Web Application Firewall Pricing",
+          "hash": "41398fadc3ea",
+          "words": 338
         },
         {
-          "h": "Case M: Web ACL created using Application Load Balancer’s 1-click experience, which adds 3 managed rule groups, sending 10M requests",
-          "hash": "b20a30e85504",
-          "words": 46
+          "h": "Managed rule groups from AWS Marketplace",
+          "hash": "60dd838fc888",
+          "words": 108
+        },
+        {
+          "h": "Managed rule groups from AWS Marketplace",
+          "hash": "8caaae54cc7c",
+          "words": 94
+        },
+        {
+          "h": "Managed rule groups from AWS Marketplace",
+          "hash": "9d9e1044bc07",
+          "words": 30
+        },
+        {
+          "h": "Managed rule groups from AWS Marketplace",
+          "hash": "aa25e2fa81e0",
+          "words": 292
+        },
+        {
+          "h": "AWS Pricing Calculator",
+          "hash": "088afe71d2cb",
+          "words": 45
+        },
+        {
+          "h": "Example 1: One web ACL with 19 rules written by you",
+          "hash": "ac1cef9ef3c3",
+          "words": 54
+        },
+        {
+          "h": "Example 2: Bot Control common protection and 7 rules written by you",
+          "hash": "3abfc6920a9e",
+          "words": 58
+        },
+        {
+          "h": "Example 3: Bot Control targeted protection on 3 web ACLs, and how rule order affects charges",
+          "hash": "71d4da6cfdbe",
+          "words": 131
+        },
+        {
+          "h": "Example 4: Fraud Control ATP on login pages and ACFP on registration pages",
+          "hash": "9ee70e932474",
+          "words": 84
+        },
+        {
+          "h": "Example 5: One managed rule group from an AWS Marketplace seller and 9 rules written by you",
+          "hash": "9997e5beec65",
+          "words": 81
+        },
+        {
+          "h": "Example 6: One web ACL associated with 50 Application Load Balancers",
+          "hash": "fbbd3a719b72",
+          "words": 44
         },
         {
           "h": "Additional pricing resources",
-          "hash": "c570c811e08f",
-          "words": 21
+          "hash": "fd766a2ed44c",
+          "words": 33
         },
         {
           "h": "AWS WAF Pricing FAQs",
@@ -13941,52 +14125,52 @@
           "words": 0
         },
         {
+          "h": "When does the new pricing take effect?",
+          "hash": "5ea8e8418b26",
+          "words": 37
+        },
+        {
+          "h": "Will my bill go up or down?",
+          "hash": "6b4ced500f2a",
+          "words": 40
+        },
+        {
+          "h": "I have a private pricing agreement. Does this affect me?",
+          "hash": "21348b82c4d9",
+          "words": 12
+        },
+        {
           "h": "What counts as a \"request\" in AWS WAF pricing?",
-          "hash": "5d7f9afebe4f",
-          "words": 54
+          "hash": "50617c70d736",
+          "words": 15
         },
         {
           "h": "Does AWS WAF charge for blocked requests?",
-          "hash": "898b727fcf4d",
-          "words": 45
+          "hash": "3a54d121b01d",
+          "words": 20
         },
         {
-          "h": "Is billing calculated hourly or monthly for WebACLs and rules?",
-          "hash": "4a4d483cac55",
-          "words": 52
+          "h": "How is the protected resource charge calculated?",
+          "hash": "245856163dcd",
+          "words": 26
         },
         {
-          "h": "Are there additional AWS WAF costs to consider when protecting multiple domains?",
-          "hash": "e53aa4a80041",
-          "words": 96
+          "h": "Does the number of web ACLs or rules affect my charges?",
+          "hash": "bf2fe8646767",
+          "words": 28
         },
         {
-          "h": "Does AWS WAF offer a free tier?",
-          "hash": "05681287db4f",
-          "words": 70
-        },
-        {
-          "h": "How can I estimate my AWS WAF monthly cost?",
-          "hash": "1c514af62e9e",
-          "words": 52
-        },
-        {
-          "h": "Are pricing programs available for AWS WAF, AWS WAF Common and Targeted Bots, and AWS WAF Fraud Protection?",
-          "hash": "5f55fa8647ff",
-          "words": 17
-        },
-        {
-          "h": "What's the difference in cost between Common and Targeted Bot Control?",
-          "hash": "b50986ec46cb",
-          "words": 110
+          "h": "How do I reduce premium request charges?",
+          "hash": "79ad1824214e",
+          "words": 28
         }
       ],
       "status": "ok",
       "terms": [],
       "title": "AWS WAF Pricing",
-      "updated": "2026-11-20",
+      "updated": "2026-11-25",
       "url": "https://aws.amazon.com/waf/pricing/",
-      "words": 2951
+      "words": 2766
     },
     "aws-windows-ami-reference": {
       "contentHash": "b11a9851c0156ee1",
@@ -22259,7 +22443,7 @@
       "words": 66908
     },
     "gcp-security-bulletins": {
-      "contentHash": "ea58bf196f4cfe42",
+      "contentHash": "af68e5f1fe092767",
       "httpStatus": 200,
       "passed": [],
       "sections": [
@@ -22269,14 +22453,24 @@
           "words": 22
         },
         {
+          "h": "GCP-2026-091",
+          "hash": "69d77218d71e",
+          "words": 2
+        },
+        {
+          "h": "Description",
+          "hash": "44a88ad6a6c4",
+          "words": 60
+        },
+        {
           "h": "GCP-2026-090",
           "hash": "200e5107b12b",
           "words": 2
         },
         {
           "h": "Description",
-          "hash": "4284bd36b5c3",
-          "words": 437
+          "hash": "d83d3c159b5a",
+          "words": 494
         },
         {
           "h": "GCP-2026-089",
@@ -22350,13 +22544,13 @@
         },
         {
           "h": "GCP-2026-082",
-          "hash": "95e86209900d",
+          "hash": "6084417aa29b",
           "words": 4
         },
         {
           "h": "Description",
-          "hash": "31c3b043c405",
-          "words": 894
+          "hash": "059990d43b50",
+          "words": 929
         },
         {
           "h": "GCP-2026-081",
@@ -25636,7 +25830,7 @@
       ],
       "title": "Security bulletins",
       "url": "https://docs.cloud.google.com/support/bulletins",
-      "words": 40114
+      "words": 40270
     },
     "gcp-security-foundations": {
       "contentHash": "62d293d8c3926b8d",
@@ -29089,7 +29283,7 @@
         "frontline standard"
       ],
       "title": "Create Context-Aware Access context conditions",
-      "url": "https://knowledge.workspace.google.com/admin/security/create-context-aware-access-levels",
+      "url": "https://knowledge.workspace.google.com/admin/security/create-context-aware-access-context-conditions",
       "words": 1617
     },
     "gws-calendar-sharing": {
@@ -30549,6 +30743,43 @@
       "title": "About Google Cloud Directory Sync",
       "url": "https://knowledge.workspace.google.com/admin/users/about-google-cloud-directory-sync",
       "words": 376
+    },
+    "gws-gcpw-security-keys": {
+      "contentHash": "6d2cf75e7577ed20",
+      "httpStatus": 200,
+      "passed": [],
+      "sections": [
+        {
+          "h": "(top)",
+          "hash": "c6c206e9a080",
+          "words": 92
+        },
+        {
+          "h": "Getting started",
+          "hash": "641975b16f4a",
+          "words": 22
+        },
+        {
+          "h": "Rollout pace",
+          "hash": "88a80058d53c",
+          "words": 20
+        },
+        {
+          "h": "Availability",
+          "hash": "a977ab944afb",
+          "words": 6
+        },
+        {
+          "h": "Resources",
+          "hash": "b5459d2b5e5b",
+          "words": 8
+        }
+      ],
+      "status": "ok",
+      "terms": [],
+      "title": "Google Credential Provider for Windows (GCPW) now supports FIDO2-compliant physical security keys as a second factor for authentication",
+      "url": "https://workspaceupdates.googleblog.com/2026/07/google-credential-provider-for-windows-now-supports-FIDO2-compliant-physical-security-keys-as-a-second-factor-for-authentication.html",
+      "words": 154
     },
     "gws-gemini-alpha": {
       "contentHash": "ad52bea6bb7dc6b3",
@@ -40197,7 +40428,6 @@
     },
     "ms-copilot-secure-govern": {
       "contentHash": "7daecacdadcaea9c",
-      "finalUrl": "https://learn.microsoft.com/en-us/copilot/plan/secure-govern-copilot-foundational-deployment-guidance",
       "httpStatus": 200,
       "learn": {
         "commit": "4d6f8e565e0819f384b73ef510c9110484b499a3",
@@ -40236,7 +40466,7 @@
       "terms": [],
       "title": "Secure and govern Microsoft Copilot: Foundational deployment guidance",
       "updated": "2026-11-13",
-      "url": "https://learn.microsoft.com/en-us/microsoft-365/copilot/secure-govern-copilot-foundational-deployment-guidance",
+      "url": "https://learn.microsoft.com/en-us/copilot/plan/secure-govern-copilot-foundational-deployment-guidance",
       "words": 321
     },
     "ms-copilot-studio": {
@@ -56925,11 +57155,11 @@
       "words": 4057
     },
     "ms-pim-configure": {
-      "contentHash": "88ef8160523d0702",
+      "contentHash": "e77533d91f589c25",
       "httpStatus": 200,
       "learn": {
         "branch": "main",
-        "commit": "9764450f30ca8f611fe812280ea0b7f366d52350",
+        "commit": "ed413d0dcc91c1e431ab3aa164881e2070c0ca6d",
         "documentId": "d7338196-8434-f76e-ec0d-15bc85d51434",
         "path": "docs/id-governance/privileged-identity-management/pim-configure.md",
         "repo": "MicrosoftDocs/entra-docs"
@@ -56953,23 +57183,23 @@
         },
         {
           "h": "License requirements",
-          "hash": "48737109348d",
-          "words": 53
+          "hash": "7a5ae05119bb",
+          "words": 18
         },
         {
           "h": "What does it do?",
-          "hash": "8ddbaef3cb53",
-          "words": 136
+          "hash": "fc35b65ec550",
+          "words": 124
         },
         {
           "h": "Privileged access capabilities in preview",
-          "hash": "b48c31109216",
-          "words": 269
+          "hash": "c1e27a02aeeb",
+          "words": 266
         },
         {
           "h": "What can I do with it?",
-          "hash": "790f7ea628a9",
-          "words": 89
+          "hash": "fc2b194a7de8",
+          "words": 46
         },
         {
           "h": "Who can do what?",
@@ -56988,8 +57218,8 @@
         },
         {
           "h": "Assign",
-          "hash": "277321269d8e",
-          "words": 205
+          "hash": "57d65a5c46f5",
+          "words": 261
         },
         {
           "h": "Activate",
@@ -57039,13 +57269,12 @@
       ],
       "status": "ok",
       "terms": [
-        "entra id governance",
-        "entra id p2"
+        "entra id governance"
       ],
       "title": "What is Microsoft Entra Privileged Identity Management?",
-      "updated": "2026-11-17",
+      "updated": "2026-11-24",
       "url": "https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure",
-      "words": 2117
+      "words": 2080
     },
     "ms-pim-resource-reviews": {
       "contentHash": "4fc51943cfd261cc",
@@ -62511,7 +62740,6 @@
     },
     "openai-chatgpt": {
       "contentHash": "691d4a44f9ca2462",
-      "finalUrl": "https://chatgpt.com/business/enterprise/",
       "httpStatus": 200,
       "passed": [],
       "sections": [
@@ -62599,7 +62827,7 @@
       "status": "ok",
       "terms": [],
       "title": "Frontier AI built for enterprise",
-      "url": "https://openai.com/chatgpt/enterprise/",
+      "url": "https://chatgpt.com/business/enterprise/",
       "words": 473
     },
     "otter-ai": {
