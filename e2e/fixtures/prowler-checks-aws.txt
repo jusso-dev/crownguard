@@ -1,5 +1,5 @@
-# Check ids in Prowler aws at tag 5.51.0 (2026-11-19), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.51.0/prowler/providers/aws/services.
+# Check ids in Prowler aws at tag 5.53.0 (2026-11-27), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.53.0/prowler/providers/aws/services.
 # One id per line. Regenerate when content/imports/prowler-aws.yaml moves to a newer Prowler.
 accessanalyzer_enabled
 accessanalyzer_enabled_without_findings
@@ -59,6 +59,7 @@ backup_recovery_point_encrypted
 backup_reportplans_exist
 backup_vaults_encrypted
 backup_vaults_exist
+backup_vaults_lock_enabled
 batch_job_definition_no_secrets
 bedrock_agent_guardrail_enabled
 bedrock_agent_role_least_privilege
@@ -435,6 +436,7 @@ iam_role_access_not_stale_to_bedrock
 iam_role_administratoraccess_policy
 iam_role_cross_account_readonlyaccess_policy
 iam_role_cross_service_confused_deputy_prevention
+iam_role_github_oidc_trust_subject_restricted
 iam_role_service_trust_restricts_source_to_account
 iam_root_credentials_management_enabled
 iam_root_hardware_mfa_enabled
@@ -608,6 +610,7 @@ sagemaker_clarify_exists
 sagemaker_domain_sso_configured
 sagemaker_endpoint_config_kms_encryption_enabled
 sagemaker_endpoint_config_prod_variant_instances
+sagemaker_full_access_policy_attached
 sagemaker_models_monitor_enabled
 sagemaker_models_network_isolation_enabled
 sagemaker_models_registry_in_use
