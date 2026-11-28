@@ -523,8 +523,8 @@
 - id: gws-caa-access-levels
   title: Create Context-Aware access levels
   publisher: Google
-  url: https://knowledge.workspace.google.com/admin/security/create-context-aware-access-levels
-  retrieved: 2026-10-09
+  url: https://knowledge.workspace.google.com/admin/security/create-context-aware-access-context-conditions
+  retrieved: 2026-11-24
 - id: gws-custom-saml-app
   title: Set up your own custom SAML app
   publisher: Google
