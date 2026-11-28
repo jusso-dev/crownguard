@@ -1,5 +1,5 @@
-# Check ids in Prowler azure at tag 5.51.0 (2026-11-19), taken from the check directory names in
-# https://github.com/prowler-cloud/prowler/tree/5.51.0/prowler/providers/azure/services.
+# Check ids in Prowler azure at tag 5.53.0 (2026-11-27), taken from the check directory names in
+# https://github.com/prowler-cloud/prowler/tree/5.53.0/prowler/providers/azure/services.
 # One id per line. Regenerate when content/imports/prowler-azure.yaml moves to a newer Prowler.
 aisearch_service_not_publicly_accessible
 aiservices_account_diagnostic_logging_enabled
@@ -14,7 +14,9 @@ aiservices_deployment_content_filter_prompt_shield_enabled
 aks_cluster_auto_upgrade_enabled
 aks_cluster_azure_monitor_enabled
 aks_cluster_defender_enabled
+aks_cluster_kms_cmk_encryption_enabled
 aks_cluster_local_accounts_disabled
+aks_cluster_node_os_upgrade_channel_enabled
 aks_cluster_rbac_enabled
 aks_clusters_created_with_private_nodes
 aks_clusters_public_access_disabled
@@ -54,6 +56,7 @@ cosmosdb_account_use_private_endpoints
 databricks_workspace_cmk_encryption_enabled
 databricks_workspace_no_public_ip_enabled
 databricks_workspace_public_network_access_disabled
+databricks_workspace_uses_private_endpoint
 databricks_workspace_vnet_injection_enabled
 defender_additional_email_configured_with_a_security_contact
 defender_assessments_vm_endpoint_protection_installed
